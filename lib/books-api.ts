@@ -12,16 +12,23 @@ export interface GoogleBook {
     averageRating?: number
     categories?: string[]
     imageLinks?: {
-      thumbnail?: string
       smallThumbnail?: string
+      thumbnail?: string
+      small?: string
+      medium?: string
+      large?: string
+      extraLarge?: string
     }
   }
 }
 
 export async function searchGoogleBooks(query: string, maxResults = 20): Promise<Book[]> {
   try {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY
+    const apiParam = apiKey ? `&key=${apiKey}` : ''
+    
     const response = await fetch(
-      `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=${maxResults}&printType=books&projection=full`
+      `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=${maxResults}&printType=books&projection=full${apiParam}`
     )
     
     if (!response.ok) {
@@ -97,12 +104,32 @@ function transformGoogleBookToBook(googleBook: GoogleBook): Book | null {
   const publishedYear = volumeInfo.publishedDate ? 
     parseInt(volumeInfo.publishedDate.split('-')[0]) : 2020
   
+  // Get the best quality image available, with fallback chain
+  const getBestCoverImage = (imageLinks?: GoogleBook['volumeInfo']['imageLinks']): string => {
+    if (!imageLinks) return 'https://via.placeholder.com/400x600?text=No+Cover'
+    
+    // Try in order of quality: extraLarge > large > medium > small > thumbnail
+    const coverUrl = imageLinks.extraLarge || 
+                     imageLinks.large || 
+                     imageLinks.medium || 
+                     imageLinks.small || 
+                     imageLinks.thumbnail || 
+                     imageLinks.smallThumbnail
+    
+    if (!coverUrl) return 'https://via.placeholder.com/400x600?text=No+Cover'
+    
+    // Ensure HTTPS and remove zoom parameter to get original size
+    return coverUrl
+      .replace('http:', 'https:')
+      .replace(/&edge=curl/g, '') // Remove curl edge effect
+      .replace(/zoom=\d+/g, 'zoom=1') // Get original size
+  }
+  
   return {
     id: googleBook.id,
     title: volumeInfo.title,
     author: volumeInfo.authors[0],
-    cover: volumeInfo.imageLinks?.thumbnail?.replace('http:', 'https:') || 
-           'https://via.placeholder.com/300x450?text=No+Cover',
+    cover: getBestCoverImage(volumeInfo.imageLinks),
     rating: Math.round(rating * 10) / 10,
     pages,
     genre: volumeInfo.categories || ['General'],
@@ -114,26 +141,39 @@ function transformGoogleBookToBook(googleBook: GoogleBook): Book | null {
   }
 }
 
-// Predefined search queries for different genres/moods
+// Predefined search queries for different genres/moods (matching questionnaire options EXACTLY)
 export const bookSearchQueries = {
-  fiction: 'subject:fiction+inauthor:bestseller',
-  mystery: 'subject:mystery+subject:thriller',
-  romance: 'subject:romance+subject:fiction',
-  fantasy: 'subject:fantasy+subject:fiction',
-  scifi: 'subject:"science fiction"',
-  biography: 'subject:biography+subject:autobiography',
-  selfhelp: 'subject:"self help"+subject:psychology',
-  philosophy: 'subject:philosophy+subject:wisdom',
-  history: 'subject:history+subject:historical',
-  humor: 'subject:humor+subject:comedy',
-  popular: 'orderBy=relevance+bestsellers',
-  recent: 'orderBy=newest+publishedDate>2020'
+  'Fantasy': 'subject:fantasy',
+  'Science Fiction': 'subject:"science fiction"',
+  'Mystery': 'subject:mystery',
+  'Romance': 'subject:romance',
+  'Thriller': 'subject:thriller',
+  'Contemporary Fiction': 'subject:fiction+bestseller',
+  'Historical Fiction': 'subject:"historical fiction"',
+  'Biography': 'subject:biography',
+  'Self-Help': 'subject:"self help"',
+  'Philosophy': 'subject:philosophy',
+  'Horror': 'subject:horror',
+  'Comedy': 'subject:humor',
+  'LGBTQ+': 'subject:lgbtq',
+  // Additional genres
+  'Adventure': 'subject:adventure',
+  'Young Adult': 'subject:"young adult"',
+  'Classics': 'subject:classics',
+  'Poetry': 'subject:poetry'
 }
 
-// Function to get books by category
+// Function to get books by category - TAGS BOOKS WITH CORRECT GENRE
 export async function getBooksByCategory(category: string, count = 10): Promise<Book[]> {
   const query = bookSearchQueries[category as keyof typeof bookSearchQueries] || category
-  return searchGoogleBooks(query, count)
+  const books = await searchGoogleBooks(query, count)
+  
+  // CRITICAL: Tag each book with the genre we searched for
+  // This overrides Google's generic categories with our specific genre
+  return books.map(book => ({
+    ...book,
+    genre: [category] // Replace with the EXACT genre we searched for
+  }))
 }
 
 // Function to get mixed recommendations

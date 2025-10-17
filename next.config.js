@@ -16,6 +16,14 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'books.googleusercontent.com',
+      },
+      {
+        protocol: 'http',
+        hostname: 'books.google.com',
+      },
+      {
+        protocol: 'https',
         hostname: 'via.placeholder.com',
       },
     ],

@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react"
 import { BookCard } from "./book-card"
 import { Button } from "@/components/ui/button"
-import { Book, UserPreferences, sampleBooks } from "@/lib/book-data"
+import { Book, UserPreferences } from "@/lib/book-data"
 import { saveLikedBooks, getLikedBooks } from "@/lib/storage"
+import { getMixedRecommendations } from "@/lib/books-api"
 import { Heart, X, RotateCcw, Settings, Library, BookOpen } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useGamification } from "./gamification-provider"
@@ -16,16 +17,31 @@ interface SwipeInterfaceProps {
 }
 
 function filterBooks(books: Book[], preferences: UserPreferences): Book[] {
-  return books.filter(book => {
-    // Filter by genre preferences
+  // If no books, return empty
+  if (books.length === 0) return []
+  
+  const filtered = books.filter(book => {
+    // Filter by genre preferences (EXACT match required)
     const hasMatchingGenre = preferences.favoriteGenres.length === 0 || 
-      book.genre.some(genre => preferences.favoriteGenres.includes(genre))
+      book.genre.some(bookGenre => 
+        preferences.favoriteGenres.some(prefGenre => {
+          const match = bookGenre.toLowerCase().trim() === prefGenre.toLowerCase().trim()
+          if (match) {
+            console.log(`✓ Genre match: "${bookGenre}" === "${prefGenre}" for book: ${book.title}`)
+          }
+          return match
+        })
+      )
     
-    // Filter by mood preferences
+    // Filter by mood preferences (EXACT match required)
     const hasMatchingMood = preferences.currentMood.length === 0 ||
-      book.mood.some(mood => preferences.currentMood.includes(mood))
+      book.mood.some(bookMood => 
+        preferences.currentMood.some(prefMood => 
+          bookMood.toLowerCase().trim() === prefMood.toLowerCase().trim()
+        )
+      )
     
-    // Filter by length preference
+    // Filter by length preference (strict)
     let matchesLength = true
     if (preferences.preferredLength !== "No preference") {
       switch (preferences.preferredLength) {
@@ -44,8 +60,17 @@ function filterBooks(books: Book[], preferences: UserPreferences): Book[] {
       }
     }
     
-    return hasMatchingGenre && hasMatchingMood && matchesLength
+    const passes = (hasMatchingGenre || hasMatchingMood) && matchesLength
+    
+    if (!passes) {
+      console.log(`✗ Filtered out: ${book.title} - Genre: ${book.genre.join(', ')} - Mood: ${book.mood.join(', ')} - Pages: ${book.pages}`)
+    }
+    
+    return passes
   })
+  
+  console.log(`Filter result: ${filtered.length}/${books.length} books passed`)
+  return filtered
 }
 
 export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeInterfaceProps) {
@@ -53,13 +78,56 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   const [currentIndex, setCurrentIndex] = useState(0)
   const [likedBooks, setLikedBooks] = useState<Book[]>([])
   const [passedBooks, setPassedBooks] = useState<Book[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const { triggerActivity } = useGamification()
 
   useEffect(() => {
-    const books = filterBooks(sampleBooks, preferences)
-    setFilteredBooks(books)
-    setCurrentIndex(0)
-    setLikedBooks(getLikedBooks())
+    async function loadBooks() {
+      setIsLoading(true)
+      try {
+        // Fetch books from Google Books API
+        console.log('Fetching books from Google Books API...')
+        console.log('User preferences:', preferences)
+        
+        const books = await getMixedRecommendations(50)
+        console.log(`Fetched ${books.length} books from API`)
+        
+        // Debug: Show first few books and their genres
+        console.log('Sample books with genres:', books.slice(0, 3).map(b => ({
+          title: b.title,
+          genre: b.genre
+        })))
+        
+        // Apply filters
+        const filtered = filterBooks(books, preferences)
+        console.log(`After filtering: ${filtered.length} books match preferences`)
+        
+        // Debug: Show what got filtered out
+        if (filtered.length < books.length) {
+          console.log(`Filtered out ${books.length - filtered.length} books`)
+        }
+        
+        // If filtering is too strict and we have no books, show error
+        if (filtered.length === 0 && books.length > 0) {
+          console.error('ERROR: No books matched your preferences!')
+          alert('No books match your preferences. Try selecting different genres or adjusting your filters.')
+          setFilteredBooks([])
+        } else {
+          setFilteredBooks(filtered)
+        }
+        
+        setCurrentIndex(0)
+        setLikedBooks(getLikedBooks())
+      } catch (error) {
+        console.error('Error loading books:', error)
+        alert('Failed to load books. Please check your internet connection and API key.')
+        setFilteredBooks([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    loadBooks()
   }, [preferences])
 
   const handleSwipe = (direction: "left" | "right") => {
@@ -86,6 +154,22 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   const currentBook = filteredBooks[currentIndex]
   const nextBook = filteredBooks[currentIndex + 1]
   const hasMoreBooks = currentIndex < filteredBooks.length
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"
+          />
+          <p className="text-lg font-semibold text-gray-700">Loading amazing books for you...</p>
+        </div>
+      </div>
+    )
+  }
 
   if (filteredBooks.length === 0) {
     return (
