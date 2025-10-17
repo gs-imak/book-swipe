@@ -55,8 +55,8 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNav
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
       >
-        <div className="max-w-md mx-auto px-2 py-2">
-          <div className="flex items-center justify-around">
+        <div className="max-w-md mx-auto px-4 py-2">
+          <div className="flex items-center justify-center gap-4">
             {navItems.map((item) => {
               const Icon = item.icon
               const isActive = currentView === item.id
@@ -65,7 +65,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNav
                 <motion.button
                   key={item.id}
                   onClick={() => onNavigate(item.id)}
-                  className={`relative flex flex-col items-center justify-center gap-1 py-2 px-4 rounded-2xl transition-all duration-300 min-w-[70px] touch-manipulation tap-target ${
+                  className={`relative flex flex-col items-center justify-center gap-1 py-2 px-3 rounded-2xl transition-all duration-300 flex-1 max-w-[100px] touch-manipulation tap-target ${
                     isActive ? item.bgColor : "hover:bg-gray-50"
                   }`}
                   whileTap={{ scale: 0.95 }}
@@ -92,8 +92,8 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNav
                       }`}
                     >
                       <Icon
-                        className={`w-5 h-5 ${
-                          isActive ? "text-white" : "text-gray-600"
+                        className={`w-6 h-6 ${
+                          isActive ? "text-white drop-shadow-sm" : "text-gray-500"
                         }`}
                       />
                     </motion.div>
@@ -123,9 +123,9 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNav
 
                   {/* Label */}
                   <span
-                    className={`text-[10px] font-semibold transition-colors ${
+                    className={`text-[10px] font-semibold transition-colors text-center ${
                       isActive
-                        ? "bg-gradient-to-r bg-clip-text text-transparent " + item.color
+                        ? "text-purple-600"
                         : "text-gray-600"
                     }`}
                   >
