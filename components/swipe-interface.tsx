@@ -104,7 +104,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
           />
         </div>
 
-        <div className="relative z-10 min-h-screen flex items-center justify-center p-6">
+        <div className="relative z-10 min-h-screen flex items-start md:items-center justify-center p-6 pt-4 pb-24">
           <motion.div 
             className="text-center max-w-md bg-white/90 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/20"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -171,7 +171,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
           />
         </div>
 
-        <div className="relative z-10 min-h-screen flex items-center justify-center p-6">
+        <div className="relative z-10 min-h-screen flex items-start md:items-center justify-center p-6 pt-4 pb-24">
           <motion.div 
             className="text-center max-w-lg bg-white/90 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/20"
             initial={{ opacity: 0, scale: 0.9 }}

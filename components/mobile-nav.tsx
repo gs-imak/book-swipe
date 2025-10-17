@@ -101,17 +101,6 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNav
                         {likedCount > 99 ? "99" : likedCount}
                       </motion.div>
                     )}
-
-                    {/* Active dot indicator */}
-                    {isActive && (
-                      <motion.div
-                        layoutId="activeDot"
-                        className={`absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-gradient-to-r ${item.color} rounded-full shadow-lg`}
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                      />
-                    )}
                   </div>
 
                   {/* Label */}
