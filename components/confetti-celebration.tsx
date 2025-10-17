@@ -13,6 +13,14 @@ interface ConfettiPiece {
   velocity: { x: number; y: number }
 }
 
+interface FireworkParticle {
+  id: string
+  x: number
+  y: number
+  angle: number
+  color: string
+}
+
 interface ConfettiCelebrationProps {
   isActive: boolean
   duration?: number
@@ -117,12 +125,11 @@ export function FireworksCelebration({
   isActive: boolean; 
   onComplete?: () => void 
 }) {
-  const [fireworks, setFireworks] = useState<any[]>([])
+  const [fireworks, setFireworks] = useState<FireworkParticle[]>([])
 
   useEffect(() => {
     if (!isActive) return
 
-    const fireworksData = []
     const width = window.innerWidth
     const height = window.innerHeight
 
@@ -132,7 +139,7 @@ export function FireworksCelebration({
         const x = Math.random() * width
         const y = Math.random() * (height / 2) + height / 4
 
-        const particles = []
+        const particles: FireworkParticle[] = []
         for (let j = 0; j < 20; j++) {
           const angle = (j / 20) * Math.PI * 2
           particles.push({

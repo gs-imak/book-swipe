@@ -16,8 +16,7 @@ export function BookNotes({ bookId, compact = false }: BookNotesProps) {
   const [notes, setNotes] = useState<BookNote[]>([])
   const [isAdding, setIsAdding] = useState(false)
   const [editingNote, setEditingNote] = useState<string | null>(null)
-  const [newNote, setNewNote] = useState({ content: "", type: "note" as const, page: "" })
-  
+  const [newNote, setNewNote] = useState<{ content: string; type: 'highlight' | 'note' | 'quote'; page: string }>({ content: "", type: "note", page: "" })  
   const { triggerActivity } = useGamification()
 
   useEffect(() => {
