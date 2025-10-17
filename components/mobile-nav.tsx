@@ -74,9 +74,10 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNav
                   {/* Active Indicator */}
                   {isActive && (
                     <motion.div
-                      layoutId="activeTab"
                       className={`absolute inset-0 bg-gradient-to-r ${item.color} opacity-10 rounded-2xl`}
-                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 0.1 }}
+                      exit={{ opacity: 0 }}
                     />
                   )}
 
