@@ -235,34 +235,16 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
 
         {likedBooks.length === 0 ? (
           <div className="text-center py-16">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", delay: 0.2 }}
-            >
+            <div>
               <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            </motion.div>
-            <motion.h2 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-2xl font-bold text-gray-600 mb-2"
-            >
+            </div>
+            <h2 className="text-2xl font-bold text-gray-600 mb-2">
               Welcome to Your Library!
-            </motion.h2>
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="text-gray-500 mb-8 max-w-md mx-auto"
-            >
+            </h2>
+            <p className="text-gray-500 mb-8 max-w-md mx-auto">
               Your personal reading collection is empty. Start discovering books tailored to your taste and build your perfect library.
-            </motion.p>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
+            </p>
+            <div>
               <Button 
                 onClick={onStartDiscovery} 
                 className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium rounded-xl transition-all duration-300"
@@ -270,7 +252,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                 <Sparkles className="w-5 h-5 mr-2" />
                 Start Discovering Books
               </Button>
-            </motion.div>
+            </div>
           </div>
         ) : (
           <>

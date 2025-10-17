@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion"
 import { Home, Heart, Trophy, Sparkles, User } from "lucide-react"
-import { useState, useEffect } from "react"
 
 interface MobileNavProps {
   currentView: "dashboard" | "swipe" | "achievements"
@@ -11,14 +10,6 @@ interface MobileNavProps {
 }
 
 export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNavProps) {
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  if (!mounted) return null
-
   const navItems = [
     {
       id: "dashboard" as const,
