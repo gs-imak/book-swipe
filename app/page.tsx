@@ -97,9 +97,9 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
     return <LoginScreen onLogin={handleLogin} />
   }
 
-  // Questionnaire has no mobile nav
+  // Questionnaire with back button
   if (currentView === "questionnaire") {
-    return <Questionnaire onComplete={handleQuestionnaireComplete} />
+    return <Questionnaire onComplete={handleQuestionnaireComplete} onBack={() => setCurrentView("dashboard")} />
   }
 
   return (

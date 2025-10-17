@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { UserPreferences } from "@/lib/book-data"
 import { motion, AnimatePresence } from "framer-motion"
+import { ArrowLeft } from "lucide-react"
 
 interface QuestionnaireProps {
   onComplete: (preferences: UserPreferences) => void
+  onBack?: () => void
 }
 
 const questions = [
@@ -65,7 +67,7 @@ const questions = [
   }
 ]
 
-export function Questionnaire({ onComplete }: QuestionnaireProps) {
+export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string[]>>({})
 
@@ -109,14 +111,30 @@ export function Questionnaire({ onComplete }: QuestionnaireProps) {
   const question = questions[currentQuestion]
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6">
-      <div className="w-full max-w-2xl mx-auto">
-        <div className="mb-6 sm:mb-8">
-          <Progress value={progress} className="h-2.5 sm:h-2" />
-          <p className="text-sm sm:text-base text-muted-foreground mt-3 sm:mt-2 font-medium">
-            Question {currentQuestion + 1} of {questions.length}
-          </p>
+    <div className="min-h-screen flex flex-col p-4 sm:p-6">
+      {/* Back Button - Only show if onBack is provided */}
+      {onBack && (
+        <div className="w-full max-w-2xl mx-auto mb-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className="tap-target touch-manipulation"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Library
+          </Button>
         </div>
+      )}
+
+      <div className="flex-1 flex items-center justify-center">
+        <div className="w-full max-w-2xl mx-auto">
+          <div className="mb-6 sm:mb-8">
+            <Progress value={progress} className="h-2.5 sm:h-2" />
+            <p className="text-sm sm:text-base text-muted-foreground mt-3 sm:mt-2 font-medium">
+              Question {currentQuestion + 1} of {questions.length}
+            </p>
+          </div>
 
         <AnimatePresence mode="wait">
           <motion.div
@@ -165,6 +183,7 @@ export function Questionnaire({ onComplete }: QuestionnaireProps) {
             </div>
           </motion.div>
         </AnimatePresence>
+        </div>
       </div>
     </div>
   )

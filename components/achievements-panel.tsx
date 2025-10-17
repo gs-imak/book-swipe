@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Trophy, Star, Target, TrendingUp, Award, Lock, Calendar, Zap } from "lucide-react"
+import { Trophy, Star, Target, TrendingUp, Award, Lock, Calendar, Zap, Home, BarChart3, X } from "lucide-react"
 import { Button } from "./ui/button"
 import { Progress } from "./ui/progress"
 import { getUserStats, getUserAchievements, calculateLevel, getPointsForNextLevel } from "@/lib/storage"
@@ -50,90 +50,93 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+        className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-4xl w-full max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
+        <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-4 sm:p-6 text-white flex-shrink-0">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                <Trophy className="w-8 h-8 text-white" />
+            <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                <Trophy className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <div>
-                <h2 className="text-2xl font-bold">Reading Journey</h2>
-                <p className="text-white/90">Level {currentLevel} • {unlockedCount}/{totalAchievements} achievements</p>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg sm:text-2xl font-bold truncate">Reading Journey</h2>
+                <p className="text-xs sm:text-base text-white/90">Level {currentLevel} • {unlockedCount}/{totalAchievements}</p>
               </div>
             </div>
             <Button
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="text-white hover:bg-white/20"
+              className="text-white hover:bg-white/20 flex-shrink-0 tap-target touch-manipulation"
             >
-              ✕
+              <X className="w-5 h-5" />
             </Button>
           </div>
 
           {/* Level Progress */}
-          <div className="mt-6">
+          <div className="mt-4 sm:mt-6">
             <div className="flex items-center justify-between mb-2">
-              <span className="font-medium">Level {currentLevel}</span>
-              <span className="text-sm text-white/80">{currentPoints} / {pointsForNext} XP</span>
+              <span className="text-sm sm:text-base font-medium">Level {currentLevel}</span>
+              <span className="text-xs sm:text-sm text-white/80">{currentPoints} / {pointsForNext} XP</span>
             </div>
-            <div className="w-full bg-white/20 rounded-full h-3">
+            <div className="w-full bg-white/20 rounded-full h-2 sm:h-3">
               <motion.div
-                className="bg-white rounded-full h-3"
+                className="bg-white rounded-full h-2 sm:h-3"
                 style={{ width: `${levelProgress}%` }}
                 initial={{ width: 0 }}
                 animate={{ width: `${levelProgress}%` }}
                 transition={{ duration: 1, ease: "easeOut" }}
               />
             </div>
-            <p className="text-sm text-white/80 mt-1">
-              {pointsToNext > 0 ? `${pointsToNext} XP to level ${currentLevel + 1}` : "Max level reached!"}
+            <p className="text-xs sm:text-sm text-white/80 mt-1">
+              {pointsToNext > 0 ? `${pointsToNext} XP to level ${currentLevel + 1}` : "Max level!"}
             </p>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="border-b">
-          <div className="flex">
+        <div className="border-b flex-shrink-0">
+          <div className="flex justify-around sm:justify-start">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+              className={`flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium border-b-2 transition-colors tap-target touch-manipulation ${
                 activeTab === 'overview'
                   ? 'border-purple-500 text-purple-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              Overview
+              <Home className="w-5 h-5 sm:w-4 sm:h-4" />
+              <span className="sm:inline">Overview</span>
             </button>
             <button
               onClick={() => setActiveTab('achievements')}
-              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+              className={`flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium border-b-2 transition-colors tap-target touch-manipulation ${
                 activeTab === 'achievements'
                   ? 'border-purple-500 text-purple-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              Achievements
+              <Trophy className="w-5 h-5 sm:w-4 sm:h-4" />
+              <span className="sm:inline">Achievements</span>
             </button>
             <button
               onClick={() => setActiveTab('stats')}
-              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+              className={`flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium border-b-2 transition-colors tap-target touch-manipulation ${
                 activeTab === 'stats'
                   ? 'border-purple-500 text-purple-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              Statistics
+              <BarChart3 className="w-5 h-5 sm:w-4 sm:h-4" />
+              <span className="sm:inline">Statistics</span>
             </button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[60vh]">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
           {activeTab === 'overview' && (
             <OverviewTab 
               stats={stats} 
@@ -149,6 +152,9 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
           {activeTab === 'stats' && (
             <StatsTab stats={stats} />
           )}
+          
+          {/* Bottom padding for mobile safe area */}
+          <div className="h-4 sm:h-0" />
         </div>
       </motion.div>
     </motion.div>
@@ -162,53 +168,53 @@ function OverviewTab({ stats, achievements, completionPercentage }: any) {
     .slice(0, 3)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl">
-          <div className="flex items-center gap-3">
-            <Star className="w-8 h-8 text-blue-600" />
-            <div>
-              <p className="text-2xl font-bold text-blue-900">{stats.totalPoints}</p>
-              <p className="text-sm text-blue-600">Total Points</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-3 sm:p-4 rounded-xl">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Star className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-lg sm:text-2xl font-bold text-blue-900">{stats.totalPoints}</p>
+              <p className="text-xs sm:text-sm text-blue-600 truncate">Points</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl">
-          <div className="flex items-center gap-3">
-            <TrendingUp className="w-8 h-8 text-green-600" />
-            <div>
-              <p className="text-2xl font-bold text-green-900">{stats.currentStreak}</p>
-              <p className="text-sm text-green-600">Day Streak</p>
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-3 sm:p-4 rounded-xl">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-lg sm:text-2xl font-bold text-green-900">{stats.currentStreak}</p>
+              <p className="text-xs sm:text-sm text-green-600 truncate">Streak</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl">
-          <div className="flex items-center gap-3">
-            <Trophy className="w-8 h-8 text-purple-600" />
-            <div>
-              <p className="text-2xl font-bold text-purple-900">{achievements.filter((a: any) => a.unlockedAt).length}</p>
-              <p className="text-sm text-purple-600">Achievements</p>
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-3 sm:p-4 rounded-xl">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Trophy className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-lg sm:text-2xl font-bold text-purple-900">{achievements.filter((a: any) => a.unlockedAt).length}</p>
+              <p className="text-xs sm:text-sm text-purple-600 truncate">Unlocked</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-xl">
-          <div className="flex items-center gap-3">
-            <Target className="w-8 h-8 text-orange-600" />
-            <div>
-              <p className="text-2xl font-bold text-orange-900">{stats.totalBooksRead}</p>
-              <p className="text-sm text-orange-600">Books Read</p>
+        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-3 sm:p-4 rounded-xl">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Target className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-lg sm:text-2xl font-bold text-orange-900">{stats.totalBooksRead}</p>
+              <p className="text-xs sm:text-sm text-orange-600 truncate">Books</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Achievement Progress */}
-      <div className="bg-gray-50 rounded-xl p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Achievement Progress</h3>
+      <div className="bg-gray-50 rounded-xl p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Achievement Progress</h3>
         <div className="flex items-center gap-4">
           <div className="flex-1">
             <Progress value={completionPercentage} className="h-3" />
@@ -225,7 +231,7 @@ function OverviewTab({ stats, achievements, completionPercentage }: any) {
       {/* Recent Achievements */}
       {recentAchievements.length > 0 && (
         <div>
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Recent Achievements</h3>
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Recent Achievements</h3>
           <div className="space-y-3">
             {recentAchievements.map((achievement: any) => (
               <div key={achievement.id} className="flex items-center gap-4 p-4 bg-yellow-50 rounded-xl border-l-4 border-yellow-400">
@@ -256,10 +262,10 @@ function AchievementsTab({ categorizedAchievements }: any) {
   ]
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {categories.map((category) => (
         <div key={category.key}>
-          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
             <span>{category.icon}</span>
             {category.name}
           </h3>
@@ -352,7 +358,7 @@ function StatsTab({ stats }: { stats: any }) {
   ]
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
       {statItems.map((item, index) => (
         <motion.div
           key={item.label}
