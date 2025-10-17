@@ -177,31 +177,34 @@ export function SmartRecommendations({ onBookLike, onStartReading }: SmartRecomm
       {/* Smart Recommendations based on liked books */}
       {recommendations.length > 0 && !selectedMood && !selectedTime && (
         <motion.div 
-          className="bg-white/90 backdrop-blur-xl rounded-3xl p-6 shadow-lg border border-white/20"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl">
-              <Sparkles className="w-5 h-5 text-white" />
+          <div className="flex items-center justify-between mb-3 px-1">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-600" />
+              <h3 className="text-base font-bold text-gray-900">Recommended for You</h3>
             </div>
-            <h3 className="text-lg font-bold text-gray-800">Recommended for You</h3>
             <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
               Based on your likes
             </span>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            {recommendations.slice(0, 4).map((book) => (
-              <SmartRecommendationCard 
-                key={book.id} 
-                book={book} 
-                onLike={handleLikeBook}
-                onStartReading={onStartReading}
-                isLiked={likedBooks.some(liked => liked.id === book.id)}
-              />
-            ))}
+          {/* Horizontal Scroll for Mobile */}
+          <div className="overflow-x-auto hide-scrollbar -mx-4 px-4">
+            <div className="flex gap-3 pb-2">
+              {recommendations.slice(0, 6).map((book, index) => (
+                <SmartRecommendationCard 
+                  key={book.id} 
+                  book={book} 
+                  onLike={handleLikeBook}
+                  onStartReading={onStartReading}
+                  isLiked={likedBooks.some(liked => liked.id === book.id)}
+                  index={index}
+                />
+              ))}
+            </div>
           </div>
         </motion.div>
       )}
@@ -241,74 +244,66 @@ export function SmartRecommendations({ onBookLike, onStartReading }: SmartRecomm
   )
 }
 
-// Smart recommendation card with reasons
+// Smart recommendation card with reasons - Mobile-first design
 function SmartRecommendationCard({ 
   book, 
   onLike, 
   onStartReading, 
-  isLiked 
+  isLiked,
+  index
 }: { 
   book: RecommendedBook
   onLike: (book: Book) => void
   onStartReading?: (book: Book) => void
   isLiked: boolean
+  index?: number
 }) {
   return (
     <motion.div
-      className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors"
-      whileHover={{ scale: 1.02 }}
+      className="flex-shrink-0 w-[160px] sm:w-[180px]"
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: (index || 0) * 0.05 }}
     >
-      <div className="flex gap-3">
-        <div className="relative w-12 h-16 flex-shrink-0">
+      <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+        {/* Book Cover */}
+        <div className="relative w-full aspect-[2/3] bg-gradient-to-br from-purple-100 to-pink-100">
           <Image
             src={book.cover}
             alt={book.title}
             fill
-            className="object-cover rounded"
-            sizes="48px"
+            className="object-cover"
+            sizes="180px"
           />
+          {/* Rating Badge */}
+          <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1 shadow-sm">
+            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+            <span className="text-xs font-semibold">{book.rating}</span>
+          </div>
         </div>
         
-        <div className="flex-1 min-w-0">
-          <h4 className="font-semibold text-sm line-clamp-1 mb-1">{book.title}</h4>
-          <p className="text-xs text-gray-600 mb-2">{book.author}</p>
+        {/* Book Info */}
+        <div className="p-3">
+          <h4 className="font-semibold text-sm line-clamp-1 mb-0.5">{book.title}</h4>
+          <p className="text-xs text-gray-500 mb-2">{book.author}</p>
           
-          <div className="flex items-center gap-1 mb-2">
-            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-            <span className="text-xs">{book.rating}</span>
-            <span className="text-xs text-gray-500">• {book.pages}p</span>
-          </div>
-
           {book.reasons.length > 0 && (
-            <div className="mb-2">
-              <p className="text-xs text-purple-600 font-medium">
-                {book.reasons[0].description}
-              </p>
-            </div>
+            <p className="text-xs text-purple-600 mb-2 line-clamp-2">
+              {book.reasons[0].description}
+            </p>
           )}
           
-          <div className="flex gap-1">
-            <Button
-              size="sm"
-              variant={isLiked ? "default" : "outline"}
-              onClick={() => onLike(book)}
-              disabled={isLiked}
-              className="h-6 px-2 text-xs flex-1"
-            >
-              <Heart className={`w-2 h-2 mr-1 ${isLiked ? 'fill-current' : ''}`} />
-              {isLiked ? 'Liked' : 'Like'}
-            </Button>
-            {onStartReading && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onStartReading(book)}
-                className="h-6 px-2 text-xs"
-              >
-                <BookOpen className="w-2 h-2" />
-              </Button>
-            )}
-          </div>
+          {/* Like Button */}
+          <Button
+            size="sm"
+            variant={isLiked ? "default" : "outline"}
+            onClick={() => onLike(book)}
+            disabled={isLiked}
+            className="w-full h-8 text-xs"
+          >
+            <Heart className={`w-3 h-3 mr-1 ${isLiked ? 'fill-current' : ''}`} />
+            {isLiked ? 'Liked' : 'Like'}
+          </Button>
         </div>
       </div>
     </motion.div>

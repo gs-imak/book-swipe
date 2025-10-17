@@ -11,7 +11,7 @@ import { BookDetailModal } from "./book-detail-modal"
 import { StarRating } from "./star-rating"
 import { getBookReview, getUserStats } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
-import { ArrowLeft, BookOpen, Star, Clock, Trash2, ExternalLink, Filter, Settings, Sparkles, Heart, Trophy, TrendingUp, Target, MessageSquare } from "lucide-react"
+import { ArrowLeft, BookOpen, Star, Clock, Trash2, ExternalLink, Filter, Settings, Sparkles, Heart, Trophy, TrendingUp, Target, MessageSquare, BarChart3 } from "lucide-react"
 import { motion } from "framer-motion"
 import Image from "next/image"
 
@@ -29,6 +29,9 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   const [selectedBook, setSelectedBook] = useState<Book | null>(null)
   const [isBookModalOpen, setIsBookModalOpen] = useState(false)
   const [userStats, setUserStats] = useState(getUserStats())
+  const [showStats, setShowStats] = useState(false)
+  const [showRecommendations, setShowRecommendations] = useState(true)
+  const [showProgress, setShowProgress] = useState(true)
   
   const { triggerActivity, showAchievementsPanel } = useGamification()
 
@@ -138,64 +141,37 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
         </div>
       </div>
 
-      {/* Gamification Stats Header */}
+      {/* Gamification Stats Header - Mobile Optimized */}
       <div className="bg-gradient-to-r from-purple-100 to-pink-100 border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                  <Trophy className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-lg font-bold text-gray-900">Level {userStats.level}</p>
-                  <p className="text-sm text-gray-600">{userStats.totalPoints} XP</p>
-                </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              
-              <div className="hidden sm:flex items-center gap-6">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-green-600" />
-                  <div>
-                    <p className="font-semibold text-gray-900">{userStats.currentStreak}</p>
-                    <p className="text-xs text-gray-500">Day streak</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Target className="w-5 h-5 text-blue-600" />
-                  <div>
-                    <p className="font-semibold text-gray-900">{userStats.totalBooksRead}</p>
-                    <p className="text-xs text-gray-500">Books read</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Star className="w-5 h-5 text-yellow-600" />
-                  <div>
-                    <p className="font-semibold text-gray-900">{userStats.totalReviews}</p>
-                    <p className="text-xs text-gray-500">Reviews</p>
-                  </div>
-                </div>
+              <div>
+                <p className="text-base sm:text-lg font-bold text-gray-900">Level {userStats.level}</p>
+                <p className="text-xs sm:text-sm text-gray-600">{userStats.totalPoints} XP</p>
               </div>
             </div>
             
             <Button
               variant="outline"
+              size="sm"
               onClick={showAchievementsPanel}
-              className="bg-white/50 hover:bg-white/80 border-purple-200"
+              className="bg-white/50 hover:bg-white/80 border-purple-200 flex-shrink-0"
             >
-              <Trophy className="w-4 h-4 mr-2 text-purple-600" />
-              Achievements
+              <Trophy className="w-4 h-4 text-purple-600" />
+              <span className="hidden sm:inline ml-2">Achievements</span>
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
         {/* Discover More Books Button - Always at top when user has books */}
         {likedBooks.length > 0 && (
-          <div className="mb-6 sm:mb-8 text-center">
+          <div className="mb-4 sm:mb-6 text-center">
             <Button 
               onClick={onStartDiscovery} 
               className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3.5 text-base sm:text-base bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium rounded-xl transition-all duration-300 shadow-lg tap-target touch-manipulation"
@@ -208,7 +184,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
 
         {/* Smart Recommendations - Only show if user has liked books */}
         {likedBooks.length > 0 && (
-          <div className="mb-8">
+          <div className="mb-4 sm:mb-6">
             <SmartRecommendations 
               onBookLike={(book) => {
                 const updatedBooks = [...likedBooks, book]
@@ -221,7 +197,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
 
         {/* Reading Progress Tracker - Only show if user has liked books */}
         {likedBooks.length > 0 && (
-          <div className="mb-8">
+          <div className="mb-4 sm:mb-6">
             <ReadingProgressTracker onStartReading={onStartDiscovery} />
           </div>
         )}
@@ -256,75 +232,93 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
           </div>
         ) : (
           <>
-            {/* Stats Section */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-              <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm">
-                <div className="text-xl sm:text-2xl font-bold text-purple-600">{stats.totalBooks}</div>
-                <div className="text-xs sm:text-sm text-gray-600">Books</div>
-              </div>
-              <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm">
-                <div className="text-xl sm:text-2xl font-bold text-green-600">{stats.totalPages.toLocaleString()}</div>
-                <div className="text-xs sm:text-sm text-gray-600">Pages</div>
-              </div>
-              <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm">
-                <div className="text-xl sm:text-2xl font-bold text-yellow-600 flex items-center gap-1">
-                  <Star className="w-4 sm:w-5 h-4 sm:h-5 fill-current" />
-                  {stats.averageRating}
+            {/* Stats Section - Collapsible on mobile */}
+            <div className="mb-4 sm:mb-6">
+              <button
+                onClick={() => setShowStats(!showStats)}
+                className="md:hidden w-full flex items-center justify-between bg-white rounded-xl p-4 shadow-sm mb-3 tap-target"
+              >
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-purple-600" />
+                  <span className="font-semibold text-gray-900">Library Stats</span>
                 </div>
-                <div className="text-xs sm:text-sm text-gray-600">Rating</div>
-              </div>
-              <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm">
-                <div className="text-sm sm:text-2xl font-bold text-blue-600 truncate">{stats.favoriteGenre}</div>
-                <div className="text-xs sm:text-sm text-gray-600">Genre</div>
-              </div>
+                <motion.div
+                  animate={{ rotate: showStats ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </motion.div>
+              </button>
+              
+              <motion.div
+                initial={false}
+                animate={{ height: showStats ? "auto" : 0, opacity: showStats ? 1 : 0 }}
+                transition={{ duration: 0.3 }}
+                className="md:!h-auto md:!opacity-100 overflow-hidden"
+              >
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-3 md:mb-0">
+                  <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-sm">
+                    <div className="text-xl sm:text-2xl font-bold text-purple-600">{stats.totalBooks}</div>
+                    <div className="text-xs sm:text-sm text-gray-600">Books</div>
+                  </div>
+                  <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-sm">
+                    <div className="text-xl sm:text-2xl font-bold text-green-600">{stats.totalPages.toLocaleString()}</div>
+                    <div className="text-xs sm:text-sm text-gray-600">Pages</div>
+                  </div>
+                  <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-sm">
+                    <div className="text-xl sm:text-2xl font-bold text-yellow-600 flex items-center gap-1">
+                      <Star className="w-4 sm:w-5 h-4 sm:h-5 fill-current" />
+                      {stats.averageRating}
+                    </div>
+                    <div className="text-xs sm:text-sm text-gray-600">Rating</div>
+                  </div>
+                  <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-sm">
+                    <div className="text-sm sm:text-2xl font-bold text-blue-600 truncate">{stats.favoriteGenre}</div>
+                    <div className="text-xs sm:text-sm text-gray-600">Genre</div>
+                  </div>
+                </div>
+              </motion.div>
             </div>
 
-            {/* Enhanced Filters and Sort */}
+            {/* Enhanced Filters and Sort - Simplified for mobile */}
             <motion.div 
-              className="bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 mb-6 sm:mb-8 shadow-lg border border-white/20"
+              className="bg-white/90 backdrop-blur-xl rounded-xl sm:rounded-2xl p-3 sm:p-6 mb-4 sm:mb-6 shadow-lg border border-white/20"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-6">
                 {/* Filter Section */}
-                <div className="flex items-center gap-3 flex-1">
-                  <div className="p-2 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl">
-                    <Filter className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-3 flex-1">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold text-gray-700 whitespace-nowrap">Filter by genre:</span>
-                      <div className="relative">
-                        <select 
-                          value={filter} 
-                          onChange={(e) => setFilter(e.target.value)}
-                          className="appearance-none bg-white/80 backdrop-blur-sm border border-purple-200 rounded-xl px-4 py-2.5 pr-10 text-sm font-medium text-gray-700 hover:border-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-300 shadow-sm"
-                        >
-                          <option value="all">All Genres</option>
-                          {genres.map(genre => (
-                            <option key={genre} value={genre}>{genre}</option>
-                          ))}
-                        </select>
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                          <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </div>
-                      </div>
+                <div className="flex items-center gap-2 flex-1">
+                  <Filter className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                  <div className="relative flex-1">
+                    <select 
+                      value={filter} 
+                      onChange={(e) => setFilter(e.target.value)}
+                      className="appearance-none w-full bg-white border border-purple-200 rounded-lg px-3 py-2 pr-8 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all"
+                    >
+                      <option value="all">All Genres</option>
+                      {genres.map(genre => (
+                        <option key={genre} value={genre}>{genre}</option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                      <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
                     </div>
                   </div>
                 </div>
 
                 {/* Sort Section */}
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl">
-                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
-                    </svg>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-semibold text-gray-700 whitespace-nowrap">Sort by:</span>
+                <div className="flex items-center gap-2 flex-1">
+                  <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                  </svg>
+                  <div className="relative flex-1">
+                    <span className="sr-only">Sort by:</span>
                     <div className="relative">
                       <select 
                         value={sortBy} 
