@@ -46,16 +46,17 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = false }: 
       dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
-      <div className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden h-full max-w-sm mx-auto border border-white/20">
-        <div className="relative h-64 sm:h-80 md:h-96">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden h-full max-w-sm mx-auto">
+        <div className="relative h-72 sm:h-80 md:h-96">
           <Image
             src={book.cover}
             alt={book.title}
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            priority={isTop}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
           
           {/* Genre tags */}
           <motion.div 
@@ -117,7 +118,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = false }: 
         </div>
 
         <motion.div 
-          className="p-3 sm:p-4 md:p-6 space-y-2 sm:space-y-3 md:space-y-4"
+          className="p-4 sm:p-5 md:p-6 space-y-3 sm:space-y-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -127,30 +128,31 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = false }: 
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 line-clamp-2 mb-1 leading-tight">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 line-clamp-2 mb-1.5 leading-tight">
               {book.title}
             </h3>
-            <p className="text-gray-600 font-medium text-sm sm:text-base">{book.author}</p>
+            <p className="text-gray-500 text-sm sm:text-base">{book.author}</p>
           </motion.div>
 
           <motion.div 
-            className="flex items-center gap-2 sm:gap-3 md:gap-6 text-xs sm:text-sm text-gray-600"
+            className="flex items-center gap-3 text-xs sm:text-sm"
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
           >
-            <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 bg-gray-50 px-2 sm:px-2.5 md:px-3 py-1 sm:py-1.5 rounded-full">
-              <BookOpen className="w-3 sm:w-3.5 md:w-4 h-3 sm:h-3.5 md:h-4 text-purple-500" />
-              <span className="font-medium text-xs sm:text-sm">{book.pages}p</span>
+            <div className="flex items-center gap-1.5 text-gray-600">
+              <BookOpen className="w-4 h-4 text-purple-500" />
+              <span className="font-medium">{book.pages}p</span>
             </div>
-            <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 bg-gray-50 px-2 sm:px-2.5 md:px-3 py-1 sm:py-1.5 rounded-full">
-              <Clock className="w-3 sm:w-3.5 md:w-4 h-3 sm:h-3.5 md:h-4 text-green-500" />
-              <span className="font-medium text-xs sm:text-sm">{book.readingTime}</span>
+            <div className="w-1 h-1 rounded-full bg-gray-300" />
+            <div className="flex items-center gap-1.5 text-gray-600">
+              <Clock className="w-4 h-4 text-green-500" />
+              <span className="font-medium">{book.readingTime}</span>
             </div>
           </motion.div>
 
           <motion.p 
-            className="text-gray-700 text-xs sm:text-sm line-clamp-2 sm:line-clamp-3 leading-relaxed"
+            className="text-gray-600 text-sm leading-relaxed line-clamp-3"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
@@ -159,7 +161,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = false }: 
           </motion.p>
 
           <motion.div 
-            className="flex flex-wrap gap-1.5 sm:gap-2"
+            className="flex flex-wrap gap-2"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
@@ -170,7 +172,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = false }: 
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.8 + index * 0.1 }}
-                className="bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 text-[10px] sm:text-xs px-2 sm:px-3 py-1 sm:py-1.5 rounded-full font-medium border border-purple-200/50"
+                className="bg-purple-50 text-purple-700 text-xs px-3 py-1.5 rounded-full font-medium"
               >
                 {mood}
               </motion.span>
@@ -195,60 +197,6 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = false }: 
             </motion.div>
           )}
         </motion.div>
-
-        {/* Enhanced swipe indicators */}
-        <div className="absolute inset-0 pointer-events-none">
-          <motion.div
-            className="absolute top-1/2 left-6 transform -translate-y-1/2 bg-gradient-to-r from-green-400 to-emerald-500 text-white p-3 rounded-full opacity-0 shadow-xl border-2 border-white/30"
-            initial={{ opacity: 0, scale: 0.8, x: -20 }}
-            whileInView={{ 
-              opacity: [0, 1, 0],
-              scale: [0.8, 1.1, 1],
-              x: [-20, 0, 20]
-            }}
-            transition={{ 
-              duration: 2,
-              repeat: Infinity,
-              repeatDelay: 3,
-              ease: "easeInOut"
-            }}
-          >
-            <Heart className="w-6 h-6" />
-          </motion.div>
-          
-          <motion.div
-            className="absolute top-1/2 right-6 transform -translate-y-1/2 bg-gradient-to-r from-red-400 to-pink-500 text-white p-3 rounded-full opacity-0 shadow-xl border-2 border-white/30"
-            initial={{ opacity: 0, scale: 0.8, x: 20 }}
-            whileInView={{ 
-              opacity: [0, 1, 0],
-              scale: [0.8, 1.1, 1],
-              x: [20, 0, -20]
-            }}
-            transition={{ 
-              duration: 2,
-              repeat: Infinity,
-              repeatDelay: 3,
-              delay: 1,
-              ease: "easeInOut"
-            }}
-          >
-            <X className="w-6 h-6" />
-          </motion.div>
-
-          {/* Subtle shine effect */}
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-            animate={{
-              x: ["-100%", "100%"]
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              repeatDelay: 5,
-              ease: "easeInOut"
-            }}
-          />
-        </div>
       </div>
     </motion.div>
   )

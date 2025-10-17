@@ -31,7 +31,8 @@ export async function searchGoogleBooks(query: string, maxResults = 20): Promise
       return []
     }
     
-    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=${maxResults}&key=${apiKey}`
+    // Enhanced query with better filters for quality books with covers
+    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=${maxResults}&printType=books&orderBy=relevance&langRestrict=en&projection=full&key=${apiKey}`
     console.log('📚 Fetching:', query)
     
     const response = await fetch(url)
@@ -67,7 +68,8 @@ export async function searchGoogleBooks(query: string, maxResults = 20): Promise
 function transformGoogleBookToBook(googleBook: GoogleBook): Book | null {
   const { volumeInfo } = googleBook
   
-  if (!volumeInfo.title || !volumeInfo.authors?.[0]) {
+  // Filter out books without proper data or cover images
+  if (!volumeInfo.title || !volumeInfo.authors?.[0] || !volumeInfo.imageLinks) {
     return null
   }
   
@@ -134,11 +136,22 @@ function transformGoogleBookToBook(googleBook: GoogleBook): Book | null {
     
     if (!coverUrl) return 'https://via.placeholder.com/400x600?text=No+Cover'
     
-    // Ensure HTTPS and remove zoom parameter to get original size
-    return coverUrl
+    // Ensure HTTPS and optimize for best quality
+    let optimizedUrl = coverUrl
       .replace('http:', 'https:')
       .replace(/&edge=curl/g, '') // Remove curl edge effect
-      .replace(/zoom=\d+/g, 'zoom=1') // Get original size
+    
+    // If it's a Google Books image, try to get larger size
+    if (optimizedUrl.includes('books.google.com') || optimizedUrl.includes('books.googleusercontent.com')) {
+      // Replace zoom levels to get highest quality
+      optimizedUrl = optimizedUrl.replace(/zoom=\d+/g, 'zoom=0')
+      // If no zoom parameter exists, add it
+      if (!optimizedUrl.includes('zoom=')) {
+        optimizedUrl += optimizedUrl.includes('?') ? '&zoom=0' : '?zoom=0'
+      }
+    }
+    
+    return optimizedUrl
   }
   
   return {
@@ -182,14 +195,18 @@ export const bookSearchQueries = {
 // Function to get books by category - TAGS BOOKS WITH CORRECT GENRE
 export async function getBooksByCategory(category: string, count = 10): Promise<Book[]> {
   const query = bookSearchQueries[category as keyof typeof bookSearchQueries] || category
-  const books = await searchGoogleBooks(query, count)
+  // Request more books than needed since we filter out books without covers
+  const books = await searchGoogleBooks(query, Math.min(count * 2, 40))
   
   // CRITICAL: Tag each book with the genre we searched for
   // This overrides Google's generic categories with our specific genre
-  return books.map(book => ({
+  const taggedBooks = books.map(book => ({
     ...book,
     genre: [category] // Replace with the EXACT genre we searched for
   }))
+  
+  // Return only the requested count
+  return taggedBooks.slice(0, count)
 }
 
 // Function to get mixed recommendations

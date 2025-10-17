@@ -485,17 +485,6 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
               </motion.div>
             </div>
             
-            <div className="flex justify-center gap-8 sm:gap-12 text-xs sm:text-sm font-medium">
-              <span className="text-red-500 flex items-center gap-1.5 sm:gap-2">
-                <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-red-500 rounded-full"></div>
-                Pass
-              </span>
-              <span className="text-green-600 flex items-center gap-1.5 sm:gap-2">
-                <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-green-500 rounded-full"></div>
-                Like
-              </span>
-            </div>
-
             {/* Swipe hint */}
             <motion.div 
               initial={{ opacity: 0, y: 10 }}

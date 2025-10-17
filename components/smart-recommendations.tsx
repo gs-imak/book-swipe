@@ -5,14 +5,10 @@ import { Button } from "@/components/ui/button"
 import { Book } from "@/lib/book-data"
 import { addBookToReading, saveLikedBooks, getLikedBooks } from "@/lib/storage"
 import { 
-  getSmartRecommendations, 
-  getDiverseRecommendations, 
-  getBooksByMood, 
-  getBooksByTime,
   moodFilters, 
-  timeBasedSuggestions,
-  RecommendedBook 
+  timeBasedSuggestions
 } from "../lib/recommendations"
+import { getMixedRecommendations, getBooksByCategory } from "@/lib/books-api"
 import { Star, Clock, BookOpen, Heart, Sparkles, Zap, Brain, Coffee } from "lucide-react"
 import { motion } from "framer-motion"
 import Image from "next/image"
@@ -24,22 +20,45 @@ interface SmartRecommendationsProps {
 }
 
 export function SmartRecommendations({ onBookLike, onStartReading }: SmartRecommendationsProps) {
-  const [recommendations, setRecommendations] = useState<RecommendedBook[]>([])
+  const [recommendations, setRecommendations] = useState<Book[]>([])
   const [diverseBooks, setDiverseBooks] = useState<Book[]>([])
   const [selectedMood, setSelectedMood] = useState<string | null>(null)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([])
   const [likedBooks, setLikedBooks] = useState<Book[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const { triggerActivity } = useGamification()
 
   useEffect(() => {
-    const liked = getLikedBooks()
-    setLikedBooks(liked)
-    
-    if (liked.length > 0) {
-      setRecommendations(getSmartRecommendations(8))
-      setDiverseBooks(getDiverseRecommendations(6))
+    async function loadRecommendations() {
+      setIsLoading(true)
+      const liked = getLikedBooks()
+      setLikedBooks(liked)
+      
+      if (liked.length > 0) {
+        try {
+          // Get recommendations based on liked books' genres
+          const likedGenres = Array.from(new Set(liked.flatMap(book => book.genre)))
+          const primaryGenre = likedGenres[0] || 'Fantasy'
+          
+          // Fetch recommended books from the same/similar genres
+          const recommendedBooks = await getMixedRecommendations(8)
+          setRecommendations(recommendedBooks)
+          
+          // Fetch diverse books from different genres
+          const diverseGenres = ['Science Fiction', 'Mystery', 'Biography', 'Philosophy', 'Historical Fiction', 'Poetry']
+          const diversePromises = diverseGenres.slice(0, 3).map(genre => getBooksByCategory(genre, 2))
+          const diverseResults = await Promise.all(diversePromises)
+          const allDiverseBooks = diverseResults.flat()
+          setDiverseBooks(allDiverseBooks)
+        } catch (error) {
+          console.error('Error loading recommendations:', error)
+        }
+      }
+      setIsLoading(false)
     }
+    
+    loadRecommendations()
   }, [])
 
   const handleMoodFilter = (moodId: string) => {
@@ -47,7 +66,15 @@ export function SmartRecommendations({ onBookLike, onStartReading }: SmartRecomm
     if (mood) {
       setSelectedMood(moodId)
       setSelectedTime(null)
-      setFilteredBooks(getBooksByMood(mood))
+      // Filter from existing recommendations by mood keywords
+      const filtered = recommendations.filter(book => 
+        book.mood.some(bookMood => 
+          mood.keywords.some(keyword => 
+            bookMood.toLowerCase().includes(keyword.toLowerCase())
+          )
+        )
+      )
+      setFilteredBooks(filtered)
     }
   }
 
@@ -56,7 +83,19 @@ export function SmartRecommendations({ onBookLike, onStartReading }: SmartRecomm
     if (timeConstraint) {
       setSelectedTime(timeId)
       setSelectedMood(null)
-      setFilteredBooks(getBooksByTime(timeConstraint))
+      // Filter from existing recommendations by reading time
+      const filtered = recommendations.filter(book => {
+        const hours = parseInt(book.readingTime.split('-')[0]) || 0
+        if (timeConstraint.maxHours && !timeConstraint.minHours) {
+          return hours <= timeConstraint.maxHours
+        } else if (timeConstraint.minHours && !timeConstraint.maxHours) {
+          return hours >= timeConstraint.minHours
+        } else if (timeConstraint.minHours && timeConstraint.maxHours) {
+          return hours >= timeConstraint.minHours && hours <= timeConstraint.maxHours
+        }
+        return true
+      })
+      setFilteredBooks(filtered)
     }
   }
 
@@ -66,9 +105,6 @@ export function SmartRecommendations({ onBookLike, onStartReading }: SmartRecomm
     saveLikedBooks(updatedLiked)
     // Update achievements/progress
     triggerActivity('like_book')
-    
-    // Refresh recommendations after liking
-    setRecommendations(getSmartRecommendations(8))
     onBookLike?.(book)
   }
 
@@ -80,6 +116,17 @@ export function SmartRecommendations({ onBookLike, onStartReading }: SmartRecomm
 
   if (likedBooks.length === 0) {
     return null // Don't show recommendations until user has liked books
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading recommendations...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -209,34 +256,35 @@ export function SmartRecommendations({ onBookLike, onStartReading }: SmartRecomm
         </motion.div>
       )}
 
-      {/* Diverse Recommendations */}
+      {/* Diverse Recommendations - Explore Something New */}
       {diverseBooks.length > 0 && !selectedMood && !selectedTime && (
         <motion.div 
-          className="bg-white/90 backdrop-blur-xl rounded-3xl p-6 shadow-lg border border-white/20"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl">
-              <Zap className="w-5 h-5 text-white" />
+          <div className="mb-3 px-1">
+            <div className="flex items-center gap-2 mb-1">
+              <Zap className="w-4 h-4 text-green-600" />
+              <h3 className="text-sm font-bold text-gray-900">Explore Something New</h3>
             </div>
-            <h3 className="text-lg font-bold text-gray-800">Explore Something New</h3>
-            <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
-              Step outside your comfort zone
-            </span>
+            <p className="text-xs text-gray-500">Step outside your comfort zone</p>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {diverseBooks.slice(0, 3).map((book) => (
-              <BookRecommendationCard 
-                key={book.id} 
-                book={book} 
-                onLike={handleLikeBook}
-                onStartReading={onStartReading}
-                isLiked={likedBooks.some(liked => liked.id === book.id)}
-              />
-            ))}
+          {/* Horizontal Scroll for Mobile */}
+          <div className="overflow-x-auto hide-scrollbar -mx-4 px-4">
+            <div className="flex gap-3 pb-2">
+              {diverseBooks.slice(0, 6).map((book, index) => (
+                <DiverseBookCard 
+                  key={book.id} 
+                  book={book} 
+                  onLike={handleLikeBook}
+                  onStartReading={onStartReading}
+                  isLiked={likedBooks.some(liked => liked.id === book.id)}
+                  index={index}
+                />
+              ))}
+            </div>
           </div>
         </motion.div>
       )}
@@ -244,7 +292,7 @@ export function SmartRecommendations({ onBookLike, onStartReading }: SmartRecomm
   )
 }
 
-// Smart recommendation card with reasons - Mobile-first design
+// Smart recommendation card - Mobile-first design
 function SmartRecommendationCard({ 
   book, 
   onLike, 
@@ -252,7 +300,7 @@ function SmartRecommendationCard({
   isLiked,
   index
 }: { 
-  book: RecommendedBook
+  book: Book
   onLike: (book: Book) => void
   onStartReading?: (book: Book) => void
   isLiked: boolean
@@ -287,11 +335,9 @@ function SmartRecommendationCard({
           <h4 className="font-semibold text-sm line-clamp-1 mb-0.5">{book.title}</h4>
           <p className="text-xs text-gray-500 mb-2">{book.author}</p>
           
-          {book.reasons.length > 0 && (
-            <p className="text-xs text-purple-600 mb-2 line-clamp-2">
-              {book.reasons[0].description}
-            </p>
-          )}
+          <p className="text-xs text-purple-600 mb-2 line-clamp-2">
+            Based on your likes
+          </p>
           
           {/* Like Button */}
           <Button
@@ -381,6 +427,70 @@ function BookRecommendationCard({
               </Button>
             )}
           </div>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+// Diverse book card - Mobile-first horizontal scroll design
+function DiverseBookCard({ 
+  book, 
+  onLike, 
+  onStartReading, 
+  isLiked,
+  index
+}: { 
+  book: Book
+  onLike: (book: Book) => void
+  onStartReading?: (book: Book) => void
+  isLiked: boolean
+  index?: number
+}) {
+  return (
+    <motion.div
+      className="flex-shrink-0 w-[160px] sm:w-[180px]"
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: (index || 0) * 0.05 }}
+    >
+      <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+        {/* Book Cover */}
+        <div className="relative w-full aspect-[2/3] bg-gradient-to-br from-green-100 to-emerald-100">
+          <Image
+            src={book.cover}
+            alt={book.title}
+            fill
+            className="object-cover"
+            sizes="180px"
+          />
+          {/* Rating Badge */}
+          <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1 shadow-sm">
+            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+            <span className="text-xs font-semibold">{book.rating}</span>
+          </div>
+        </div>
+        
+        {/* Book Info */}
+        <div className="p-3">
+          <h4 className="font-semibold text-sm line-clamp-1 mb-0.5">{book.title}</h4>
+          <p className="text-xs text-gray-500 mb-2">{book.author}</p>
+          
+          <p className="text-xs text-green-600 mb-2 line-clamp-2">
+            New genre for you!
+          </p>
+          
+          {/* Like Button */}
+          <Button
+            size="sm"
+            variant={isLiked ? "default" : "outline"}
+            onClick={() => onLike(book)}
+            disabled={isLiked}
+            className="w-full h-8 text-xs"
+          >
+            <Heart className={`w-3 h-3 mr-1 ${isLiked ? 'fill-current' : ''}`} />
+            {isLiked ? 'Liked' : 'Like'}
+          </Button>
         </div>
       </div>
     </motion.div>
