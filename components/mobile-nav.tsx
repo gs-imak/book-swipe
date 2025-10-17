@@ -87,14 +87,15 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNav
                       transition={{ duration: 0.3 }}
                       className={`relative flex items-center justify-center ${
                         isActive
-                          ? `bg-gradient-to-r ${item.color} p-2 rounded-xl shadow-lg`
+                          ? `bg-gradient-to-br ${item.color} p-3 rounded-xl shadow-xl`
                           : "p-2"
                       }`}
                     >
                       <Icon
-                        className={`w-6 h-6 ${
-                          isActive ? "text-white drop-shadow-sm" : "text-gray-500"
+                        className={`${isActive ? "w-7 h-7" : "w-6 h-6"} ${
+                          isActive ? "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" : "text-gray-400"
                         }`}
+                        strokeWidth={isActive ? 3 : 1.5}
                       />
                     </motion.div>
 
