@@ -302,10 +302,17 @@ function AchievementCard({ achievement }: { achievement: any }) {
           {isUnlocked ? achievement.icon : <Lock className="w-6 h-6 text-gray-400" />}
         </div>
         
-        <div className="flex-1">
-          <h4 className={`font-semibold ${isUnlocked ? 'text-gray-900' : 'text-gray-500'}`}>
-            {achievement.name}
-          </h4>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <h4 className={`font-semibold flex-1 ${isUnlocked ? 'text-gray-900' : 'text-gray-500'}`}>
+              {achievement.name}
+            </h4>
+            {isUnlocked && (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700 border border-green-200 whitespace-nowrap flex-shrink-0">
+                ✓ Completed
+              </span>
+            )}
+          </div>
           <p className={`text-sm ${isUnlocked ? 'text-gray-600' : 'text-gray-400'}`}>
             {achievement.description}
           </p>
@@ -321,7 +328,7 @@ function AchievementCard({ achievement }: { achievement: any }) {
           )}
           
           {isUnlocked && (
-            <div className="mt-2 flex items-center gap-2">
+            <div className="mt-2 flex items-center gap-2 flex-wrap">
               <span className={`
                 px-2 py-1 rounded-full text-xs font-medium
                 ${achievement.type === 'bronze' ? 'bg-amber-100 text-amber-800' :
@@ -334,7 +341,6 @@ function AchievementCard({ achievement }: { achievement: any }) {
               <span className="text-xs text-gray-500">
                 {new Date(achievement.unlockedAt).toLocaleDateString()}
               </span>
-              <span className="ml-auto text-xs font-medium text-green-600">Completed ✓</span>
             </div>
           )}
         </div>
