@@ -80,19 +80,19 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-white space-y-6 sm:space-y-8 text-center lg:text-left order-2 lg:order-1"
+            className="text-white space-y-6 sm:space-y-8 text-center lg:text-left order-1 lg:order-1"
           >
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <motion.div 
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.3, type: "spring" }}
-                className="flex items-center justify-center lg:justify-start gap-3"
+                className="flex items-center justify-center lg:justify-start gap-2"
               >
-                <div className="p-2 sm:p-3 bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl">
-                  <BookOpen className="w-6 sm:w-8 h-6 sm:h-8 text-white" />
+                <div className="p-2 bg-white/10 backdrop-blur-sm rounded-xl">
+                  <BookOpen className="w-5 sm:w-8 h-5 sm:h-8 text-white" />
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
+                <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
                   BookSwipe
                 </h1>
               </motion.div>
@@ -101,7 +101,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight"
+                className="text-2xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight"
               >
                 Discover Your Next
                 <span className="block bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
@@ -113,10 +113,9 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}
-                className="text-lg sm:text-xl text-purple-100 leading-relaxed max-w-2xl mx-auto lg:mx-0"
+                className="text-sm sm:text-xl text-purple-100 leading-relaxed max-w-2xl mx-auto lg:mx-0"
               >
-                Swipe through personalized book recommendations tailored to your mood. 
-                Like Netflix, but for your next great read.
+                Personalized recommendations tailored to your mood. Like Netflix, but for books.
               </motion.p>
             </div>
 
@@ -124,19 +123,19 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.9 }}
-              className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 sm:gap-6 lg:gap-8"
+              className="flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-6"
             >
-              <div className="flex items-center gap-2">
-                <Heart className="w-4 sm:w-5 h-4 sm:h-5 text-pink-300" />
-                <span className="text-sm sm:text-base text-purple-200">Smart Matching</span>
+              <div className="flex items-center gap-1.5">
+                <Heart className="w-4 h-4 text-pink-300" />
+                <span className="text-xs sm:text-base text-purple-200">Smart Matching</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 sm:w-5 h-4 sm:h-5 text-yellow-300" />
-                <span className="text-sm sm:text-base text-purple-200">Mood-Based</span>
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-yellow-300" />
+                <span className="text-xs sm:text-base text-purple-200">Mood-Based</span>
               </div>
-              <div className="flex items-center gap-2">
-                <BookOpen className="w-4 sm:w-5 h-4 sm:h-5 text-blue-300" />
-                <span className="text-sm sm:text-base text-purple-200">Curated</span>
+              <div className="flex items-center gap-1.5">
+                <BookOpen className="w-4 h-4 text-blue-300" />
+                <span className="text-xs sm:text-base text-purple-200">Curated</span>
               </div>
             </motion.div>
           </motion.div>
@@ -146,7 +145,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="w-full max-w-md mx-auto order-1 lg:order-2"
+            className="w-full max-w-md mx-auto order-2 lg:order-2"
           >
             <div className="bg-white/10 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 border border-white/20 shadow-2xl">
               <div className="text-center mb-6 sm:mb-8">
