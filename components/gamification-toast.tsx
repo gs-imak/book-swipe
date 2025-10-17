@@ -48,7 +48,7 @@ export function GamificationToast({ events, onEventShown, onOpenAchievements }: 
         initial={{ opacity: 0, y: -100, scale: 0.8 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -100, scale: 0.8 }}
-        className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50"
+        className="fixed top-4 left-4 z-[100] w-[calc(100%-2rem)] max-w-[400px]"
       >
         <div
           onClick={() => {
@@ -59,7 +59,7 @@ export function GamificationToast({ events, onEventShown, onOpenAchievements }: 
           }}
           className={`
           ${getEventStyle(currentEvent.type)}
-          rounded-2xl shadow-2xl border-2 p-4 min-w-[300px] max-w-[400px]
+          rounded-2xl shadow-2xl border-2 p-4 w-full
           backdrop-blur-xl cursor-pointer
         `}
         >

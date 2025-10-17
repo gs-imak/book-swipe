@@ -25,25 +25,41 @@ export interface GoogleBook {
 export async function searchGoogleBooks(query: string, maxResults = 20): Promise<Book[]> {
   try {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY
-    const apiParam = apiKey ? `&key=${apiKey}` : ''
     
-    const response = await fetch(
-      `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=${maxResults}&printType=books&projection=full${apiParam}`
-    )
+    if (!apiKey) {
+      console.error('❌ GOOGLE_BOOKS_API_KEY is not set! Check your .env.local file')
+      return []
+    }
+    
+    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=${maxResults}&key=${apiKey}`
+    console.log('📚 Fetching:', query)
+    
+    const response = await fetch(url)
     
     if (!response.ok) {
-      throw new Error('Failed to fetch books')
+      const errorText = await response.text()
+      console.error(`❌ Google Books API Error (${response.status}):`, errorText)
+      
+      if (response.status === 400) {
+        console.error('🔑 API KEY ISSUE: Check if Books API is enabled and key restrictions allow this request')
+      } else if (response.status === 403) {
+        console.error('🚫 ACCESS DENIED: Check API key restrictions or quota limits')
+      }
+      
+      return []
     }
     
     const data = await response.json()
     
     if (!data.items) {
+      console.warn(`⚠️ No books found for query: ${query}`)
       return []
     }
     
+    console.log(`✅ Found ${data.items.length} books for: ${query}`)
     return data.items.map(transformGoogleBookToBook).filter(Boolean)
   } catch (error) {
-    console.error('Error fetching books:', error)
+    console.error('💥 Error fetching books:', error)
     return []
   }
 }
