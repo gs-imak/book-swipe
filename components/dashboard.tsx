@@ -11,7 +11,7 @@ import { BookDetailModal } from "./book-detail-modal"
 import { StarRating } from "./star-rating"
 import { getBookReview, getUserStats } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
-import { ArrowLeft, BookOpen, Star, Clock, Trash2, ExternalLink, Filter, Settings, Sparkles, Heart, Trophy, TrendingUp, Target } from "lucide-react"
+import { ArrowLeft, BookOpen, Star, Clock, Trash2, ExternalLink, Filter, Settings, Sparkles, Heart, Trophy, TrendingUp, Target, MessageSquare } from "lucide-react"
 import { motion } from "framer-motion"
 import Image from "next/image"
 
@@ -96,43 +96,43 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 smooth-scroll">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 smooth-scroll pb-20">
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-3 sm:gap-4">
-              {showBackButton && onBack && (
-                <Button variant="outline" size="sm" onClick={onBack} className="flex-shrink-0">
-                  <ArrowLeft className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Back to Swipe</span>
-                </Button>
-              )}
-              <div className="min-w-0">
-                <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  My Reading Library
-                </h1>
-                <p className="text-xs sm:text-sm text-gray-600">
-                  {likedBooks.length} books in your collection
-                </p>
+          <div className="flex flex-col gap-3 sm:gap-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                {showBackButton && onBack && (
+                  <Button variant="outline" size="sm" onClick={onBack} className="flex-shrink-0 tap-target touch-manipulation">
+                    <ArrowLeft className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Back</span>
+                  </Button>
+                )}
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent truncate">
+                    My Library
+                  </h1>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    {likedBooks.length} {likedBooks.length === 1 ? 'book' : 'books'}
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="flex gap-2 self-start sm:self-auto">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setShowAdmin(!showAdmin)}
-                className="flex-shrink-0"
-              >
-                <Settings className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">{showAdmin ? 'Hide' : 'API Settings'}</span>
-              </Button>
-              {likedBooks.length > 0 && (
-                <Button variant="destructive" size="sm" onClick={handleClearAll} className="flex-shrink-0">
-                  <Trash2 className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Clear All</span>
+              <div className="flex gap-2 flex-shrink-0">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowAdmin(!showAdmin)}
+                  className="tap-target touch-manipulation"
+                >
+                  <Settings className="w-4 h-4" />
                 </Button>
-              )}
+                {likedBooks.length > 0 && (
+                  <Button variant="destructive" size="sm" onClick={handleClearAll} className="tap-target touch-manipulation">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -195,10 +195,10 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Discover More Books Button - Always at top when user has books */}
         {likedBooks.length > 0 && (
-          <div className="mb-8 text-center">
+          <div className="mb-6 sm:mb-8 text-center">
             <Button 
               onClick={onStartDiscovery} 
-              className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium rounded-xl transition-all duration-300 shadow-lg"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3.5 text-base sm:text-base bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium rounded-xl transition-all duration-300 shadow-lg tap-target touch-manipulation"
             >
               <Heart className="w-5 h-5 mr-2" />
               Discover More Books
@@ -275,31 +275,31 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
         ) : (
           <>
             {/* Stats Section */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-              <div className="bg-white rounded-2xl p-6 shadow-sm">
-                <div className="text-2xl font-bold text-purple-600">{stats.totalBooks}</div>
-                <div className="text-sm text-gray-600">Books Liked</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+              <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm">
+                <div className="text-xl sm:text-2xl font-bold text-purple-600">{stats.totalBooks}</div>
+                <div className="text-xs sm:text-sm text-gray-600">Books</div>
               </div>
-              <div className="bg-white rounded-2xl p-6 shadow-sm">
-                <div className="text-2xl font-bold text-green-600">{stats.totalPages.toLocaleString()}</div>
-                <div className="text-sm text-gray-600">Total Pages</div>
+              <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm">
+                <div className="text-xl sm:text-2xl font-bold text-green-600">{stats.totalPages.toLocaleString()}</div>
+                <div className="text-xs sm:text-sm text-gray-600">Pages</div>
               </div>
-              <div className="bg-white rounded-2xl p-6 shadow-sm">
-                <div className="text-2xl font-bold text-yellow-600 flex items-center gap-1">
-                  <Star className="w-5 h-5 fill-current" />
+              <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm">
+                <div className="text-xl sm:text-2xl font-bold text-yellow-600 flex items-center gap-1">
+                  <Star className="w-4 sm:w-5 h-4 sm:h-5 fill-current" />
                   {stats.averageRating}
                 </div>
-                <div className="text-sm text-gray-600">Avg Rating</div>
+                <div className="text-xs sm:text-sm text-gray-600">Rating</div>
               </div>
-              <div className="bg-white rounded-2xl p-6 shadow-sm">
-                <div className="text-2xl font-bold text-blue-600">{stats.favoriteGenre}</div>
-                <div className="text-sm text-gray-600">Top Genre</div>
+              <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm">
+                <div className="text-sm sm:text-2xl font-bold text-blue-600 truncate">{stats.favoriteGenre}</div>
+                <div className="text-xs sm:text-sm text-gray-600">Genre</div>
               </div>
             </div>
 
             {/* Enhanced Filters and Sort */}
             <motion.div 
-              className="bg-white/90 backdrop-blur-xl rounded-3xl p-6 mb-8 shadow-lg border border-white/20"
+              className="bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 mb-6 sm:mb-8 shadow-lg border border-white/20"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
@@ -403,7 +403,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
             </motion.div>
 
             {/* Books Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
               {sortedBooks.map((book, index) => {
                 const review = getBookReview(book.id)
                 return (

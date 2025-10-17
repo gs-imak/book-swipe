@@ -91,4 +91,10 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Prevent overscroll bounce on iOS */
+  html, body {
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+  }
 }

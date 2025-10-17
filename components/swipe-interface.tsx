@@ -339,10 +339,10 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
         </div>
 
         {/* Cards Stack */}
-        <div className="flex-1 flex items-center justify-center p-4 sm:p-6">
+        <div className="flex-1 flex items-center justify-center p-3 sm:p-4 md:p-6">
           <div className="relative w-full max-w-sm">
             <motion.div 
-              className="relative h-[580px] sm:h-[640px]"
+              className="relative h-[520px] sm:h-[580px] md:h-[640px]"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
@@ -370,7 +370,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
         </div>
 
         {/* Action Buttons */}
-        <div className="pb-6 sm:pb-8 pt-3 sm:pt-4">
+        <div className="pb-20 sm:pb-8 pt-3 sm:pt-4">
           <div className="max-w-sm mx-auto px-4 sm:px-6">
             <div className="flex justify-center gap-6 sm:gap-8 mb-4 sm:mb-6">
               <motion.div

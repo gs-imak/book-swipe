@@ -148,37 +148,37 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="w-full max-w-md mx-auto order-1 lg:order-2"
           >
-            <div className="bg-white/10 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-white/20 shadow-2xl">
+            <div className="bg-white/10 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 border border-white/20 shadow-2xl">
               <div className="text-center mb-6 sm:mb-8">
-                <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">Welcome Back</h3>
-                <p className="text-sm sm:text-base text-purple-200">Sign in to continue your reading journey</p>
+                <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2">Welcome Back</h3>
+                <p className="text-sm sm:text-base text-purple-200">Sign in to continue your journey</p>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-5 sm:space-y-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-purple-200">Email</label>
+                  <label className="text-sm sm:text-base font-medium text-purple-200">Email</label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-300" />
+                    <Mail className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-300" />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter your email"
-                      className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm"
+                      className="w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-3.5 text-base bg-white/10 border border-white/20 rounded-xl text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm tap-target"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-purple-200">Password</label>
+                  <label className="text-sm sm:text-base font-medium text-purple-200">Password</label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-300" />
+                    <Lock className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-300" />
                     <input
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter your password"
-                      className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm"
+                      className="w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-3.5 text-base bg-white/10 border border-white/20 rounded-xl text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent backdrop-blur-sm tap-target"
                     />
                   </div>
                 </div>
@@ -186,17 +186,17 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 <Button 
                   onClick={handleLogin}
                   disabled={loading || !email || !password}
-                  className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-3.5 sm:py-4 text-base sm:text-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed tap-target touch-manipulation"
                 >
                   {loading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="flex items-center gap-2 justify-center">
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       Signing In...
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 justify-center">
                       Sign In
-                      <ArrowRight className="w-4 h-4" />
+                      <ArrowRight className="w-5 h-5" />
                     </div>
                   )}
                 </Button>
@@ -213,9 +213,9 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 <Button 
                   onClick={handleDemoLogin}
                   variant="outline"
-                  className="w-full py-3 border-white/20 text-white hover:bg-white/10 rounded-xl transition-all duration-300"
+                  className="w-full py-3.5 sm:py-4 text-base border-white/20 text-white hover:bg-white/10 rounded-xl transition-all duration-300 tap-target touch-manipulation"
                 >
-                  <User className="w-4 h-4 mr-2" />
+                  <User className="w-5 h-5 mr-2" />
                   Try Demo Account
                 </Button>
 

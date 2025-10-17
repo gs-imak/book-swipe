@@ -7,6 +7,13 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'BookSwipe - Discover Your Next Favorite Book',
   description: 'Discover books tailored to your mood with our Tinder-like interface',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
+  themeColor: '#A855F7',
 }
 
 export default function RootLayout({

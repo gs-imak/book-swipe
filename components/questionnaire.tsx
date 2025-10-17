@@ -109,11 +109,11 @@ export function Questionnaire({ onComplete }: QuestionnaireProps) {
   const question = questions[currentQuestion]
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6">
       <div className="w-full max-w-2xl mx-auto">
-        <div className="mb-8">
-          <Progress value={progress} className="h-2" />
-          <p className="text-sm text-muted-foreground mt-2">
+        <div className="mb-6 sm:mb-8">
+          <Progress value={progress} className="h-2.5 sm:h-2" />
+          <p className="text-sm sm:text-base text-muted-foreground mt-3 sm:mt-2 font-medium">
             Question {currentQuestion + 1} of {questions.length}
           </p>
         </div>
@@ -125,19 +125,19 @@ export function Questionnaire({ onComplete }: QuestionnaireProps) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
-            className="bg-white rounded-2xl shadow-xl p-8"
+            className="bg-white rounded-2xl sm:rounded-3xl shadow-xl p-5 sm:p-8"
           >
-            <h2 className="text-2xl font-bold mb-2">{question.title}</h2>
-            <p className="text-muted-foreground mb-6">{question.subtitle}</p>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-2 leading-tight">{question.title}</h2>
+            <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8">{question.subtitle}</p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 mb-6 sm:mb-8">
               {question.options.map((option) => {
                 const isSelected = (answers[question.id] || []).includes(option)
                 return (
                   <Button
                     key={option}
                     variant={isSelected ? "default" : "outline"}
-                    className="p-4 h-auto text-left justify-start"
+                    className="p-4 sm:p-4 h-auto text-left justify-start text-sm sm:text-base min-h-[52px] tap-target touch-manipulation font-medium"
                     onClick={() => handleAnswer(question.id, option, question.type === "multiple")}
                   >
                     {option}
@@ -146,18 +146,19 @@ export function Questionnaire({ onComplete }: QuestionnaireProps) {
               })}
             </div>
 
-            <div className="flex justify-between">
+            <div className="flex gap-3 sm:gap-4">
               <Button
                 variant="outline"
                 onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}
                 disabled={currentQuestion === 0}
+                className="flex-1 sm:flex-none py-3 text-base tap-target touch-manipulation"
               >
                 Back
               </Button>
               <Button
                 onClick={handleNext}
                 disabled={!canProceed()}
-                className="px-8"
+                className="flex-1 sm:flex-auto px-6 sm:px-8 py-3 text-base tap-target touch-manipulation"
               >
                 {currentQuestion === questions.length - 1 ? "Start Discovering!" : "Next"}
               </Button>
