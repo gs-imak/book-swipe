@@ -88,23 +88,26 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.3, type: "spring" }}
-                className="flex items-center justify-center lg:justify-start"
+                className="flex items-center justify-center lg:justify-start gap-2 sm:gap-3"
               >
                 <Image 
-                  src="/logo/bookswipe_logo.png" 
-                  alt="BookSwipe Logo" 
-                  width={200}
-                  height={30}
-                  className="w-auto h-16 sm:h-24 md:h-28 lg:h-32"
-                  priority
+                    src="/logo/bookswipe_logo.png" 
+                    alt="BookSwipe Logo" 
+                    width={70}
+                    height={30}
+                    className="w-auto h-12 sm:h-14 md:h-16"
+                    priority
                 />
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
+                  BookSwipe
+                </h1>
               </motion.div>
               
               <motion.h2 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="text-2xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight"
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight"
               >
                 Discover Your Next
                 <span className="block bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
@@ -116,7 +119,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}
-                className="text-sm sm:text-xl text-purple-100 leading-relaxed max-w-2xl mx-auto lg:mx-0"
+                className="text-base sm:text-lg md:text-xl text-purple-100 leading-relaxed max-w-2xl mx-auto lg:mx-0"
               >
                 Personalized recommendations tailored to your mood. Like Netflix, but for books.
               </motion.p>
@@ -126,19 +129,19 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.9 }}
-              className="flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-6"
+              className="flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6"
             >
-              <div className="flex items-center gap-1.5">
-                <Heart className="w-4 h-4 text-pink-300" />
-                <span className="text-xs sm:text-base text-purple-200">Smart Matching</span>
+              <div className="flex items-center gap-2">
+                <Heart className="w-5 h-5 text-pink-300" />
+                <span className="text-sm sm:text-base text-purple-200">Smart Matching</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-yellow-300" />
-                <span className="text-xs sm:text-base text-purple-200">Mood-Based</span>
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-yellow-300" />
+                <span className="text-sm sm:text-base text-purple-200">Mood-Based</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <BookOpen className="w-4 h-4 text-blue-300" />
-                <span className="text-xs sm:text-base text-purple-200">Curated</span>
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-blue-300" />
+                <span className="text-sm sm:text-base text-purple-200">Curated</span>
               </div>
             </motion.div>
           </motion.div>
