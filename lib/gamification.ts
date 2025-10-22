@@ -68,21 +68,24 @@ export function updateReadingStreak(): number {
 }
 
 // Award points and check for achievements
-export function awardPoints(activity: string, amount?: number): GamificationEvent[] {
+export function awardPoints(activity: string, amount?: number, silent: boolean = true): GamificationEvent[] {
   const events: GamificationEvent[] = []
   const pointsToAward = amount || getPointsForActivity(activity)
   
   // Award points
   const leveledUp = addPoints(pointsToAward, activity)
   
-  events.push({
-    type: 'points_earned',
-    title: `+${pointsToAward} points!`,
-    description: getActivityDescription(activity),
-    points: pointsToAward
-  })
+  // Only show points notification if not silent (for special occasions)
+  if (!silent) {
+    events.push({
+      type: 'points_earned',
+      title: `+${pointsToAward} points!`,
+      description: getActivityDescription(activity),
+      points: pointsToAward
+    })
+  }
 
-  // Check for level up
+  // Check for level up (always show these)
   if (leveledUp) {
     const stats = getUserStats()
     events.push({
@@ -131,7 +134,7 @@ export function checkAchievements(): GamificationEvent[] {
       const unlocked = unlockAchievement(achievement.id)
       if (unlocked) {
         achievements = getUserAchievements()
-        // Award bonus points for unlocking achievement
+        // Award bonus points for unlocking achievement (silently)
         addPoints(POINTS_CONFIG.UNLOCK_ACHIEVEMENT, 'unlock_achievement')
         
         events.push({

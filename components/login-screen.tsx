@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { BookOpen, Heart, Sparkles, ArrowRight, Mail, Lock, User } from "lucide-react"
 import { motion } from "framer-motion"
+import Image from "next/image"
 
 interface LoginScreenProps {
   onLogin: () => void
@@ -87,14 +88,16 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.3, type: "spring" }}
-                className="flex items-center justify-center lg:justify-start gap-2"
+                className="flex items-center justify-center lg:justify-start"
               >
-                <div className="p-2 bg-white/10 backdrop-blur-sm rounded-xl">
-                  <BookOpen className="w-5 sm:w-8 h-5 sm:h-8 text-white" />
-                </div>
-                <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
-                  BookSwipe
-                </h1>
+                <Image 
+                  src="/logo/bookswipe_logo.png" 
+                  alt="BookSwipe Logo" 
+                  width={400}
+                  height={120}
+                  className="w-auto h-16 sm:h-24 md:h-28 lg:h-32"
+                  priority
+                />
               </motion.div>
               
               <motion.h2 

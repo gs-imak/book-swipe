@@ -114,14 +114,14 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
     <div className="min-h-screen flex flex-col p-4 sm:p-6">
       {/* Back Button - Only show if onBack is provided */}
       {onBack && (
-        <div className="w-full max-w-2xl mx-auto mb-4">
+        <div className="w-full max-w-2xl mx-auto mb-6">
           <Button
-            variant="ghost"
-            size="sm"
+            variant="outline"
+            size="default"
             onClick={onBack}
-            className="tap-target touch-manipulation"
+            className="tap-target touch-manipulation border-2 hover:bg-accent hover:border-primary transition-all font-semibold shadow-sm"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className="w-5 h-5 mr-2" />
             Back to Library
           </Button>
         </div>

@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useState, useCallback, ReactNode } from "react"
 import { GamificationEvent, handleUserActivity } from "@/lib/gamification"
-import { POINTS_CONFIG } from "@/lib/achievements"
 import { GamificationToast } from "./gamification-toast"
 import { ConfettiCelebration, FireworksCelebration } from "./confetti-celebration"
 
@@ -34,14 +33,19 @@ export function GamificationProvider({ children, onShowAchievements }: Gamificat
   const triggerActivity = useCallback((activity: string, data?: any) => {
     try {
       const rawEvents = handleUserActivity(activity, data)
-      const newEvents: GamificationEvent[] = mergeAchievementIntoPoints(rawEvents)
       
-      if (newEvents.length > 0) {
-        setEvents(newEvents)
+      // Only show meaningful events (achievements, level-ups)
+      // Filter out routine points_earned events to reduce clutter
+      const significantEvents = rawEvents.filter(e => 
+        e.type === 'achievement_unlocked' || e.type === 'level_up'
+      )
+      
+      if (significantEvents.length > 0) {
+        setEvents(significantEvents)
         
         // Check for special celebrations
-        const hasAchievement = newEvents.some(e => e.type === 'achievement_unlocked')
-        const hasLevelUp = newEvents.some(e => e.type === 'level_up')
+        const hasAchievement = significantEvents.some(e => e.type === 'achievement_unlocked')
+        const hasLevelUp = significantEvents.some(e => e.type === 'level_up')
         
         if (hasAchievement && hasLevelUp) {
           // Both achievement and level up - fireworks!
@@ -103,22 +107,5 @@ export function GamificationProvider({ children, onShowAchievements }: Gamificat
       />
     </GamificationContext.Provider>
   )
-}
-
-// Merge duplicate achievement + points into a single green points event
-function mergeAchievementIntoPoints(events: GamificationEvent[]): GamificationEvent[] {
-  if (events.length <= 1) return events
-  const points = events.find(e => e.type === 'points_earned')
-  const achievement = events.find(e => e.type === 'achievement_unlocked')
-  // If both appear together, show only the green points card
-  if (points && achievement) {
-    return [{
-      type: 'points_earned',
-      title: points.title,
-      description: `${points.description} • ${achievement.title.replace(/^[^\s]+\s/, '')}`,
-      points: points.points
-    }]
-  }
-  return events
 }
 
