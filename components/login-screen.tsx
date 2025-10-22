@@ -93,8 +93,8 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 <Image 
                   src="/logo/bookswipe_logo.png" 
                   alt="BookSwipe Logo" 
-                  width={400}
-                  height={120}
+                  width={200}
+                  height={30}
                   className="w-auto h-16 sm:h-24 md:h-28 lg:h-32"
                   priority
                 />
