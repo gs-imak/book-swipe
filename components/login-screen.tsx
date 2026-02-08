@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { BookOpen, ArrowRight, Bookmark, Library } from "lucide-react"
+import { BookOpen, ArrowRight, Bookmark, Library, Star, Heart } from "lucide-react"
 import { motion } from "framer-motion"
 import Image from "next/image"
 
@@ -10,12 +10,26 @@ interface LoginScreenProps {
   onLogin: () => void
 }
 
-const SAMPLE_COVERS = [
-  { title: "Fiction", color: "from-amber-700 to-amber-900" },
-  { title: "Mystery", color: "from-slate-700 to-slate-900" },
-  { title: "Romance", color: "from-rose-600 to-rose-800" },
-  { title: "Sci-Fi", color: "from-teal-700 to-teal-900" },
-  { title: "Fantasy", color: "from-indigo-700 to-indigo-900" },
+// Real book covers from Open Library for the preview
+const PREVIEW_BOOKS = [
+  {
+    title: "Dune",
+    author: "Frank Herbert",
+    cover: "https://covers.openlibrary.org/b/isbn/9780441172719-M.jpg",
+    rating: 4.6,
+  },
+  {
+    title: "The Great Gatsby",
+    author: "F. Scott Fitzgerald",
+    cover: "https://covers.openlibrary.org/b/isbn/9780743273565-M.jpg",
+    rating: 4.2,
+  },
+  {
+    title: "Pride and Prejudice",
+    author: "Jane Austen",
+    cover: "https://covers.openlibrary.org/b/isbn/9780141439518-M.jpg",
+    rating: 4.5,
+  },
 ]
 
 export function LoginScreen({ onLogin }: LoginScreenProps) {
@@ -28,11 +42,6 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] relative overflow-hidden flex flex-col">
-      {/* Subtle texture overlay */}
-      <div className="absolute inset-0 opacity-[0.03]" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-      }} />
-
       {/* Header */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
@@ -139,58 +148,79 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               </div>
             </motion.div>
 
-            {/* Right: Visual preview - stacked book cards */}
+            {/* Right: App preview mockup */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.35 }}
-              className="relative h-[380px] sm:h-[440px] order-1 lg:order-2"
+              className="relative h-[400px] sm:h-[460px] order-1 lg:order-2"
             >
-              {/* Floating card stack */}
-              <div className="relative w-full max-w-[300px] sm:max-w-[340px] mx-auto h-full">
-                {SAMPLE_COVERS.map((cover, i) => {
-                  const offset = (SAMPLE_COVERS.length - 1 - i) * 8
-                  const scale = 1 - (SAMPLE_COVERS.length - 1 - i) * 0.03
-                  const isTop = i === SAMPLE_COVERS.length - 1
+              <div className="relative w-full max-w-[280px] sm:max-w-[310px] mx-auto h-full flex items-center">
+                {/* Card stack - 3 cards with real covers */}
+                {PREVIEW_BOOKS.map((book, i) => {
+                  const isTop = i === PREVIEW_BOOKS.length - 1
+                  const stackOffset = (PREVIEW_BOOKS.length - 1 - i)
 
                   return (
                     <motion.div
-                      key={cover.title}
-                      initial={{ opacity: 0, y: 60, rotate: (i - 2) * 2 }}
+                      key={book.title}
+                      initial={{ opacity: 0, y: 40 }}
                       animate={{
-                        opacity: 1,
-                        y: -offset,
-                        rotate: isTop ? 0 : (i - 2) * 1.5,
-                        scale
+                        opacity: isTop ? 1 : 0.85 - stackOffset * 0.15,
+                        y: stackOffset * -10,
+                        scale: 1 - stackOffset * 0.04,
                       }}
                       transition={{
-                        duration: 0.6,
-                        delay: 0.5 + i * 0.1,
+                        duration: 0.5,
+                        delay: 0.5 + i * 0.12,
                         type: "spring",
-                        stiffness: 100
+                        stiffness: 120,
+                        damping: 20,
                       }}
-                      className="absolute inset-x-0 bottom-0"
+                      className="absolute inset-x-0 top-1/2 -translate-y-1/2"
                       style={{ zIndex: i }}
                     >
-                      <div
-                        className={`w-full aspect-[3/4] rounded-2xl bg-gradient-to-br ${cover.color} shadow-xl flex flex-col items-center justify-end p-6 sm:p-8 relative overflow-hidden`}
-                      >
-                        {/* Book spine detail */}
-                        <div className="absolute left-0 top-0 bottom-0 w-3 bg-black/10" />
+                      <div className="w-full aspect-[3/4.2] rounded-2xl overflow-hidden shadow-lg border border-stone-200/50 bg-stone-100 relative">
+                        {/* Book cover */}
+                        <Image
+                          src={book.cover}
+                          alt={book.title}
+                          fill
+                          className="object-cover"
+                          sizes="310px"
+                        />
 
-                        {/* Text on card */}
+                        {/* Dark gradient at bottom */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+
+                        {/* Top-right rating badge (only on top card) */}
                         {isTop && (
                           <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 1.2 }}
-                            className="text-center text-white/90 space-y-2"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 1 }}
+                            className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm"
                           >
-                            <div className="w-12 h-0.5 bg-white/30 mx-auto" />
-                            <p className="text-xl sm:text-2xl font-serif font-medium italic">
-                              &ldquo;Swipe right on your next adventure&rdquo;
-                            </p>
-                            <div className="w-12 h-0.5 bg-white/30 mx-auto" />
+                            <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                            <span className="text-xs font-bold text-stone-700">{book.rating}</span>
+                          </motion.div>
+                        )}
+
+                        {/* Bottom info (only on top card) */}
+                        {isTop && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 1.1 }}
+                            className="absolute bottom-0 left-0 right-0 p-5"
+                          >
+                            <h3
+                              className="text-xl sm:text-2xl font-bold text-white leading-tight mb-0.5"
+                              style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+                            >
+                              {book.title}
+                            </h3>
+                            <p className="text-white/75 text-sm">{book.author}</p>
                           </motion.div>
                         )}
                       </div>
@@ -198,18 +228,22 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                   )
                 })}
 
-                {/* Swipe hint arrow */}
+                {/* Floating action buttons preview */}
                 <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1, x: [0, 12, 0] }}
-                  transition={{
-                    opacity: { delay: 1.5 },
-                    x: { delay: 1.8, duration: 1.5, repeat: Infinity, ease: "easeInOut" }
-                  }}
-                  className="absolute -right-8 sm:-right-12 top-1/2 -translate-y-1/2 text-stone-300"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.3 }}
+                  className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-4"
                   style={{ zIndex: 10 }}
                 >
-                  <ArrowRight className="w-8 h-8 sm:w-10 sm:h-10" />
+                  <div className="w-11 h-11 rounded-full border-2 border-red-200 bg-white shadow-md flex items-center justify-center">
+                    <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </div>
+                  <div className="w-11 h-11 rounded-full bg-emerald-500 shadow-md flex items-center justify-center">
+                    <Heart className="w-5 h-5 text-white" />
+                  </div>
                 </motion.div>
               </div>
             </motion.div>
