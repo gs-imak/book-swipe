@@ -47,12 +47,10 @@ function filterBooks(books: Book[], preferences: UserPreferences): Book[] {
     return bookGenres.some(bg => {
       const bgLower = bg.toLowerCase().trim()
       if (prefGenres.has(bgLower)) return true
-      // Alias matching
       for (const [canonical, aliases] of Object.entries(GENRE_ALIASES)) {
         if (prefGenres.has(canonical) && aliases.some(a => bgLower.includes(a))) return true
         if (aliases.some(a => a === bgLower) && prefGenres.has(canonical)) return true
       }
-      // Substring containment
       if (prefGenresArr.some(pg => bgLower.includes(pg) || pg.includes(bgLower))) return true
       return false
     })
@@ -68,7 +66,6 @@ function filterBooks(books: Book[], preferences: UserPreferences): Book[] {
     })
   }
 
-  // Score-based filtering instead of strict pass/fail
   const scored = books.map(book => {
     let score = 0
     if (matchesGenre(book.genre)) score += 2
@@ -77,15 +74,13 @@ function filterBooks(books: Book[], preferences: UserPreferences): Book[] {
     let matchesLength = true
     if (preferences.preferredLength !== "No preference") {
       switch (preferences.preferredLength) {
-        case "Short (under 250 pages)": matchesLength = book.pages < 300; break // Relaxed
+        case "Short (under 250 pages)": matchesLength = book.pages < 300; break
         case "Medium (250-400 pages)": matchesLength = book.pages >= 200 && book.pages <= 450; break
         case "Long (400-600 pages)": matchesLength = book.pages > 350 && book.pages <= 650; break
         case "Epic (600+ pages)": matchesLength = book.pages > 550; break
       }
     }
     if (matchesLength) score += 0.5
-
-    // Bonus for higher ratings
     score += book.rating / 10
 
     return { book, score }
@@ -96,7 +91,6 @@ function filterBooks(books: Book[], preferences: UserPreferences): Book[] {
     .sort((a, b) => b.score - a.score)
     .map(s => s.book)
 
-  // Graceful fallback: if too strict, relax to genre OR mood match
   if (filtered.length < 5 && books.length > 10) {
     return books
       .filter(b => matchesGenre(b.genre) || matchesMood(b.mood))
@@ -119,33 +113,22 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
     async function loadBooks() {
       setIsLoading(true)
       try {
-        // Try cache first for instant loading
         let books = getCachedBooks()
-
-        // If cache is insufficient, fetch from APIs (parallel)
         if (books.length < 30) {
           const fresh = await getMixedRecommendations(50)
           addBooksToCache(fresh)
           books = getCachedBooks()
         }
-
-        // Apply fuzzy filters
         const filtered = filterBooks(books, preferences)
-
         if (filtered.length === 0 && books.length > 0) {
-          // Graceful fallback: show top-rated books instead of dead end
-          setFilteredBooks(
-            books.sort((a, b) => b.rating - a.rating).slice(0, 50)
-          )
+          setFilteredBooks(books.sort((a, b) => b.rating - a.rating).slice(0, 50))
         } else {
           setFilteredBooks(filtered)
         }
-
         setCurrentIndex(0)
         setLikedBooks(getLikedBooks())
       } catch (error) {
         console.error('Error loading books:', error)
-        // Fallback to cached books on error
         const cached = getCachedBooks()
         if (cached.length > 0) {
           const filtered = filterBooks(cached, preferences)
@@ -155,7 +138,6 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
         setIsLoading(false)
       }
     }
-
     loadBooks()
   }, [preferences])
 
@@ -167,7 +149,6 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
       const newLikedBooks = [...likedBooks, currentBook]
       setLikedBooks(newLikedBooks)
       saveLikedBooks(newLikedBooks)
-      // Update gamification progress (likes achievements)
       triggerActivity('like_book')
     } else {
       setPassedBooks(prev => [...prev, currentBook])
@@ -176,289 +157,183 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
     setCurrentIndex(prev => prev + 1)
   }
 
-  const handleButtonSwipe = (direction: "left" | "right") => {
-    handleSwipe(direction)
-  }
-
   const currentBook = filteredBooks[currentIndex]
   const nextBook = filteredBooks[currentIndex + 1]
   const hasMoreBooks = currentIndex < filteredBooks.length
 
-  // Loading state
+  // Loading
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">
         <div className="text-center">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"
+            className="w-12 h-12 border-3 border-stone-300 border-t-amber-600 rounded-full mx-auto mb-4"
+            style={{ borderWidth: '3px' }}
           />
-          <p className="text-lg font-semibold text-gray-700">Loading amazing books for you...</p>
+          <p className="text-base font-medium text-stone-600">Finding books for you...</p>
         </div>
       </div>
     )
   }
 
+  // No matches
   if (filteredBooks.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 relative overflow-hidden">
-        {/* Animated background */}
-        <div className="absolute inset-0">
-          <motion.div 
-            animate={{ rotate: [0, 360] }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-200/20 rounded-full blur-3xl"
-          />
-          <motion.div 
-            animate={{ rotate: [360, 0] }}
-            transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-            className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-pink-200/20 rounded-full blur-3xl"
-          />
-        </div>
-
-        <div className="relative z-10 min-h-screen flex items-start md:items-center justify-center p-6 pt-4 pb-24">
-          <motion.div 
-            className="text-center max-w-md bg-white/90 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/20"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
+      <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center p-6 pb-24">
+        <motion.div
+          className="text-center max-w-sm"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
+            <BookOpen className="w-8 h-8 text-amber-600" />
+          </div>
+          <h2
+            className="text-2xl font-bold text-stone-900 mb-2"
+            style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
           >
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring" }}
-              className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center mx-auto mb-6"
-            >
-              <BookOpen className="w-8 h-8 text-white" />
-            </motion.div>
-            <motion.h2 
-              className="text-2xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              No Perfect Matches Found
-            </motion.h2>
-            <motion.p 
-              className="text-gray-600 mb-8 leading-relaxed"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              We couldn't find books that match your current preferences. Let's adjust your taste profile to discover more amazing reads!
-            </motion.p>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <Button 
-                onClick={onRestart} 
-                className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium rounded-xl transition-all duration-300"
-              >
-                <Settings className="w-5 h-5 mr-2" />
-                Update Preferences
-              </Button>
-            </motion.div>
-          </motion.div>
-        </div>
+            No matches yet
+          </h2>
+          <p className="text-stone-500 mb-6 leading-relaxed">
+            We couldn&apos;t find books for your current preferences. Try adjusting your taste profile.
+          </p>
+          <Button
+            onClick={onRestart}
+            className="h-11 px-6 bg-stone-900 hover:bg-stone-800 text-white font-medium rounded-xl"
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            Update Preferences
+          </Button>
+        </motion.div>
       </div>
     )
   }
 
+  // Done swiping
   if (!hasMoreBooks) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 relative overflow-hidden">
-        {/* Animated background */}
-        <div className="absolute inset-0">
-          <motion.div 
-            animate={{ rotate: [0, 360] }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-200/20 rounded-full blur-3xl"
-          />
-          <motion.div 
-            animate={{ rotate: [360, 0] }}
-            transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-            className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-pink-200/20 rounded-full blur-3xl"
-          />
-        </div>
-
-        <div className="relative z-10 min-h-screen flex items-start md:items-center justify-center p-6 pt-4 pb-24">
-          <motion.div 
-            className="text-center max-w-lg bg-white/90 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/20"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
+      <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center p-6 pb-24">
+        <motion.div
+          className="text-center max-w-sm w-full"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
+            <Heart className="w-8 h-8 text-emerald-600" />
+          </div>
+          <h2
+            className="text-2xl font-bold text-stone-900 mb-2"
+            style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
           >
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring" }}
-              className="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6"
-            >
-              <Heart className="w-10 h-10 text-white" />
-            </motion.div>
-            
-            <motion.h2 
-              className="text-3xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              Discovery Complete! 🎉
-            </motion.h2>
-            
-            <motion.div 
-              className="mb-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <p className="text-gray-600 mb-4 text-lg">
-                Amazing! You've explored all available books.
-              </p>
-              <div className="flex justify-center gap-8 mb-6">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{likedBooks.length}</div>
-                  <div className="text-sm text-gray-500">Books Liked</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-red-400">{passedBooks.length}</div>
-                  <div className="text-sm text-gray-500">Books Passed</div>
-                </div>
-              </div>
-              
-              {likedBooks.length > 0 && (
-                <motion.div 
-                  className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-2xl border border-green-200/50"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.6 }}
-                >
-                  <h3 className="font-bold text-green-800 mb-3 flex items-center gap-2">
-                    <Heart className="w-5 h-5" />
-                    Your Reading List
-                  </h3>
-                  <div className="max-h-32 overflow-y-auto space-y-1">
-                    {likedBooks.map((book, index) => (
-                      <motion.div
-                        key={book.id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.7 + index * 0.1 }}
-                        className="text-sm text-green-700 bg-white/60 rounded-lg px-3 py-2"
-                      >
-                        <span className="font-medium">{book.title}</span> by {book.author}
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </motion.div>
+            All done!
+          </h2>
+          <p className="text-stone-500 mb-6">
+            You&apos;ve explored all available books.
+          </p>
 
-            <motion.div 
-              className="flex gap-4 justify-center"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
+          {/* Stats */}
+          <div className="flex justify-center gap-8 mb-6">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-emerald-600">{likedBooks.length}</p>
+              <p className="text-xs text-stone-500">Liked</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-stone-400">{passedBooks.length}</p>
+              <p className="text-xs text-stone-500">Passed</p>
+            </div>
+          </div>
+
+          {/* Liked books list */}
+          {likedBooks.length > 0 && (
+            <div className="bg-white rounded-xl p-4 border border-stone-100 mb-6 text-left">
+              <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-3">
+                Your picks
+              </h3>
+              <div className="max-h-32 overflow-y-auto space-y-1.5">
+                {likedBooks.map((book, index) => (
+                  <motion.div
+                    key={book.id}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 + index * 0.05 }}
+                    className="text-sm text-stone-700 bg-stone-50 rounded-lg px-3 py-2"
+                  >
+                    <span className="font-medium">{book.title}</span>
+                    <span className="text-stone-400"> by {book.author}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-3">
+            <Button
+              onClick={onViewLibrary}
+              className="flex-1 h-11 bg-stone-900 hover:bg-stone-800 text-white font-medium rounded-xl"
             >
-              <Button 
-                onClick={onViewLibrary}
-                className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium rounded-xl transition-all duration-300"
-              >
-                <Library className="w-5 h-5 mr-2" />
-                View Library
-              </Button>
-              <Button 
-                onClick={onRestart} 
-                variant="outline"
-                className="px-6 py-3 border-purple-200 hover:border-purple-300 hover:bg-purple-50 rounded-xl transition-all duration-300"
-              >
-                <RotateCcw className="w-5 h-5 mr-2" />
-                Start Over
-              </Button>
-            </motion.div>
-          </motion.div>
-        </div>
+              <Library className="w-4 h-4 mr-2" />
+              View Library
+            </Button>
+            <Button
+              onClick={onRestart}
+              variant="outline"
+              className="flex-1 h-11 border-stone-200 hover:bg-stone-50 text-stone-700 rounded-xl"
+            >
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Start Over
+            </Button>
+          </div>
+        </motion.div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <motion.div 
-          animate={{ 
-            rotate: [0, 360],
-            scale: [1, 1.1, 1]
-          }}
-          transition={{ 
-            duration: 25, 
-            repeat: Infinity, 
-            ease: "linear" 
-          }}
-          className="absolute -top-32 -left-32 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl"
-        />
-        <motion.div 
-          animate={{ 
-            rotate: [360, 0],
-            scale: [1.1, 1, 1.1]
-          }}
-          transition={{ 
-            duration: 30, 
-            repeat: Infinity, 
-            ease: "linear" 
-          }}
-          className="absolute -bottom-32 -right-32 w-96 h-96 bg-pink-200/20 rounded-full blur-3xl"
-        />
-      </div>
-
+    <div className="min-h-screen bg-[#FDFBF7] relative">
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Header */}
-        <div className="bg-white/80 backdrop-blur-xl border-b border-white/20 sticky top-0 z-20">
-          <div className="px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center max-w-md mx-auto">
-            <Button 
-              variant="outline" 
-              size="sm" 
+        <div className="bg-[#FDFBF7]/90 backdrop-blur-md border-b border-stone-200/60 sticky top-0 z-20">
+          <div className="px-4 sm:px-6 py-3 flex justify-between items-center max-w-md mx-auto">
+            <button
               onClick={onViewLibrary}
-              className="border-purple-200 hover:border-purple-300 hover:bg-purple-50 transition-all duration-300 flex-shrink-0"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-100 hover:bg-stone-200 transition-colors tap-target touch-manipulation"
             >
-              <Library className="w-4 h-4 sm:mr-2 text-purple-600" />
-              <span className="font-medium text-purple-700">{likedBooks.length}</span>
-            </Button>
-            <div className="text-center flex-1 min-w-0 mx-2 sm:mx-4">
-              <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <Library className="w-4 h-4 text-stone-600" />
+              <span className="text-sm font-medium text-stone-700">{likedBooks.length}</span>
+            </button>
+
+            <div className="text-center">
+              <h1
+                className="text-lg font-bold text-stone-900 tracking-tight"
+                style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+              >
                 BookSwipe
               </h1>
-              <div className="flex items-center justify-center gap-1 sm:gap-2 mt-0.5 sm:mt-1">
-                <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-pulse"></div>
-                <p className="text-xs sm:text-sm text-gray-600 font-medium">
-                  {currentIndex + 1} of {filteredBooks.length}
-                </p>
-                <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-pulse"></div>
-              </div>
+              <p className="text-xs text-stone-400 font-medium">
+                {currentIndex + 1} of {filteredBooks.length}
+              </p>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
+
+            <button
               onClick={onRestart}
-              className="border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all duration-300 flex-shrink-0"
+              className="p-2 rounded-lg hover:bg-stone-100 transition-colors tap-target touch-manipulation"
             >
-              <Settings className="w-4 h-4 text-gray-600" />
-            </Button>
+              <Settings className="w-5 h-5 text-stone-400" />
+            </button>
           </div>
         </div>
 
-        {/* Cards Stack */}
-        <div className="flex-1 flex items-center justify-center p-3 sm:p-4 md:p-6">
+        {/* Card stack */}
+        <div className="flex-1 flex items-center justify-center p-3 sm:p-4">
           <div className="relative w-full max-w-sm">
-            <motion.div 
-              className="relative h-[520px] sm:h-[580px] md:h-[640px]"
-              initial={{ scale: 0.9, opacity: 0 }}
+            <motion.div
+              className="relative h-[500px] sm:h-[560px] md:h-[600px]"
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
+              transition={{ duration: 0.4 }}
             >
               <AnimatePresence>
                 {nextBook && (
@@ -482,49 +357,30 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="pb-20 sm:pb-8 pt-3 sm:pt-4">
-          <div className="max-w-sm mx-auto px-4 sm:px-6">
-            <div className="flex justify-center gap-6 sm:gap-8 mb-4 sm:mb-6">
-              <motion.div
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
+        {/* Action buttons */}
+        <div className="pb-20 sm:pb-6 pt-2">
+          <div className="max-w-sm mx-auto px-4">
+            <div className="flex justify-center gap-6 mb-3">
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                className="w-14 h-14 rounded-full border-2 border-red-200 hover:border-red-300 bg-white shadow-sm flex items-center justify-center transition-colors tap-target touch-manipulation"
+                onClick={() => handleSwipe("left")}
               >
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="w-14 sm:w-16 h-14 sm:h-16 rounded-full border-2 border-red-200 hover:border-red-300 hover:bg-red-50 bg-white/80 backdrop-blur-sm shadow-lg transition-all duration-300 tap-target touch-manipulation"
-                  onClick={() => handleButtonSwipe("left")}
-                >
-                  <X className="w-6 sm:w-7 h-6 sm:h-7 text-red-500" />
-                </Button>
-              </motion.div>
-              
-              <motion.div
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
+                <X className="w-6 h-6 text-red-400" />
+              </motion.button>
+
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                className="w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-600 shadow-sm flex items-center justify-center transition-colors tap-target touch-manipulation"
+                onClick={() => handleSwipe("right")}
               >
-                <Button
-                  size="icon"
-                  className="w-14 sm:w-16 h-14 sm:h-16 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 shadow-lg transition-all duration-300 tap-target touch-manipulation"
-                  onClick={() => handleButtonSwipe("right")}
-                >
-                  <Heart className="w-6 sm:w-7 h-6 sm:h-7 text-white" />
-                </Button>
-              </motion.div>
+                <Heart className="w-6 h-6 text-white" />
+              </motion.button>
             </div>
-            
-            {/* Swipe hint */}
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1, duration: 0.5 }}
-              className="text-center mt-3 sm:mt-4"
-            >
-              <p className="text-xs text-gray-500 bg-white/60 backdrop-blur-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2 inline-block">
-                💡 Swipe or tap to discover your next read
-              </p>
-            </motion.div>
+
+            <p className="text-center text-xs text-stone-400">
+              Swipe or tap to discover
+            </p>
           </div>
         </div>
       </div>

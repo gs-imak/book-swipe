@@ -1,12 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
-import { Trophy, Star, Target, TrendingUp, Award, Lock, Calendar, Zap, Home, BarChart3, X } from "lucide-react"
-import { Button } from "./ui/button"
+import { motion, AnimatePresence } from "framer-motion"
+import { Trophy, Star, Target, TrendingUp, Lock, X } from "lucide-react"
 import { Progress } from "./ui/progress"
-import { getUserStats, getUserAchievements, calculateLevel, getPointsForNextLevel } from "@/lib/storage"
-import { ACHIEVEMENTS, getAchievementsByCategory, getAchievementProgress } from "@/lib/achievements"
+import { getUserStats, getUserAchievements, getPointsForNextLevel } from "@/lib/storage"
+import { ACHIEVEMENTS, getAchievementsByCategory } from "@/lib/achievements"
 
 interface AchievementsPanelProps {
   isOpen: boolean
@@ -38,126 +37,119 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
   const pointsToNext = pointsForNext - currentPoints
   const levelProgress = ((currentPoints % pointsForNext) / pointsForNext) * 100
 
+  const tabs = [
+    { id: 'overview' as const, label: 'Overview' },
+    { id: 'achievements' as const, label: 'Achievements' },
+    { id: 'stats' as const, label: 'Statistics' },
+  ]
+
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/50 md:backdrop-blur-sm z-50 flex items-start md:items-center justify-center p-4 pb-24 pt-4"
-      onClick={onClose}
-    >
+    <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-4xl w-full max-h-[calc(100vh-120px)] sm:max-h-[90vh] overflow-hidden flex flex-col"
-        onClick={(e) => e.stopPropagation()}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-start md:items-center justify-center p-3 sm:p-4 pb-24 pt-4"
+        onClick={onClose}
       >
-        {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-4 sm:p-6 text-white flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                <Trophy className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+        <motion.div
+          initial={{ opacity: 0, y: 30, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 30, scale: 0.97 }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          className="bg-[#FDFBF7] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[calc(100vh-120px)] sm:max-h-[85vh] overflow-hidden flex flex-col border border-stone-200/60"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 flex-shrink-0">
+            <div className="flex items-start justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 bg-amber-50 rounded-xl flex items-center justify-center">
+                  <Trophy className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <h2
+                    className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight"
+                    style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+                  >
+                    Reading Journey
+                  </h2>
+                  <p className="text-sm text-stone-500">
+                    Level {currentLevel} &middot; {unlockedCount}/{totalAchievements} unlocked
+                  </p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <h2 className="text-lg sm:text-2xl font-bold truncate">Reading Journey</h2>
-                <p className="text-xs sm:text-base text-white/90">Level {currentLevel} • {unlockedCount}/{totalAchievements}</p>
-              </div>
+              <button
+                onClick={onClose}
+                className="p-2 -mr-2 rounded-lg hover:bg-stone-100 transition-colors tap-target touch-manipulation"
+              >
+                <X className="w-5 h-5 text-stone-400" />
+              </button>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="text-white hover:bg-white/20 flex-shrink-0 tap-target touch-manipulation"
-            >
-              <X className="w-5 h-5" />
-            </Button>
+
+            {/* Level Progress */}
+            <div className="bg-white rounded-xl p-4 border border-stone-100">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-stone-700">Level {currentLevel}</span>
+                <span className="text-xs text-stone-400">{currentPoints} / {pointsForNext} XP</span>
+              </div>
+              <div className="w-full bg-stone-100 rounded-full h-2">
+                <motion.div
+                  className="bg-amber-500 rounded-full h-2"
+                  style={{ width: `${levelProgress}%` }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${levelProgress}%` }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                />
+              </div>
+              <p className="text-xs text-stone-400 mt-1.5">
+                {pointsToNext > 0 ? `${pointsToNext} XP to level ${currentLevel + 1}` : "Max level reached!"}
+              </p>
+            </div>
           </div>
 
-          {/* Level Progress */}
-          <div className="mt-4 sm:mt-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm sm:text-base font-medium">Level {currentLevel}</span>
-              <span className="text-xs sm:text-sm text-white/80">{currentPoints} / {pointsForNext} XP</span>
+          {/* Tabs */}
+          <div className="px-5 sm:px-6 flex-shrink-0">
+            <div className="flex gap-1 bg-stone-100 rounded-lg p-1">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all tap-target touch-manipulation ${
+                    activeTab === tab.id
+                      ? 'bg-white text-stone-900 shadow-sm'
+                      : 'text-stone-500 hover:text-stone-700'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
-            <div className="w-full bg-white/20 rounded-full h-2 sm:h-3">
-              <motion.div
-                className="bg-white rounded-full h-2 sm:h-3"
-                style={{ width: `${levelProgress}%` }}
-                initial={{ width: 0 }}
-                animate={{ width: `${levelProgress}%` }}
-                transition={{ duration: 1, ease: "easeOut" }}
+          </div>
+
+          {/* Content */}
+          <div className="p-5 sm:p-6 overflow-y-auto flex-1 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+            {activeTab === 'overview' && (
+              <OverviewTab
+                stats={stats}
+                achievements={achievements}
+                completionPercentage={completionPercentage}
               />
-            </div>
-            <p className="text-xs sm:text-sm text-white/80 mt-1">
-              {pointsToNext > 0 ? `${pointsToNext} XP to level ${currentLevel + 1}` : "Max level!"}
-            </p>
-          </div>
-        </div>
+            )}
 
-        {/* Tabs */}
-        <div className="border-b flex-shrink-0">
-          <div className="flex justify-around sm:justify-start">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium border-b-2 transition-colors tap-target touch-manipulation ${
-                activeTab === 'overview'
-                  ? 'border-purple-500 text-purple-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <Home className="w-5 h-5 sm:w-4 sm:h-4" />
-              <span className="sm:inline">Overview</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('achievements')}
-              className={`flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium border-b-2 transition-colors tap-target touch-manipulation ${
-                activeTab === 'achievements'
-                  ? 'border-purple-500 text-purple-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <Trophy className="w-5 h-5 sm:w-4 sm:h-4" />
-              <span className="sm:inline">Achievements</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('stats')}
-              className={`flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium border-b-2 transition-colors tap-target touch-manipulation ${
-                activeTab === 'stats'
-                  ? 'border-purple-500 text-purple-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <BarChart3 className="w-5 h-5 sm:w-4 sm:h-4" />
-              <span className="sm:inline">Statistics</span>
-            </button>
-          </div>
-        </div>
+            {activeTab === 'achievements' && (
+              <AchievementsTab categorizedAchievements={categorizedAchievements} />
+            )}
 
-        {/* Content */}
-        <div className="p-4 sm:p-6 overflow-y-auto flex-1 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
-          {activeTab === 'overview' && (
-            <OverviewTab 
-              stats={stats} 
-              achievements={achievements} 
-              completionPercentage={completionPercentage}
-            />
-          )}
-          
-          {activeTab === 'achievements' && (
-            <AchievementsTab categorizedAchievements={categorizedAchievements} />
-          )}
-          
-          {activeTab === 'stats' && (
-            <StatsTab stats={stats} />
-          )}
-          
-          {/* Bottom padding for mobile safe area */}
-          <div className="h-4 sm:h-0" />
-        </div>
+            {activeTab === 'stats' && (
+              <StatsTab stats={stats} />
+            )}
+
+            <div className="h-4 sm:h-0" />
+          </div>
+        </motion.div>
       </motion.div>
-    </motion.div>
+    </AnimatePresence>
   )
 }
 
@@ -168,62 +160,68 @@ function OverviewTab({ stats, achievements, completionPercentage }: any) {
     .slice(0, 3)
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-5">
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-3 sm:p-4 rounded-xl">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Star className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" />
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-white rounded-xl p-3.5 border border-stone-100">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <Star className="w-4 h-4 text-blue-600" />
+            </div>
             <div className="min-w-0">
-              <p className="text-lg sm:text-2xl font-bold text-blue-900">{stats.totalPoints}</p>
-              <p className="text-xs sm:text-sm text-blue-600 truncate">Points</p>
+              <p className="text-lg font-bold text-stone-900">{stats.totalPoints}</p>
+              <p className="text-xs text-stone-500">Points</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-green-50 to-green-100 p-3 sm:p-4 rounded-xl">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 flex-shrink-0" />
+        <div className="bg-white rounded-xl p-3.5 border border-stone-100">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+              <TrendingUp className="w-4 h-4 text-emerald-600" />
+            </div>
             <div className="min-w-0">
-              <p className="text-lg sm:text-2xl font-bold text-green-900">{stats.currentStreak}</p>
-              <p className="text-xs sm:text-sm text-green-600 truncate">Streak</p>
+              <p className="text-lg font-bold text-stone-900">{stats.currentStreak}</p>
+              <p className="text-xs text-stone-500">Day streak</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-3 sm:p-4 rounded-xl">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Trophy className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 flex-shrink-0" />
+        <div className="bg-white rounded-xl p-3.5 border border-stone-100">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+              <Trophy className="w-4 h-4 text-amber-600" />
+            </div>
             <div className="min-w-0">
-              <p className="text-lg sm:text-2xl font-bold text-purple-900">{achievements.filter((a: any) => a.unlockedAt).length}</p>
-              <p className="text-xs sm:text-sm text-purple-600 truncate">Unlocked</p>
+              <p className="text-lg font-bold text-stone-900">{achievements.filter((a: any) => a.unlockedAt).length}</p>
+              <p className="text-xs text-stone-500">Unlocked</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-3 sm:p-4 rounded-xl">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Target className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600 flex-shrink-0" />
+        <div className="bg-white rounded-xl p-3.5 border border-stone-100">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-lg bg-rose-50 flex items-center justify-center flex-shrink-0">
+              <Target className="w-4 h-4 text-rose-600" />
+            </div>
             <div className="min-w-0">
-              <p className="text-lg sm:text-2xl font-bold text-orange-900">{stats.totalBooksRead}</p>
-              <p className="text-xs sm:text-sm text-orange-600 truncate">Books</p>
+              <p className="text-lg font-bold text-stone-900">{stats.totalBooksRead}</p>
+              <p className="text-xs text-stone-500">Books read</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Achievement Progress */}
-      <div className="bg-gray-50 rounded-xl p-4 sm:p-6">
-        <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Achievement Progress</h3>
-        <div className="flex items-center gap-4">
-          <div className="flex-1">
-            <Progress value={completionPercentage} className="h-3" />
-          </div>
-          <span className="text-sm font-medium text-gray-600">
+      <div className="bg-white rounded-xl p-4 border border-stone-100">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-stone-900">Achievement Progress</h3>
+          <span className="text-sm font-medium text-amber-600">
             {Math.round(completionPercentage)}%
           </span>
         </div>
-        <p className="text-sm text-gray-500 mt-2">
+        <Progress value={completionPercentage} className="h-2" />
+        <p className="text-xs text-stone-400 mt-2">
           {achievements.filter((a: any) => a.unlockedAt).length} of {ACHIEVEMENTS.length} achievements unlocked
         </p>
       </div>
@@ -231,18 +229,18 @@ function OverviewTab({ stats, achievements, completionPercentage }: any) {
       {/* Recent Achievements */}
       {recentAchievements.length > 0 && (
         <div>
-          <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Recent Achievements</h3>
-          <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-stone-900 mb-3">Recently Unlocked</h3>
+          <div className="space-y-2">
             {recentAchievements.map((achievement: any) => (
-              <div key={achievement.id} className="flex items-center gap-4 p-4 bg-yellow-50 rounded-xl border-l-4 border-yellow-400">
-                <span className="text-2xl">{achievement.icon}</span>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-gray-900">{achievement.name}</h4>
-                  <p className="text-sm text-gray-600">{achievement.description}</p>
+              <div key={achievement.id} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-stone-100">
+                <span className="text-xl">{achievement.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium text-sm text-stone-900">{achievement.name}</h4>
+                  <p className="text-xs text-stone-500 truncate">{achievement.description}</p>
                 </div>
-                <div className="text-xs text-gray-500">
+                <span className="text-[11px] text-stone-400 flex-shrink-0">
                   {new Date(achievement.unlockedAt).toLocaleDateString()}
-                </div>
+                </span>
               </div>
             ))}
           </div>
@@ -262,14 +260,14 @@ function AchievementsTab({ categorizedAchievements }: any) {
   ]
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <div className="space-y-6">
       {categories.map((category) => (
         <div key={category.key}>
-          <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
             <span>{category.icon}</span>
             {category.name}
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
             {categorizedAchievements[category.key]?.map((achievement: any) => (
               <AchievementCard key={achievement.id} achievement={achievement} />
             ))}
@@ -287,58 +285,59 @@ function AchievementCard({ achievement }: { achievement: any }) {
   const progressPercentage = (progress / maxProgress) * 100
 
   return (
-    <div className={`
-      p-4 rounded-xl border-2 transition-all
-      ${isUnlocked 
-        ? 'bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200' 
-        : 'bg-gray-50 border-gray-200'
-      }
-    `}>
+    <div className={`p-3.5 rounded-xl border transition-all ${
+      isUnlocked
+        ? 'bg-white border-amber-200/60'
+        : 'bg-stone-50/50 border-stone-100'
+    }`}>
       <div className="flex items-start gap-3">
-        <div className={`
-          text-2xl p-2 rounded-lg
-          ${isUnlocked ? 'bg-yellow-100' : 'bg-gray-200'}
-        `}>
-          {isUnlocked ? achievement.icon : <Lock className="w-6 h-6 text-gray-400" />}
+        <div className={`text-xl w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+          isUnlocked ? 'bg-amber-50' : 'bg-stone-100'
+        }`}>
+          {isUnlocked ? achievement.icon : <Lock className="w-4 h-4 text-stone-400" />}
         </div>
-        
+
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2 mb-1">
-            <h4 className={`font-semibold flex-1 ${isUnlocked ? 'text-gray-900' : 'text-gray-500'}`}>
+          <div className="flex items-start justify-between gap-2 mb-0.5">
+            <h4 className={`font-medium text-sm ${isUnlocked ? 'text-stone-900' : 'text-stone-400'}`}>
               {achievement.name}
             </h4>
             {isUnlocked && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700 border border-green-200 whitespace-nowrap flex-shrink-0">
-                ✓ Completed
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 whitespace-nowrap flex-shrink-0">
+                Done
               </span>
             )}
           </div>
-          <p className={`text-sm ${isUnlocked ? 'text-gray-600' : 'text-gray-400'}`}>
+          <p className={`text-xs leading-relaxed ${isUnlocked ? 'text-stone-500' : 'text-stone-400'}`}>
             {achievement.description}
           </p>
-          
-          {achievement.maxProgress && (
+
+          {achievement.maxProgress && !isUnlocked && (
             <div className="mt-2">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-gray-500">Progress</span>
-                <span className="text-xs text-gray-500">{progress}/{maxProgress}</span>
+                <span className="text-[11px] text-stone-400">Progress</span>
+                <span className="text-[11px] text-stone-400">{progress}/{maxProgress}</span>
               </div>
-              <Progress value={progressPercentage} className="h-2" />
+              <div className="w-full bg-stone-100 rounded-full h-1.5">
+                <div
+                  className="bg-amber-400 rounded-full h-1.5 transition-all"
+                  style={{ width: `${progressPercentage}%` }}
+                />
+              </div>
             </div>
           )}
-          
+
           {isUnlocked && (
-            <div className="mt-2 flex items-center gap-2 flex-wrap">
-              <span className={`
-                px-2 py-1 rounded-full text-xs font-medium
-                ${achievement.type === 'bronze' ? 'bg-amber-100 text-amber-800' :
-                  achievement.type === 'silver' ? 'bg-gray-100 text-gray-800' :
-                  achievement.type === 'gold' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-purple-100 text-purple-800'}
-              `}>
-                {achievement.type.toUpperCase()}
+            <div className="mt-2 flex items-center gap-2">
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                achievement.type === 'bronze' ? 'bg-amber-100 text-amber-700' :
+                achievement.type === 'silver' ? 'bg-stone-100 text-stone-600' :
+                achievement.type === 'gold' ? 'bg-yellow-100 text-yellow-700' :
+                'bg-violet-50 text-violet-700'
+              }`}>
+                {achievement.type.charAt(0).toUpperCase() + achievement.type.slice(1)}
               </span>
-              <span className="text-xs text-gray-500">
+              <span className="text-[11px] text-stone-400">
                 {new Date(achievement.unlockedAt).toLocaleDateString()}
               </span>
             </div>
@@ -364,25 +363,22 @@ function StatsTab({ stats }: { stats: any }) {
   ]
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
       {statItems.map((item, index) => (
         <motion.div
           key={item.label}
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
-          className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl"
+          transition={{ delay: index * 0.04 }}
+          className="bg-white rounded-xl p-3.5 border border-stone-100 flex items-center gap-3"
         >
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">{item.icon}</span>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">{item.value}</p>
-              <p className="text-sm text-gray-600">{item.label}</p>
-            </div>
+          <span className="text-lg">{item.icon}</span>
+          <div>
+            <p className="text-base font-bold text-stone-900">{item.value}</p>
+            <p className="text-xs text-stone-500">{item.label}</p>
           </div>
         </motion.div>
       ))}
     </div>
   )
 }
-
