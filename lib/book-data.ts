@@ -1,3 +1,11 @@
+export interface BookMetadata {
+  subjects?: string[]
+  readinglogCount?: number
+  wantToReadCount?: number
+  ratingsCount?: number
+  source: 'sample' | 'google' | 'openlibrary'
+}
+
 export interface Book {
   id: string
   title: string
@@ -10,6 +18,7 @@ export interface Book {
   description: string
   publishedYear: number
   readingTime: string
+  metadata?: BookMetadata
 }
 
 export const sampleBooks: Book[] = [

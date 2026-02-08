@@ -1,12 +1,17 @@
 "use client"
 
-import { sampleBooks, type Book } from "./book-data"
+import { type Book } from "./book-data"
 import { getLikedBooks } from "./storage"
+import { getCachedBooks } from "./book-cache"
+import { fetchPersonalizedBooks } from "./books-api"
+import {
+  scoreBooks,
+  applyMMR,
+  ensureGenreDiversity,
+  type RecommendationReason,
+} from "./scoring-engine"
 
-export interface RecommendationReason {
-  type: "genre" | "mood" | "author" | "rating"
-  description: string
-}
+export type { RecommendationReason }
 
 export interface RecommendedBook extends Book {
   reasons: RecommendationReason[]
@@ -37,7 +42,7 @@ export const moodFilters: MoodFilter[] = [
   { id: "thoughtful", name: "Thoughtful", emoji: "🧠", description: "Philosophical and contemplative", keywords: ["Philosophical", "Thought-provoking", "Contemplative", "Reflective"] },
   { id: "funny", name: "Funny", emoji: "😄", description: "Humorous and light reads", keywords: ["Humorous", "Funny", "Light-hearted"] },
   { id: "inspiring", name: "Inspiring", emoji: "🌟", description: "Motivating and empowering", keywords: ["Inspiring", "Motivational", "Empowering", "Practical"] },
-  { id: "dark", name: "Dark", emoji: "🌒", description: "Brooding, heavy, and intense", keywords: ["Dark", "Melancholic", "Powerful"] }
+  { id: "dark", name: "Dark", emoji: "🌒", description: "Brooding, heavy, and intense", keywords: ["Dark", "Melancholic", "Powerful"] },
 ]
 
 export const timeBasedSuggestions: TimeSuggestion[] = [
@@ -45,7 +50,7 @@ export const timeBasedSuggestions: TimeSuggestion[] = [
   { id: "short-session", name: "2–4 hrs", emoji: "☕", description: "Nice afternoon read", minHours: 2, maxHours: 4 },
   { id: "unwind", name: "4–6 hrs", emoji: "🌆", description: "Unwind in the evening", minHours: 4, maxHours: 6 },
   { id: "weekend", name: "6–8 hrs", emoji: "📚", description: "Great for a weekend", minHours: 6, maxHours: 8 },
-  { id: "marathon", name: "> 8 hrs", emoji: "🚀", description: "Settle in for a long ride", minHours: 8 }
+  { id: "marathon", name: "> 8 hrs", emoji: "🚀", description: "Settle in for a long ride", minHours: 8 },
 ]
 
 function estimateHoursFromString(readingTime: string): number {
@@ -58,98 +63,105 @@ function estimateHoursFromString(readingTime: string): number {
   return 4
 }
 
-function buildUserPreferenceMaps(liked: Book[]) {
-  const genreFrequency = new Map<string, number>()
-  const moodFrequency = new Map<string, number>()
-  const authorFrequency = new Map<string, number>()
-
-  liked.forEach((book) => {
-    book.genre.forEach((g) => genreFrequency.set(g, (genreFrequency.get(g) || 0) + 1))
-    book.mood.forEach((m) => moodFrequency.set(m, (moodFrequency.get(m) || 0) + 1))
-    authorFrequency.set(book.author, (authorFrequency.get(book.author) || 0) + 1)
-  })
-
-  return { genreFrequency, moodFrequency, authorFrequency }
-}
-
-function scoreBookForUser(book: Book, pref: ReturnType<typeof buildUserPreferenceMaps>): { score: number; reasons: RecommendationReason[] } {
-  let score = 0
-  const reasons: RecommendationReason[] = []
-
-  const genreMatches = book.genre.filter((g) => pref.genreFrequency.has(g))
-  if (genreMatches.length > 0) {
-    score += 3 * genreMatches.length
-    reasons.push({ type: "genre", description: `Matches your preferred genre: ${genreMatches[0]}` })
-  }
-
-  const moodMatches = book.mood.filter((m) => pref.moodFrequency.has(m))
-  if (moodMatches.length > 0) {
-    score += 2 * moodMatches.length
-    reasons.push({ type: "mood", description: `Captures a mood you like: ${moodMatches[0]}` })
-  }
-
-  if (pref.authorFrequency.has(book.author)) {
-    score += 2
-    reasons.push({ type: "author", description: `By an author you enjoyed: ${book.author}` })
-  }
-
-  score += book.rating / 5
-  reasons.push({ type: "rating", description: `Highly rated (${book.rating})` })
-
-  return { score, reasons }
-}
-
-export function getSmartRecommendations(count = 8): RecommendedBook[] {
+// TF-IDF powered smart recommendations using full book pool
+export async function getSmartRecommendations(count = 8): Promise<RecommendedBook[]> {
   const liked = getLikedBooks()
   if (liked.length === 0) return []
 
   const likedIds = new Set(liked.map((b) => b.id))
-  const preferences = buildUserPreferenceMaps(liked)
+  let allBooks = getCachedBooks()
+  let candidates = allBooks.filter((b) => !likedIds.has(b.id))
 
-  return sampleBooks
-    .filter((b) => !likedIds.has(b.id))
-    .map((b) => {
-      const { score, reasons } = scoreBookForUser(b, preferences)
-      return { ...b, reasons, _score: score } as unknown as RecommendedBook & { _score: number }
-    })
-    .sort((a, b) => (b as any)._score - (a as any)._score)
-    .slice(0, count)
-    .map(({ _score, ...rest }) => rest as RecommendedBook)
+  // If cache is too small, fetch personalized books
+  if (candidates.length < count * 2) {
+    try {
+      const fresh = await fetchPersonalizedBooks(liked)
+      const freshFiltered = fresh.filter((b) => !likedIds.has(b.id))
+      candidates = [...candidates, ...freshFiltered]
+      // Deduplicate
+      const seen = new Set<string>()
+      candidates = candidates.filter((b) => {
+        if (seen.has(b.id)) return false
+        seen.add(b.id)
+        return true
+      })
+    } catch {
+      // Continue with what we have
+    }
+  }
+
+  if (candidates.length === 0) return []
+
+  // Score using TF-IDF engine
+  const scored = scoreBooks(candidates, liked, {
+    communityBoost: true,
+    excludeIds: likedIds,
+  })
+
+  // Apply MMR for diversity
+  const diverse = applyMMR(scored, count, 0.7)
+
+  return diverse.map((s) => ({
+    ...s.book,
+    reasons: s.reasons,
+  }))
 }
 
+// Pick books that are different from what the user has liked but still high quality
 export function getDiverseRecommendations(count = 6): Book[] {
   const liked = getLikedBooks()
-  const preferences = buildUserPreferenceMaps(liked)
   const likedIds = new Set(liked.map((b) => b.id))
+  const allBooks = getCachedBooks()
+  const candidates = allBooks.filter((b) => !likedIds.has(b.id))
 
-  return sampleBooks
-    .filter((b) => !likedIds.has(b.id))
-    .map((b) => {
-      const genreOverlap = b.genre.filter((g) => preferences.genreFrequency.has(g)).length
-      const moodOverlap = b.mood.filter((m) => preferences.moodFrequency.has(m)).length
-      const authorOverlap = preferences.authorFrequency.has(b.author) ? 1 : 0
-      const overlap = genreOverlap + moodOverlap + authorOverlap
-      return { book: b, overlap }
-    })
-    .sort((a, b) => a.overlap - b.overlap || b.book.rating - a.book.rating)
+  if (liked.length === 0) {
+    return candidates
+      .sort((a, b) => b.rating - a.rating)
+      .slice(0, count)
+  }
+
+  // Score then pick from the BOTTOM of relevance (low similarity = diverse)
+  const scored = scoreBooks(candidates, liked, { excludeIds: likedIds })
+
+  const diverseCandidates = scored
+    .filter((s) => s.score < 0.3 && s.book.rating >= 3.5)
+    .sort((a, b) => b.book.rating - a.book.rating)
+
+  // If not enough low-similarity books, relax the threshold
+  const pool =
+    diverseCandidates.length >= count
+      ? diverseCandidates
+      : scored
+          .sort((a, b) => a.score - b.score || b.book.rating - a.book.rating)
+          .slice(0, count * 2)
+
+  return ensureGenreDiversity(pool, 3)
     .slice(0, count)
-    .map((x) => x.book)
+    .map((s) => s.book)
 }
 
+// Filter by mood from full cache
 export function getBooksByMood(mood: MoodFilter): Book[] {
+  const allBooks = getCachedBooks()
   const keywords = new Set(mood.keywords.map((k) => k.toLowerCase()))
-  return sampleBooks.filter((b) => b.mood.some((m) => keywords.has(m.toLowerCase())))
+
+  return allBooks
+    .filter((b) => b.mood.some((m) => keywords.has(m.toLowerCase())))
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, 20)
 }
 
+// Filter by reading time from full cache
 export function getBooksByTime(time: TimeSuggestion): Book[] {
-  return sampleBooks.filter((b) => {
-    const hours = estimateHoursFromString(b.readingTime)
-    if (typeof time.minHours === "number" && hours < time.minHours) return false
-    if (typeof time.maxHours === "number" && hours > time.maxHours) return false
-    return true
-  })
+  const allBooks = getCachedBooks()
+
+  return allBooks
+    .filter((b) => {
+      const hours = estimateHoursFromString(b.readingTime)
+      if (typeof time.minHours === "number" && hours < time.minHours) return false
+      if (typeof time.maxHours === "number" && hours > time.maxHours) return false
+      return true
+    })
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, 20)
 }
-
-
-
-

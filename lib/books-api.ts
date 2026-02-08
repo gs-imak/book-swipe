@@ -1,4 +1,6 @@
 import { Book } from "./book-data"
+import { getCachedBooks, addBooksToCache, isQueryCached, markQueryCompleted, queryCache } from "./book-cache"
+import { searchOpenLibrary } from "./openlibrary-api"
 
 // Google Books API integration
 export interface GoogleBook {
@@ -163,10 +165,13 @@ function transformGoogleBookToBook(googleBook: GoogleBook): Book | null {
     pages,
     genre: volumeInfo.categories || ['General'],
     mood: mapCategoriesToMoods(volumeInfo.categories || []),
-    description: volumeInfo.description?.replace(/<[^>]*>/g, '').slice(0, 200) + '...' || 
+    description: volumeInfo.description?.replace(/<[^>]*>/g, '').slice(0, 200) + '...' ||
                 'No description available.',
     publishedYear,
-    readingTime: estimateReadingTime(pages)
+    readingTime: estimateReadingTime(pages),
+    metadata: {
+      source: 'google' as const,
+    }
   }
 }
 
@@ -192,43 +197,114 @@ export const bookSearchQueries = {
   'Poetry': 'subject:poetry'
 }
 
-// Function to get books by category - TAGS BOOKS WITH CORRECT GENRE
+// Function to get books by category - merges searched genre with Google's categories
 export async function getBooksByCategory(category: string, count = 10): Promise<Book[]> {
   const query = bookSearchQueries[category as keyof typeof bookSearchQueries] || category
   // Request more books than needed since we filter out books without covers
   const books = await searchGoogleBooks(query, Math.min(count * 2, 40))
-  
-  // CRITICAL: Tag each book with the genre we searched for
-  // This overrides Google's generic categories with our specific genre
+
+  // Merge searched genre with Google's existing categories (don't overwrite)
   const taggedBooks = books.map(book => ({
     ...book,
-    genre: [category] // Replace with the EXACT genre we searched for
+    genre: book.genre[0] === 'General'
+      ? [category]
+      : Array.from(new Set([category, ...book.genre]))
   }))
-  
-  // Return only the requested count
+
   return taggedBooks.slice(0, count)
 }
 
-// Function to get mixed recommendations
+// Function to get mixed recommendations -- parallel fetching with cache
 export async function getMixedRecommendations(count = 50): Promise<Book[]> {
+  // Check cache first
+  const cached = getCachedBooks()
+  const allCached = cached.length >= count &&
+    Object.keys(bookSearchQueries).every(q => isQueryCached(q))
+
+  if (allCached) {
+    return cached.sort(() => Math.random() - 0.5).slice(0, count)
+  }
+
   const categories = Object.keys(bookSearchQueries)
   const booksPerCategory = Math.ceil(count / categories.length)
-  
-  const allBooks: Book[] = []
-  
-  for (const category of categories) {
+
+  // Fetch all categories in PARALLEL
+  const fetchPromises = categories.map(async (category) => {
+    if (isQueryCached(category)) {
+      return queryCache(book => book.genre.some(g => g === category)).slice(0, booksPerCategory)
+    }
     try {
       const books = await getBooksByCategory(category, booksPerCategory)
-      allBooks.push(...books)
+      addBooksToCache(books)
+      markQueryCompleted(category)
+      return books
     } catch (error) {
       console.error(`Error fetching ${category} books:`, error)
+      return []
     }
+  })
+
+  const results = await Promise.allSettled(fetchPromises)
+  const allBooks = results
+    .filter((r): r is PromiseFulfilledResult<Book[]> => r.status === 'fulfilled')
+    .flatMap(r => r.value)
+
+  // Also fetch from Open Library for richer data (top 3 genres only to limit requests)
+  try {
+    const olGenres = categories.slice(0, 3)
+    const olPromises = olGenres.map(g => searchOpenLibrary(g, 5))
+    const olResults = await Promise.allSettled(olPromises)
+    const olBooks = olResults
+      .filter((r): r is PromiseFulfilledResult<Book[]> => r.status === 'fulfilled')
+      .flatMap(r => r.value)
+    if (olBooks.length > 0) {
+      addBooksToCache(olBooks)
+      allBooks.push(...olBooks)
+    }
+  } catch {
+    // Open Library is supplementary, don't fail if it errors
   }
-  
-  // Shuffle and return requested count
+
   return allBooks
     .sort(() => Math.random() - 0.5)
     .slice(0, count)
 }
 
+// Fetch books specifically related to user's liked books
+export async function fetchPersonalizedBooks(likedBooks: Book[]): Promise<Book[]> {
+  if (likedBooks.length === 0) return []
 
+  // Extract top genres and authors from liked books
+  const genreCounts: Record<string, number> = {}
+  const authorCounts: Record<string, number> = {}
+
+  likedBooks.forEach(book => {
+    book.genre.forEach(g => { genreCounts[g] = (genreCounts[g] || 0) + 1 })
+    authorCounts[book.author] = (authorCounts[book.author] || 0) + 1
+  })
+
+  const topGenres = Object.entries(genreCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([genre]) => genre)
+
+  const topAuthors = Object.entries(authorCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 2)
+    .map(([author]) => author)
+
+  // Fetch in parallel: Google genre + Google author + Open Library genre
+  const promises: Promise<Book[]>[] = [
+    ...topGenres.map(g => getBooksByCategory(g, 8)),
+    ...topAuthors.map(a => searchGoogleBooks(`inauthor:"${a}"`, 8)),
+    ...topGenres.slice(0, 2).map(g => searchOpenLibrary(g, 8)),
+  ]
+
+  const results = await Promise.allSettled(promises)
+  const books = results
+    .filter((r): r is PromiseFulfilledResult<Book[]> => r.status === 'fulfilled')
+    .flatMap(r => r.value)
+
+  addBooksToCache(books)
+  return books
+}

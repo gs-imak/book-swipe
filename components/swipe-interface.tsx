@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Book, UserPreferences } from "@/lib/book-data"
 import { saveLikedBooks, getLikedBooks } from "@/lib/storage"
 import { getMixedRecommendations } from "@/lib/books-api"
+import { getCachedBooks, addBooksToCache } from "@/lib/book-cache"
 import { Heart, X, RotateCcw, Settings, Library, BookOpen } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useGamification } from "./gamification-provider"
@@ -16,60 +17,93 @@ interface SwipeInterfaceProps {
   onViewLibrary: () => void
 }
 
+// Genre alias map for fuzzy matching
+const GENRE_ALIASES: Record<string, string[]> = {
+  'fantasy': ['fantasy', 'magical', 'myths', 'fairy tales'],
+  'science fiction': ['science fiction', 'sci-fi', 'scifi', 'space', 'futuristic'],
+  'mystery': ['mystery', 'detective', 'crime', 'whodunit'],
+  'romance': ['romance', 'love stories', 'romantic'],
+  'thriller': ['thriller', 'suspense', 'crime thriller'],
+  'contemporary fiction': ['fiction', 'contemporary', 'literary fiction', 'general fiction'],
+  'historical fiction': ['historical fiction', 'history', 'historical'],
+  'biography': ['biography', 'memoir', 'autobiography', 'biographical'],
+  'self-help': ['self-help', 'self help', 'personal development', 'self improvement'],
+  'philosophy': ['philosophy', 'philosophical'],
+  'horror': ['horror', 'gothic', 'dark fiction'],
+  'comedy': ['comedy', 'humor', 'humour', 'funny', 'satire'],
+  'lgbtq+': ['lgbtq', 'lgbtq+', 'queer', 'gay', 'lesbian'],
+}
+
 function filterBooks(books: Book[], preferences: UserPreferences): Book[] {
-  // If no books, return empty
   if (books.length === 0) return []
-  
-  const filtered = books.filter(book => {
-    // Filter by genre preferences (EXACT match required)
-    const hasMatchingGenre = preferences.favoriteGenres.length === 0 || 
-      book.genre.some(bookGenre => 
-        preferences.favoriteGenres.some(prefGenre => {
-          const match = bookGenre.toLowerCase().trim() === prefGenre.toLowerCase().trim()
-          if (match) {
-            console.log(`✓ Genre match: "${bookGenre}" === "${prefGenre}" for book: ${book.title}`)
-          }
-          return match
-        })
-      )
-    
-    // Filter by mood preferences (EXACT match required)
-    const hasMatchingMood = preferences.currentMood.length === 0 ||
-      book.mood.some(bookMood => 
-        preferences.currentMood.some(prefMood => 
-          bookMood.toLowerCase().trim() === prefMood.toLowerCase().trim()
-        )
-      )
-    
-    // Filter by length preference (strict)
+
+  const prefGenresArr = preferences.favoriteGenres.map(g => g.toLowerCase().trim())
+  const prefGenres = new Set(prefGenresArr)
+  const prefMoodsArr = preferences.currentMood.map(m => m.toLowerCase().trim())
+  const prefMoods = new Set(prefMoodsArr)
+
+  const matchesGenre = (bookGenres: string[]): boolean => {
+    if (prefGenres.size === 0) return true
+    return bookGenres.some(bg => {
+      const bgLower = bg.toLowerCase().trim()
+      if (prefGenres.has(bgLower)) return true
+      // Alias matching
+      for (const [canonical, aliases] of Object.entries(GENRE_ALIASES)) {
+        if (prefGenres.has(canonical) && aliases.some(a => bgLower.includes(a))) return true
+        if (aliases.some(a => a === bgLower) && prefGenres.has(canonical)) return true
+      }
+      // Substring containment
+      if (prefGenresArr.some(pg => bgLower.includes(pg) || pg.includes(bgLower))) return true
+      return false
+    })
+  }
+
+  const matchesMood = (bookMoods: string[]): boolean => {
+    if (prefMoods.size === 0) return true
+    return bookMoods.some(bm => {
+      const bmLower = bm.toLowerCase().trim()
+      if (prefMoods.has(bmLower)) return true
+      if (prefMoodsArr.some(pm => bmLower.includes(pm) || pm.includes(bmLower))) return true
+      return false
+    })
+  }
+
+  // Score-based filtering instead of strict pass/fail
+  const scored = books.map(book => {
+    let score = 0
+    if (matchesGenre(book.genre)) score += 2
+    if (matchesMood(book.mood)) score += 1
+
     let matchesLength = true
     if (preferences.preferredLength !== "No preference") {
       switch (preferences.preferredLength) {
-        case "Short (under 250 pages)":
-          matchesLength = book.pages < 250
-          break
-        case "Medium (250-400 pages)":
-          matchesLength = book.pages >= 250 && book.pages <= 400
-          break
-        case "Long (400-600 pages)":
-          matchesLength = book.pages > 400 && book.pages <= 600
-          break
-        case "Epic (600+ pages)":
-          matchesLength = book.pages > 600
-          break
+        case "Short (under 250 pages)": matchesLength = book.pages < 300; break // Relaxed
+        case "Medium (250-400 pages)": matchesLength = book.pages >= 200 && book.pages <= 450; break
+        case "Long (400-600 pages)": matchesLength = book.pages > 350 && book.pages <= 650; break
+        case "Epic (600+ pages)": matchesLength = book.pages > 550; break
       }
     }
-    
-    const passes = (hasMatchingGenre || hasMatchingMood) && matchesLength
-    
-    if (!passes) {
-      console.log(`✗ Filtered out: ${book.title} - Genre: ${book.genre.join(', ')} - Mood: ${book.mood.join(', ')} - Pages: ${book.pages}`)
-    }
-    
-    return passes
+    if (matchesLength) score += 0.5
+
+    // Bonus for higher ratings
+    score += book.rating / 10
+
+    return { book, score }
   })
-  
-  console.log(`Filter result: ${filtered.length}/${books.length} books passed`)
+
+  const filtered = scored
+    .filter(s => s.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .map(s => s.book)
+
+  // Graceful fallback: if too strict, relax to genre OR mood match
+  if (filtered.length < 5 && books.length > 10) {
+    return books
+      .filter(b => matchesGenre(b.genre) || matchesMood(b.mood))
+      .sort((a, b) => b.rating - a.rating)
+      .slice(0, 50)
+  }
+
   return filtered
 }
 
@@ -85,48 +119,43 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
     async function loadBooks() {
       setIsLoading(true)
       try {
-        // Fetch books from Google Books API
-        console.log('Fetching books from Google Books API...')
-        console.log('User preferences:', preferences)
-        
-        const books = await getMixedRecommendations(50)
-        console.log(`Fetched ${books.length} books from API`)
-        
-        // Debug: Show first few books and their genres
-        console.log('Sample books with genres:', books.slice(0, 3).map(b => ({
-          title: b.title,
-          genre: b.genre
-        })))
-        
-        // Apply filters
-        const filtered = filterBooks(books, preferences)
-        console.log(`After filtering: ${filtered.length} books match preferences`)
-        
-        // Debug: Show what got filtered out
-        if (filtered.length < books.length) {
-          console.log(`Filtered out ${books.length - filtered.length} books`)
+        // Try cache first for instant loading
+        let books = getCachedBooks()
+
+        // If cache is insufficient, fetch from APIs (parallel)
+        if (books.length < 30) {
+          const fresh = await getMixedRecommendations(50)
+          addBooksToCache(fresh)
+          books = getCachedBooks()
         }
-        
-        // If filtering is too strict and we have no books, show error
+
+        // Apply fuzzy filters
+        const filtered = filterBooks(books, preferences)
+
         if (filtered.length === 0 && books.length > 0) {
-          console.error('ERROR: No books matched your preferences!')
-          alert('No books match your preferences. Try selecting different genres or adjusting your filters.')
-          setFilteredBooks([])
+          // Graceful fallback: show top-rated books instead of dead end
+          setFilteredBooks(
+            books.sort((a, b) => b.rating - a.rating).slice(0, 50)
+          )
         } else {
           setFilteredBooks(filtered)
         }
-        
+
         setCurrentIndex(0)
         setLikedBooks(getLikedBooks())
       } catch (error) {
         console.error('Error loading books:', error)
-        alert('Failed to load books. Please check your internet connection and API key.')
-        setFilteredBooks([])
+        // Fallback to cached books on error
+        const cached = getCachedBooks()
+        if (cached.length > 0) {
+          const filtered = filterBooks(cached, preferences)
+          setFilteredBooks(filtered.length > 0 ? filtered : cached.slice(0, 50))
+        }
       } finally {
         setIsLoading(false)
       }
     }
-    
+
     loadBooks()
   }, [preferences])
 

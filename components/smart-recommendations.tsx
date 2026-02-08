@@ -4,11 +4,13 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Book } from "@/lib/book-data"
 import { addBookToReading, saveLikedBooks, getLikedBooks } from "@/lib/storage"
-import { 
-  moodFilters, 
-  timeBasedSuggestions
+import {
+  moodFilters,
+  timeBasedSuggestions,
+  getSmartRecommendations,
+  getDiverseRecommendations,
 } from "../lib/recommendations"
-import { getMixedRecommendations, getBooksByCategory } from "@/lib/books-api"
+import { getCachedBooks } from "@/lib/book-cache"
 import { Star, Clock, BookOpen, Heart, Sparkles, Zap, Brain, Coffee } from "lucide-react"
 import { motion } from "framer-motion"
 import Image from "next/image"
@@ -34,30 +36,26 @@ export function SmartRecommendations({ onBookLike, onStartReading }: SmartRecomm
       setIsLoading(true)
       const liked = getLikedBooks()
       setLikedBooks(liked)
-      
+
       if (liked.length > 0) {
         try {
-          // Get recommendations based on liked books' genres
-          const likedGenres = Array.from(new Set(liked.flatMap(book => book.genre)))
-          const primaryGenre = likedGenres[0] || 'Fantasy'
-          
-          // Fetch recommended books from the same/similar genres
-          const recommendedBooks = await getMixedRecommendations(8)
-          setRecommendations(recommendedBooks)
-          
-          // Fetch diverse books from different genres
-          const diverseGenres = ['Science Fiction', 'Mystery', 'Biography', 'Philosophy', 'Historical Fiction', 'Poetry']
-          const diversePromises = diverseGenres.slice(0, 3).map(genre => getBooksByCategory(genre, 2))
-          const diverseResults = await Promise.all(diversePromises)
-          const allDiverseBooks = diverseResults.flat()
-          setDiverseBooks(allDiverseBooks)
+          // TF-IDF powered smart recommendations
+          const smartRecs = await getSmartRecommendations(8)
+          setRecommendations(smartRecs)
+
+          // Diverse recommendations from full pool
+          const diverseRecs = getDiverseRecommendations(6)
+          setDiverseBooks(diverseRecs)
         } catch (error) {
           console.error('Error loading recommendations:', error)
+          // Fallback: use cached books sorted by rating
+          const cached = getCachedBooks()
+          setRecommendations(cached.sort((a, b) => b.rating - a.rating).slice(0, 8))
         }
       }
       setIsLoading(false)
     }
-    
+
     loadRecommendations()
   }, [])
 
@@ -336,9 +334,9 @@ function SmartRecommendationCard({
           <p className="text-xs text-gray-500 mb-2">{book.author}</p>
           
           <p className="text-xs text-purple-600 mb-2 line-clamp-2">
-            Based on your likes
+            {(book as any).reasons?.[0]?.description || 'Based on your likes'}
           </p>
-          
+
           {/* Like Button */}
           <Button
             size="sm"

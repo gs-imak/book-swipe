@@ -11,8 +11,8 @@ import { BookDetailModal } from "./book-detail-modal"
 import { StarRating } from "./star-rating"
 import { getBookReview, getUserStats } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
-import { ArrowLeft, BookOpen, Star, Clock, Trash2, ExternalLink, Filter, Settings, Sparkles, Heart, Trophy, TrendingUp, Target, MessageSquare, BarChart3 } from "lucide-react"
-import { motion } from "framer-motion"
+import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 
 interface DashboardProps {
@@ -29,10 +29,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   const [selectedBook, setSelectedBook] = useState<Book | null>(null)
   const [isBookModalOpen, setIsBookModalOpen] = useState(false)
   const [userStats, setUserStats] = useState(getUserStats())
-  const [showStats, setShowStats] = useState(false)
-  const [showRecommendations, setShowRecommendations] = useState(true)
-  const [showProgress, setShowProgress] = useState(true)
-  
+
   const { triggerActivity, showAchievementsPanel } = useGamification()
 
   useEffect(() => {
@@ -41,7 +38,6 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   }, [])
 
   useEffect(() => {
-    // Update stats when liked books change
     setUserStats(getUserStats())
   }, [likedBooks])
 
@@ -55,7 +51,6 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   const handleBookClick = (book: Book) => {
     setSelectedBook(book)
     setIsBookModalOpen(true)
-    // Trigger interaction activity
     triggerActivity('daily_reading')
   }
 
@@ -66,7 +61,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
 
   const filteredBooks = likedBooks.filter(book => {
     if (filter === "all") return true
-    return book.genre.some(genre => 
+    return book.genre.some(genre =>
       genre.toLowerCase().includes(filter.toLowerCase())
     )
   })
@@ -78,7 +73,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
       case "pages":
         return a.pages - b.pages
       default:
-        return 0 // Keep original order for "recent"
+        return 0
     }
   })
 
@@ -87,395 +82,292 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   const stats = {
     totalBooks: likedBooks.length,
     totalPages: likedBooks.reduce((sum, book) => sum + book.pages, 0),
-    averageRating: likedBooks.length > 0 
+    averageRating: likedBooks.length > 0
       ? (likedBooks.reduce((sum, book) => sum + book.rating, 0) / likedBooks.length).toFixed(1)
       : "0",
-    favoriteGenre: genres.length > 0 
-      ? genres.reduce((a, b) => 
-          likedBooks.filter(book => book.genre.includes(a)).length > 
+    favoriteGenre: genres.length > 0
+      ? genres.reduce((a, b) =>
+          likedBooks.filter(book => book.genre.includes(a)).length >
           likedBooks.filter(book => book.genre.includes(b)).length ? a : b
         )
       : "None"
   }
 
+  const sortOptions: { value: "recent" | "rating" | "pages"; label: string }[] = [
+    { value: "recent", label: "Recent" },
+    { value: "rating", label: "Top Rated" },
+    { value: "pages", label: "Shortest" },
+  ]
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 smooth-scroll pb-20">
+    <div className="min-h-screen bg-[#FDFBF7] smooth-scroll pb-20">
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-          <div className="flex flex-col gap-3 sm:gap-4">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                {showBackButton && onBack && (
-                  <Button variant="outline" size="sm" onClick={onBack} className="flex-shrink-0 tap-target touch-manipulation">
-                    <ArrowLeft className="w-4 h-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Back</span>
-                  </Button>
-                )}
-                <div className="min-w-0 flex-1">
-                  <h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent truncate">
-                    My Library
-                  </h1>
-                  <p className="text-xs sm:text-sm text-gray-600">
-                    {likedBooks.length} {likedBooks.length === 1 ? 'book' : 'books'}
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-2 flex-shrink-0">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setShowAdmin(!showAdmin)}
-                  className="tap-target touch-manipulation"
+      <div className="bg-[#FDFBF7]/90 backdrop-blur-md border-b border-stone-200/60 sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 min-w-0">
+              {showBackButton && onBack && (
+                <button
+                  onClick={onBack}
+                  className="p-2 -ml-2 rounded-lg hover:bg-stone-100 transition-colors tap-target touch-manipulation"
                 >
-                  <Settings className="w-4 h-4" />
-                </Button>
-                {likedBooks.length > 0 && (
-                  <Button variant="destructive" size="sm" onClick={handleClearAll} className="tap-target touch-manipulation">
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                )}
+                  <ArrowLeft className="w-5 h-5 text-stone-600" />
+                </button>
+              )}
+              <div className="min-w-0">
+                <h1
+                  className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight"
+                  style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+                >
+                  My Library
+                </h1>
               </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={showAchievementsPanel}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-700 text-sm font-medium transition-colors tap-target touch-manipulation"
+              >
+                <Trophy className="w-4 h-4" />
+                <span className="hidden sm:inline">Lv.{userStats.level}</span>
+                <span className="sm:hidden">{userStats.level}</span>
+              </button>
+              <button
+                onClick={() => setShowAdmin(!showAdmin)}
+                className="p-2 rounded-lg hover:bg-stone-100 transition-colors tap-target touch-manipulation"
+              >
+                <Settings className="w-5 h-5 text-stone-400" />
+              </button>
+              {likedBooks.length > 0 && (
+                <button
+                  onClick={handleClearAll}
+                  className="p-2 rounded-lg hover:bg-red-50 text-stone-400 hover:text-red-500 transition-colors tap-target touch-manipulation"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Gamification Stats Header - Mobile Optimized */}
-      <div className="bg-gradient-to-r from-purple-100 to-pink-100 border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-base sm:text-lg font-bold text-gray-900">Level {userStats.level}</p>
-                <p className="text-xs sm:text-sm text-gray-600">{userStats.totalPoints} XP</p>
-              </div>
-            </div>
-            
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
+        {/* Admin Panel */}
+        <AnimatePresence>
+          {showAdmin && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <AdminPanel onBooksLoaded={() => {}} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {likedBooks.length === 0 ? (
+          /* Empty State */
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-16 sm:py-24 px-4"
+          >
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.1, type: "spring", stiffness: 150 }}
+              className="w-20 h-20 rounded-2xl bg-amber-50 flex items-center justify-center mx-auto mb-6"
+            >
+              <BookOpen className="w-10 h-10 text-amber-600" />
+            </motion.div>
+            <h2
+              className="text-2xl sm:text-3xl font-bold text-stone-900 mb-3"
+              style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+            >
+              Your shelf is empty
+            </h2>
+            <p className="text-stone-500 mb-8 max-w-md mx-auto text-base sm:text-lg leading-relaxed">
+              Start swiping to discover books you&apos;ll love.
+              We&apos;ll learn your taste and suggest better matches over time.
+            </p>
             <Button
-              variant="outline"
-              size="sm"
-              onClick={showAchievementsPanel}
-              className="bg-white/50 hover:bg-white/80 border-purple-200 flex-shrink-0"
+              onClick={onStartDiscovery}
+              className="h-12 px-8 text-base bg-stone-900 hover:bg-stone-800 text-white font-medium rounded-xl transition-all shadow-sm hover:shadow-md tap-target touch-manipulation"
             >
-              <Trophy className="w-4 h-4 text-purple-600" />
-              <span className="hidden sm:inline ml-2">Achievements</span>
+              <Sparkles className="w-5 h-5 mr-2" />
+              Start Discovering
             </Button>
-          </div>
-        </div>
-      </div>
+          </motion.div>
+        ) : (
+          <>
+            {/* Discover CTA */}
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <p className="text-stone-500 text-sm">
+                {likedBooks.length} {likedBooks.length === 1 ? "book" : "books"} saved
+              </p>
+              <Button
+                onClick={onStartDiscovery}
+                className="h-10 px-5 text-sm bg-stone-900 hover:bg-stone-800 text-white font-medium rounded-xl transition-all shadow-sm tap-target touch-manipulation"
+              >
+                <Heart className="w-4 h-4 mr-2" />
+                Discover More
+              </Button>
+            </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
-        {/* Discover More Books Button - Always at top when user has books */}
-        {likedBooks.length > 0 && (
-          <div className="mb-4 sm:mb-6 text-center">
-            <Button 
-              onClick={onStartDiscovery} 
-              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3.5 text-base sm:text-base bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium rounded-xl transition-all duration-300 shadow-lg tap-target touch-manipulation"
-            >
-              <Heart className="w-5 h-5 mr-2" />
-              Discover More Books
-            </Button>
-          </div>
-        )}
+            {/* Inline Stats */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-white rounded-xl p-4 border border-stone-100">
+                <p className="text-2xl font-bold text-stone-900">{stats.totalBooks}</p>
+                <p className="text-xs text-stone-500 mt-0.5">Books saved</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 border border-stone-100">
+                <p className="text-2xl font-bold text-stone-900">{stats.totalPages.toLocaleString()}</p>
+                <p className="text-xs text-stone-500 mt-0.5">Total pages</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 border border-stone-100">
+                <div className="flex items-center gap-1">
+                  <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                  <span className="text-2xl font-bold text-stone-900">{stats.averageRating}</span>
+                </div>
+                <p className="text-xs text-stone-500 mt-0.5">Avg rating</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 border border-stone-100">
+                <p className="text-lg font-bold text-stone-900 truncate">{stats.favoriteGenre}</p>
+                <p className="text-xs text-stone-500 mt-0.5">Top genre</p>
+              </div>
+            </div>
 
-        {/* Smart Recommendations - Only show if user has liked books */}
-        {likedBooks.length > 0 && (
-          <div className="mb-4 sm:mb-6">
-            <SmartRecommendations 
+            {/* Smart Recommendations */}
+            <SmartRecommendations
               onBookLike={(book) => {
                 const updatedBooks = [...likedBooks, book]
                 setLikedBooks(updatedBooks)
               }}
               onStartReading={addBookToReading}
             />
-          </div>
-        )}
 
-        {/* Reading Progress Tracker - Only show if user has liked books */}
-        {likedBooks.length > 0 && (
-          <div className="mb-4 sm:mb-6">
+            {/* Reading Progress */}
             <ReadingProgressTracker onStartReading={onStartDiscovery} />
-          </div>
-        )}
 
-        {/* Admin Panel */}
-        {showAdmin && (
-          <div className="mb-8">
-            <AdminPanel onBooksLoaded={() => {}} />
-          </div>
-        )}
-
-        {likedBooks.length === 0 ? (
-          <div className="text-center py-16">
-            <div>
-              <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-600 mb-2">
-              Welcome to Your Library!
-            </h2>
-            <p className="text-gray-500 mb-8 max-w-md mx-auto">
-              Your personal reading collection is empty. Start discovering books tailored to your taste and build your perfect library.
-            </p>
-            <div>
-              <Button 
-                onClick={onStartDiscovery} 
-                className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium rounded-xl transition-all duration-300"
-              >
-                <Sparkles className="w-5 h-5 mr-2" />
-                Start Discovering Books
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Stats Section - Collapsible on mobile */}
-            <div className="mb-4 sm:mb-6">
-              <button
-                onClick={() => setShowStats(!showStats)}
-                className="md:hidden w-full flex items-center justify-between bg-white rounded-xl p-4 shadow-sm mb-3 tap-target"
-              >
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-purple-600" />
-                  <span className="font-semibold text-gray-900">Library Stats</span>
-                </div>
-                <motion.div
-                  animate={{ rotate: showStats ? 180 : 0 }}
-                  transition={{ duration: 0.2 }}
+            {/* Filter & Sort */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2
+                  className="text-lg font-semibold text-stone-900"
+                  style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
                 >
-                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </motion.div>
-              </button>
-              
-              <motion.div
-                initial={false}
-                animate={{ height: showStats ? "auto" : 0, opacity: showStats ? 1 : 0 }}
-                transition={{ duration: 0.3 }}
-                className="md:!h-auto md:!opacity-100 overflow-hidden"
-              >
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-3 md:mb-0">
-                  <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-sm">
-                    <div className="text-xl sm:text-2xl font-bold text-purple-600">{stats.totalBooks}</div>
-                    <div className="text-xs sm:text-sm text-gray-600">Books</div>
-                  </div>
-                  <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-sm">
-                    <div className="text-xl sm:text-2xl font-bold text-green-600">{stats.totalPages.toLocaleString()}</div>
-                    <div className="text-xs sm:text-sm text-gray-600">Pages</div>
-                  </div>
-                  <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-sm">
-                    <div className="text-xl sm:text-2xl font-bold text-yellow-600 flex items-center gap-1">
-                      <Star className="w-4 sm:w-5 h-4 sm:h-5 fill-current" />
-                      {stats.averageRating}
-                    </div>
-                    <div className="text-xs sm:text-sm text-gray-600">Rating</div>
-                  </div>
-                  <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-sm">
-                    <div className="text-sm sm:text-2xl font-bold text-blue-600 truncate">{stats.favoriteGenre}</div>
-                    <div className="text-xs sm:text-sm text-gray-600">Genre</div>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-
-            {/* Enhanced Filters and Sort - Simplified for mobile */}
-            <motion.div 
-              className="bg-white/90 backdrop-blur-xl rounded-xl sm:rounded-2xl p-3 sm:p-6 mb-4 sm:mb-6 shadow-lg border border-white/20"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-6">
-                {/* Filter Section */}
-                <div className="flex items-center gap-2 flex-1">
-                  <Filter className="w-4 h-4 text-purple-600 flex-shrink-0" />
-                  <div className="relative flex-1">
-                    <select 
-                      value={filter} 
-                      onChange={(e) => setFilter(e.target.value)}
-                      className="appearance-none w-full bg-white border border-purple-200 rounded-lg px-3 py-2 pr-8 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all"
-                    >
-                      <option value="all">All Genres</option>
-                      {genres.map(genre => (
-                        <option key={genre} value={genre}>{genre}</option>
-                      ))}
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                      <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Sort Section */}
-                <div className="flex items-center gap-2 flex-1">
-                  <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
-                  </svg>
-                  <div className="relative flex-1">
-                    <span className="sr-only">Sort by:</span>
-                    <div className="relative">
-                      <select 
-                        value={sortBy} 
-                        onChange={(e) => setSortBy(e.target.value as "recent" | "rating" | "pages")}
-                        className="appearance-none bg-white/80 backdrop-blur-sm border border-green-200 rounded-xl px-4 py-2.5 pr-10 text-sm font-medium text-gray-700 hover:border-green-300 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-300 shadow-sm"
-                      >
-                        <option value="recent">Recently Added</option>
-                        <option value="rating">Highest Rated</option>
-                        <option value="pages">Shortest First</option>
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Active Filter Indicator */}
-                {filter !== "all" && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="flex items-center gap-2 bg-gradient-to-r from-purple-100 to-pink-100 px-3 py-2 rounded-xl border border-purple-200"
-                  >
-                    <span className="text-xs font-medium text-purple-700">Active: {filter}</span>
-                    <button
-                      onClick={() => setFilter("all")}
-                      className="w-4 h-4 rounded-full bg-purple-200 hover:bg-purple-300 flex items-center justify-center transition-colors"
-                    >
-                      <svg className="w-2.5 h-2.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </motion.div>
-                )}
+                  Saved Books
+                </h2>
+                <span className="text-xs text-stone-400">
+                  {sortedBooks.length !== likedBooks.length
+                    ? `${sortedBooks.length} of ${likedBooks.length}`
+                    : `${likedBooks.length} books`}
+                </span>
               </div>
 
-              {/* Filter Summary */}
-              <motion.div 
-                className="mt-4 pt-4 border-t border-gray-100"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-              >
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span>
-                    Showing {sortedBooks.length} of {likedBooks.length} books
-                    {filter !== "all" && ` in ${filter}`}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-pulse"></div>
-                    <span>Updated just now</span>
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
+              {/* Genre pills */}
+              <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+                <button
+                  onClick={() => setFilter("all")}
+                  className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    filter === "all"
+                      ? "bg-stone-900 text-white"
+                      : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                  }`}
+                >
+                  All
+                </button>
+                {genres.slice(0, 8).map(genre => (
+                  <button
+                    key={genre}
+                    onClick={() => setFilter(genre)}
+                    className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all ${
+                      filter === genre
+                        ? "bg-stone-900 text-white"
+                        : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                    }`}
+                  >
+                    {genre}
+                  </button>
+                ))}
+              </div>
+
+              {/* Sort pills */}
+              <div className="flex gap-1.5">
+                {sortOptions.map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setSortBy(opt.value)}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                      sortBy === opt.value
+                        ? "bg-amber-100 text-amber-800"
+                        : "text-stone-400 hover:text-stone-600 hover:bg-stone-50"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {/* Books Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5">
               {sortedBooks.map((book, index) => {
                 const review = getBookReview(book.id)
                 return (
                   <motion.div
                     key={book.id}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                    transition={{ delay: Math.min(index * 0.05, 0.5) }}
+                    className="group cursor-pointer"
                     onClick={() => handleBookClick(book)}
                   >
-                  <div className="relative h-64">
-                    <Image
-                      src={book.cover}
-                      alt={book.title}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                    />
-                    <div className="absolute top-3 right-3 bg-white/90 text-black px-2 py-1 rounded-full flex items-center gap-1">
-                      <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                      <span className="text-xs font-medium">{book.rating}</span>
+                    {/* Cover */}
+                    <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-stone-100 mb-2.5 shadow-sm group-hover:shadow-md transition-shadow">
+                      <Image
+                        src={book.cover}
+                        alt={book.title}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                      />
+                      {/* Rating badge */}
+                      <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
+                        <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                        <span className="text-xs font-semibold text-stone-700">{book.rating}</span>
+                      </div>
+                      {/* Favorite heart */}
+                      {review?.favorite && (
+                        <div className="absolute top-2 left-2">
+                          <Heart className="w-4 h-4 text-red-500 fill-red-500 drop-shadow-sm" />
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  
-                  <div className="p-4 space-y-3">
-                    <div>
-                      <h3 className="font-bold text-gray-900 line-clamp-2 mb-1 group-hover:text-purple-600 transition-colors">
+
+                    {/* Info */}
+                    <div className="space-y-0.5 px-0.5">
+                      <h3 className="font-semibold text-sm text-stone-900 line-clamp-2 leading-tight group-hover:text-amber-800 transition-colors">
                         {book.title}
                       </h3>
-                      <p className="text-gray-600 text-sm font-medium">{book.author}</p>
-                    </div>
+                      <p className="text-xs text-stone-500 truncate">{book.author}</p>
 
-                    {/* User Review */}
-                    {review && (
-                      <div className="flex items-center justify-between py-2 px-3 bg-purple-50 rounded-lg">
-                        <StarRating rating={review.rating} readonly size="sm" />
-                        {review.favorite && (
-                          <Heart className="w-4 h-4 text-red-500 fill-red-500" />
-                        )}
-                      </div>
-                    )}
+                      {/* User rating */}
+                      {review && (
+                        <div className="pt-1">
+                          <StarRating rating={review.rating} readonly size="sm" />
+                        </div>
+                      )}
 
-                    <div className="flex items-center gap-3 text-xs text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <BookOpen className="w-3 h-3" />
+                      {/* Meta */}
+                      <div className="flex items-center gap-2 text-[11px] text-stone-400 pt-0.5">
                         <span>{book.pages}p</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
+                        <span className="w-0.5 h-0.5 rounded-full bg-stone-300" />
                         <span>{book.readingTime}</span>
                       </div>
                     </div>
-
-                    <div className="flex flex-wrap gap-1">
-                      {book.genre.slice(0, 2).map((genre) => (
-                        <span
-                          key={genre}
-                          className="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full"
-                        >
-                          {genre}
-                        </span>
-                      ))}
-                    </div>
-
-                    <p className="text-gray-700 text-xs line-clamp-2">
-                      {book.description}
-                    </p>
-
-                    <div className="flex gap-2">
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="flex-1 text-xs"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleBookClick(book)
-                        }}
-                      >
-                        {review ? <MessageSquare className="w-3 h-3 mr-1" /> : <Star className="w-3 h-3 mr-1" />}
-                        {review ? 'Review' : 'Rate'}
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        className="flex-1 text-xs bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          addBookToReading(book)
-                        }}
-                      >
-                        <BookOpen className="w-3 h-3 mr-1" />
-                        Read
-                      </Button>
-                    </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
                 )
               })}
             </div>
