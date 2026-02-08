@@ -101,6 +101,9 @@ function filterBooks(books: Book[], preferences: UserPreferences): Book[] {
   return filtered
 }
 
+// Max books per swipe session — enough variety without overwhelming
+const MAX_DECK_SIZE = 15
+
 export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeInterfaceProps) {
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -121,9 +124,9 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
         }
         const filtered = filterBooks(books, preferences)
         if (filtered.length === 0 && books.length > 0) {
-          setFilteredBooks(books.sort((a, b) => b.rating - a.rating).slice(0, 50))
+          setFilteredBooks(books.sort((a, b) => b.rating - a.rating).slice(0, MAX_DECK_SIZE))
         } else {
-          setFilteredBooks(filtered)
+          setFilteredBooks(filtered.slice(0, MAX_DECK_SIZE))
         }
         setCurrentIndex(0)
         setLikedBooks(getLikedBooks())
@@ -132,7 +135,9 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
         const cached = getCachedBooks()
         if (cached.length > 0) {
           const filtered = filterBooks(cached, preferences)
-          setFilteredBooks(filtered.length > 0 ? filtered : cached.slice(0, 50))
+          setFilteredBooks(
+            (filtered.length > 0 ? filtered : cached).slice(0, MAX_DECK_SIZE)
+          )
         }
       } finally {
         setIsLoading(false)
