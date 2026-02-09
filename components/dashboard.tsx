@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Book } from "@/lib/book-data"
-import { getLikedBooks, clearLikedBooks, addBookToReading } from "@/lib/storage"
+import { getLikedBooks, clearLikedBooks, addBookToReading, saveLikedBooks } from "@/lib/storage"
 import { Button } from "@/components/ui/button"
 import { AdminPanel } from "./admin-panel"
 import { ReadingProgressTracker } from "./reading-progress"
@@ -11,9 +11,11 @@ import { BookDetailModal } from "./book-detail-modal"
 import { StarRating } from "./star-rating"
 import { getBookReview, getUserStats } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
-import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy } from "lucide-react"
+import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy, Search } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
+import { useToast } from "./toast-provider"
+import { BookSearch } from "./book-search"
 
 interface DashboardProps {
   onBack?: () => void
@@ -29,8 +31,10 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   const [selectedBook, setSelectedBook] = useState<Book | null>(null)
   const [isBookModalOpen, setIsBookModalOpen] = useState(false)
   const [userStats, setUserStats] = useState(getUserStats())
+  const [showSearch, setShowSearch] = useState(false)
 
   const { triggerActivity, showAchievementsPanel } = useGamification()
+  const { showToast } = useToast()
 
   useEffect(() => {
     setLikedBooks(getLikedBooks())
@@ -45,7 +49,21 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
     if (confirm("Are you sure you want to clear all your liked books? This action cannot be undone.")) {
       clearLikedBooks()
       setLikedBooks([])
+      showToast("Library cleared", "info")
     }
+  }
+
+  const handleSearchSave = (book: Book) => {
+    const alreadySaved = likedBooks.some(b => b.id === book.id)
+    if (alreadySaved) {
+      showToast("Already in your library", "info")
+      return
+    }
+    const updated = [...likedBooks, book]
+    setLikedBooks(updated)
+    saveLikedBooks(updated)
+    triggerActivity('like_book')
+    showToast(`"${book.title}" saved to library`)
   }
 
   const handleBookClick = (book: Book) => {
@@ -125,6 +143,13 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
             </div>
             <div className="flex items-center gap-2">
               <button
+                onClick={() => setShowSearch(true)}
+                aria-label="Search books"
+                className="p-2 rounded-lg hover:bg-stone-100 transition-colors tap-target touch-manipulation"
+              >
+                <Search className="w-5 h-5 text-stone-500" />
+              </button>
+              <button
                 onClick={showAchievementsPanel}
                 aria-label="Achievements"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-700 text-sm font-medium transition-colors tap-target touch-manipulation"
@@ -164,7 +189,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <AdminPanel onBooksLoaded={() => {}} />
+              <AdminPanel onBooksLoaded={(books) => { setLikedBooks(getLikedBooks()) }} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -385,6 +410,14 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
         isOpen={isBookModalOpen}
         onClose={handleCloseModal}
         onStartReading={addBookToReading}
+      />
+
+      {/* Book Search */}
+      <BookSearch
+        isOpen={showSearch}
+        onClose={() => setShowSearch(false)}
+        onSaveBook={handleSearchSave}
+        savedBookIds={likedBooks.map(b => b.id)}
       />
     </div>
   )

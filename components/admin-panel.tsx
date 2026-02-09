@@ -1,153 +1,253 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { getMixedRecommendations, getBooksByCategory, bookSearchQueries } from "@/lib/books-api"
 import { Book } from "@/lib/book-data"
-import { Download, RefreshCw, Database, Globe } from "lucide-react"
+import {
+  getLikedBooks,
+  saveLikedBooks,
+  getReadingProgress,
+  saveReadingProgress,
+  getBookReviews,
+  saveBookReviews,
+  getBookNotes,
+  saveBookNotes,
+  getReadingGoals,
+  saveReadingGoals,
+  getUserStats,
+  saveUserStats,
+  getUserAchievements,
+  saveUserAchievements,
+} from "@/lib/storage"
+import { Download, Upload, Shield, AlertTriangle } from "lucide-react"
+import { useToast } from "./toast-provider"
 
 interface AdminPanelProps {
   onBooksLoaded: (books: Book[]) => void
 }
 
+interface ExportData {
+  version: number
+  exportedAt: string
+  data: {
+    likedBooks: Book[]
+    readingProgress: ReturnType<typeof getReadingProgress>
+    bookReviews: ReturnType<typeof getBookReviews>
+    bookNotes: ReturnType<typeof getBookNotes>
+    readingGoals: ReturnType<typeof getReadingGoals>
+    userStats: ReturnType<typeof getUserStats>
+    achievements: ReturnType<typeof getUserAchievements>
+  }
+}
+
 export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
-  const [loading, setLoading] = useState(false)
-  const [apiBooks, setApiBooks] = useState<Book[]>([])
+  const [importing, setImporting] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { showToast } = useToast()
 
-  const loadMixedBooks = async () => {
-    setLoading(true)
-    try {
-      const books = await getMixedRecommendations(30)
-      setApiBooks(books)
-    } catch (error) {
-    } finally {
-      setLoading(false)
+  const handleExport = () => {
+    const exportData: ExportData = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      data: {
+        likedBooks: getLikedBooks(),
+        readingProgress: getReadingProgress(),
+        bookReviews: getBookReviews(),
+        bookNotes: getBookNotes(),
+        readingGoals: getReadingGoals(),
+        userStats: getUserStats(),
+        achievements: getUserAchievements(),
+      },
     }
-  }
 
-  const loadByCategory = async (category: string) => {
-    setLoading(true)
-    try {
-      const books = await getBooksByCategory(category, 15)
-      setApiBooks(books)
-    } catch (error) {
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const exportToBookData = () => {
-    if (apiBooks.length === 0) return
-    
-    const exportData = `// Auto-generated books from Google Books API
-export const apiBooks: Book[] = ${JSON.stringify(apiBooks, null, 2)}
-
-// To use these books, import and spread them into your sampleBooks array:
-// export const sampleBooks: Book[] = [...existingBooks, ...apiBooks]`
-
-    const blob = new Blob([exportData], { type: 'text/typescript' })
+    const json = JSON.stringify(exportData, null, 2)
+    const blob = new Blob([json], { type: "application/json" })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
+    const a = document.createElement("a")
     a.href = url
-    a.download = 'api-books.ts'
+    const date = new Date().toISOString().split("T")[0]
+    a.download = `bookswipe-backup-${date}.json`
     a.click()
     URL.revokeObjectURL(url)
+    showToast("Backup downloaded successfully")
   }
 
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setImporting(true)
+    try {
+      const text = await file.text()
+      const parsed = JSON.parse(text) as ExportData
+
+      if (!parsed.version || !parsed.data) {
+        showToast("Invalid backup file format", "error")
+        return
+      }
+
+      const { data } = parsed
+      const counts = {
+        books: 0,
+        progress: 0,
+        reviews: 0,
+        notes: 0,
+      }
+
+      // Merge liked books (don't duplicate)
+      if (data.likedBooks?.length) {
+        const existing = getLikedBooks()
+        const existingIds = new Set(existing.map(b => b.id))
+        const newBooks = data.likedBooks.filter(b => !existingIds.has(b.id))
+        saveLikedBooks([...existing, ...newBooks])
+        counts.books = newBooks.length
+      }
+
+      // Merge reading progress
+      if (data.readingProgress?.length) {
+        const existing = getReadingProgress()
+        const existingIds = new Set(existing.map(p => p.bookId))
+        const newProgress = data.readingProgress.filter(p => !existingIds.has(p.bookId))
+        saveReadingProgress([...existing, ...newProgress])
+        counts.progress = newProgress.length
+      }
+
+      // Merge reviews
+      if (data.bookReviews?.length) {
+        const existing = getBookReviews()
+        const existingIds = new Set(existing.map(r => r.bookId))
+        const newReviews = data.bookReviews.filter(r => !existingIds.has(r.bookId))
+        saveBookReviews([...existing, ...newReviews])
+        counts.reviews = newReviews.length
+      }
+
+      // Merge notes
+      if (data.bookNotes?.length) {
+        const existing = getBookNotes()
+        const existingIds = new Set(existing.map(n => n.id))
+        const newNotes = data.bookNotes.filter(n => !existingIds.has(n.id))
+        saveBookNotes([...existing, ...newNotes])
+        counts.notes = newNotes.length
+      }
+
+      // Restore goals (only if user has default/empty goals)
+      if (data.readingGoals) {
+        const current = getReadingGoals()
+        if (current.booksCompleted === 0 && current.pagesRead === 0) {
+          saveReadingGoals(data.readingGoals)
+        }
+      }
+
+      // Restore stats (use higher values)
+      if (data.userStats) {
+        const current = getUserStats()
+        if (current.totalBooksLiked === 0) {
+          saveUserStats(data.userStats)
+        }
+      }
+
+      // Merge achievements
+      if (data.achievements?.length) {
+        const existing = getUserAchievements()
+        if (existing.length === 0) {
+          saveUserAchievements(data.achievements)
+        }
+      }
+
+      const parts: string[] = []
+      if (counts.books > 0) parts.push(`${counts.books} books`)
+      if (counts.progress > 0) parts.push(`${counts.progress} reading entries`)
+      if (counts.reviews > 0) parts.push(`${counts.reviews} reviews`)
+      if (counts.notes > 0) parts.push(`${counts.notes} notes`)
+
+      if (parts.length > 0) {
+        showToast(`Imported ${parts.join(", ")}`)
+      } else {
+        showToast("Everything was already up to date", "info")
+      }
+
+      // Trigger a reload
+      onBooksLoaded(getLikedBooks())
+    } catch {
+      showToast("Failed to read backup file", "error")
+    } finally {
+      setImporting(false)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    }
+  }
+
+  const likedCount = getLikedBooks().length
+  const reviewCount = getBookReviews().length
+  const noteCount = getBookNotes().length
+  const progressCount = getReadingProgress().length
+
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-lg">
-      <div className="mb-6">
-        <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-          <Database className="w-5 h-5" />
-          Book Data Management
+    <div className="bg-white rounded-xl p-5 border border-stone-200/60 shadow-sm space-y-5">
+      <div>
+        <h3 className="text-base font-semibold text-stone-900 flex items-center gap-2 mb-1">
+          <Shield className="w-4 h-4 text-stone-500" />
+          Data & Backup
         </h3>
-        <p className="text-gray-600 text-sm">
-          Load books from Google Books API to expand your collection
+        <p className="text-xs text-stone-500">
+          Export your data to keep a backup, or import from a previous backup.
         </p>
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <h4 className="font-medium mb-2">Quick Load Options:</h4>
-          <div className="flex flex-wrap gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={loadMixedBooks}
-              disabled={loading}
-            >
-              <Globe className="w-4 h-4 mr-2" />
-              {loading ? 'Loading...' : 'Mixed Selection (30 books)'}
-            </Button>
-          </div>
+      {/* Current data summary */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="bg-stone-50 rounded-lg px-3 py-2">
+          <p className="text-lg font-bold text-stone-900">{likedCount}</p>
+          <p className="text-[11px] text-stone-500">Books</p>
         </div>
-
-        <div>
-          <h4 className="font-medium mb-2">Load by Category:</h4>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {Object.keys(bookSearchQueries).map(category => (
-              <Button
-                key={category}
-                variant="outline"
-                size="sm"
-                onClick={() => loadByCategory(category)}
-                disabled={loading}
-                className="text-xs"
-              >
-                {category}
-              </Button>
-            ))}
-          </div>
+        <div className="bg-stone-50 rounded-lg px-3 py-2">
+          <p className="text-lg font-bold text-stone-900">{progressCount}</p>
+          <p className="text-[11px] text-stone-500">Reading</p>
         </div>
-
-        {apiBooks.length > 0 && (
-          <div className="border-t pt-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium">
-                Loaded {apiBooks.length} books from API
-              </span>
-              <Button size="sm" onClick={exportToBookData}>
-                <Download className="w-4 h-4 mr-2" />
-                Export to File
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-40 overflow-y-auto">
-              {apiBooks.slice(0, 10).map(book => (
-                <div key={book.id} className="text-xs p-2 bg-gray-50 rounded">
-                  <div className="font-medium">{book.title}</div>
-                  <div className="text-gray-600">{book.author}</div>
-                </div>
-              ))}
-              {apiBooks.length > 10 && (
-                <div className="text-xs text-gray-500 p-2">
-                  ...and {apiBooks.length - 10} more books
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        <div className="bg-blue-50 p-4 rounded-lg text-sm">
-          <h5 className="font-medium text-blue-800 mb-1">How to use API books:</h5>
-          <ol className="text-blue-700 space-y-1 text-xs">
-            <li>1. Click "Mixed Selection" or choose a category</li>
-            <li>2. Click "Export to File" to download the book data</li>
-            <li>3. Copy the exported books to your book-data.ts file</li>
-            <li>4. Restart your app to see the new books</li>
-          </ol>
+        <div className="bg-stone-50 rounded-lg px-3 py-2">
+          <p className="text-lg font-bold text-stone-900">{reviewCount}</p>
+          <p className="text-[11px] text-stone-500">Reviews</p>
         </div>
-
-        <div className="bg-yellow-50 p-4 rounded-lg text-sm">
-          <h5 className="font-medium text-yellow-800 mb-1">Note:</h5>
-          <p className="text-yellow-700 text-xs">
-            The Google Books API is free but has rate limits. For production use, consider 
-            implementing caching and error handling. You may also want to get an API key 
-            for higher limits.
-          </p>
+        <div className="bg-stone-50 rounded-lg px-3 py-2">
+          <p className="text-lg font-bold text-stone-900">{noteCount}</p>
+          <p className="text-[11px] text-stone-500">Notes</p>
         </div>
+      </div>
+
+      {/* Export / Import buttons */}
+      <div className="flex gap-3">
+        <Button
+          onClick={handleExport}
+          className="flex-1 h-10 bg-stone-900 hover:bg-stone-800 text-white font-medium rounded-xl text-sm"
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Export Backup
+        </Button>
+        <Button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={importing}
+          variant="outline"
+          className="flex-1 h-10 border-stone-200 hover:bg-stone-50 text-stone-700 rounded-xl text-sm"
+        >
+          <Upload className="w-4 h-4 mr-2" />
+          {importing ? "Importing..." : "Import Backup"}
+        </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json"
+          onChange={handleImport}
+          className="hidden"
+        />
+      </div>
+
+      {/* Warning */}
+      <div className="flex gap-2 p-3 rounded-lg bg-amber-50 border border-amber-100">
+        <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+        <p className="text-xs text-amber-700 leading-relaxed">
+          Your data is stored in this browser only. Clearing browser data will erase it.
+          Export backups regularly to avoid data loss.
+        </p>
       </div>
     </div>
   )
 }
-
-

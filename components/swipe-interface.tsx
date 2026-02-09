@@ -10,6 +10,7 @@ import { getCachedBooks, addBooksToCache } from "@/lib/book-cache"
 import { Heart, X, RotateCcw, Settings, Library, BookOpen } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useGamification } from "./gamification-provider"
+import { useToast } from "./toast-provider"
 
 interface SwipeInterfaceProps {
   preferences: UserPreferences
@@ -111,6 +112,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   const [passedBooks, setPassedBooks] = useState<Book[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const { triggerActivity } = useGamification()
+  const { showToast } = useToast()
 
   useEffect(() => {
     async function loadBooks() {
@@ -138,6 +140,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
             (filtered.length > 0 ? filtered : cached).slice(0, MAX_DECK_SIZE)
           )
         }
+        showToast("Couldn't load new books. Showing cached results.", "error")
       } finally {
         setIsLoading(false)
       }
@@ -154,6 +157,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
       setLikedBooks(newLikedBooks)
       saveLikedBooks(newLikedBooks)
       triggerActivity('like_book')
+      showToast(`"${currentBook.title}" saved to library`)
     } else {
       setPassedBooks(prev => [...prev, currentBook])
     }

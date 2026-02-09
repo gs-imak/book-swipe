@@ -7,6 +7,7 @@ import { SwipeInterface } from "@/components/swipe-interface"
 import { Dashboard } from "@/components/dashboard"
 import { GamificationProvider } from "@/components/gamification-provider"
 import { AchievementsPanel } from "@/components/achievements-panel"
+import { ToastProvider } from "@/components/toast-provider"
 import { MobileNav } from "@/components/mobile-nav"
 import { UserPreferences } from "@/lib/book-data"
 import { getLikedBooks, migrateCoverUrls } from "@/lib/storage"
@@ -138,15 +139,17 @@ export default function App() {
   }, [])
 
   return (
-    <GamificationProvider onShowAchievements={() => setShowAchievements(true)}>
-      <Home 
-        onShowAchievements={setShowAchievements}
-        isAchievementsOpen={showAchievements}
-      />
-      <AchievementsPanel
-        isOpen={showAchievements}
-        onClose={() => setShowAchievements(false)}
-      />
-    </GamificationProvider>
+    <ToastProvider>
+      <GamificationProvider onShowAchievements={() => setShowAchievements(true)}>
+        <Home
+          onShowAchievements={setShowAchievements}
+          isAchievementsOpen={showAchievements}
+        />
+        <AchievementsPanel
+          isOpen={showAchievements}
+          onClose={() => setShowAchievements(false)}
+        />
+      </GamificationProvider>
+    </ToastProvider>
   )
 }

@@ -15,6 +15,7 @@ import { Star, Clock, BookOpen, Heart, Sparkles, Zap } from "lucide-react"
 import { motion } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
 import { useGamification } from "./gamification-provider"
+import { useToast } from "./toast-provider"
 
 interface SmartRecommendationsProps {
   onBookLike?: (book: Book) => void
@@ -30,6 +31,7 @@ export function SmartRecommendations({ onBookLike, onStartReading }: SmartRecomm
   const [likedBooks, setLikedBooks] = useState<Book[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const { triggerActivity } = useGamification()
+  const { showToast } = useToast()
 
   useEffect(() => {
     async function loadRecommendations() {
@@ -98,6 +100,7 @@ export function SmartRecommendations({ onBookLike, onStartReading }: SmartRecomm
     setLikedBooks(updatedLiked)
     saveLikedBooks(updatedLiked)
     triggerActivity('like_book')
+    showToast(`"${book.title}" saved to library`)
     onBookLike?.(book)
   }
 
