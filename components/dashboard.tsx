@@ -126,6 +126,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
             <div className="flex items-center gap-2">
               <button
                 onClick={showAchievementsPanel}
+                aria-label="Achievements"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-700 text-sm font-medium transition-colors tap-target touch-manipulation"
               >
                 <Trophy className="w-4 h-4" />
@@ -134,6 +135,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               </button>
               <button
                 onClick={() => setShowAdmin(!showAdmin)}
+                aria-label="Settings"
                 className="p-2 rounded-lg hover:bg-stone-100 transition-colors tap-target touch-manipulation"
               >
                 <Settings className="w-5 h-5 text-stone-400" />
@@ -141,6 +143,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               {likedBooks.length > 0 && (
                 <button
                   onClick={handleClearAll}
+                  aria-label="Clear all books"
                   className="p-2 rounded-lg hover:bg-red-50 text-stone-400 hover:text-red-500 transition-colors tap-target touch-manipulation"
                 >
                   <Trash2 className="w-5 h-5" />

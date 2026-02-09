@@ -130,8 +130,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
         }
         setCurrentIndex(0)
         setLikedBooks(getLikedBooks())
-      } catch (error) {
-        console.error('Error loading books:', error)
+      } catch {
         const cached = getCachedBooks()
         if (cached.length > 0) {
           const filtered = filterBooks(cached, preferences)
@@ -165,6 +164,22 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   const currentBook = filteredBooks[currentIndex]
   const nextBook = filteredBooks[currentIndex + 1]
   const hasMoreBooks = currentIndex < filteredBooks.length
+
+  // Keyboard navigation for swipe actions
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!hasMoreBooks || !currentBook) return
+      if (e.key === "ArrowLeft") {
+        handleSwipe("left")
+      } else if (e.key === "ArrowRight") {
+        handleSwipe("right")
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown)
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [hasMoreBooks, currentBook])
 
   // Loading
   if (isLoading) {
@@ -299,6 +314,13 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   return (
     <div className="min-h-screen bg-[#FDFBF7] relative">
       <div className="relative z-10 min-h-screen flex flex-col">
+        {/* Screen reader announcement */}
+        <div aria-live="polite" className="sr-only">
+          {currentBook
+            ? `${currentBook.title} by ${currentBook.author}, card ${currentIndex + 1} of ${filteredBooks.length}`
+            : ""}
+        </div>
+
         {/* Header */}
         <div className="bg-[#FDFBF7]/90 backdrop-blur-md border-b border-stone-200/60 sticky top-0 z-20">
           <div className="px-4 sm:px-6 py-3 flex justify-between items-center max-w-md mx-auto">
@@ -368,6 +390,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
             <div className="flex justify-center gap-6 mb-3">
               <motion.button
                 whileTap={{ scale: 0.9 }}
+                aria-label="Pass"
                 className="w-14 h-14 rounded-full border-2 border-red-200 hover:border-red-300 bg-white shadow-sm flex items-center justify-center transition-colors tap-target touch-manipulation"
                 onClick={() => handleSwipe("left")}
               >
@@ -376,6 +399,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
 
               <motion.button
                 whileTap={{ scale: 0.9 }}
+                aria-label="Like"
                 className="w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-600 shadow-sm flex items-center justify-center transition-colors tap-target touch-manipulation"
                 onClick={() => handleSwipe("right")}
               >

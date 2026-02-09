@@ -19,9 +19,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
     try {
       const books = await getMixedRecommendations(30)
       setApiBooks(books)
-      console.log('Loaded books:', books)
     } catch (error) {
-      console.error('Error loading mixed books:', error)
     } finally {
       setLoading(false)
     }
@@ -32,9 +30,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
     try {
       const books = await getBooksByCategory(category, 15)
       setApiBooks(books)
-      console.log(`Loaded ${category} books:`, books)
     } catch (error) {
-      console.error(`Error loading ${category} books:`, error)
     } finally {
       setLoading(false)
     }

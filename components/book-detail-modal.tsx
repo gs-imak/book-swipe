@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Star, Heart, MessageSquare, FileText, Calendar, Clock, BookOpen } from "lucide-react"
 import { Book } from "@/lib/book-data"
@@ -21,6 +21,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
   const [activeTab, setActiveTab] = useState<"overview" | "review" | "notes">("overview")
   const [existingReview, setExistingReview] = useState<BookReview | null>(null)
   const [isEditingReview, setIsEditingReview] = useState(false)
+  const dialogRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (book) {
@@ -29,6 +30,27 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
       setActiveTab("overview")
     }
   }, [book])
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose()
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown)
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [isOpen, onClose])
+
+  // Focus the dialog on open
+  useEffect(() => {
+    if (isOpen && dialogRef.current) {
+      dialogRef.current.focus()
+    }
+  }, [isOpen])
 
   if (!book || !isOpen) return null
 
@@ -64,6 +86,11 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
         onClick={onClose}
       >
         <motion.div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="book-detail-title"
+          tabIndex={-1}
           initial={{ opacity: 0, y: 30, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 30, scale: 0.97 }}
@@ -90,6 +117,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <h2
+                      id="book-detail-title"
                       className="text-lg sm:text-xl font-bold text-stone-900 leading-tight line-clamp-2"
                       style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
                     >

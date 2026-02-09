@@ -43,8 +43,7 @@ export function SmartRecommendations({ onBookLike, onStartReading }: SmartRecomm
           setRecommendations(smartRecs)
           const diverseRecs = getDiverseRecommendations(6)
           setDiverseBooks(diverseRecs)
-        } catch (error) {
-          console.error('Error loading recommendations:', error)
+        } catch {
           const cached = getCachedBooks()
           setRecommendations(cached.sort((a, b) => b.rating - a.rating).slice(0, 8))
         }

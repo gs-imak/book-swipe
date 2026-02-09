@@ -6,7 +6,7 @@ import { GamificationToast } from "./gamification-toast"
 import { ConfettiCelebration, FireworksCelebration } from "./confetti-celebration"
 
 interface GamificationContextType {
-  triggerActivity: (activity: string, data?: any) => void
+  triggerActivity: (activity: string, data?: Record<string, unknown>) => void
   showAchievementsPanel: () => void
 }
 
@@ -30,7 +30,7 @@ export function GamificationProvider({ children, onShowAchievements }: Gamificat
   const [showConfetti, setShowConfetti] = useState(false)
   const [showFireworks, setShowFireworks] = useState(false)
 
-  const triggerActivity = useCallback((activity: string, data?: any) => {
+  const triggerActivity = useCallback((activity: string, data?: Record<string, unknown>) => {
     try {
       const rawEvents = handleUserActivity(activity, data)
       
@@ -55,8 +55,8 @@ export function GamificationProvider({ children, onShowAchievements }: Gamificat
           setShowConfetti(true)
         }
       }
-    } catch (error) {
-      console.error('Error handling gamification activity:', error)
+    } catch {
+      // Gamification activity error handled silently
     }
   }, [])
 

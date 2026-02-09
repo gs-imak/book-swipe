@@ -22,7 +22,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = false }: 
   const likeOpacity = useTransform(x, [0, 80], [0, 1])
   const nopeOpacity = useTransform(x, [-80, 0], [1, 0])
 
-  const handleDragEnd = (event: any, info: PanInfo) => {
+  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const threshold = 80
     const velocity = info.velocity.x
     const offset = info.offset.x
@@ -116,6 +116,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = false }: 
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => setInfoExpanded(true)}
+              aria-label="View book details"
               className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md border border-white/25 flex items-center justify-center flex-shrink-0"
             >
               <Info className="w-5 h-5 text-white" />
@@ -160,6 +161,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = false }: 
           <div className="flex-shrink-0 py-3 flex justify-center border-b border-stone-100">
             <button
               onClick={() => setInfoExpanded(false)}
+              aria-label="Close details"
               className="flex items-center gap-1 text-stone-400 hover:text-stone-600 transition-colors px-3 py-1"
             >
               <ChevronDown className="w-5 h-5" />

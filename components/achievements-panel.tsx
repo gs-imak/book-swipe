@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Trophy, Star, Target, TrendingUp, Lock, X } from "lucide-react"
 import { Progress } from "./ui/progress"
-import { getUserStats, getUserAchievements, getPointsForNextLevel } from "@/lib/storage"
+import { getUserStats, getUserAchievements, getPointsForNextLevel, type Achievement, type UserStats } from "@/lib/storage"
 import { ACHIEVEMENTS, getAchievementsByCategory } from "@/lib/achievements"
 
 interface AchievementsPanelProps {
@@ -23,6 +23,20 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
       setAchievements(getUserAchievements())
     }
   }, [isOpen])
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose()
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown)
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [isOpen, onClose])
 
   if (!isOpen) return null
 
@@ -53,6 +67,9 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
         onClick={onClose}
       >
         <motion.div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="achievements-title"
           initial={{ opacity: 0, y: 30, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 30, scale: 0.97 }}
@@ -69,6 +86,7 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
                 </div>
                 <div>
                   <h2
+                    id="achievements-title"
                     className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight"
                     style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
                   >
@@ -110,10 +128,12 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
 
           {/* Tabs */}
           <div className="px-5 sm:px-6 flex-shrink-0">
-            <div className="flex gap-1 bg-stone-100 rounded-lg p-1">
+            <div className="flex gap-1 bg-stone-100 rounded-lg p-1" role="tablist">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all tap-target touch-manipulation ${
                     activeTab === tab.id
@@ -153,10 +173,16 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
   )
 }
 
-function OverviewTab({ stats, achievements, completionPercentage }: any) {
+interface OverviewTabProps {
+  stats: UserStats
+  achievements: Achievement[]
+  completionPercentage: number
+}
+
+function OverviewTab({ stats, achievements, completionPercentage }: OverviewTabProps) {
   const recentAchievements = achievements
-    .filter((a: any) => a.unlockedAt)
-    .sort((a: any, b: any) => new Date(b.unlockedAt).getTime() - new Date(a.unlockedAt).getTime())
+    .filter((a: Achievement) => a.unlockedAt)
+    .sort((a: Achievement, b: Achievement) => new Date(b.unlockedAt!).getTime() - new Date(a.unlockedAt!).getTime())
     .slice(0, 3)
 
   return (
@@ -193,7 +219,7 @@ function OverviewTab({ stats, achievements, completionPercentage }: any) {
               <Trophy className="w-4 h-4 text-amber-600" />
             </div>
             <div className="min-w-0">
-              <p className="text-lg font-bold text-stone-900">{achievements.filter((a: any) => a.unlockedAt).length}</p>
+              <p className="text-lg font-bold text-stone-900">{achievements.filter((a: Achievement) => a.unlockedAt).length}</p>
               <p className="text-xs text-stone-500">Unlocked</p>
             </div>
           </div>
@@ -222,7 +248,7 @@ function OverviewTab({ stats, achievements, completionPercentage }: any) {
         </div>
         <Progress value={completionPercentage} className="h-2" />
         <p className="text-xs text-stone-400 mt-2">
-          {achievements.filter((a: any) => a.unlockedAt).length} of {ACHIEVEMENTS.length} achievements unlocked
+          {achievements.filter((a: Achievement) => a.unlockedAt).length} of {ACHIEVEMENTS.length} achievements unlocked
         </p>
       </div>
 
@@ -231,7 +257,7 @@ function OverviewTab({ stats, achievements, completionPercentage }: any) {
         <div>
           <h3 className="text-sm font-semibold text-stone-900 mb-3">Recently Unlocked</h3>
           <div className="space-y-2">
-            {recentAchievements.map((achievement: any) => (
+            {recentAchievements.map((achievement: Achievement) => (
               <div key={achievement.id} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-stone-200/60 shadow-sm">
                 <span className="text-xl">{achievement.icon}</span>
                 <div className="flex-1 min-w-0">
@@ -239,7 +265,7 @@ function OverviewTab({ stats, achievements, completionPercentage }: any) {
                   <p className="text-xs text-stone-500 truncate">{achievement.description}</p>
                 </div>
                 <span className="text-[11px] text-stone-400 flex-shrink-0">
-                  {new Date(achievement.unlockedAt).toLocaleDateString()}
+                  {achievement.unlockedAt ? new Date(achievement.unlockedAt).toLocaleDateString() : ""}
                 </span>
               </div>
             ))}
@@ -250,7 +276,11 @@ function OverviewTab({ stats, achievements, completionPercentage }: any) {
   )
 }
 
-function AchievementsTab({ categorizedAchievements }: any) {
+interface AchievementsTabProps {
+  categorizedAchievements: Record<string, Achievement[]>
+}
+
+function AchievementsTab({ categorizedAchievements }: AchievementsTabProps) {
   const categories = [
     { key: 'discovery', name: 'Discovery', icon: '🔍' },
     { key: 'reading', name: 'Reading', icon: '📚' },
@@ -268,7 +298,7 @@ function AchievementsTab({ categorizedAchievements }: any) {
             {category.name}
           </h3>
           <div className="space-y-2">
-            {categorizedAchievements[category.key]?.map((achievement: any) => (
+            {categorizedAchievements[category.key]?.map((achievement: Achievement) => (
               <AchievementCard key={achievement.id} achievement={achievement} />
             ))}
           </div>
@@ -278,7 +308,7 @@ function AchievementsTab({ categorizedAchievements }: any) {
   )
 }
 
-function AchievementCard({ achievement }: { achievement: any }) {
+function AchievementCard({ achievement }: { achievement: Achievement }) {
   const isUnlocked = !!achievement.unlockedAt
   const progress = achievement.progress || 0
   const maxProgress = achievement.maxProgress || 1
@@ -338,7 +368,7 @@ function AchievementCard({ achievement }: { achievement: any }) {
                 {achievement.type.charAt(0).toUpperCase() + achievement.type.slice(1)}
               </span>
               <span className="text-[11px] text-stone-400">
-                {new Date(achievement.unlockedAt).toLocaleDateString()}
+                {new Date(achievement.unlockedAt!).toLocaleDateString()}
               </span>
             </div>
           )}
@@ -348,7 +378,7 @@ function AchievementCard({ achievement }: { achievement: any }) {
   )
 }
 
-function StatsTab({ stats }: { stats: any }) {
+function StatsTab({ stats }: { stats: UserStats }) {
   const statItems = [
     { label: 'Books Liked', value: stats.totalBooksLiked, icon: '❤️' },
     { label: 'Books Completed', value: stats.totalBooksRead, icon: '✅' },

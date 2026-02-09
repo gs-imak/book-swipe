@@ -1,0 +1,22 @@
+{
+  "name": "BookSwipe",
+  "short_name": "BookSwipe",
+  "description": "Discover your next favorite book",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FDFBF7",
+  "theme_color": "#FDFBF7",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logo/bookswipe_logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo/bookswipe_logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

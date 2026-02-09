@@ -12,6 +12,7 @@ import {
   getLikedBooks
 } from "./storage"
 import { ACHIEVEMENTS, POINTS_CONFIG } from "./achievements"
+import type { Achievement } from "./storage"
 
 export interface GamificationEvent {
   type: 'achievement_unlocked' | 'level_up' | 'points_earned'
@@ -19,7 +20,7 @@ export interface GamificationEvent {
   description: string
   points?: number
   level?: number
-  achievement?: any
+  achievement?: Achievement
 }
 
 // Initialize achievements for new users
@@ -198,7 +199,7 @@ function calculateWeeklyReadingTime(): number {
 }
 
 // Get current value for specific achievement
-function getCurrentValueForAchievement(achievementId: string, values: any): number {
+function getCurrentValueForAchievement(achievementId: string, values: Record<string, number>): number {
   switch (achievementId) {
     case 'first_like':
     case 'book_lover':
@@ -252,7 +253,7 @@ function getCurrentValueForAchievement(achievementId: string, values: any): numb
 }
 
 // Main function to handle any user activity
-export function handleUserActivity(activity: string, data?: any): GamificationEvent[] {
+export function handleUserActivity(activity: string, data?: Record<string, unknown>): GamificationEvent[] {
   const events: GamificationEvent[] = []
   
   // Initialize achievements if needed
@@ -273,7 +274,7 @@ export function handleUserActivity(activity: string, data?: any): GamificationEv
 }
 
 // Update user stats based on activity
-function updateStatsForActivity(activity: string, data?: any): void {
+function updateStatsForActivity(activity: string, data?: Record<string, unknown>): void {
   const stats = getUserStats()
   
   switch (activity) {
@@ -282,12 +283,11 @@ function updateStatsForActivity(activity: string, data?: any): void {
       break
     
     case 'write_review':
-      const reviewLength = data?.review?.length || 0
-      updateUserStats({ 
+      updateUserStats({
         totalReviews: stats.totalReviews + 1,
-        averageRating: calculateNewAverageRating(data?.rating)
+        averageRating: calculateNewAverageRating(data?.rating as number | undefined)
       })
-      
+
       if (data?.favorite) {
         updateUserStats({ favoritesCount: stats.favoritesCount + 1 })
       }
@@ -300,10 +300,10 @@ function updateStatsForActivity(activity: string, data?: any): void {
       break
     
     case 'complete_book':
-      updateUserStats({ 
+      updateUserStats({
         totalBooksRead: stats.totalBooksRead + 1,
-        totalPagesRead: stats.totalPagesRead + (data?.pages || 0),
-        totalReadingTime: stats.totalReadingTime + (data?.readingTime || 0)
+        totalPagesRead: stats.totalPagesRead + (Number(data?.pages) || 0),
+        totalReadingTime: stats.totalReadingTime + (Number(data?.readingTime) || 0)
       })
       break
     

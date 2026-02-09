@@ -24,7 +24,28 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: 'BookSwipe - Discover Your Next Favorite Book',
-  description: 'Discover books tailored to your mood with our Tinder-like interface',
+  description: 'Swipe through personalized book recommendations matched to your taste. No accounts, no fuss — just great books.',
+  metadataBase: new URL('https://bookswipe.app'),
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.png', type: 'image/png', sizes: '64x64' },
+    ],
+    apple: '/logo/bookswipe_logo.png',
+  },
+  manifest: '/manifest.json',
+  openGraph: {
+    title: 'BookSwipe - Discover Your Next Favorite Book',
+    description: 'Swipe through personalized book recommendations matched to your taste.',
+    type: 'website',
+    images: ['/logo/bookswipe_logo.png'],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'BookSwipe',
+    description: 'Swipe through personalized book recommendations matched to your taste.',
+  },
+  robots: { index: true, follow: true },
 }
 
 export default function RootLayout({

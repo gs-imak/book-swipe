@@ -195,7 +195,6 @@ export async function searchOpenLibrary(
       .map((doc) => transformToBook(doc, subject))
       .filter((b): b is Book => b !== null)
   } catch (error) {
-    console.error(`Open Library search error for "${subject}":`, error)
     return []
   }
 }

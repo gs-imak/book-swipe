@@ -31,6 +31,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNav
   return (
     <>
       <motion.nav
+        aria-label="Main navigation"
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -49,6 +50,8 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNav
                 <motion.button
                   key={item.id}
                   onClick={() => onNavigate(item.id)}
+                  aria-label={item.label}
+                  aria-current={isActive ? "page" : undefined}
                   className="relative flex flex-col items-center justify-center gap-0.5 py-2 px-4 rounded-xl transition-all duration-200 touch-manipulation tap-target"
                   whileTap={{ scale: 0.92 }}
                 >
