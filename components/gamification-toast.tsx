@@ -127,13 +127,13 @@ function getEventDuration(event: GamificationEvent): number {
 function getEventStyle(type: string): string {
   switch (type) {
     case 'achievement_unlocked':
-      return 'bg-gradient-to-r from-yellow-500 to-orange-500 border-yellow-300'
+      return 'bg-gradient-to-r from-amber-500 to-orange-500 border-amber-300'
     case 'level_up':
-      return 'bg-gradient-to-r from-purple-500 to-pink-500 border-purple-300'
+      return 'bg-gradient-to-r from-stone-700 to-stone-900 border-stone-500'
     case 'points_earned':
-      return 'bg-gradient-to-r from-green-500 to-emerald-500 border-green-300'
+      return 'bg-gradient-to-r from-emerald-500 to-teal-600 border-emerald-300'
     default:
-      return 'bg-gradient-to-r from-blue-500 to-indigo-500 border-blue-300'
+      return 'bg-gradient-to-r from-stone-600 to-stone-800 border-stone-400'
   }
 }
 

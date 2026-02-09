@@ -88,7 +88,7 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
             </div>
 
             {/* Level Progress */}
-            <div className="bg-white rounded-xl p-4 border border-stone-100">
+            <div className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-stone-700">Level {currentLevel}</span>
                 <span className="text-xs text-stone-400">{currentPoints} / {pointsForNext} XP</span>
@@ -163,7 +163,7 @@ function OverviewTab({ stats, achievements, completionPercentage }: any) {
     <div className="space-y-5">
       {/* Quick Stats */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white rounded-xl p-3.5 border border-stone-100">
+        <div className="bg-white rounded-xl p-3.5 border border-stone-200/60 shadow-sm">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
               <Star className="w-4 h-4 text-blue-600" />
@@ -175,7 +175,7 @@ function OverviewTab({ stats, achievements, completionPercentage }: any) {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-3.5 border border-stone-100">
+        <div className="bg-white rounded-xl p-3.5 border border-stone-200/60 shadow-sm">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
               <TrendingUp className="w-4 h-4 text-emerald-600" />
@@ -187,7 +187,7 @@ function OverviewTab({ stats, achievements, completionPercentage }: any) {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-3.5 border border-stone-100">
+        <div className="bg-white rounded-xl p-3.5 border border-stone-200/60 shadow-sm">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
               <Trophy className="w-4 h-4 text-amber-600" />
@@ -199,7 +199,7 @@ function OverviewTab({ stats, achievements, completionPercentage }: any) {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-3.5 border border-stone-100">
+        <div className="bg-white rounded-xl p-3.5 border border-stone-200/60 shadow-sm">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-lg bg-rose-50 flex items-center justify-center flex-shrink-0">
               <Target className="w-4 h-4 text-rose-600" />
@@ -213,7 +213,7 @@ function OverviewTab({ stats, achievements, completionPercentage }: any) {
       </div>
 
       {/* Achievement Progress */}
-      <div className="bg-white rounded-xl p-4 border border-stone-100">
+      <div className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-stone-900">Achievement Progress</h3>
           <span className="text-sm font-medium text-amber-600">
@@ -232,7 +232,7 @@ function OverviewTab({ stats, achievements, completionPercentage }: any) {
           <h3 className="text-sm font-semibold text-stone-900 mb-3">Recently Unlocked</h3>
           <div className="space-y-2">
             {recentAchievements.map((achievement: any) => (
-              <div key={achievement.id} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-stone-100">
+              <div key={achievement.id} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-stone-200/60 shadow-sm">
                 <span className="text-xl">{achievement.icon}</span>
                 <div className="flex-1 min-w-0">
                   <h4 className="font-medium text-sm text-stone-900">{achievement.name}</h4>
@@ -370,7 +370,7 @@ function StatsTab({ stats }: { stats: any }) {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.04 }}
-          className="bg-white rounded-xl p-3.5 border border-stone-100 flex items-center gap-3"
+          className="bg-white rounded-xl p-3.5 border border-stone-200/60 shadow-sm flex items-center gap-3"
         >
           <span className="text-lg">{item.icon}</span>
           <div>

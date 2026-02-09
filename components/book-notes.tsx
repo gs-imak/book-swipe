@@ -114,12 +114,12 @@ export function BookNotes({ bookId, compact = false }: BookNotesProps) {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6"
+      className="bg-white rounded-2xl shadow-lg border border-stone-200/60 shadow-sm p-6"
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <FileText className="w-5 h-5 text-purple-600" />
+          <FileText className="w-5 h-5 text-amber-600" />
           <h3 className="text-lg font-bold text-gray-900">Notes & Highlights</h3>
           <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
             {notes.length}
@@ -178,13 +178,13 @@ export function BookNotes({ bookId, compact = false }: BookNotesProps) {
                 placeholder="Page (optional)"
                 value={newNote.page}
                 onChange={(e) => setNewNote(prev => ({ ...prev, page: e.target.value }))}
-                className="w-24 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                className="w-24 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
               />
               <textarea
                 placeholder="Add your note, highlight, or favorite quote..."
                 value={newNote.content}
                 onChange={(e) => setNewNote(prev => ({ ...prev, content: e.target.value }))}
-                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-400"
+                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-amber-400"
                 rows={3}
               />
             </div>
@@ -312,7 +312,7 @@ function EditNoteForm({ initialContent, onSave, onCancel }: EditNoteFormProps) {
       <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        className="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-400"
+        className="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-amber-400"
         rows={3}
       />
       <div className="flex justify-end gap-2">

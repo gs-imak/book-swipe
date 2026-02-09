@@ -252,7 +252,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
 
           {/* Liked books list */}
           {likedBooks.length > 0 && (
-            <div className="bg-white rounded-xl p-4 border border-stone-100 mb-6 text-left">
+            <div className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm mb-6 text-left">
               <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-3">
                 Your picks
               </h3>

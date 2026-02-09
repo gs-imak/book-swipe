@@ -217,22 +217,22 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
 
             {/* Inline Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="bg-white rounded-xl p-4 border border-stone-100">
+              <div className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm">
                 <p className="text-2xl font-bold text-stone-900">{stats.totalBooks}</p>
                 <p className="text-xs text-stone-500 mt-0.5">Books saved</p>
               </div>
-              <div className="bg-white rounded-xl p-4 border border-stone-100">
+              <div className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm">
                 <p className="text-2xl font-bold text-stone-900">{stats.totalPages.toLocaleString()}</p>
                 <p className="text-xs text-stone-500 mt-0.5">Total pages</p>
               </div>
-              <div className="bg-white rounded-xl p-4 border border-stone-100">
+              <div className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm">
                 <div className="flex items-center gap-1">
                   <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
                   <span className="text-2xl font-bold text-stone-900">{stats.averageRating}</span>
                 </div>
                 <p className="text-xs text-stone-500 mt-0.5">Avg rating</p>
               </div>
-              <div className="bg-white rounded-xl p-4 border border-stone-100">
+              <div className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm">
                 <p className="text-lg font-bold text-stone-900 truncate">{stats.favoriteGenre}</p>
                 <p className="text-xs text-stone-500 mt-0.5">Top genre</p>
               </div>

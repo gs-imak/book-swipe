@@ -183,17 +183,17 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = false }: 
 
               {/* Stats */}
               <div className="grid grid-cols-3 gap-2">
-                <div className="bg-white rounded-xl p-3 border border-stone-100 text-center">
+                <div className="bg-white rounded-xl p-3 border border-stone-200/60 shadow-sm text-center">
                   <BookOpen className="w-4 h-4 text-stone-400 mx-auto mb-1" />
                   <p className="text-lg font-bold text-stone-900">{book.pages}</p>
                   <p className="text-[11px] text-stone-400">pages</p>
                 </div>
-                <div className="bg-white rounded-xl p-3 border border-stone-100 text-center">
+                <div className="bg-white rounded-xl p-3 border border-stone-200/60 shadow-sm text-center">
                   <Clock className="w-4 h-4 text-stone-400 mx-auto mb-1" />
                   <p className="text-lg font-bold text-stone-900">{book.readingTime.replace(' hours', 'h').replace(' hour', 'h')}</p>
                   <p className="text-[11px] text-stone-400">read time</p>
                 </div>
-                <div className="bg-white rounded-xl p-3 border border-stone-100 text-center">
+                <div className="bg-white rounded-xl p-3 border border-stone-200/60 shadow-sm text-center">
                   <Star className="w-4 h-4 text-amber-500 mx-auto mb-1" />
                   <p className="text-lg font-bold text-stone-900">{book.rating}</p>
                   <p className="text-[11px] text-stone-400">rating</p>
@@ -245,7 +245,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = false }: 
               </div>
 
               {/* Perfect for */}
-              <div className="bg-white rounded-xl p-4 border border-stone-100">
+              <div className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm">
                 <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-1.5">
                   Perfect for
                 </h3>

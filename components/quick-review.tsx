@@ -92,7 +92,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 space-y-6"
+      className="bg-white rounded-2xl shadow-lg border border-stone-200/60 shadow-sm p-6 space-y-6"
     >
       {/* Header */}
       <div className="flex items-start gap-4">
@@ -167,7 +167,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
           value={review}
           onChange={(e) => setReview(e.target.value)}
           placeholder="What did you love about this book? Any memorable quotes or moments?"
-          className="w-full p-3 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent"
+          className="w-full p-3 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
           rows={3}
         />
       </div>

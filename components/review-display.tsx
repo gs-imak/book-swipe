@@ -76,7 +76,7 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 space-y-4"
+      className="bg-white rounded-2xl shadow-lg border border-stone-200/60 shadow-sm p-6 space-y-4"
     >
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -121,7 +121,7 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowFullReview(!showFullReview)}
-                className="mt-2 p-0 h-auto text-purple-600 hover:text-purple-700"
+                className="mt-2 p-0 h-auto text-amber-700 hover:text-amber-800"
               >
                 {showFullReview ? 'Show less' : 'Show more'}
               </Button>
@@ -151,7 +151,7 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
             {review.tags.map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
+                className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-stone-100 text-stone-700"
               >
                 {tag}
               </span>
