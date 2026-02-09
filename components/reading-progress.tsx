@@ -131,6 +131,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                   <div className="relative w-12 h-16 flex-shrink-0">
                     <BookCover
                       src={book.book.cover}
+                      fallbackSrc={book.book.coverFallback}
                       alt={book.book.title}
                       fill
                       className="object-cover rounded"
@@ -210,6 +211,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                   <div className="relative w-8 h-11 flex-shrink-0">
                     <BookCover
                       src={book.book.cover}
+                      fallbackSrc={book.book.coverFallback}
                       alt={book.book.title}
                       fill
                       className="object-cover rounded"

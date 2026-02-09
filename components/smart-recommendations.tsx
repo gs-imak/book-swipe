@@ -260,6 +260,7 @@ function MiniBookCard({
       <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-stone-100 mb-2 shadow-sm">
         <BookCover
           src={book.cover}
+          fallbackSrc={book.coverFallback}
           alt={book.title}
           fill
           className="object-cover"

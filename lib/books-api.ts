@@ -13,6 +13,7 @@ export interface GoogleBook {
     publishedDate?: string
     averageRating?: number
     categories?: string[]
+    industryIdentifiers?: { type: string; identifier: string }[]
     imageLinks?: {
       smallThumbnail?: string
       thumbnail?: string
@@ -129,23 +130,33 @@ function transformGoogleBookToBook(googleBook: GoogleBook): Book | null {
       .replace('http:', 'https:')
       .replace(/&edge=curl/g, '') // Remove curl edge effect
 
-    // If it's a Google Books image, request a usable size
+    // If it's a Google Books image, request best available size
     if (optimizedUrl.includes('books.google.com') || optimizedUrl.includes('books.googleusercontent.com')) {
-      // zoom=1 is ~128px (too small), zoom=3 gives ~400px which is good for cards
-      optimizedUrl = optimizedUrl.replace(/zoom=\d+/g, 'zoom=3')
+      // zoom=0 returns full resolution, zoom=1 is ~128px (too small)
+      optimizedUrl = optimizedUrl.replace(/zoom=\d+/g, 'zoom=0')
       if (!optimizedUrl.includes('zoom=')) {
-        optimizedUrl += optimizedUrl.includes('?') ? '&zoom=3' : '?zoom=3'
+        optimizedUrl += optimizedUrl.includes('?') ? '&zoom=0' : '?zoom=0'
       }
     }
 
     return optimizedUrl
   }
   
+  // Try to get a curated cover from Open Library via ISBN (better for classics)
+  const isbn = volumeInfo.industryIdentifiers?.find(id => id.type === 'ISBN_13')?.identifier ||
+               volumeInfo.industryIdentifiers?.find(id => id.type === 'ISBN_10')?.identifier
+  const olIsbnCover = isbn
+    ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg?default=false`
+    : ''
+  const googleCover = getBestCoverImage(volumeInfo.imageLinks)
+
   return {
     id: googleBook.id,
     title: volumeInfo.title,
     author: volumeInfo.authors[0],
-    cover: getBestCoverImage(volumeInfo.imageLinks),
+    // Prefer OL ISBN cover (better curated), fall back to Google Books cover
+    cover: olIsbnCover || googleCover,
+    coverFallback: olIsbnCover ? googleCover : undefined,
     rating: Math.round(rating * 10) / 10,
     pages,
     genre: volumeInfo.categories || ['General'],

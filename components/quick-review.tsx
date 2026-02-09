@@ -100,6 +100,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
         <div className="relative w-16 h-24 flex-shrink-0 rounded-lg overflow-hidden shadow-md">
           <BookCover
             src={book.cover}
+            fallbackSrc={book.coverFallback}
             alt={book.title}
             fill
             className="object-cover"

@@ -331,6 +331,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                     <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-stone-100 mb-2.5 shadow-sm group-hover:shadow-md transition-shadow">
                       <BookCover
                         src={book.cover}
+                        fallbackSrc={book.coverFallback}
                         alt={book.title}
                         fill
                         className="object-cover"

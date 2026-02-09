@@ -9,7 +9,7 @@ import { GamificationProvider } from "@/components/gamification-provider"
 import { AchievementsPanel } from "@/components/achievements-panel"
 import { MobileNav } from "@/components/mobile-nav"
 import { UserPreferences } from "@/lib/book-data"
-import { getLikedBooks } from "@/lib/storage"
+import { getLikedBooks, migrateCoverUrls } from "@/lib/storage"
 
 type AppState = "login" | "dashboard" | "questionnaire" | "swipe"
 
@@ -131,7 +131,12 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
 // Main app component with gamification wrapper
 export default function App() {
   const [showAchievements, setShowAchievements] = useState(false)
-  
+
+  // One-time migration: fix cached cover URLs
+  useEffect(() => {
+    migrateCoverUrls()
+  }, [])
+
   return (
     <GamificationProvider onShowAchievements={() => setShowAchievements(true)}>
       <Home 

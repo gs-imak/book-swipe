@@ -57,6 +57,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = false }: 
         <div className="absolute inset-0">
           <BookCover
             src={book.cover}
+            fallbackSrc={book.coverFallback}
             alt={book.title}
             fill
             className="object-cover"

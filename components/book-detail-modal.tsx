@@ -105,6 +105,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
               <div className="relative w-20 h-28 sm:w-24 sm:h-36 flex-shrink-0 rounded-xl overflow-hidden shadow-md border border-stone-200/40">
                 <BookCover
                   src={book.cover}
+                  fallbackSrc={book.coverFallback}
                   alt={book.title}
                   fill
                   className="object-cover"
