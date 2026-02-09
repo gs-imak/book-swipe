@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { Heart, MessageSquare, Tag, Calendar, Clock } from "lucide-react"
 import { Button } from "./ui/button"
 import { StarRating } from "./star-rating"
+import { BookCover } from "@/components/book-cover"
 import { Book } from "@/lib/book-data"
 import { BookReview, saveBookReview } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
@@ -96,11 +97,15 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
     >
       {/* Header */}
       <div className="flex items-start gap-4">
-        <img
-          src={book.cover}
-          alt={book.title}
-          className="w-16 h-24 object-cover rounded-lg shadow-md"
-        />
+        <div className="relative w-16 h-24 flex-shrink-0 rounded-lg overflow-hidden shadow-md">
+          <BookCover
+            src={book.cover}
+            alt={book.title}
+            fill
+            className="object-cover"
+            sizes="64px"
+          />
+        </div>
         <div className="flex-1">
           <h3 className="font-bold text-lg text-gray-900 line-clamp-2">
             {book.title}

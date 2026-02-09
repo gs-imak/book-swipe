@@ -13,7 +13,7 @@ import { getBookReview, getUserStats } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
 import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import Image from "next/image"
+import { BookCover } from "@/components/book-cover"
 
 interface DashboardProps {
   onBack?: () => void
@@ -329,7 +329,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                   >
                     {/* Cover */}
                     <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-stone-100 mb-2.5 shadow-sm group-hover:shadow-md transition-shadow">
-                      <Image
+                      <BookCover
                         src={book.cover}
                         alt={book.title}
                         fill

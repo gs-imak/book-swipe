@@ -5,7 +5,7 @@ import { Book } from "@/lib/book-data"
 import { Star, Clock, BookOpen, Info, Plus, ChevronDown } from "lucide-react"
 import { addBookToReading } from "@/lib/storage"
 import { Button } from "@/components/ui/button"
-import Image from "next/image"
+import { BookCover } from "@/components/book-cover"
 import { useState } from "react"
 
 interface BookCardProps {
@@ -55,7 +55,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = false }: 
       <div className="relative h-full w-full overflow-hidden rounded-2xl shadow-lg border border-stone-200/40">
         {/* Cover image */}
         <div className="absolute inset-0">
-          <Image
+          <BookCover
             src={book.cover}
             alt={book.title}
             fill

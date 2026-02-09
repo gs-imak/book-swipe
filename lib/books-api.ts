@@ -112,33 +112,32 @@ function transformGoogleBookToBook(googleBook: GoogleBook): Book | null {
   
   // Get the best quality image available, with fallback chain
   const getBestCoverImage = (imageLinks?: GoogleBook['volumeInfo']['imageLinks']): string => {
-    if (!imageLinks) return 'https://via.placeholder.com/400x600?text=No+Cover'
-    
+    if (!imageLinks) return ''
+
     // Try in order of quality: extraLarge > large > medium > small > thumbnail
-    const coverUrl = imageLinks.extraLarge || 
-                     imageLinks.large || 
-                     imageLinks.medium || 
-                     imageLinks.small || 
-                     imageLinks.thumbnail || 
+    const coverUrl = imageLinks.extraLarge ||
+                     imageLinks.large ||
+                     imageLinks.medium ||
+                     imageLinks.small ||
+                     imageLinks.thumbnail ||
                      imageLinks.smallThumbnail
-    
-    if (!coverUrl) return 'https://via.placeholder.com/400x600?text=No+Cover'
-    
-    // Ensure HTTPS and optimize for best quality
+
+    if (!coverUrl) return ''
+
+    // Ensure HTTPS and clean up the URL
     let optimizedUrl = coverUrl
       .replace('http:', 'https:')
       .replace(/&edge=curl/g, '') // Remove curl edge effect
-    
-    // If it's a Google Books image, try to get larger size
+
+    // If it's a Google Books image, request a usable size
     if (optimizedUrl.includes('books.google.com') || optimizedUrl.includes('books.googleusercontent.com')) {
-      // Replace zoom levels to get highest quality
-      optimizedUrl = optimizedUrl.replace(/zoom=\d+/g, 'zoom=0')
-      // If no zoom parameter exists, add it
+      // zoom=1 is ~128px (too small), zoom=3 gives ~400px which is good for cards
+      optimizedUrl = optimizedUrl.replace(/zoom=\d+/g, 'zoom=3')
       if (!optimizedUrl.includes('zoom=')) {
-        optimizedUrl += optimizedUrl.includes('?') ? '&zoom=0' : '?zoom=0'
+        optimizedUrl += optimizedUrl.includes('?') ? '&zoom=3' : '?zoom=3'
       }
     }
-    
+
     return optimizedUrl
   }
   

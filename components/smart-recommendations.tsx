@@ -13,7 +13,7 @@ import {
 import { getCachedBooks } from "@/lib/book-cache"
 import { Star, Clock, BookOpen, Heart, Sparkles, Zap } from "lucide-react"
 import { motion } from "framer-motion"
-import Image from "next/image"
+import { BookCover } from "@/components/book-cover"
 import { useGamification } from "./gamification-provider"
 
 interface SmartRecommendationsProps {
@@ -258,7 +258,7 @@ function MiniBookCard({
     >
       {/* Cover */}
       <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-stone-100 mb-2 shadow-sm">
-        <Image
+        <BookCover
           src={book.cover}
           alt={book.title}
           fill

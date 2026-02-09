@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { ReadingProgress, ReadingGoals, getReadingProgress, updateReadingProgress, removeFromReading, getReadingGoals, updateReadingGoals } from "@/lib/storage"
 import { BookOpen, Clock, Target, Flame, Plus, Minus, Play, Pause, CheckCircle, X } from "lucide-react"
 import { motion } from "framer-motion"
-import Image from "next/image"
+import { BookCover } from "@/components/book-cover"
 
 interface ReadingProgressProps {
   onStartReading?: (bookId: string) => void
@@ -129,7 +129,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
               return (
                 <div key={book.bookId} className="flex gap-3 p-3 bg-stone-50 rounded-lg">
                   <div className="relative w-12 h-16 flex-shrink-0">
-                    <Image
+                    <BookCover
                       src={book.book.cover}
                       alt={book.book.title}
                       fill
@@ -208,7 +208,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
               return (
                 <div key={book.bookId} className="flex items-center gap-3 p-2.5 bg-stone-50 rounded-lg">
                   <div className="relative w-8 h-11 flex-shrink-0">
-                    <Image
+                    <BookCover
                       src={book.book.cover}
                       alt={book.book.title}
                       fill

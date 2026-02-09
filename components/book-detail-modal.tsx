@@ -8,7 +8,7 @@ import { BookReview, getBookReview } from "@/lib/storage"
 import { QuickReview } from "./quick-review"
 import { ReviewDisplay } from "./review-display"
 import { BookNotes } from "./book-notes"
-import Image from "next/image"
+import { BookCover } from "@/components/book-cover"
 
 interface BookDetailModalProps {
   book: Book | null
@@ -103,7 +103,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
             <div className="flex items-start gap-4 sm:gap-5">
               {/* Cover */}
               <div className="relative w-20 h-28 sm:w-24 sm:h-36 flex-shrink-0 rounded-xl overflow-hidden shadow-md border border-stone-200/40">
-                <Image
+                <BookCover
                   src={book.cover}
                   alt={book.title}
                   fill
