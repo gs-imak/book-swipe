@@ -257,13 +257,13 @@ function MiniBookCard({
       transition={{ delay: (index || 0) * 0.05 }}
     >
       {/* Cover */}
-      <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-stone-100 mb-2 shadow-sm">
+      <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-stone-200 mb-2 shadow-sm">
         <BookCover
           src={book.cover}
           fallbackSrc={book.coverFallback}
           alt={book.title}
           fill
-          className="object-cover"
+          className="object-contain"
           sizes="150px"
         />
         <div className="absolute top-1.5 right-1.5 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-0.5">

@@ -382,44 +382,13 @@ export function addPoints(points: number, activity: string): boolean {
 }
 
 // Cover URL migration
-const COVER_MIGRATION_KEY = "bookswipe_cover_migration_v3"
-
-function fixCoverUrl(url: string): string {
-  if (!url) return url
-  let fixed = url
-  // Google Books: normalize to zoom=0 (full resolution)
-  if (fixed.includes('books.google.com') || fixed.includes('books.googleusercontent.com')) {
-    fixed = fixed.replace(/zoom=\d+/g, 'zoom=0')
-  }
-  // Open Library: add ?default=false so missing covers 404 instead of placeholder
-  if (fixed.includes('covers.openlibrary.org') && !fixed.includes('default=false')) {
-    fixed += fixed.includes('?') ? '&default=false' : '?default=false'
-  }
-  return fixed
-}
+const COVER_MIGRATION_KEY = "bookswipe_cover_migration_v4"
 
 export function migrateCoverUrls(): void {
   if (typeof window === 'undefined') return
   if (localStorage.getItem(COVER_MIGRATION_KEY)) return
 
-  // Migrate liked books
-  const likedBooks = getLikedBooks()
-  if (likedBooks.length > 0) {
-    const fixed = likedBooks.map(book => ({ ...book, cover: fixCoverUrl(book.cover) }))
-    saveLikedBooks(fixed)
-  }
-
-  // Migrate reading progress
-  const progress = getReadingProgress()
-  if (progress.length > 0) {
-    const fixed = progress.map(p => ({
-      ...p,
-      book: { ...p.book, cover: fixCoverUrl(p.book.cover) },
-    }))
-    saveReadingProgress(fixed)
-  }
-
-  // Clear the book cache entirely so new fetches get correct URLs
+  // Nuclear clear: wipe the book cache so all books are re-fetched with new cover logic
   const { clearBookCache } = require("./book-cache")
   clearBookCache()
 

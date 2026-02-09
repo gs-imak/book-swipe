@@ -26,6 +26,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'via.placeholder.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'i.gr-assets.com',
+      },
     ],
   },
   async headers() {

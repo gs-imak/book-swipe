@@ -53,14 +53,23 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = false }: 
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
       <div className="relative h-full w-full overflow-hidden rounded-2xl shadow-lg border border-stone-200/40">
-        {/* Cover image */}
-        <div className="absolute inset-0">
+        {/* Cover image with blurred background fill */}
+        <div className="absolute inset-0 bg-stone-900">
+          {/* Blurred background version to fill gaps */}
+          <BookCover
+            src={book.cover}
+            alt=""
+            fill
+            className="object-cover blur-2xl scale-110 opacity-50"
+            sizes="100px"
+          />
+          {/* Actual cover shown in full */}
           <BookCover
             src={book.cover}
             fallbackSrc={book.coverFallback}
             alt={book.title}
             fill
-            className="object-cover"
+            className="object-contain"
             sizes="(max-width: 640px) 100vw, 400px"
             priority={isTop}
           />
