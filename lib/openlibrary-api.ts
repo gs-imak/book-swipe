@@ -77,7 +77,8 @@ const SUBJECT_TO_MOOD: Record<string, string[]> = {
 }
 
 function getOpenLibraryCover(coverId: number, size: "S" | "M" | "L" = "L"): string {
-  return `https://covers.openlibrary.org/b/id/${coverId}-${size}.jpg`
+  // default=false returns 404 instead of a placeholder "image not available" image
+  return `https://covers.openlibrary.org/b/id/${coverId}-${size}.jpg?default=false`
 }
 
 function mapSubjectsToGenres(subjects: string[]): string[] {
