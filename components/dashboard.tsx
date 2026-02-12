@@ -11,7 +11,7 @@ import { BookDetailModal } from "./book-detail-modal"
 import { StarRating } from "./star-rating"
 import { getBookReview, getUserStats } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
-import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy, Search, Library } from "lucide-react"
+import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy, Search, Library, ChevronDown, SlidersHorizontal } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
 import { useToast } from "./toast-provider"
@@ -43,6 +43,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   const [shelfFilter, setShelfFilter] = useState<string | null>(null)
   const [formatFilter, setFormatFilter] = useState<"all" | "ebook" | "audio">("all")
   const [readingSpd, setReadingSpd] = useState<ReadingSpeed>("average")
+  const [showFilters, setShowFilters] = useState(false)
 
   const { triggerActivity, showAchievementsPanel } = useGamification()
   const { showToast } = useToast()
@@ -134,7 +135,16 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
     { value: "pages", label: "Shortest" },
   ]
 
-  // Smooth spring entrance — tight stagger, subtle motion
+  const hasActiveFilters = shelfFilter !== null || filter !== "all" || formatFilter !== "all"
+
+  // Time-based greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours()
+    if (hour < 12) return "Good morning"
+    if (hour < 17) return "Good afternoon"
+    return "Good evening"
+  }
+
   const fadeInUp = (delay: number) => ({
     initial: { opacity: 0, y: 8 },
     animate: { opacity: 1, y: 0 },
@@ -157,9 +167,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                 </button>
               )}
               <div className="min-w-0">
-                <h1
-                  className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight font-serif"
-                >
+                <h1 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight font-serif">
                   My Library
                 </h1>
               </div>
@@ -202,7 +210,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
         {/* Admin Panel */}
         <AnimatePresence>
           {showAdmin && (
@@ -211,8 +219,9 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
+              className="pt-6"
             >
-              <AdminPanel onBooksLoaded={(books) => { setLikedBooks(getLikedBooks()) }} />
+              <AdminPanel onBooksLoaded={() => { setLikedBooks(getLikedBooks()) }} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -232,9 +241,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
             >
               <BookOpen className="w-10 h-10 text-amber-600" />
             </motion.div>
-            <h2
-              className="text-2xl sm:text-3xl font-bold text-stone-900 mb-3 font-serif"
-            >
+            <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 mb-3 font-serif">
               Your shelf is empty
             </h2>
             <p className="text-stone-500 mb-8 max-w-md mx-auto text-base sm:text-lg leading-relaxed">
@@ -250,306 +257,307 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
             </Button>
           </motion.div>
         ) : (
-          <>
-            {/* Discover CTA */}
-            <motion.div {...fadeInUp(0)} className="flex items-center justify-between gap-4 flex-wrap">
-              <p className="text-stone-500 text-sm">
-                {likedBooks.length} {likedBooks.length === 1 ? "book" : "books"} saved
-              </p>
-              <Button
-                onClick={onStartDiscovery}
-                className="h-10 px-5 text-sm bg-stone-900 hover:bg-stone-800 text-white font-medium rounded-xl transition-all shadow-sm tap-target touch-manipulation"
-              >
-                <Heart className="w-4 h-4 mr-2" />
-                Discover More
-              </Button>
-            </motion.div>
+          <div className="space-y-10 py-6 sm:py-8">
 
-            {/* Inline Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[
-                { value: stats.totalBooks, label: "Books saved" },
-                { value: stats.totalPages.toLocaleString(), label: "Total pages" },
-                { value: null, label: "Avg rating" },
-                { value: null, label: "Top genre" },
-              ].map((stat, i) => (
-                <motion.div
-                  key={stat.label}
-                  {...fadeInUp(0.03 + i * 0.03)}
-                  className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm"
+            {/* ━━━ SECTION 1: Personal Greeting + Stats ━━━ */}
+            <motion.div {...fadeInUp(0)}>
+              <div className="flex items-start justify-between gap-4 mb-5">
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 font-serif leading-tight">
+                    {getGreeting()},<br className="sm:hidden" /> reader.
+                  </h2>
+                  <p className="text-stone-500 text-sm mt-1">
+                    {stats.totalBooks} books &middot; {stats.totalPages.toLocaleString()} pages &middot;{" "}
+                    <Star className="w-3 h-3 text-amber-500 fill-amber-500 inline -mt-0.5" /> {stats.averageRating} avg
+                  </p>
+                </div>
+                <Button
+                  onClick={onStartDiscovery}
+                  className="h-10 px-5 text-sm bg-stone-900 hover:bg-stone-800 text-white font-medium rounded-xl transition-all shadow-sm flex-shrink-0 tap-target touch-manipulation"
                 >
-                  {stat.label === "Avg rating" ? (
-                    <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                      <span className="text-2xl font-bold text-stone-900">{stats.averageRating}</span>
-                    </div>
-                  ) : stat.label === "Top genre" ? (
-                    <p className="text-lg font-bold text-stone-900 truncate">{stats.favoriteGenre}</p>
-                  ) : (
-                    <p className="text-2xl font-bold text-stone-900">{stat.value}</p>
-                  )}
-                  <p className="text-xs text-stone-500 mt-0.5">{stat.label}</p>
-                </motion.div>
-              ))}
-            </div>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Discover
+                </Button>
+              </div>
 
-            {/* Daily Pick */}
-            {likedBooks.length >= 3 && (
-              <DailyPickCard
-                onBookClick={handleBookClick}
-                onBookLiked={(book) => {
-                  setLikedBooks([...likedBooks, book])
-                  showToast(`"${book.title}" saved to library`)
-                }}
-              />
-            )}
-
-            {/* Smart Recommendations */}
-            <motion.div {...fadeInUp(0.08)}>
-              <SmartRecommendations
-                onBookLike={(book) => {
-                  const updatedBooks = [...likedBooks, book]
-                  setLikedBooks(updatedBooks)
-                }}
-                onStartReading={addBookToReading}
-              />
+              {/* Daily Pick — inline within the greeting zone */}
+              {likedBooks.length >= 3 && (
+                <DailyPickCard
+                  onBookClick={handleBookClick}
+                  onBookLiked={(book) => {
+                    setLikedBooks([...likedBooks, book])
+                    showToast(`"${book.title}" saved to library`)
+                  }}
+                />
+              )}
             </motion.div>
 
-            {/* Discover Hub — Trending, Author Spotlight, Curated Lists, Genre Deep-Dives, Surprise Me */}
-            <motion.div {...fadeInUp(0.1)}>
-              <DiscoverHub
-                likedBooks={likedBooks}
-                onSaveBook={(book) => {
-                  const alreadySaved = likedBooks.some(b => b.id === book.id)
-                  if (alreadySaved) return
-                  const updated = [...likedBooks, book]
-                  setLikedBooks(updated)
-                  saveLikedBooks(updated)
-                }}
-                savedBookIds={new Set(likedBooks.map(b => b.id))}
-              />
-            </motion.div>
-
-            {/* Reading Progress */}
-            <motion.div {...fadeInUp(0.12)}>
+            {/* ━━━ SECTION 2: Reading Progress (currently reading up front) ━━━ */}
+            <motion.div {...fadeInUp(0.05)}>
               <ReadingProgressTracker onStartReading={onStartDiscovery} />
             </motion.div>
 
-            {/* Reading Paths */}
-            {likedBooks.length >= 3 && (
-              <ReadingPath onBookClick={handleBookClick} />
-            )}
-
-            {/* Filter & Sort */}
-            <motion.div {...fadeInUp(0.14)} className="space-y-3">
+            {/* ━━━ SECTION 3: Your Library (the core — moved UP) ━━━ */}
+            <motion.div {...fadeInUp(0.08)} className="space-y-4">
+              {/* Section header + filter toggle */}
               <div className="flex items-center justify-between">
-                <h2
-                  className="text-lg font-semibold text-stone-900 font-serif"
+                <div className="flex items-center gap-3">
+                  <h2 className="text-lg font-semibold text-stone-900 font-serif">
+                    Your Books
+                  </h2>
+                  <span className="text-xs text-stone-400 bg-stone-100 px-2 py-0.5 rounded-full">
+                    {sortedBooks.length !== likedBooks.length
+                      ? `${sortedBooks.length} / ${likedBooks.length}`
+                      : likedBooks.length}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all tap-target touch-manipulation ${
+                    showFilters || hasActiveFilters
+                      ? "bg-amber-50 text-amber-700"
+                      : "text-stone-400 hover:text-stone-600 hover:bg-stone-50"
+                  }`}
                 >
-                  Saved Books
-                </h2>
-                <span className="text-xs text-stone-400">
-                  {sortedBooks.length !== likedBooks.length
-                    ? `${sortedBooks.length} of ${likedBooks.length}`
-                    : `${likedBooks.length} books`}
-                </span>
+                  <SlidersHorizontal className="w-3.5 h-3.5" />
+                  Filters
+                  {hasActiveFilters && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  )}
+                </button>
               </div>
 
-              {/* Shelf filter pills */}
+              {/* Shelf pills — always visible, compact */}
               <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
                 <button
                   onClick={() => setShelfFilter(null)}
-                  className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                     shelfFilter === null
-                      ? "bg-amber-600 text-white"
-                      : "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200/60"
-                  }`}
-                >
-                  All Shelves
-                </button>
-                {shelves.map(shelf => (
-                  <button
-                    key={shelf.id}
-                    onClick={() => setShelfFilter(shelfFilter === shelf.id ? null : shelf.id)}
-                    className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all ${
-                      shelfFilter === shelf.id
-                        ? "bg-amber-600 text-white"
-                        : "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200/60"
-                    }`}
-                  >
-                    {shelf.emoji} {shelf.name}
-                  </button>
-                ))}
-                <button
-                  onClick={() => setShowShelfManager(true)}
-                  className="flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-all flex items-center gap-1"
-                >
-                  <Library className="w-3.5 h-3.5" />
-                  Manage
-                </button>
-              </div>
-
-              {/* Genre pills */}
-              <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
-                <button
-                  onClick={() => setFilter("all")}
-                  className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all ${
-                    filter === "all"
                       ? "bg-stone-900 text-white"
                       : "bg-stone-100 text-stone-600 hover:bg-stone-200"
                   }`}
                 >
                   All
                 </button>
-                {genres.slice(0, 8).map(genre => (
+                {shelves.map(shelf => (
                   <button
-                    key={genre}
-                    onClick={() => setFilter(genre)}
-                    className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all ${
-                      filter === genre
+                    key={shelf.id}
+                    onClick={() => setShelfFilter(shelfFilter === shelf.id ? null : shelf.id)}
+                    className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      shelfFilter === shelf.id
                         ? "bg-stone-900 text-white"
                         : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                    }`}
+                  >
+                    {shelf.emoji} {shelf.name}
+                  </button>
+                ))}
+                {genres.slice(0, 6).map(genre => (
+                  <button
+                    key={genre}
+                    onClick={() => setFilter(filter === genre ? "all" : genre)}
+                    className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      filter === genre
+                        ? "bg-amber-600 text-white"
+                        : "bg-amber-50 text-amber-700 hover:bg-amber-100"
                     }`}
                   >
                     {genre}
                   </button>
                 ))}
+                <button
+                  onClick={() => setShowShelfManager(true)}
+                  className="flex-shrink-0 px-2.5 py-1.5 rounded-full text-xs font-medium text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-all flex items-center gap-1"
+                >
+                  <Library className="w-3 h-3" />
+                  Manage
+                </button>
               </div>
 
-              {/* Sort pills + Format filter + Reading speed */}
-              <div className="flex items-center gap-3 flex-wrap">
-                <div className="flex gap-1.5">
-                  {sortOptions.map(opt => (
-                    <button
-                      key={opt.value}
-                      onClick={() => setSortBy(opt.value)}
-                      className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                        sortBy === opt.value
-                          ? "bg-amber-100 text-amber-800"
-                          : "text-stone-400 hover:text-stone-600 hover:bg-stone-50"
-                      }`}
+              {/* Collapsible advanced filters */}
+              <AnimatePresence>
+                {showFilters && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="flex items-center gap-3 flex-wrap py-1">
+                      <div className="flex gap-1.5">
+                        {sortOptions.map(opt => (
+                          <button
+                            key={opt.value}
+                            onClick={() => setSortBy(opt.value)}
+                            className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                              sortBy === opt.value
+                                ? "bg-amber-100 text-amber-800"
+                                : "text-stone-400 hover:text-stone-600 hover:bg-stone-50"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      <span className="w-px h-4 bg-stone-200" />
+
+                      <div className="flex gap-1">
+                        {([
+                          { value: "all" as const, label: "All Formats" },
+                          { value: "ebook" as const, label: "eBook" },
+                          { value: "audio" as const, label: "Audio" },
+                        ]).map(f => (
+                          <button
+                            key={f.value}
+                            onClick={() => setFormatFilter(f.value)}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
+                              formatFilter === f.value
+                                ? "bg-blue-50 text-blue-700"
+                                : "text-stone-400 hover:text-stone-600 hover:bg-stone-50"
+                            }`}
+                          >
+                            {f.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      <span className="w-px h-4 bg-stone-200" />
+
+                      <select
+                        value={readingSpd}
+                        onChange={(e) => {
+                          const speed = e.target.value as ReadingSpeed
+                          setReadingSpd(speed)
+                          setReadingSpeed(speed)
+                        }}
+                        className="text-[11px] text-stone-500 bg-transparent border-none cursor-pointer focus:outline-none hover:text-stone-700"
+                      >
+                        {getAllSpeeds().map(s => (
+                          <option key={s.value} value={s.value}>{s.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Books Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5">
+                {sortedBooks.map((book, index) => {
+                  const review = getBookReview(book.id)
+                  const bookShelfIds = getShelvesForBook(book.id)
+                  const firstShelf = bookShelfIds.length > 0 ? shelves.find(s => s.id === bookShelfIds[0]) : null
+                  return (
+                    <motion.div
+                      key={book.id}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 24, delay: Math.min(index * 0.025, 0.2) }}
+                      whileHover={{ y: -3, transition: { type: "spring", stiffness: 400, damping: 25 } }}
+                      className="group cursor-pointer"
+                      onClick={() => handleBookClick(book)}
                     >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
+                      {/* Cover */}
+                      <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-stone-100 mb-2.5 shadow-sm group-hover:shadow-md transition-shadow ring-1 ring-stone-200/50">
+                        <BookCover
+                          src={book.cover}
+                          fallbackSrc={book.coverFallback}
+                          alt={book.title}
+                          fill
+                          className="object-contain"
+                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                        />
+                        {/* Rating badge */}
+                        <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-0.5 shadow-sm">
+                          <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                          <span className="text-xs font-semibold text-stone-700">{book.rating}</span>
+                        </div>
+                        {/* Favorite heart */}
+                        {review?.favorite && (
+                          <div className="absolute top-2 left-2">
+                            <Heart className="w-4 h-4 text-red-500 fill-red-500 drop-shadow-sm" />
+                          </div>
+                        )}
+                        {/* Shelf badge */}
+                        {firstShelf && (
+                          <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md text-[10px] font-medium text-stone-600 max-w-[calc(100%-16px)] truncate shadow-sm">
+                            {firstShelf.emoji} {firstShelf.name}
+                          </div>
+                        )}
+                      </div>
 
-                <span className="w-px h-4 bg-stone-200" />
+                      {/* Info */}
+                      <div className="space-y-0.5 px-0.5">
+                        <h3 className="font-semibold text-sm text-stone-900 line-clamp-2 leading-tight group-hover:text-amber-800 transition-colors">
+                          {book.title}
+                        </h3>
+                        <p className="text-xs text-stone-500 truncate">{book.author}</p>
 
-                {/* Format filter */}
-                <div className="flex gap-1">
-                  {([
-                    { value: "all" as const, label: "All" },
-                    { value: "ebook" as const, label: "eBook" },
-                    { value: "audio" as const, label: "Audio" },
-                  ]).map(f => (
-                    <button
-                      key={f.value}
-                      onClick={() => setFormatFilter(f.value)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
-                        formatFilter === f.value
-                          ? "bg-blue-50 text-blue-700"
-                          : "text-stone-400 hover:text-stone-600 hover:bg-stone-50"
-                      }`}
-                    >
-                      {f.label}
-                    </button>
-                  ))}
-                </div>
+                        {/* User rating */}
+                        {review && (
+                          <div className="pt-1">
+                            <StarRating rating={review.rating} readonly size="sm" />
+                          </div>
+                        )}
 
-                <span className="w-px h-4 bg-stone-200" />
-
-                {/* Reading speed */}
-                <select
-                  value={readingSpd}
-                  onChange={(e) => {
-                    const speed = e.target.value as ReadingSpeed
-                    setReadingSpd(speed)
-                    setReadingSpeed(speed)
-                  }}
-                  className="text-[11px] text-stone-500 bg-transparent border-none cursor-pointer focus:outline-none hover:text-stone-700"
-                >
-                  {getAllSpeeds().map(s => (
-                    <option key={s.value} value={s.value}>{s.label}</option>
-                  ))}
-                </select>
+                        {/* Meta */}
+                        <div className="flex items-center gap-2 text-[11px] text-stone-400 pt-0.5 flex-wrap">
+                          <span>{book.pages}p</span>
+                          <span className="w-0.5 h-0.5 rounded-full bg-stone-300" />
+                          <span>{estimateReadingTime(book.pages, readingSpd)}</span>
+                          {book.formats?.ebook && (
+                            <span className="px-1 py-px rounded bg-blue-50 text-blue-500 text-[9px] font-medium">eBook</span>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )
+                })}
               </div>
             </motion.div>
 
-            {/* Books Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5">
-              {sortedBooks.map((book, index) => {
-                const review = getBookReview(book.id)
-                const bookShelfIds = getShelvesForBook(book.id)
-                const firstShelf = bookShelfIds.length > 0 ? shelves.find(s => s.id === bookShelfIds[0]) : null
-                return (
-                  <motion.div
-                    key={book.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 24, delay: Math.min(index * 0.025, 0.2) }}
-                    whileHover={{ y: -3, transition: { type: "spring", stiffness: 400, damping: 25 } }}
-                    className="group cursor-pointer"
-                    onClick={() => handleBookClick(book)}
-                  >
-                    {/* Cover */}
-                    <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-stone-200 mb-2.5 shadow-sm group-hover:shadow-md transition-shadow">
-                      <BookCover
-                        src={book.cover}
-                        fallbackSrc={book.coverFallback}
-                        alt={book.title}
-                        fill
-                        className="object-contain"
-                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                      />
-                      {/* Rating badge */}
-                      <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
-                        <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                        <span className="text-xs font-semibold text-stone-700">{book.rating}</span>
-                      </div>
-                      {/* Favorite heart */}
-                      {review?.favorite && (
-                        <div className="absolute top-2 left-2">
-                          <Heart className="w-4 h-4 text-red-500 fill-red-500 drop-shadow-sm" />
-                        </div>
-                      )}
-                      {/* Shelf badge */}
-                      {firstShelf && (
-                        <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md text-[10px] font-medium text-stone-600 max-w-[calc(100%-16px)] truncate">
-                          {firstShelf.emoji} {firstShelf.name}
-                        </div>
-                      )}
-                    </div>
+            {/* ━━━ SECTION 4: Discovery Zone ━━━ */}
+            <div className="space-y-8">
+              <div className="flex items-center gap-3">
+                <div className="h-px flex-1 bg-stone-200/60" />
+                <span className="text-xs font-semibold text-stone-400 uppercase tracking-widest">Discover</span>
+                <div className="h-px flex-1 bg-stone-200/60" />
+              </div>
 
-                    {/* Info */}
-                    <div className="space-y-0.5 px-0.5">
-                      <h3 className="font-semibold text-sm text-stone-900 line-clamp-2 leading-tight group-hover:text-amber-800 transition-colors">
-                        {book.title}
-                      </h3>
-                      <p className="text-xs text-stone-500 truncate">{book.author}</p>
+              {/* Smart Recommendations */}
+              <motion.div {...fadeInUp(0.1)}>
+                <SmartRecommendations
+                  onBookLike={(book) => {
+                    const updatedBooks = [...likedBooks, book]
+                    setLikedBooks(updatedBooks)
+                  }}
+                  onStartReading={addBookToReading}
+                />
+              </motion.div>
 
-                      {/* User rating */}
-                      {review && (
-                        <div className="pt-1">
-                          <StarRating rating={review.rating} readonly size="sm" />
-                        </div>
-                      )}
+              {/* Discover Hub */}
+              <motion.div {...fadeInUp(0.12)}>
+                <DiscoverHub
+                  likedBooks={likedBooks}
+                  onSaveBook={(book) => {
+                    const alreadySaved = likedBooks.some(b => b.id === book.id)
+                    if (alreadySaved) return
+                    const updated = [...likedBooks, book]
+                    setLikedBooks(updated)
+                    saveLikedBooks(updated)
+                  }}
+                  savedBookIds={new Set(likedBooks.map(b => b.id))}
+                />
+              </motion.div>
 
-                      {/* Meta */}
-                      <div className="flex items-center gap-2 text-[11px] text-stone-400 pt-0.5 flex-wrap">
-                        <span>{book.pages}p</span>
-                        <span className="w-0.5 h-0.5 rounded-full bg-stone-300" />
-                        <span>{estimateReadingTime(book.pages, readingSpd)}</span>
-                        {book.formats?.ebook && (
-                          <span className="px-1 py-px rounded bg-blue-50 text-blue-500 text-[9px] font-medium">eBook</span>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                )
-              })}
+              {/* Reading Paths */}
+              {likedBooks.length >= 3 && (
+                <ReadingPath onBookClick={handleBookClick} />
+              )}
             </div>
-          </>
+          </div>
         )}
       </div>
 
