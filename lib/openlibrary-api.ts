@@ -1,6 +1,6 @@
 import { Book } from "./book-data"
 
-interface OpenLibraryDoc {
+export interface OpenLibraryDoc {
   key: string
   title: string
   author_name?: string[]
@@ -119,7 +119,7 @@ function estimateReadingTime(pages: number): string {
   return "12+ hours"
 }
 
-function transformToBook(doc: OpenLibraryDoc, searchedSubject: string): Book | null {
+export function transformToBook(doc: OpenLibraryDoc, searchedSubject: string): Book | null {
   if (!doc.title || !doc.author_name?.[0] || !doc.cover_i) return null
 
   const subjects = doc.subject || []

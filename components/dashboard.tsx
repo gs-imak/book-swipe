@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
 import { useToast } from "./toast-provider"
 import { BookSearch } from "./book-search"
+import { DiscoverHub } from "./discover-hub"
 import { DailyPickCard } from "./daily-pick-card"
 import { ShelfManager } from "./shelf-manager"
 import { ReadingPath } from "./reading-path"
@@ -314,8 +315,23 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               />
             </motion.div>
 
-            {/* Reading Progress */}
+            {/* Discover Hub — Trending, Author Spotlight, Curated Lists, Genre Deep-Dives, Surprise Me */}
             <motion.div {...fadeInUp(0.1)}>
+              <DiscoverHub
+                likedBooks={likedBooks}
+                onSaveBook={(book) => {
+                  const alreadySaved = likedBooks.some(b => b.id === book.id)
+                  if (alreadySaved) return
+                  const updated = [...likedBooks, book]
+                  setLikedBooks(updated)
+                  saveLikedBooks(updated)
+                }}
+                savedBookIds={new Set(likedBooks.map(b => b.id))}
+              />
+            </motion.div>
+
+            {/* Reading Progress */}
+            <motion.div {...fadeInUp(0.12)}>
               <ReadingProgressTracker onStartReading={onStartDiscovery} />
             </motion.div>
 
@@ -325,7 +341,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
             )}
 
             {/* Filter & Sort */}
-            <motion.div {...fadeInUp(0.12)} className="space-y-3">
+            <motion.div {...fadeInUp(0.14)} className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2
                   className="text-lg font-semibold text-stone-900 font-serif"
