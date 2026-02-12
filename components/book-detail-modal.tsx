@@ -119,8 +119,8 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
                   fallbackSrc={book.coverFallback}
                   alt={book.title}
                   fill
-                  className="object-cover"
-                  sizes="96px"
+                  className="object-contain"
+                  sizes="(max-width: 640px) 160px, 192px"
                 />
               </div>
 

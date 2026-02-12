@@ -126,7 +126,7 @@ async function matchBookToAPI(row: GoodreadsRow): Promise<Book | null> {
       const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&maxResults=1`)
       const data = await res.json()
       if (data.items && data.items.length > 0) {
-        return googleBookToBook(data.items[0])
+        return googleBookToBook(data.items[0], isbn)
       }
     } catch {
       // Fall through to title+author search
@@ -148,16 +148,42 @@ async function matchBookToAPI(row: GoodreadsRow): Promise<Book | null> {
   return null
 }
 
-function googleBookToBook(item: any): Book {
+function getBestGoogleCover(imageLinks: any): string {
+  if (!imageLinks) return ""
+  // Prefer largest available size
+  const url =
+    imageLinks.extraLarge ||
+    imageLinks.large ||
+    imageLinks.medium ||
+    imageLinks.small ||
+    imageLinks.thumbnail ||
+    ""
+  if (!url) return ""
+  return url
+    .replace("http:", "https:")
+    .replace(/&edge=curl/g, "")
+    .replace(/zoom=\d/, "zoom=0")
+}
+
+function googleBookToBook(item: any, isbn?: string): Book {
   const info = item.volumeInfo || {}
   const pageCount = info.pageCount || 200
   const hours = Math.max(1, Math.round(pageCount / 50))
+
+  const googleCover = getBestGoogleCover(info.imageLinks)
+
+  // Use Open Library ISBN cover as primary when ISBN is available (higher res)
+  const resolvedIsbn = isbn || info.industryIdentifiers?.find((id: any) => id.type === "ISBN_13")?.identifier || info.industryIdentifiers?.find((id: any) => id.type === "ISBN_10")?.identifier
+  const openLibraryCover = resolvedIsbn
+    ? `https://covers.openlibrary.org/b/isbn/${resolvedIsbn}-L.jpg`
+    : ""
 
   return {
     id: item.id || Date.now().toString(),
     title: info.title || "Unknown",
     author: (info.authors || ["Unknown"]).join(", "),
-    cover: info.imageLinks?.thumbnail?.replace("http:", "https:") || "",
+    cover: openLibraryCover || googleCover,
+    coverFallback: openLibraryCover ? googleCover : undefined,
     rating: info.averageRating || 0,
     pages: pageCount,
     genre: (info.categories || ["Fiction"]).slice(0, 3),

@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { BookOpen } from "lucide-react"
 
 interface BookCoverProps {
@@ -17,10 +17,19 @@ interface BookCoverProps {
 export function BookCover({ src, fallbackSrc, alt, fill, sizes, priority, className = "object-contain" }: BookCoverProps) {
   const [currentSrc, setCurrentSrc] = useState(src)
   const [hasError, setHasError] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  // Reset loaded state when src changes
+  useEffect(() => {
+    setCurrentSrc(src)
+    setHasError(false)
+    setIsLoaded(false)
+  }, [src])
 
   const handleError = useCallback(() => {
     if (currentSrc === src && fallbackSrc) {
       setCurrentSrc(fallbackSrc)
+      setIsLoaded(false)
     } else {
       setHasError(true)
     }
@@ -36,15 +45,23 @@ export function BookCover({ src, fallbackSrc, alt, fill, sizes, priority, classN
   }
 
   return (
-    <Image
-      key={currentSrc}
-      src={currentSrc}
-      alt={alt}
-      fill={fill}
-      sizes={sizes}
-      priority={priority}
-      className={className}
-      onError={handleError}
-    />
+    <>
+      {/* Loading skeleton */}
+      {!isLoaded && (
+        <div className="absolute inset-0 bg-gradient-to-br from-stone-200 via-stone-100 to-stone-200 animate-pulse" />
+      )}
+      <Image
+        key={currentSrc}
+        src={currentSrc}
+        alt={alt}
+        fill={fill}
+        sizes={sizes}
+        priority={priority}
+        quality={85}
+        className={`${className} transition-opacity duration-200 ${isLoaded ? "opacity-100" : "opacity-0"}`}
+        onLoad={() => setIsLoaded(true)}
+        onError={handleError}
+      />
+    </>
   )
 }

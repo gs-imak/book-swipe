@@ -73,7 +73,7 @@ function ExploreBookCard({
           alt={book.title}
           fill
           className="object-contain"
-          sizes="140px"
+          sizes="280px"
         />
         <div className="absolute top-1.5 right-1.5 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
           <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
@@ -360,7 +360,7 @@ export function DiscoverHub({
                     alt={surprise.book.title}
                     fill
                     className="object-contain"
-                    sizes="90px"
+                    sizes="180px"
                   />
                 </div>
                 <div className="flex-1 min-w-0 py-0.5">

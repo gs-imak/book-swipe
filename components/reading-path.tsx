@@ -68,8 +68,8 @@ export function ReadingPath({ onBookClick }: ReadingPathProps) {
                     fallbackSrc={chain.startBook.coverFallback}
                     alt={chain.startBook.title}
                     fill
-                    className="object-cover"
-                    sizes="64px"
+                    className="object-contain"
+                    sizes="128px"
                   />
                 </div>
                 <p className="text-[10px] text-stone-600 mt-1 w-14 sm:w-16 truncate text-center font-medium group-hover:text-amber-700 transition-colors">
@@ -91,8 +91,8 @@ export function ReadingPath({ onBookClick }: ReadingPathProps) {
                         fallbackSrc={book.coverFallback}
                         alt={book.title}
                         fill
-                        className="object-cover"
-                        sizes="64px"
+                        className="object-contain"
+                        sizes="128px"
                       />
                     </div>
                     <p className="text-[10px] text-stone-600 mt-1 w-14 sm:w-16 truncate text-center font-medium group-hover:text-amber-700 transition-colors">

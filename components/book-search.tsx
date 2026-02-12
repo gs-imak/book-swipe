@@ -158,7 +158,7 @@ export function BookSearch({ isOpen, onClose, onSaveBook, savedBookIds }: BookSe
                           alt={book.title}
                           fill
                           className="object-contain"
-                          sizes="64px"
+                          sizes="128px"
                         />
                       </div>
 

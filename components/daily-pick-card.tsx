@@ -71,8 +71,8 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
               fallbackSrc={pick.book.coverFallback}
               alt={pick.book.title}
               fill
-              className="object-cover"
-              sizes="96px"
+              className="object-contain"
+              sizes="(max-width: 640px) 160px, 192px"
             />
           </div>
 
