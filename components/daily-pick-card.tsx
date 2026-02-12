@@ -90,7 +90,7 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
                   {pick.reasons.slice(0, 2).map((reason, i) => (
                     <span
                       key={i}
-                      className="text-[11px] px-2 py-0.5 rounded-full bg-white/70 text-amber-800 border border-amber-200/50"
+                      className="text-xs px-2 py-0.5 rounded-full bg-white/70 text-amber-800 border border-amber-200/50"
                     >
                       {reason.description}
                     </span>
@@ -109,7 +109,7 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
               ) : (
                 <button
                   onClick={handleLike}
-                  className="h-8 px-3.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5"
+                  className="h-9 px-3.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5"
                 >
                   <Heart className="w-3.5 h-3.5" />
                   Save
@@ -117,7 +117,7 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
               )}
               <button
                 onClick={handleDismiss}
-                className="h-8 px-3 text-stone-400 hover:text-stone-600 hover:bg-white/60 text-xs rounded-lg transition-colors flex items-center gap-1"
+                className="h-9 px-3 text-stone-400 hover:text-stone-600 hover:bg-white/60 text-xs rounded-lg transition-colors flex items-center gap-1"
               >
                 <X className="w-3.5 h-3.5" />
                 Pass

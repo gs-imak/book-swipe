@@ -93,7 +93,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-start md:items-center justify-center p-3 sm:p-4 pt-8 pb-24"
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-start md:items-center justify-center p-3 sm:p-4 pt-3 sm:pt-8 pb-16 sm:pb-24"
         onClick={onClose}
       >
         <motion.div
@@ -106,11 +106,11 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 30, scale: 0.97 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="bg-background rounded-2xl shadow-2xl max-w-3xl w-full max-h-[calc(100vh-120px)] sm:max-h-[85vh] overflow-hidden flex flex-col border border-stone-200/60"
+          className="bg-background rounded-2xl shadow-2xl max-w-3xl w-full max-h-[calc(100vh-64px)] sm:max-h-[85vh] overflow-hidden flex flex-col border border-stone-200/60"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header with cover */}
-          <div className="flex-shrink-0 p-5 sm:p-6 pb-4">
+          <div className="flex-shrink-0 p-4 sm:p-6 pb-4">
             <div className="flex items-start gap-4 sm:gap-5">
               {/* Cover */}
               <div className="relative w-20 h-28 sm:w-24 sm:h-36 flex-shrink-0 rounded-xl overflow-hidden shadow-md border border-stone-200/40">
@@ -173,7 +173,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
                 </div>
 
                 {/* Action buttons */}
-                <div className="flex items-center gap-2 pt-0.5">
+                <div className="flex items-center gap-2 pt-0.5 flex-wrap">
                   {onStartReading && (
                     <button
                       onClick={() => onStartReading(book)}

@@ -157,7 +157,7 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
                 {question.subtitle}
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 mb-6 sm:mb-8">
+              <div className={`grid gap-2 sm:gap-3 mb-6 sm:mb-8 ${currentQuestion <= 1 ? 'grid-cols-2' : 'grid-cols-1 sm:grid-cols-2'}`}>
                 {question.options.map((option, index) => {
                   const isSelected = (answers[question.id] || []).includes(option)
                   return (

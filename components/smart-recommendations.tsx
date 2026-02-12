@@ -254,7 +254,7 @@ function MiniBookCard({
 }) {
   return (
     <motion.div
-      className="flex-shrink-0 w-[140px] sm:w-[150px]"
+      className="flex-shrink-0 w-[130px] sm:w-[150px]"
       initial={{ opacity: 0, x: 16 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: (index || 0) * 0.05 }}
@@ -278,7 +278,7 @@ function MiniBookCard({
       {/* Info */}
       <div className="px-0.5">
         <h4 className="font-semibold text-xs text-stone-900 line-clamp-1 leading-tight">{book.title}</h4>
-        <p className="text-[11px] text-stone-400 mb-1.5 truncate">{book.author}</p>
+        <p className="text-xs text-stone-400 mb-1.5 truncate">{book.author}</p>
 
         {reason && (
           <p className="text-[10px] text-amber-700 mb-1.5 line-clamp-1">{reason}</p>
@@ -287,7 +287,7 @@ function MiniBookCard({
         <button
           onClick={() => onLike(book)}
           disabled={isLiked}
-          className={`w-full flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium transition-all ${
+          className={`w-full flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium transition-all min-h-[32px] ${
             isLiked
               ? "bg-stone-100 text-stone-400"
               : "bg-stone-900 text-white hover:bg-stone-800"

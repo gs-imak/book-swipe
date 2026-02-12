@@ -45,7 +45,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNav
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
       >
-        <div className="max-w-md mx-auto px-6 py-1.5">
+        <div className="max-w-md mx-auto px-4 py-1.5">
           <div className="flex items-center justify-around">
             {navItems.map((item) => {
               const Icon = item.icon
@@ -57,7 +57,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNav
                   onClick={() => onNavigate(item.id)}
                   aria-label={item.label}
                   aria-current={isActive ? "page" : undefined}
-                  className="relative flex flex-col items-center justify-center gap-0.5 py-2 px-4 rounded-xl transition-all duration-200 touch-manipulation tap-target"
+                  className="relative flex flex-col items-center justify-center gap-0.5 py-2 px-3 rounded-xl transition-all duration-200 touch-manipulation tap-target"
                   whileTap={{ scale: 0.92 }}
                 >
                   <div className="relative">

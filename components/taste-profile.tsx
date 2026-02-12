@@ -196,7 +196,7 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
           className="overflow-y-auto overscroll-contain"
           style={{ height: "calc(100vh - 57px)", WebkitOverflowScrolling: "touch" as any }}
         >
-          <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 pb-8">
+          <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8 pb-8">
             {likedBooks.length === 0 ? (
               <div className="text-center py-16">
                 <div className="w-40 h-32 mx-auto mb-4 opacity-60">
@@ -219,7 +219,7 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
                   </div>
                   <div className="relative z-10">
                     <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-2">Your Reader Type</p>
-                    <h2 className="text-3xl sm:text-4xl font-bold text-stone-900 font-serif">{archetype}</h2>
+                    <h2 className="text-3xl sm:text-4xl font-bold text-stone-900 font-serif leading-tight">{archetype}</h2>
                     <p className="text-sm text-stone-500 mt-2">
                       Based on {likedBooks.length} books in your library
                     </p>
@@ -248,7 +248,7 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
                     <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">Genres</h3>
                     <div className="flex flex-col sm:flex-row items-center gap-6">
                       {/* SVG Donut */}
-                      <svg width="160" height="160" viewBox="0 0 160 160" className="flex-shrink-0">
+                      <svg viewBox="0 0 160 160" className="flex-shrink-0 w-[120px] h-[120px] sm:w-[160px] sm:h-[160px]">
                         {donutSegments.map((genre, i) => (
                           <circle
                             key={genre.name}

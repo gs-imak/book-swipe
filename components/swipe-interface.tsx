@@ -205,7 +205,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   // No matches
   if (filteredBooks.length === 0) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6 pb-24">
+      <div className="min-h-screen bg-background flex items-center justify-center p-6 pb-16">
         <motion.div
           className="text-center max-w-sm"
           initial={{ opacity: 0, y: 20 }}
@@ -237,7 +237,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   // Done swiping
   if (!hasMoreBooks) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6 pb-24">
+      <div className="min-h-screen bg-background flex items-center justify-center p-6 pb-16">
         <motion.div
           className="text-center max-w-sm w-full"
           initial={{ opacity: 0, y: 20 }}
@@ -358,7 +358,8 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
         <div className="flex-1 flex items-center justify-center p-3 sm:p-4">
           <div className="relative w-full max-w-sm">
             <motion.div
-              className="relative h-[500px] sm:h-[560px] md:h-[600px]"
+              className="relative sm:h-[560px] md:h-[600px]"
+              style={{ height: "min(500px, 65vh)" }}
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.4 }}
@@ -386,9 +387,9 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
         </div>
 
         {/* Action buttons */}
-        <div className="pb-20 sm:pb-6 pt-2">
+        <div className="pb-16 sm:pb-6 pt-2">
           <div className="max-w-sm mx-auto px-4">
-            <div className="flex justify-center gap-6 mb-3">
+            <div className="flex justify-center gap-5 mb-3">
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 aria-label="Pass"
