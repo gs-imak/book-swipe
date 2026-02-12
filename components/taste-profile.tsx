@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, BookOpen, Star, Clock, Heart, TrendingUp } from "lucide-react"
-import { ReadingDoodle } from "./illustrations"
+import { ReadingDoodle, SittingReadingDoodle } from "./illustrations"
 import { getLikedBooks, getBookReviews, getUserStats, type BookReview } from "@/lib/storage"
 import { Book } from "@/lib/book-data"
 
@@ -209,13 +209,21 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
                 {/* Reader Archetype */}
                 <motion.div
                   {...fadeIn(0.05)}
-                  className="text-center py-6"
+                  className="relative text-center py-8 overflow-hidden"
                 >
-                  <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-2">Your Reader Type</p>
-                  <h2 className="text-3xl sm:text-4xl font-bold text-stone-900 font-serif">{archetype}</h2>
-                  <p className="text-sm text-stone-500 mt-2">
-                    Based on {likedBooks.length} books in your library
-                  </p>
+                  {/* Background doodle watermark */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.07]">
+                    <div className="w-64 h-48 sm:w-80 sm:h-60">
+                      <SittingReadingDoodle ink="#78716c" accent="#d97706" />
+                    </div>
+                  </div>
+                  <div className="relative z-10">
+                    <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-2">Your Reader Type</p>
+                    <h2 className="text-3xl sm:text-4xl font-bold text-stone-900 font-serif">{archetype}</h2>
+                    <p className="text-sm text-stone-500 mt-2">
+                      Based on {likedBooks.length} books in your library
+                    </p>
+                  </div>
                 </motion.div>
 
                 {/* Summary Stats */}
