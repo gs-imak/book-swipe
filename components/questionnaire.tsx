@@ -149,37 +149,48 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
             <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8">{question.subtitle}</p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 mb-6 sm:mb-8">
-              {question.options.map((option) => {
+              {question.options.map((option, index) => {
                 const isSelected = (answers[question.id] || []).includes(option)
                 return (
-                  <Button
+                  <motion.div
                     key={option}
-                    variant={isSelected ? "default" : "outline"}
-                    className="p-4 sm:p-4 h-auto text-left justify-start text-sm sm:text-base min-h-[52px] tap-target touch-manipulation font-medium"
-                    onClick={() => handleAnswer(question.id, option, question.type === "multiple")}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.08 + index * 0.035, duration: 0.3, ease: [0.25, 0.1, 0.25, 1.0] }}
+                    whileTap={{ scale: 0.97 }}
                   >
-                    {option}
-                  </Button>
+                    <Button
+                      variant={isSelected ? "default" : "outline"}
+                      className="w-full p-4 sm:p-4 h-auto text-left justify-start text-sm sm:text-base min-h-[52px] tap-target touch-manipulation font-medium transition-all duration-200"
+                      onClick={() => handleAnswer(question.id, option, question.type === "multiple")}
+                    >
+                      {option}
+                    </Button>
+                  </motion.div>
                 )
               })}
             </div>
 
             <div className="flex gap-3 sm:gap-4">
-              <Button
-                variant="outline"
-                onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}
-                disabled={currentQuestion === 0}
-                className="flex-1 sm:flex-none py-3 text-base tap-target touch-manipulation"
-              >
-                Back
-              </Button>
-              <Button
-                onClick={handleNext}
-                disabled={!canProceed()}
-                className="flex-1 sm:flex-auto px-6 sm:px-8 py-3 text-base tap-target touch-manipulation"
-              >
-                {currentQuestion === questions.length - 1 ? "Start Discovering!" : "Next"}
-              </Button>
+              <motion.div whileTap={{ scale: 0.97 }} className="flex-1 sm:flex-none">
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}
+                  disabled={currentQuestion === 0}
+                  className="w-full py-3 text-base tap-target touch-manipulation"
+                >
+                  Back
+                </Button>
+              </motion.div>
+              <motion.div whileTap={{ scale: 0.97 }} className="flex-1 sm:flex-auto">
+                <Button
+                  onClick={handleNext}
+                  disabled={!canProceed()}
+                  className="w-full px-6 sm:px-8 py-3 text-base tap-target touch-manipulation"
+                >
+                  {currentQuestion === questions.length - 1 ? "Start Discovering!" : "Next"}
+                </Button>
+              </motion.div>
             </div>
           </motion.div>
         </AnimatePresence>

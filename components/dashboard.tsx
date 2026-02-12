@@ -117,6 +117,13 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
     { value: "pages", label: "Shortest" },
   ]
 
+  // Staggered entrance for dashboard sections
+  const fadeInUp = (delay: number) => ({
+    initial: { opacity: 0, y: 16 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.45, delay, ease: [0.25, 0.1, 0.25, 1.0] as const },
+  })
+
   return (
     <div className="min-h-screen bg-background smooth-scroll pb-20">
       {/* Header */}
@@ -228,7 +235,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
         ) : (
           <>
             {/* Discover CTA */}
-            <div className="flex items-center justify-between gap-4 flex-wrap">
+            <motion.div {...fadeInUp(0.05)} className="flex items-center justify-between gap-4 flex-wrap">
               <p className="text-stone-500 text-sm">
                 {likedBooks.length} {likedBooks.length === 1 ? "book" : "books"} saved
               </p>
@@ -239,45 +246,54 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                 <Heart className="w-4 h-4 mr-2" />
                 Discover More
               </Button>
-            </div>
+            </motion.div>
 
             {/* Inline Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm">
-                <p className="text-2xl font-bold text-stone-900">{stats.totalBooks}</p>
-                <p className="text-xs text-stone-500 mt-0.5">Books saved</p>
-              </div>
-              <div className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm">
-                <p className="text-2xl font-bold text-stone-900">{stats.totalPages.toLocaleString()}</p>
-                <p className="text-xs text-stone-500 mt-0.5">Total pages</p>
-              </div>
-              <div className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm">
-                <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                  <span className="text-2xl font-bold text-stone-900">{stats.averageRating}</span>
-                </div>
-                <p className="text-xs text-stone-500 mt-0.5">Avg rating</p>
-              </div>
-              <div className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm">
-                <p className="text-lg font-bold text-stone-900 truncate">{stats.favoriteGenre}</p>
-                <p className="text-xs text-stone-500 mt-0.5">Top genre</p>
-              </div>
+              {[
+                { value: stats.totalBooks, label: "Books saved" },
+                { value: stats.totalPages.toLocaleString(), label: "Total pages" },
+                { value: null, label: "Avg rating" },
+                { value: null, label: "Top genre" },
+              ].map((stat, i) => (
+                <motion.div
+                  key={stat.label}
+                  {...fadeInUp(0.1 + i * 0.06)}
+                  className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm"
+                >
+                  {stat.label === "Avg rating" ? (
+                    <div className="flex items-center gap-1">
+                      <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                      <span className="text-2xl font-bold text-stone-900">{stats.averageRating}</span>
+                    </div>
+                  ) : stat.label === "Top genre" ? (
+                    <p className="text-lg font-bold text-stone-900 truncate">{stats.favoriteGenre}</p>
+                  ) : (
+                    <p className="text-2xl font-bold text-stone-900">{stat.value}</p>
+                  )}
+                  <p className="text-xs text-stone-500 mt-0.5">{stat.label}</p>
+                </motion.div>
+              ))}
             </div>
 
             {/* Smart Recommendations */}
-            <SmartRecommendations
-              onBookLike={(book) => {
-                const updatedBooks = [...likedBooks, book]
-                setLikedBooks(updatedBooks)
-              }}
-              onStartReading={addBookToReading}
-            />
+            <motion.div {...fadeInUp(0.35)}>
+              <SmartRecommendations
+                onBookLike={(book) => {
+                  const updatedBooks = [...likedBooks, book]
+                  setLikedBooks(updatedBooks)
+                }}
+                onStartReading={addBookToReading}
+              />
+            </motion.div>
 
             {/* Reading Progress */}
-            <ReadingProgressTracker onStartReading={onStartDiscovery} />
+            <motion.div {...fadeInUp(0.42)}>
+              <ReadingProgressTracker onStartReading={onStartDiscovery} />
+            </motion.div>
 
             {/* Filter & Sort */}
-            <div className="space-y-3">
+            <motion.div {...fadeInUp(0.48)} className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2
                   className="text-lg font-semibold text-stone-900 font-serif"
@@ -334,10 +350,10 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                   </button>
                 ))}
               </div>
-            </div>
+            </motion.div>
 
             {/* Books Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5">
+            <motion.div {...fadeInUp(0.55)} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5">
               {sortedBooks.map((book, index) => {
                 const review = getBookReview(book.id)
                 return (
@@ -345,7 +361,8 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                     key={book.id}
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: Math.min(index * 0.05, 0.5) }}
+                    transition={{ delay: 0.55 + Math.min(index * 0.04, 0.4) }}
+                    whileHover={{ y: -4, transition: { duration: 0.2 } }}
                     className="group cursor-pointer"
                     onClick={() => handleBookClick(book)}
                   >
@@ -396,7 +413,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                   </motion.div>
                 )
               })}
-            </div>
+            </motion.div>
           </>
         )}
       </div>

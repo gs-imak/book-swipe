@@ -11,6 +11,7 @@ import { ToastProvider } from "@/components/toast-provider"
 import { MobileNav } from "@/components/mobile-nav"
 import { UserPreferences } from "@/lib/book-data"
 import { getLikedBooks, migrateCoverUrls } from "@/lib/storage"
+import { motion, AnimatePresence } from "framer-motion"
 
 type AppState = "login" | "dashboard" | "questionnaire" | "swipe"
 
@@ -93,39 +94,71 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
     return "dashboard"
   }
 
-  // If not logged in, show login screen
-  if (!isLoggedIn) {
-    return <LoginScreen onLogin={handleLogin} />
-  }
-
-  // Questionnaire with back button
-  if (currentView === "questionnaire") {
-    return <Questionnaire onComplete={handleQuestionnaireComplete} onBack={() => setCurrentView("dashboard")} />
-  }
+  const showNav = isLoggedIn && currentView !== "questionnaire"
 
   return (
-    <div className="pb-safe">
-      {currentView === "swipe" && userPreferences ? (
-        <SwipeInterface 
-          preferences={userPreferences} 
-          onRestart={handleRestart}
-          onViewLibrary={handleViewLibrary}
-        />
-      ) : (
-        <Dashboard 
-          onBack={currentView === "dashboard" && userPreferences ? handleBackToSwipe : undefined}
-          onStartDiscovery={handleStartDiscovery}
-          showBackButton={currentView === "dashboard" && userPreferences !== null}
+    <>
+      <AnimatePresence mode="wait">
+        {!isLoggedIn ? (
+          <motion.div
+            key="login"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <LoginScreen onLogin={handleLogin} />
+          </motion.div>
+        ) : currentView === "questionnaire" ? (
+          <motion.div
+            key="questionnaire"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Questionnaire onComplete={handleQuestionnaireComplete} onBack={() => setCurrentView("dashboard")} />
+          </motion.div>
+        ) : currentView === "swipe" && userPreferences ? (
+          <motion.div
+            key="swipe"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <SwipeInterface 
+              preferences={userPreferences} 
+              onRestart={handleRestart}
+              onViewLibrary={handleViewLibrary}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="dashboard"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Dashboard 
+              onBack={currentView === "dashboard" && userPreferences ? handleBackToSwipe : undefined}
+              onStartDiscovery={handleStartDiscovery}
+              showBackButton={currentView === "dashboard" && userPreferences !== null}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Bottom Navigation - persists across dashboard/swipe transitions */}
+      {showNav && (
+        <MobileNav
+          currentView={getCurrentNavView()}
+          onNavigate={handleMobileNavigation}
+          likedCount={likedBooksCount}
         />
       )}
-
-      {/* Mobile Bottom Navigation - only show when not in questionnaire */}
-      <MobileNav
-        currentView={getCurrentNavView()}
-        onNavigate={handleMobileNavigation}
-        likedCount={likedBooksCount}
-      />
-    </div>
+    </>
   )
 }
 
