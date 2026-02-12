@@ -95,7 +95,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 30, scale: 0.97 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="bg-[#FDFBF7] rounded-2xl shadow-2xl max-w-3xl w-full max-h-[calc(100vh-120px)] sm:max-h-[85vh] overflow-hidden flex flex-col border border-stone-200/60"
+          className="bg-background rounded-2xl shadow-2xl max-w-3xl w-full max-h-[calc(100vh-120px)] sm:max-h-[85vh] overflow-hidden flex flex-col border border-stone-200/60"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header with cover */}
@@ -119,8 +119,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
                   <div className="min-w-0">
                     <h2
                       id="book-detail-title"
-                      className="text-lg sm:text-xl font-bold text-stone-900 leading-tight line-clamp-2"
-                      style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+                      className="text-lg sm:text-xl font-bold text-stone-900 leading-tight line-clamp-2 font-serif"
                     >
                       {book.title}
                     </h2>

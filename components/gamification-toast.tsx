@@ -168,13 +168,13 @@ function getAchievementTypeStyle(type: string): string {
     case 'bronze':
       return 'bg-amber-600 text-white'
     case 'silver':
-      return 'bg-gray-400 text-white'
+      return 'bg-stone-400 text-white'
     case 'gold':
       return 'bg-yellow-500 text-white'
     case 'platinum':
-      return 'bg-gray-800 text-white'
+      return 'bg-stone-800 text-white'
     default:
-      return 'bg-gray-500 text-white'
+      return 'bg-stone-500 text-white'
   }
 }
 

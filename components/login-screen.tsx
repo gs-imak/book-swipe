@@ -19,7 +19,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] relative overflow-hidden flex flex-col">
+    <div className="min-h-screen bg-background relative overflow-hidden flex flex-col">
       {/* Header */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
@@ -37,8 +37,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             priority
           />
           <span
-            className="text-xl sm:text-2xl font-semibold tracking-tight text-stone-900"
-            style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+            className="text-xl sm:text-2xl font-semibold tracking-tight text-stone-900 font-serif"
           >
             BookSwipe
           </span>
@@ -58,8 +57,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             >
               <div className="space-y-4">
                 <h1
-                  className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.1] text-stone-900 tracking-tight"
-                  style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+                  className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.1] text-stone-900 tracking-tight font-serif"
                 >
                   Find your next
                   <span className="block text-amber-700">favorite book.</span>
@@ -168,7 +166,7 @@ function PhoneMockup() {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-5 bg-stone-800 rounded-b-2xl z-30" />
 
         {/* Screen */}
-        <div className="relative bg-[#FDFBF7] rounded-[2rem] overflow-hidden">
+        <div className="relative bg-background rounded-[2rem] overflow-hidden">
           {/* Status bar space */}
           <div className="h-10" />
 
@@ -185,8 +183,7 @@ function PhoneMockup() {
             </div>
             <div className="text-center">
               <p
-                className="text-xs font-bold text-stone-800"
-                style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+                className="text-xs font-bold text-stone-800 font-serif"
               >
                 BookSwipe
               </p>
@@ -237,8 +234,7 @@ function PhoneMockup() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 1.5 }}
-                  className="text-white text-xl font-bold leading-tight mb-1.5"
-                  style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+                  className="text-white text-xl font-bold leading-tight mb-1.5 font-serif"
                 >
                   The Midnight
                   <br />

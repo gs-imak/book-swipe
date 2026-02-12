@@ -48,8 +48,8 @@ export function StarRating({
             <Star
               className={`${sizeClasses[size]} transition-colors ${
                 star <= rating
-                  ? "text-yellow-400 fill-yellow-400"
-                  : "text-gray-300"
+                  ? "text-amber-500 fill-amber-500"
+                  : "text-stone-300"
               }`}
             />
           </motion.button>
@@ -57,7 +57,7 @@ export function StarRating({
       </div>
       
       {showLabel && rating > 0 && (
-        <span className="text-sm text-gray-600 font-medium">
+        <span className="text-sm text-stone-500 font-medium">
           {labels[rating as keyof typeof labels]}
         </span>
       )}

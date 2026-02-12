@@ -46,7 +46,7 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-gray-50 rounded-xl p-4 space-y-3"
+        className="bg-stone-50 rounded-xl p-4 space-y-3"
       >
         <div className="flex items-center justify-between">
           <StarRating rating={review.rating} readonly size="sm" />
@@ -56,12 +56,12 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
         </div>
         
         {review.review && (
-          <p className="text-sm text-gray-600 line-clamp-2">
+          <p className="text-sm text-stone-500 line-clamp-2">
             "{review.review}"
           </p>
         )}
         
-        <div className="flex items-center gap-2 text-xs text-gray-500">
+        <div className="flex items-center gap-2 text-xs text-stone-400">
           {review.mood && moodEmojis[review.mood] && (
             <span>{moodEmojis[review.mood]}</span>
           )}
@@ -76,7 +76,7 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl shadow-lg border border-stone-200/60 shadow-sm p-6 space-y-4"
+      className="bg-white rounded-2xl border border-stone-200/60 shadow-sm p-6 space-y-4"
     >
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -109,11 +109,11 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
       {review.review && (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <MessageSquare className="w-4 h-4 text-gray-500" />
-            <span className="text-sm font-medium text-gray-700">Your Review</span>
+            <MessageSquare className="w-4 h-4 text-stone-400" />
+            <span className="text-sm font-medium text-stone-700">Your Review</span>
           </div>
-          <div className="bg-gray-50 rounded-lg p-4">
-            <p className={`text-gray-700 leading-relaxed ${!showFullReview && review.review.length > 200 ? 'line-clamp-3' : ''}`}>
+          <div className="bg-stone-50 rounded-lg p-4">
+            <p className={`text-stone-700 leading-relaxed ${!showFullReview && review.review.length > 200 ? 'line-clamp-3' : ''}`}>
               "{review.review}"
             </p>
             {review.review.length > 200 && (
@@ -134,7 +134,7 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
       {review.mood && moodEmojis[review.mood] && (
         <div className="flex items-center gap-2">
           <span className="text-lg">{moodEmojis[review.mood]}</span>
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-stone-500">
             This book made you feel {review.mood}
           </span>
         </div>
@@ -144,8 +144,8 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
       {review.tags.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Tag className="w-4 h-4 text-gray-500" />
-            <span className="text-sm font-medium text-gray-700">Tags</span>
+            <Tag className="w-4 h-4 text-stone-400" />
+            <span className="text-sm font-medium text-stone-700">Tags</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {review.tags.map((tag) => (
@@ -161,7 +161,7 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
       )}
 
       {/* Metadata */}
-      <div className="flex items-center justify-between text-xs text-gray-500 pt-4 border-t">
+      <div className="flex items-center justify-between text-xs text-stone-400 pt-4 border-t">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
             <Calendar className="w-3 h-3" />

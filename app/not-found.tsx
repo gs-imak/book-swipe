@@ -3,14 +3,13 @@ import { BookOpen } from "lucide-react"
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-background flex items-center justify-center p-6">
       <div className="text-center max-w-sm">
         <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
           <BookOpen className="w-8 h-8 text-amber-600" />
         </div>
         <h1
-          className="text-3xl font-bold text-stone-900 mb-3"
-          style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+          className="text-3xl font-bold text-stone-900 mb-3 font-serif"
         >
           Page not found
         </h1>

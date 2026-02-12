@@ -188,7 +188,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   // Loading
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <motion.div
             animate={{ rotate: 360 }}
@@ -205,7 +205,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   // No matches
   if (filteredBooks.length === 0) {
     return (
-      <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center p-6 pb-24">
+      <div className="min-h-screen bg-background flex items-center justify-center p-6 pb-24">
         <motion.div
           className="text-center max-w-sm"
           initial={{ opacity: 0, y: 20 }}
@@ -215,8 +215,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
             <BookOpen className="w-8 h-8 text-amber-600" />
           </div>
           <h2
-            className="text-2xl font-bold text-stone-900 mb-2"
-            style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+            className="text-2xl font-bold text-stone-900 mb-2 font-serif"
           >
             No matches yet
           </h2>
@@ -238,7 +237,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   // Done swiping
   if (!hasMoreBooks) {
     return (
-      <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center p-6 pb-24">
+      <div className="min-h-screen bg-background flex items-center justify-center p-6 pb-24">
         <motion.div
           className="text-center max-w-sm w-full"
           initial={{ opacity: 0, y: 20 }}
@@ -248,8 +247,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
             <Heart className="w-8 h-8 text-emerald-600" />
           </div>
           <h2
-            className="text-2xl font-bold text-stone-900 mb-2"
-            style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+            className="text-2xl font-bold text-stone-900 mb-2 font-serif"
           >
             All done!
           </h2>
@@ -316,7 +314,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] relative">
+    <div className="min-h-screen bg-background relative">
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Screen reader announcement */}
         <div aria-live="polite" className="sr-only">
@@ -326,7 +324,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
         </div>
 
         {/* Header */}
-        <div className="bg-[#FDFBF7]/90 backdrop-blur-md border-b border-stone-200/60 sticky top-0 z-20">
+        <div className="bg-background/90 backdrop-blur-md border-b border-stone-200/60 sticky top-0 z-20">
           <div className="px-4 sm:px-6 py-3 flex justify-between items-center max-w-md mx-auto">
             <button
               onClick={onViewLibrary}
@@ -338,8 +336,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
 
             <div className="text-center">
               <h1
-                className="text-lg font-bold text-stone-900 tracking-tight"
-                style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+                className="text-lg font-bold text-stone-900 tracking-tight font-serif"
               >
                 BookSwipe
               </h1>

@@ -93,7 +93,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl shadow-lg border border-stone-200/60 shadow-sm p-6 space-y-6"
+      className="bg-white rounded-2xl border border-stone-200/60 shadow-sm p-6 space-y-6"
     >
       {/* Header */}
       <div className="flex items-start gap-4">
@@ -108,16 +108,16 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
           />
         </div>
         <div className="flex-1">
-          <h3 className="font-bold text-lg text-gray-900 line-clamp-2">
+          <h3 className="font-bold text-lg text-stone-900 line-clamp-2">
             {book.title}
           </h3>
-          <p className="text-gray-600 text-sm">{book.author}</p>
+          <p className="text-stone-500 text-sm">{book.author}</p>
         </div>
       </div>
 
       {/* Rating */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold text-gray-700">How was it?</label>
+        <label className="text-sm font-semibold text-stone-700">How was it?</label>
         <StarRating
           rating={rating}
           onRatingChange={setRating}
@@ -128,7 +128,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
 
       {/* Mood */}
       <div className="space-y-3">
-        <label className="text-sm font-semibold text-gray-700">How did it make you feel?</label>
+        <label className="text-sm font-semibold text-stone-700">How did it make you feel?</label>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
           {moodOptions.map((mood) => (
             <Button
@@ -147,7 +147,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
 
       {/* Quick Tags */}
       <div className="space-y-3">
-        <label className="text-sm font-semibold text-gray-700">Quick tags</label>
+        <label className="text-sm font-semibold text-stone-700">Quick tags</label>
         <div className="flex flex-wrap gap-2">
           {quickTags.map((tag) => (
             <Button
@@ -166,14 +166,14 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
 
       {/* Written Review */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold text-gray-700">
-          Your thoughts <span className="text-gray-400 font-normal">(optional)</span>
+        <label className="text-sm font-semibold text-stone-700">
+          Your thoughts <span className="text-stone-400 font-normal">(optional)</span>
         </label>
         <textarea
           value={review}
           onChange={(e) => setReview(e.target.value)}
           placeholder="What did you love about this book? Any memorable quotes or moments?"
-          className="w-full p-3 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+          className="w-full p-3 border border-stone-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
           rows={3}
         />
       </div>

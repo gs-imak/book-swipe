@@ -56,7 +56,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${dmSans.variable} ${sourceSerif.variable} font-sans`}>
-        <div className="min-h-screen bg-[#FDFBF7]">
+        <div className="min-h-screen bg-background">
           {children}
         </div>
       </body>

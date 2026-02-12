@@ -67,17 +67,17 @@ export function BookNotes({ bookId, compact = false }: BookNotesProps) {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'highlight': return <Highlighter className="w-4 h-4 text-yellow-500" />
-      case 'quote': return <Quote className="w-4 h-4 text-blue-500" />
-      default: return <FileText className="w-4 h-4 text-gray-500" />
+      case 'highlight': return <Highlighter className="w-4 h-4 text-amber-500" />
+      case 'quote': return <Quote className="w-4 h-4 text-teal-500" />
+      default: return <FileText className="w-4 h-4 text-stone-500" />
     }
   }
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'highlight': return 'bg-yellow-50 border-yellow-200'
-      case 'quote': return 'bg-blue-50 border-blue-200'
-      default: return 'bg-gray-50 border-gray-200'
+      case 'highlight': return 'bg-amber-50 border-amber-200'
+      case 'quote': return 'bg-teal-50 border-teal-200'
+      default: return 'bg-stone-50 border-stone-200'
     }
   }
 
@@ -85,8 +85,8 @@ export function BookNotes({ bookId, compact = false }: BookNotesProps) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="font-medium text-gray-900">Notes & Highlights</h4>
-          <span className="text-sm text-gray-500">{notes.length}</span>
+          <h4 className="font-medium text-stone-900">Notes & Highlights</h4>
+          <span className="text-sm text-stone-500">{notes.length}</span>
         </div>
         
         {notes.length > 0 ? (
@@ -95,16 +95,16 @@ export function BookNotes({ bookId, compact = false }: BookNotesProps) {
               <div key={note.id} className={`p-3 rounded-lg border ${getTypeColor(note.type)}`}>
                 <div className="flex items-start gap-2">
                   {getTypeIcon(note.type)}
-                  <p className="text-sm text-gray-700 line-clamp-2">{note.content}</p>
+                  <p className="text-sm text-stone-700 line-clamp-2">{note.content}</p>
                 </div>
               </div>
             ))}
             {notes.length > 2 && (
-              <p className="text-sm text-gray-500 text-center">+{notes.length - 2} more notes</p>
+              <p className="text-sm text-stone-500 text-center">+{notes.length - 2} more notes</p>
             )}
           </div>
         ) : (
-          <p className="text-sm text-gray-500 text-center py-4">No notes yet</p>
+          <p className="text-sm text-stone-500 text-center py-4">No notes yet</p>
         )}
       </div>
     )
@@ -114,14 +114,14 @@ export function BookNotes({ bookId, compact = false }: BookNotesProps) {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="bg-white rounded-2xl shadow-lg border border-stone-200/60 shadow-sm p-6"
+      className="bg-white rounded-2xl border border-stone-200/60 shadow-sm p-6"
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <FileText className="w-5 h-5 text-amber-600" />
-          <h3 className="text-lg font-bold text-gray-900">Notes & Highlights</h3>
-          <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+          <h3 className="text-lg font-bold text-stone-900">Notes & Highlights</h3>
+          <span className="text-sm text-stone-500 bg-stone-100 px-2 py-1 rounded-full">
             {notes.length}
           </span>
         </div>
@@ -143,7 +143,7 @@ export function BookNotes({ bookId, compact = false }: BookNotesProps) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="mb-6 p-4 bg-gray-50 rounded-xl space-y-4"
+            className="mb-6 p-4 bg-stone-50 rounded-xl space-y-4"
           >
             <div className="flex gap-2">
               <Button
@@ -178,13 +178,13 @@ export function BookNotes({ bookId, compact = false }: BookNotesProps) {
                 placeholder="Page (optional)"
                 value={newNote.page}
                 onChange={(e) => setNewNote(prev => ({ ...prev, page: e.target.value }))}
-                className="w-24 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                className="w-24 px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
               />
               <textarea
                 placeholder="Add your note, highlight, or favorite quote..."
                 value={newNote.content}
                 onChange={(e) => setNewNote(prev => ({ ...prev, content: e.target.value }))}
-                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-amber-400"
+                className="flex-1 px-3 py-2 border border-stone-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-amber-400"
                 rows={3}
               />
             </div>
@@ -229,11 +229,11 @@ export function BookNotes({ bookId, compact = false }: BookNotesProps) {
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2">
                     {getTypeIcon(note.type)}
-                    <span className="text-sm font-medium text-gray-700 capitalize">
+                    <span className="text-sm font-medium text-stone-700 capitalize">
                       {note.type}
                     </span>
                     {note.page && (
-                      <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded-full">
+                      <span className="text-xs text-stone-500 bg-white px-2 py-1 rounded-full">
                         Page {note.page}
                       </span>
                     )}
@@ -267,10 +267,10 @@ export function BookNotes({ bookId, compact = false }: BookNotesProps) {
                   />
                 ) : (
                   <div>
-                    <p className="text-gray-700 leading-relaxed mb-2">
+                    <p className="text-stone-700 leading-relaxed mb-2">
                       {note.type === 'quote' ? `"${note.content}"` : note.content}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-stone-500">
                       {new Date(note.createdAt).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'short', 
@@ -286,9 +286,9 @@ export function BookNotes({ bookId, compact = false }: BookNotesProps) {
           </AnimatePresence>
         ) : (
           <div className="text-center py-8">
-            <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 mb-2">No notes yet</p>
-            <p className="text-sm text-gray-400">
+            <FileText className="w-12 h-12 text-stone-300 mx-auto mb-4" />
+            <p className="text-stone-500 mb-2">No notes yet</p>
+            <p className="text-sm text-stone-400">
               Add notes, highlights, and favorite quotes as you read
             </p>
           </div>
@@ -312,7 +312,7 @@ function EditNoteForm({ initialContent, onSave, onCancel }: EditNoteFormProps) {
       <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        className="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-amber-400"
+        className="w-full px-3 py-2 border border-stone-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-amber-400"
         rows={3}
       />
       <div className="flex justify-end gap-2">

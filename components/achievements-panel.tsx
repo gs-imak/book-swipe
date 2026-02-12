@@ -74,7 +74,7 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 30, scale: 0.97 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="bg-[#FDFBF7] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[calc(100vh-120px)] sm:max-h-[85vh] overflow-hidden flex flex-col border border-stone-200/60"
+          className="bg-background rounded-2xl shadow-2xl max-w-2xl w-full max-h-[calc(100vh-120px)] sm:max-h-[85vh] overflow-hidden flex flex-col border border-stone-200/60"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -87,8 +87,7 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
                 <div>
                   <h2
                     id="achievements-title"
-                    className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight"
-                    style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+                    className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight font-serif"
                   >
                     Reading Journey
                   </h2>
@@ -191,8 +190,8 @@ function OverviewTab({ stats, achievements, completionPercentage }: OverviewTabP
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-white rounded-xl p-3.5 border border-stone-200/60 shadow-sm">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-              <Star className="w-4 h-4 text-blue-600" />
+            <div className="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
+              <Star className="w-4 h-4 text-teal-600" />
             </div>
             <div className="min-w-0">
               <p className="text-lg font-bold text-stone-900">{stats.totalPoints}</p>

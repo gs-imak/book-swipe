@@ -195,19 +195,19 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
 
       {/* Current data summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <div className="bg-stone-50 rounded-lg px-3 py-2">
+        <div className="bg-stone-50 rounded-xl px-3 py-2">
           <p className="text-lg font-bold text-stone-900">{likedCount}</p>
           <p className="text-[11px] text-stone-500">Books</p>
         </div>
-        <div className="bg-stone-50 rounded-lg px-3 py-2">
+        <div className="bg-stone-50 rounded-xl px-3 py-2">
           <p className="text-lg font-bold text-stone-900">{progressCount}</p>
           <p className="text-[11px] text-stone-500">Reading</p>
         </div>
-        <div className="bg-stone-50 rounded-lg px-3 py-2">
+        <div className="bg-stone-50 rounded-xl px-3 py-2">
           <p className="text-lg font-bold text-stone-900">{reviewCount}</p>
           <p className="text-[11px] text-stone-500">Reviews</p>
         </div>
-        <div className="bg-stone-50 rounded-lg px-3 py-2">
+        <div className="bg-stone-50 rounded-xl px-3 py-2">
           <p className="text-lg font-bold text-stone-900">{noteCount}</p>
           <p className="text-[11px] text-stone-500">Notes</p>
         </div>

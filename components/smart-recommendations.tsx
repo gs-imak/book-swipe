@@ -130,7 +130,7 @@ export function SmartRecommendations({ onBookLike, onStartReading }: SmartRecomm
               className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
                 selectedMood === mood.id
                   ? "bg-stone-900 text-white"
-                  : "bg-stone-50 text-stone-600 hover:bg-stone-100"
+                  : "bg-stone-100 text-stone-600 hover:bg-stone-200"
               }`}
             >
               <span className="text-sm">{mood.emoji}</span>

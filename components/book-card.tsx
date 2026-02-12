@@ -112,8 +112,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = false }: 
           <div className="flex items-end justify-between gap-3 mb-3">
             <div className="flex-1 min-w-0">
               <h3
-                className="text-2xl sm:text-3xl font-bold text-white leading-tight mb-1 drop-shadow-lg"
-                style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+                className="text-2xl sm:text-3xl font-bold text-white leading-tight mb-1 drop-shadow-lg font-serif"
               >
                 {book.title}
               </h3>
@@ -164,7 +163,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = false }: 
           initial={false}
           animate={{ y: infoExpanded ? 0 : '100%' }}
           transition={{ type: "spring", damping: 30, stiffness: 300 }}
-          className="absolute inset-0 bg-[#FDFBF7] z-30 flex flex-col"
+          className="absolute inset-0 bg-background z-30 flex flex-col"
           style={{ touchAction: infoExpanded ? 'pan-y' : 'none' }}
         >
           {/* Handle bar */}
@@ -185,8 +184,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = false }: 
               {/* Header */}
               <div>
                 <h2
-                  className="text-xl font-bold text-stone-900 mb-1"
-                  style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+                  className="text-xl font-bold text-stone-900 mb-1 font-serif"
                 >
                   {book.title}
                 </h2>

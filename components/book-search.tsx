@@ -81,10 +81,10 @@ export function BookSearch({ isOpen, onClose, onSaveBook, savedBookIds }: BookSe
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
-          className="fixed inset-0 z-50 bg-[#FDFBF7]"
+          className="fixed inset-0 z-50 bg-background"
         >
           {/* Search header */}
-          <div className="border-b border-stone-200/60 bg-[#FDFBF7]">
+          <div className="border-b border-stone-200/60 bg-background">
             <div className="max-w-2xl mx-auto px-4 py-3">
               <form onSubmit={handleSubmit} className="flex items-center gap-3">
                 <Search className="w-5 h-5 text-stone-400 flex-shrink-0" />

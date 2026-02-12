@@ -118,9 +118,9 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   ]
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] smooth-scroll pb-20">
+    <div className="min-h-screen bg-background smooth-scroll pb-20">
       {/* Header */}
-      <div className="bg-[#FDFBF7]/90 backdrop-blur-md border-b border-stone-200/60 sticky top-0 z-10">
+      <div className="bg-background/90 backdrop-blur-md border-b border-stone-200/60 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 min-w-0">
@@ -134,8 +134,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               )}
               <div className="min-w-0">
                 <h1
-                  className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight"
-                  style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+                  className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight font-serif"
                 >
                   My Library
                 </h1>
@@ -210,8 +209,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               <BookOpen className="w-10 h-10 text-amber-600" />
             </motion.div>
             <h2
-              className="text-2xl sm:text-3xl font-bold text-stone-900 mb-3"
-              style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+              className="text-2xl sm:text-3xl font-bold text-stone-900 mb-3 font-serif"
             >
               Your shelf is empty
             </h2>
@@ -282,8 +280,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2
-                  className="text-lg font-semibold text-stone-900"
-                  style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+                  className="text-lg font-semibold text-stone-900 font-serif"
                 >
                   Saved Books
                 </h2>

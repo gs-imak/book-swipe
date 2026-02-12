@@ -35,7 +35,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNav
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="fixed bottom-0 left-0 right-0 z-50 bg-[#FDFBF7]/95 backdrop-blur-xl border-t border-stone-200/80"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-t border-stone-200/80"
         style={{
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
