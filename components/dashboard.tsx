@@ -11,7 +11,8 @@ import { BookDetailModal } from "./book-detail-modal"
 import { StarRating } from "./star-rating"
 import { getBookReview, getUserStats } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
-import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy, Search, Library, ChevronDown, SlidersHorizontal } from "lucide-react"
+import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy, Search, Library, SlidersHorizontal } from "lucide-react"
+import { EmptyShelfIllustration, BookStackIllustration, DiscoverIllustration, ReadingGlassesIllustration, LeafSprig } from "./illustrations"
 import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
 import { useToast } from "./toast-provider"
@@ -231,18 +232,18 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center py-16 sm:py-24 px-4"
+            className="text-center py-12 sm:py-20 px-4"
           >
             <motion.div
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1, type: "spring", stiffness: 150 }}
-              className="w-20 h-20 rounded-2xl bg-amber-50 flex items-center justify-center mx-auto mb-6"
+              className="flex justify-center mb-2"
             >
-              <BookOpen className="w-10 h-10 text-amber-600" />
+              <EmptyShelfIllustration className="w-56 h-44 sm:w-64 sm:h-48" />
             </motion.div>
             <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 mb-3 font-serif">
-              Your shelf is empty
+              Your shelf is waiting
             </h2>
             <p className="text-stone-500 mb-8 max-w-md mx-auto text-base sm:text-lg leading-relaxed">
               Start swiping to discover books you&apos;ll love.
@@ -262,14 +263,33 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
             {/* ━━━ SECTION 1: Personal Greeting + Stats ━━━ */}
             <motion.div {...fadeInUp(0)}>
               <div className="flex items-start justify-between gap-4 mb-5">
-                <div>
-                  <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 font-serif leading-tight">
-                    {getGreeting()},<br className="sm:hidden" /> reader.
-                  </h2>
-                  <p className="text-stone-500 text-sm mt-1">
-                    {stats.totalBooks} books &middot; {stats.totalPages.toLocaleString()} pages &middot;{" "}
-                    <Star className="w-3 h-3 text-amber-500 fill-amber-500 inline -mt-0.5" /> {stats.averageRating} avg
-                  </p>
+                <div className="flex items-start gap-4">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
+                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                    transition={{ delay: 0.15, type: "spring", stiffness: 200, damping: 20 }}
+                    className="hidden sm:block flex-shrink-0 -mt-2"
+                  >
+                    <BookStackIllustration className="w-24 h-24" />
+                  </motion.div>
+                  <div>
+                    <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 font-serif leading-tight">
+                      {getGreeting()},<br className="sm:hidden" /> reader.
+                    </h2>
+                    <div className="flex items-center gap-3 mt-1.5 text-stone-500 text-sm">
+                      <span className="flex items-center gap-1">
+                        <BookOpen className="w-3.5 h-3.5 text-stone-400" />
+                        {stats.totalBooks} books
+                      </span>
+                      <span className="w-0.5 h-0.5 rounded-full bg-stone-300" />
+                      <span>{stats.totalPages.toLocaleString()} pages</span>
+                      <span className="w-0.5 h-0.5 rounded-full bg-stone-300" />
+                      <span className="flex items-center gap-0.5">
+                        <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                        {stats.averageRating}
+                      </span>
+                    </div>
+                  </div>
                 </div>
                 <Button
                   onClick={onStartDiscovery}
@@ -301,7 +321,8 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
             <motion.div {...fadeInUp(0.08)} className="space-y-4">
               {/* Section header + filter toggle */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <ReadingGlassesIllustration className="w-10 h-6 hidden sm:block" />
                   <h2 className="text-lg font-semibold text-stone-900 font-serif">
                     Your Books
                   </h2>
@@ -522,7 +543,10 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
             <div className="space-y-8">
               <div className="flex items-center gap-3">
                 <div className="h-px flex-1 bg-stone-200/60" />
-                <span className="text-xs font-semibold text-stone-400 uppercase tracking-widest">Discover</span>
+                <div className="flex items-center gap-2">
+                  <DiscoverIllustration className="w-7 h-7" />
+                  <span className="text-xs font-semibold text-stone-400 uppercase tracking-widest">Discover</span>
+                </div>
                 <div className="h-px flex-1 bg-stone-200/60" />
               </div>
 
