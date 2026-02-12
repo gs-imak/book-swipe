@@ -6,6 +6,7 @@ import { ReadingProgress, ReadingGoals, getReadingProgress, updateReadingProgres
 import { BookOpen, Clock, Target, Flame, Plus, Minus, Play, Pause, CheckCircle, X } from "lucide-react"
 import { motion } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
+import { MeditatingDoodle } from "./illustrations"
 
 interface ReadingProgressProps {
   onStartReading?: (bookId: string) => void
@@ -247,7 +248,9 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
       {/* Empty State */}
       {readingBooks.length === 0 && (
         <div className="text-center py-8 bg-white rounded-xl border border-stone-200/60 shadow-sm">
-          <BookOpen className="w-10 h-10 text-stone-300 mx-auto mb-3" />
+          <div className="w-32 h-24 mx-auto mb-2 opacity-60">
+            <MeditatingDoodle />
+          </div>
           <h3 className="text-sm font-semibold text-stone-700 mb-1">No books in progress</h3>
           <p className="text-xs text-stone-400 mb-4">Start tracking your reading journey</p>
           <button

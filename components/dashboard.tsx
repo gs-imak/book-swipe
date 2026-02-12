@@ -12,7 +12,7 @@ import { StarRating } from "./star-rating"
 import { getBookReview, getUserStats } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
 import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy, Search, Library, SlidersHorizontal } from "lucide-react"
-import { SittingReadingDoodle, ReadingSideDoodle, MeditatingDoodle } from "./illustrations"
+import { SittingReadingDoodle, ReadingSideDoodle, ReadingDoodle, FloatDoodle, GroovyDoodle, LovingDoodle } from "./illustrations"
 import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
 import { useToast } from "./toast-provider"
@@ -238,9 +238,9 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               initial={{ scale: 0.85, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1, type: "spring", stiffness: 150 }}
-              className="flex justify-center mb-2"
+              className="w-48 h-36 sm:w-56 sm:h-44 mx-auto mb-4 opacity-80"
             >
-              <div className="w-56 h-44 sm:w-64 sm:h-48 mx-auto"><SittingReadingDoodle /></div>
+              <SittingReadingDoodle />
             </motion.div>
             <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 mb-3 font-serif">
               Your shelf is waiting
@@ -265,12 +265,12 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               <div className="flex items-start justify-between gap-4 mb-5">
                 <div className="flex items-start gap-4">
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
-                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 0.7, scale: 1 }}
                     transition={{ delay: 0.15, type: "spring", stiffness: 200, damping: 20 }}
-                    className="hidden sm:block flex-shrink-0 -mt-2"
+                    className="hidden sm:block flex-shrink-0 w-20 h-16"
                   >
-                    <div className="w-24 h-20"><ReadingSideDoodle /></div>
+                    <ReadingSideDoodle />
                   </motion.div>
                   <div>
                     <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 font-serif leading-tight">
@@ -465,6 +465,20 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               </AnimatePresence>
 
               {/* Books Grid */}
+              {sortedBooks.length === 0 && likedBooks.length > 0 && (
+                <div className="text-center py-10">
+                  <div className="w-36 h-28 mx-auto mb-3 opacity-60">
+                    <LovingDoodle />
+                  </div>
+                  <p className="text-sm text-stone-500">No books match these filters</p>
+                  <button
+                    onClick={() => { setFilter("all"); setShelfFilter(null); setFormatFilter("all") }}
+                    className="mt-2 text-xs text-amber-600 hover:text-amber-700 font-medium"
+                  >
+                    Clear filters
+                  </button>
+                </div>
+              )}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5">
                 {sortedBooks.map((book, index) => {
                   const review = getBookReview(book.id)
@@ -541,13 +555,15 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
 
             {/* ━━━ SECTION 4: Discovery Zone ━━━ */}
             <div className="space-y-8">
-              <div className="flex items-center gap-3">
-                <div className="h-px flex-1 bg-stone-200/60" />
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-600" />
-                  <span className="text-xs font-semibold text-stone-400 uppercase tracking-widest">Discover</span>
+              <div className="flex flex-col items-center gap-2 py-2">
+                <div className="w-28 h-24 opacity-60">
+                  <FloatDoodle />
                 </div>
-                <div className="h-px flex-1 bg-stone-200/60" />
+                <div className="flex items-center gap-3 w-full">
+                  <div className="h-px flex-1 bg-stone-200/60" />
+                  <span className="text-xs font-semibold text-stone-400 uppercase tracking-widest">Discover</span>
+                  <div className="h-px flex-1 bg-stone-200/60" />
+                </div>
               </div>
 
               {/* Smart Recommendations */}

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, BookOpen, Star, Clock, Heart, TrendingUp } from "lucide-react"
+import { ReadingDoodle } from "./illustrations"
 import { getLikedBooks, getBookReviews, getUserStats, type BookReview } from "@/lib/storage"
 import { Book } from "@/lib/book-data"
 
@@ -198,7 +199,9 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
           <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 pb-8">
             {likedBooks.length === 0 ? (
               <div className="text-center py-16">
-                <BookOpen className="w-12 h-12 text-stone-300 mx-auto mb-4" />
+                <div className="w-40 h-32 mx-auto mb-4 opacity-60">
+                  <ReadingDoodle />
+                </div>
                 <p className="text-stone-500">Save some books to see your taste profile</p>
               </div>
             ) : (
