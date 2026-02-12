@@ -117,11 +117,11 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
     { value: "pages", label: "Shortest" },
   ]
 
-  // Staggered entrance for dashboard sections
+  // Smooth spring entrance — tight stagger, subtle motion
   const fadeInUp = (delay: number) => ({
-    initial: { opacity: 0, y: 16 },
+    initial: { opacity: 0, y: 8 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.45, delay, ease: [0.25, 0.1, 0.25, 1.0] as const },
+    transition: { type: "spring" as const, stiffness: 380, damping: 30, delay },
   })
 
   return (
@@ -235,7 +235,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
         ) : (
           <>
             {/* Discover CTA */}
-            <motion.div {...fadeInUp(0.05)} className="flex items-center justify-between gap-4 flex-wrap">
+            <motion.div {...fadeInUp(0)} className="flex items-center justify-between gap-4 flex-wrap">
               <p className="text-stone-500 text-sm">
                 {likedBooks.length} {likedBooks.length === 1 ? "book" : "books"} saved
               </p>
@@ -258,7 +258,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               ].map((stat, i) => (
                 <motion.div
                   key={stat.label}
-                  {...fadeInUp(0.1 + i * 0.06)}
+                  {...fadeInUp(0.03 + i * 0.03)}
                   className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm"
                 >
                   {stat.label === "Avg rating" ? (
@@ -277,7 +277,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
             </div>
 
             {/* Smart Recommendations */}
-            <motion.div {...fadeInUp(0.35)}>
+            <motion.div {...fadeInUp(0.08)}>
               <SmartRecommendations
                 onBookLike={(book) => {
                   const updatedBooks = [...likedBooks, book]
@@ -288,12 +288,12 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
             </motion.div>
 
             {/* Reading Progress */}
-            <motion.div {...fadeInUp(0.42)}>
+            <motion.div {...fadeInUp(0.1)}>
               <ReadingProgressTracker onStartReading={onStartDiscovery} />
             </motion.div>
 
             {/* Filter & Sort */}
-            <motion.div {...fadeInUp(0.48)} className="space-y-3">
+            <motion.div {...fadeInUp(0.12)} className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2
                   className="text-lg font-semibold text-stone-900 font-serif"
@@ -353,16 +353,16 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
             </motion.div>
 
             {/* Books Grid */}
-            <motion.div {...fadeInUp(0.55)} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5">
               {sortedBooks.map((book, index) => {
                 const review = getBookReview(book.id)
                 return (
                   <motion.div
                     key={book.id}
-                    initial={{ opacity: 0, y: 16 }}
+                    initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.55 + Math.min(index * 0.04, 0.4) }}
-                    whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                    transition={{ type: "spring", stiffness: 300, damping: 24, delay: Math.min(index * 0.025, 0.2) }}
+                    whileHover={{ y: -3, transition: { type: "spring", stiffness: 400, damping: 25 } }}
                     className="group cursor-pointer"
                     onClick={() => handleBookClick(book)}
                   >
@@ -413,7 +413,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                   </motion.div>
                 )
               })}
-            </motion.div>
+            </div>
           </>
         )}
       </div>

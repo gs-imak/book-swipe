@@ -139,10 +139,10 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQuestion}
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0, x: -10, transition: { duration: 0.1 } }}
+            transition={{ type: "spring", stiffness: 350, damping: 30 }}
             className="bg-white rounded-2xl sm:rounded-3xl shadow-xl p-5 sm:p-8"
           >
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-2 leading-tight">{question.title}</h2>
@@ -154,14 +154,14 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
                 return (
                   <motion.div
                     key={option}
-                    initial={{ opacity: 0, y: 8 }}
+                    initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.08 + index * 0.035, duration: 0.3, ease: [0.25, 0.1, 0.25, 1.0] }}
-                    whileTap={{ scale: 0.97 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 28, delay: index * 0.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
                     <Button
                       variant={isSelected ? "default" : "outline"}
-                      className="w-full p-4 sm:p-4 h-auto text-left justify-start text-sm sm:text-base min-h-[52px] tap-target touch-manipulation font-medium transition-all duration-200"
+                      className="w-full p-4 sm:p-4 h-auto text-left justify-start text-sm sm:text-base min-h-[52px] tap-target touch-manipulation font-medium transition-all duration-150"
                       onClick={() => handleAnswer(question.id, option, question.type === "multiple")}
                     >
                       {option}
@@ -172,7 +172,7 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
             </div>
 
             <div className="flex gap-3 sm:gap-4">
-              <motion.div whileTap={{ scale: 0.97 }} className="flex-1 sm:flex-none">
+              <motion.div whileTap={{ scale: 0.98 }} className="flex-1 sm:flex-none">
                 <Button
                   variant="outline"
                   onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}
@@ -182,7 +182,7 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
                   Back
                 </Button>
               </motion.div>
-              <motion.div whileTap={{ scale: 0.97 }} className="flex-1 sm:flex-auto">
+              <motion.div whileTap={{ scale: 0.98 }} className="flex-1 sm:flex-auto">
                 <Button
                   onClick={handleNext}
                   disabled={!canProceed()}

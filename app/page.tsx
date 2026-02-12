@@ -104,8 +104,8 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
             key="login"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0, transition: { duration: 0.1 } }}
+            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
           >
             <LoginScreen onLogin={handleLogin} />
           </motion.div>
@@ -114,8 +114,8 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
             key="questionnaire"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0, transition: { duration: 0.1 } }}
+            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
           >
             <Questionnaire onComplete={handleQuestionnaireComplete} onBack={() => setCurrentView("dashboard")} />
           </motion.div>
@@ -124,8 +124,8 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
             key="swipe"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, transition: { duration: 0.1 } }}
+            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
           >
             <SwipeInterface 
               preferences={userPreferences} 
@@ -138,8 +138,8 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
             key="dashboard"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, transition: { duration: 0.1 } }}
+            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
           >
             <Dashboard 
               onBack={currentView === "dashboard" && userPreferences ? handleBackToSwipe : undefined}
