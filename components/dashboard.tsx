@@ -11,11 +11,14 @@ import { BookDetailModal } from "./book-detail-modal"
 import { StarRating } from "./star-rating"
 import { getBookReview, getUserStats } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
-import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy, Search } from "lucide-react"
+import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy, Search, Library } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
 import { useToast } from "./toast-provider"
 import { BookSearch } from "./book-search"
+import { DailyPickCard } from "./daily-pick-card"
+import { ShelfManager } from "./shelf-manager"
+import { getShelves, getBooksForShelf, type Shelf } from "@/lib/storage"
 
 interface DashboardProps {
   onBack?: () => void
@@ -32,6 +35,9 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   const [isBookModalOpen, setIsBookModalOpen] = useState(false)
   const [userStats, setUserStats] = useState(getUserStats())
   const [showSearch, setShowSearch] = useState(false)
+  const [showShelfManager, setShowShelfManager] = useState(false)
+  const [shelves, setShelves] = useState<Shelf[]>([])
+  const [shelfFilter, setShelfFilter] = useState<string | null>(null)
 
   const { triggerActivity, showAchievementsPanel } = useGamification()
   const { showToast } = useToast()
@@ -39,6 +45,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   useEffect(() => {
     setLikedBooks(getLikedBooks())
     setUserStats(getUserStats())
+    setShelves(getShelves())
   }, [])
 
   useEffect(() => {
@@ -77,7 +84,9 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
     setSelectedBook(null)
   }
 
+  const shelfBookIds = shelfFilter ? new Set(getBooksForShelf(shelfFilter)) : null
   const filteredBooks = likedBooks.filter(book => {
+    if (shelfBookIds && !shelfBookIds.has(book.id)) return false
     if (filter === "all") return true
     return book.genre.some(genre =>
       genre.toLowerCase().includes(filter.toLowerCase())
@@ -276,6 +285,17 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               ))}
             </div>
 
+            {/* Daily Pick */}
+            {likedBooks.length >= 3 && (
+              <DailyPickCard
+                onBookClick={handleBookClick}
+                onBookLiked={(book) => {
+                  setLikedBooks([...likedBooks, book])
+                  showToast(`"${book.title}" saved to library`)
+                }}
+              />
+            )}
+
             {/* Smart Recommendations */}
             <motion.div {...fadeInUp(0.08)}>
               <SmartRecommendations
@@ -305,6 +325,40 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                     ? `${sortedBooks.length} of ${likedBooks.length}`
                     : `${likedBooks.length} books`}
                 </span>
+              </div>
+
+              {/* Shelf filter pills */}
+              <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+                <button
+                  onClick={() => setShelfFilter(null)}
+                  className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    shelfFilter === null
+                      ? "bg-amber-600 text-white"
+                      : "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200/60"
+                  }`}
+                >
+                  All Shelves
+                </button>
+                {shelves.map(shelf => (
+                  <button
+                    key={shelf.id}
+                    onClick={() => setShelfFilter(shelfFilter === shelf.id ? null : shelf.id)}
+                    className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all ${
+                      shelfFilter === shelf.id
+                        ? "bg-amber-600 text-white"
+                        : "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200/60"
+                    }`}
+                  >
+                    {shelf.emoji} {shelf.name}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setShowShelfManager(true)}
+                  className="flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-all flex items-center gap-1"
+                >
+                  <Library className="w-3.5 h-3.5" />
+                  Manage
+                </button>
               </div>
 
               {/* Genre pills */}
@@ -432,6 +486,13 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
         onClose={() => setShowSearch(false)}
         onSaveBook={handleSearchSave}
         savedBookIds={likedBooks.map(b => b.id)}
+      />
+
+      {/* Shelf Manager */}
+      <ShelfManager
+        isOpen={showShelfManager}
+        onClose={() => setShowShelfManager(false)}
+        onShelvesChanged={() => setShelves(getShelves())}
       />
     </div>
   )

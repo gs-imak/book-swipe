@@ -2,13 +2,15 @@
 
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Star, Heart, MessageSquare, FileText, Calendar, Clock, BookOpen } from "lucide-react"
+import { X, Star, Heart, MessageSquare, FileText, Calendar, Clock, BookOpen, Library, Share2 } from "lucide-react"
 import { Book } from "@/lib/book-data"
-import { BookReview, getBookReview } from "@/lib/storage"
+import { BookReview, getBookReview, getShelvesForBook, getShelves, type Shelf } from "@/lib/storage"
 import { QuickReview } from "./quick-review"
 import { ReviewDisplay } from "./review-display"
 import { BookNotes } from "./book-notes"
 import { BookCover } from "@/components/book-cover"
+import { ShelfPicker } from "./shelf-picker"
+import { ShareCardGenerator } from "./share-card-generator"
 
 interface BookDetailModalProps {
   book: Book | null
@@ -21,6 +23,9 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
   const [activeTab, setActiveTab] = useState<"overview" | "review" | "notes">("overview")
   const [existingReview, setExistingReview] = useState<BookReview | null>(null)
   const [isEditingReview, setIsEditingReview] = useState(false)
+  const [showShelfPicker, setShowShelfPicker] = useState(false)
+  const [showShareCard, setShowShareCard] = useState(false)
+  const [assignedShelves, setAssignedShelves] = useState<Shelf[]>([])
   const dialogRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -28,6 +33,10 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
       const review = getBookReview(book.id)
       setExistingReview(review)
       setActiveTab("overview")
+      // Load assigned shelves
+      const shelfIds = getShelvesForBook(book.id)
+      const allShelves = getShelves()
+      setAssignedShelves(allShelves.filter(s => shelfIds.includes(s.id)))
     }
   }, [book])
 
@@ -174,7 +183,34 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
                       Review
                     </button>
                   )}
+
+                  <button
+                    onClick={() => setShowShelfPicker(true)}
+                    className="h-9 px-3 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium rounded-xl transition-colors shadow-sm"
+                  >
+                    <Library className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />
+                    Shelves
+                  </button>
+
+                  <button
+                    onClick={() => setShowShareCard(true)}
+                    className="h-9 px-3 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium rounded-xl transition-colors shadow-sm"
+                  >
+                    <Share2 className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />
+                    Share
+                  </button>
                 </div>
+
+                {/* Assigned shelf tags */}
+                {assignedShelves.length > 0 && (
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    {assignedShelves.map(shelf => (
+                      <span key={shelf.id} className="text-[11px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">
+                        {shelf.emoji} {shelf.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -296,6 +332,26 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
             <div className="h-4 sm:h-0" />
           </div>
         </motion.div>
+
+        {/* Shelf Picker */}
+        <ShelfPicker
+          bookId={book.id}
+          isOpen={showShelfPicker}
+          onClose={() => {
+            setShowShelfPicker(false)
+            // Refresh assigned shelves
+            const shelfIds = getShelvesForBook(book.id)
+            const allShelves = getShelves()
+            setAssignedShelves(allShelves.filter(s => shelfIds.includes(s.id)))
+          }}
+        />
+
+        {/* Share Card Generator */}
+        <ShareCardGenerator
+          book={book}
+          isOpen={showShareCard}
+          onClose={() => setShowShareCard(false)}
+        />
       </motion.div>
     </AnimatePresence>
   )

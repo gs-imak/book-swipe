@@ -11,6 +11,7 @@ import { ToastProvider } from "@/components/toast-provider"
 import { MobileNav } from "@/components/mobile-nav"
 import { UserPreferences } from "@/lib/book-data"
 import { getLikedBooks, migrateCoverUrls } from "@/lib/storage"
+import { TasteProfile } from "@/components/taste-profile"
 import { motion, AnimatePresence } from "framer-motion"
 
 type AppState = "login" | "dashboard" | "questionnaire" | "swipe"
@@ -25,6 +26,7 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   const [currentView, setCurrentView] = useState<AppState>("login")
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [likedBooksCount, setLikedBooksCount] = useState(0)
+  const [showTasteProfile, setShowTasteProfile] = useState(false)
 
   // Update liked books count
   useEffect(() => {
@@ -72,10 +74,15 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
     setCurrentView("swipe")
   }
 
-  const handleMobileNavigation = (view: "dashboard" | "swipe" | "achievements") => {
-    if (view === "achievements") {
+  const handleMobileNavigation = (view: "dashboard" | "swipe" | "achievements" | "profile") => {
+    if (view === "profile") {
+      onShowAchievements(false)
+      setShowTasteProfile(true)
+    } else if (view === "achievements") {
+      setShowTasteProfile(false)
       onShowAchievements(true)
     } else if (view === "swipe") {
+      setShowTasteProfile(false)
       onShowAchievements(false)
       if (!userPreferences) {
         setCurrentView("questionnaire")
@@ -83,12 +90,14 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
         setCurrentView("swipe")
       }
     } else {
+      setShowTasteProfile(false)
       onShowAchievements(false)
       setCurrentView("dashboard")
     }
   }
 
-  const getCurrentNavView = (): "dashboard" | "swipe" | "achievements" => {
+  const getCurrentNavView = (): "dashboard" | "swipe" | "achievements" | "profile" => {
+    if (showTasteProfile) return "profile"
     if (isAchievementsOpen) return "achievements"
     if (currentView === "swipe") return "swipe"
     return "dashboard"
@@ -149,6 +158,12 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Taste Profile Panel */}
+      <TasteProfile
+        isOpen={showTasteProfile}
+        onClose={() => setShowTasteProfile(false)}
+      />
 
       {/* Mobile Bottom Navigation - persists across dashboard/swipe transitions */}
       {showNav && (

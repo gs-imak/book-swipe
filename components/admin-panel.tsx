@@ -18,9 +18,14 @@ import {
   saveUserStats,
   getUserAchievements,
   saveUserAchievements,
+  getShelves,
+  saveShelves,
+  getShelfAssignments,
+  saveShelfAssignments,
 } from "@/lib/storage"
-import { Download, Upload, Shield, AlertTriangle } from "lucide-react"
+import { Download, Upload, Shield, AlertTriangle, BookOpen } from "lucide-react"
 import { useToast } from "./toast-provider"
+import { GoodreadsImport } from "./goodreads-import"
 
 interface AdminPanelProps {
   onBooksLoaded: (books: Book[]) => void
@@ -37,11 +42,14 @@ interface ExportData {
     readingGoals: ReturnType<typeof getReadingGoals>
     userStats: ReturnType<typeof getUserStats>
     achievements: ReturnType<typeof getUserAchievements>
+    shelves?: ReturnType<typeof getShelves>
+    shelfAssignments?: ReturnType<typeof getShelfAssignments>
   }
 }
 
 export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
   const [importing, setImporting] = useState(false)
+  const [showGoodreadsImport, setShowGoodreadsImport] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { showToast } = useToast()
 
@@ -57,6 +65,8 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
         readingGoals: getReadingGoals(),
         userStats: getUserStats(),
         achievements: getUserAchievements(),
+        shelves: getShelves(),
+        shelfAssignments: getShelfAssignments(),
       },
     }
 
@@ -154,6 +164,26 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
         }
       }
 
+      // Merge shelves
+      if (data.shelves?.length) {
+        const existing = getShelves()
+        const existingIds = new Set(existing.map(s => s.id))
+        const newShelves = data.shelves.filter(s => !existingIds.has(s.id))
+        if (newShelves.length > 0) {
+          saveShelves([...existing, ...newShelves])
+        }
+      }
+
+      // Merge shelf assignments
+      if (data.shelfAssignments?.length) {
+        const existing = getShelfAssignments()
+        const existingKeys = new Set(existing.map(a => `${a.bookId}|${a.shelfId}`))
+        const newAssignments = data.shelfAssignments.filter(a => !existingKeys.has(`${a.bookId}|${a.shelfId}`))
+        if (newAssignments.length > 0) {
+          saveShelfAssignments([...existing, ...newAssignments])
+        }
+      }
+
       const parts: string[] = []
       if (counts.books > 0) parts.push(`${counts.books} books`)
       if (counts.progress > 0) parts.push(`${counts.progress} reading entries`)
@@ -240,6 +270,18 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
         />
       </div>
 
+      {/* Goodreads Import */}
+      <div className="pt-2 border-t border-stone-200/60">
+        <Button
+          onClick={() => setShowGoodreadsImport(true)}
+          variant="outline"
+          className="w-full h-10 border-stone-200 hover:bg-stone-50 text-stone-700 rounded-xl text-sm"
+        >
+          <BookOpen className="w-4 h-4 mr-2" />
+          Import from Goodreads
+        </Button>
+      </div>
+
       {/* Warning */}
       <div className="flex gap-2 p-3 rounded-lg bg-amber-50 border border-amber-100">
         <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
@@ -248,6 +290,13 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
           Export backups regularly to avoid data loss.
         </p>
       </div>
+
+      {/* Goodreads Import Modal */}
+      <GoodreadsImport
+        isOpen={showGoodreadsImport}
+        onClose={() => setShowGoodreadsImport(false)}
+        onComplete={() => onBooksLoaded(getLikedBooks())}
+      />
     </div>
   )
 }

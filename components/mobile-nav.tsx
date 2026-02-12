@@ -1,11 +1,11 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Home, Sparkles, Trophy } from "lucide-react"
+import { Home, Sparkles, Trophy, BarChart3 } from "lucide-react"
 
 interface MobileNavProps {
-  currentView: "dashboard" | "swipe" | "achievements"
-  onNavigate: (view: "dashboard" | "swipe" | "achievements") => void
+  currentView: "dashboard" | "swipe" | "achievements" | "profile"
+  onNavigate: (view: "dashboard" | "swipe" | "achievements" | "profile") => void
   likedCount?: number
 }
 
@@ -20,6 +20,11 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNav
       id: "swipe" as const,
       icon: Sparkles,
       label: "Discover",
+    },
+    {
+      id: "profile" as const,
+      icon: BarChart3,
+      label: "Profile",
     },
     {
       id: "achievements" as const,

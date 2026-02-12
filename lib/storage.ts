@@ -9,6 +9,9 @@ const BOOK_REVIEWS_KEY = "bookswipe_book_reviews"
 const BOOK_NOTES_KEY = "bookswipe_book_notes"
 const USER_ACHIEVEMENTS_KEY = "bookswipe_achievements"
 const USER_STATS_KEY = "bookswipe_user_stats"
+const SHELVES_KEY = "bookswipe_shelves"
+const SHELF_ASSIGNMENTS_KEY = "bookswipe_shelf_assignments"
+const DAILY_PICK_KEY = "bookswipe_daily_pick"
 
 export interface ReadingProgress {
   bookId: string
@@ -85,6 +88,28 @@ export interface UserStats {
   averageRating: number
   favoritesCount: number
   joinDate: string
+}
+
+export interface Shelf {
+  id: string
+  name: string
+  emoji: string
+  isDefault: boolean
+  createdAt: string
+}
+
+export interface BookShelfAssignment {
+  bookId: string
+  shelfId: string
+  addedAt: string
+}
+
+export interface DailyPick {
+  book: Book
+  reasons: { type: string; description: string }[]
+  date: string
+  dismissed: boolean
+  saved: boolean
 }
 
 // Liked Books Functions
@@ -379,6 +404,118 @@ export function addPoints(points: number, activity: string): boolean {
   
   // Return true if level up occurred
   return stats.level > oldLevel
+}
+
+// Shelves Functions
+const DEFAULT_SHELVES: Shelf[] = [
+  { id: "want-to-read", name: "Want to Read", emoji: "\u{1F4DA}", isDefault: true, createdAt: new Date().toISOString() },
+  { id: "currently-reading", name: "Currently Reading", emoji: "\u{1F4D6}", isDefault: true, createdAt: new Date().toISOString() },
+  { id: "finished", name: "Finished", emoji: "\u2705", isDefault: true, createdAt: new Date().toISOString() },
+]
+
+export function getShelves(): Shelf[] {
+  if (typeof window !== 'undefined') {
+    const stored = localStorage.getItem(SHELVES_KEY)
+    if (stored) return JSON.parse(stored)
+    // Seed defaults on first access
+    localStorage.setItem(SHELVES_KEY, JSON.stringify(DEFAULT_SHELVES))
+    return DEFAULT_SHELVES
+  }
+  return DEFAULT_SHELVES
+}
+
+export function saveShelves(shelves: Shelf[]): void {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(SHELVES_KEY, JSON.stringify(shelves))
+  }
+}
+
+export function createShelf(name: string, emoji: string): Shelf {
+  const shelves = getShelves()
+  const newShelf: Shelf = {
+    id: Date.now().toString() + Math.random().toString(36).substr(2, 6),
+    name,
+    emoji,
+    isDefault: false,
+    createdAt: new Date().toISOString(),
+  }
+  shelves.push(newShelf)
+  saveShelves(shelves)
+  return newShelf
+}
+
+export function renameShelf(shelfId: string, name: string, emoji: string): void {
+  const shelves = getShelves()
+  const idx = shelves.findIndex(s => s.id === shelfId)
+  if (idx !== -1) {
+    shelves[idx] = { ...shelves[idx], name, emoji }
+    saveShelves(shelves)
+  }
+}
+
+export function deleteShelf(shelfId: string): void {
+  const shelves = getShelves().filter(s => s.id !== shelfId)
+  saveShelves(shelves)
+  // Also remove assignments for this shelf
+  const assignments = getShelfAssignments().filter(a => a.shelfId !== shelfId)
+  saveShelfAssignments(assignments)
+}
+
+export function getShelfAssignments(): BookShelfAssignment[] {
+  if (typeof window !== 'undefined') {
+    const stored = localStorage.getItem(SHELF_ASSIGNMENTS_KEY)
+    return stored ? JSON.parse(stored) : []
+  }
+  return []
+}
+
+export function saveShelfAssignments(assignments: BookShelfAssignment[]): void {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(SHELF_ASSIGNMENTS_KEY, JSON.stringify(assignments))
+  }
+}
+
+export function assignBookToShelf(bookId: string, shelfId: string): void {
+  const assignments = getShelfAssignments()
+  const exists = assignments.some(a => a.bookId === bookId && a.shelfId === shelfId)
+  if (!exists) {
+    assignments.push({ bookId, shelfId, addedAt: new Date().toISOString() })
+    saveShelfAssignments(assignments)
+  }
+}
+
+export function removeBookFromShelf(bookId: string, shelfId: string): void {
+  const assignments = getShelfAssignments().filter(
+    a => !(a.bookId === bookId && a.shelfId === shelfId)
+  )
+  saveShelfAssignments(assignments)
+}
+
+export function getShelvesForBook(bookId: string): string[] {
+  return getShelfAssignments()
+    .filter(a => a.bookId === bookId)
+    .map(a => a.shelfId)
+}
+
+export function getBooksForShelf(shelfId: string): string[] {
+  return getShelfAssignments()
+    .filter(a => a.shelfId === shelfId)
+    .map(a => a.bookId)
+}
+
+// Daily Pick Functions
+export function getDailyPick(): DailyPick | null {
+  if (typeof window !== 'undefined') {
+    const stored = localStorage.getItem(DAILY_PICK_KEY)
+    return stored ? JSON.parse(stored) : null
+  }
+  return null
+}
+
+export function saveDailyPick(pick: DailyPick): void {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(DAILY_PICK_KEY, JSON.stringify(pick))
+  }
 }
 
 // Cover URL migration
