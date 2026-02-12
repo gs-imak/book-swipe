@@ -12,7 +12,7 @@ import { StarRating } from "./star-rating"
 import { getBookReview, getUserStats } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
 import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy, Search, Library, SlidersHorizontal } from "lucide-react"
-import { EmptyShelfIllustration, BookStackIllustration, DiscoverIllustration, ReadingGlassesIllustration, LeafSprig } from "./illustrations"
+import { SittingReadingDoodle, ReadingSideDoodle, MeditatingDoodle } from "./illustrations"
 import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
 import { useToast } from "./toast-provider"
@@ -240,7 +240,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               transition={{ delay: 0.1, type: "spring", stiffness: 150 }}
               className="flex justify-center mb-2"
             >
-              <EmptyShelfIllustration className="w-56 h-44 sm:w-64 sm:h-48" />
+              <div className="w-56 h-44 sm:w-64 sm:h-48 mx-auto"><SittingReadingDoodle /></div>
             </motion.div>
             <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 mb-3 font-serif">
               Your shelf is waiting
@@ -270,7 +270,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                     transition={{ delay: 0.15, type: "spring", stiffness: 200, damping: 20 }}
                     className="hidden sm:block flex-shrink-0 -mt-2"
                   >
-                    <BookStackIllustration className="w-24 h-24" />
+                    <div className="w-24 h-20"><ReadingSideDoodle /></div>
                   </motion.div>
                   <div>
                     <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 font-serif leading-tight">
@@ -322,7 +322,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               {/* Section header + filter toggle */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <ReadingGlassesIllustration className="w-10 h-6 hidden sm:block" />
+                  <BookOpen className="w-5 h-5 text-amber-600 hidden sm:block" />
                   <h2 className="text-lg font-semibold text-stone-900 font-serif">
                     Your Books
                   </h2>
@@ -544,7 +544,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               <div className="flex items-center gap-3">
                 <div className="h-px flex-1 bg-stone-200/60" />
                 <div className="flex items-center gap-2">
-                  <DiscoverIllustration className="w-7 h-7" />
+                  <Sparkles className="w-4 h-4 text-amber-600" />
                   <span className="text-xs font-semibold text-stone-400 uppercase tracking-widest">Discover</span>
                 </div>
                 <div className="h-px flex-1 bg-stone-200/60" />
