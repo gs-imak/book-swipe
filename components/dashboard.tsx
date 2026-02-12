@@ -18,7 +18,9 @@ import { useToast } from "./toast-provider"
 import { BookSearch } from "./book-search"
 import { DailyPickCard } from "./daily-pick-card"
 import { ShelfManager } from "./shelf-manager"
-import { getShelves, getBooksForShelf, type Shelf } from "@/lib/storage"
+import { ReadingPath } from "./reading-path"
+import { getShelves, getBooksForShelf, getShelvesForBook, type Shelf } from "@/lib/storage"
+import { estimateReadingTime, getReadingSpeed, setReadingSpeed, getAllSpeeds, type ReadingSpeed } from "@/lib/reading-time"
 
 interface DashboardProps {
   onBack?: () => void
@@ -38,6 +40,8 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   const [showShelfManager, setShowShelfManager] = useState(false)
   const [shelves, setShelves] = useState<Shelf[]>([])
   const [shelfFilter, setShelfFilter] = useState<string | null>(null)
+  const [formatFilter, setFormatFilter] = useState<"all" | "ebook" | "audio">("all")
+  const [readingSpd, setReadingSpd] = useState<ReadingSpeed>("average")
 
   const { triggerActivity, showAchievementsPanel } = useGamification()
   const { showToast } = useToast()
@@ -46,6 +50,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
     setLikedBooks(getLikedBooks())
     setUserStats(getUserStats())
     setShelves(getShelves())
+    setReadingSpd(getReadingSpeed())
   }, [])
 
   useEffect(() => {
@@ -87,6 +92,8 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   const shelfBookIds = shelfFilter ? new Set(getBooksForShelf(shelfFilter)) : null
   const filteredBooks = likedBooks.filter(book => {
     if (shelfBookIds && !shelfBookIds.has(book.id)) return false
+    if (formatFilter === "ebook" && !book.formats?.ebook) return false
+    if (formatFilter === "audio" && !book.formats?.audiobook) return false
     if (filter === "all") return true
     return book.genre.some(genre =>
       genre.toLowerCase().includes(filter.toLowerCase())
@@ -312,6 +319,11 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               <ReadingProgressTracker onStartReading={onStartDiscovery} />
             </motion.div>
 
+            {/* Reading Paths */}
+            {likedBooks.length >= 3 && (
+              <ReadingPath onBookClick={handleBookClick} />
+            )}
+
             {/* Filter & Sort */}
             <motion.div {...fadeInUp(0.12)} className="space-y-3">
               <div className="flex items-center justify-between">
@@ -388,21 +400,63 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                 ))}
               </div>
 
-              {/* Sort pills */}
-              <div className="flex gap-1.5">
-                {sortOptions.map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setSortBy(opt.value)}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                      sortBy === opt.value
-                        ? "bg-amber-100 text-amber-800"
-                        : "text-stone-400 hover:text-stone-600 hover:bg-stone-50"
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+              {/* Sort pills + Format filter + Reading speed */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex gap-1.5">
+                  {sortOptions.map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setSortBy(opt.value)}
+                      className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                        sortBy === opt.value
+                          ? "bg-amber-100 text-amber-800"
+                          : "text-stone-400 hover:text-stone-600 hover:bg-stone-50"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+
+                <span className="w-px h-4 bg-stone-200" />
+
+                {/* Format filter */}
+                <div className="flex gap-1">
+                  {([
+                    { value: "all" as const, label: "All" },
+                    { value: "ebook" as const, label: "eBook" },
+                    { value: "audio" as const, label: "Audio" },
+                  ]).map(f => (
+                    <button
+                      key={f.value}
+                      onClick={() => setFormatFilter(f.value)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
+                        formatFilter === f.value
+                          ? "bg-blue-50 text-blue-700"
+                          : "text-stone-400 hover:text-stone-600 hover:bg-stone-50"
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+
+                <span className="w-px h-4 bg-stone-200" />
+
+                {/* Reading speed */}
+                <select
+                  value={readingSpd}
+                  onChange={(e) => {
+                    const speed = e.target.value as ReadingSpeed
+                    setReadingSpd(speed)
+                    setReadingSpeed(speed)
+                  }}
+                  className="text-[11px] text-stone-500 bg-transparent border-none cursor-pointer focus:outline-none hover:text-stone-700"
+                >
+                  {getAllSpeeds().map(s => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
+                  ))}
+                </select>
               </div>
             </motion.div>
 
@@ -410,6 +464,8 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5">
               {sortedBooks.map((book, index) => {
                 const review = getBookReview(book.id)
+                const bookShelfIds = getShelvesForBook(book.id)
+                const firstShelf = bookShelfIds.length > 0 ? shelves.find(s => s.id === bookShelfIds[0]) : null
                 return (
                   <motion.div
                     key={book.id}
@@ -441,6 +497,12 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                           <Heart className="w-4 h-4 text-red-500 fill-red-500 drop-shadow-sm" />
                         </div>
                       )}
+                      {/* Shelf badge */}
+                      {firstShelf && (
+                        <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md text-[10px] font-medium text-stone-600 max-w-[calc(100%-16px)] truncate">
+                          {firstShelf.emoji} {firstShelf.name}
+                        </div>
+                      )}
                     </div>
 
                     {/* Info */}
@@ -458,10 +520,13 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                       )}
 
                       {/* Meta */}
-                      <div className="flex items-center gap-2 text-[11px] text-stone-400 pt-0.5">
+                      <div className="flex items-center gap-2 text-[11px] text-stone-400 pt-0.5 flex-wrap">
                         <span>{book.pages}p</span>
                         <span className="w-0.5 h-0.5 rounded-full bg-stone-300" />
-                        <span>{book.readingTime}</span>
+                        <span>{estimateReadingTime(book.pages, readingSpd)}</span>
+                        {book.formats?.ebook && (
+                          <span className="px-1 py-px rounded bg-blue-50 text-blue-500 text-[9px] font-medium">eBook</span>
+                        )}
                       </div>
                     </div>
                   </motion.div>

@@ -23,6 +23,14 @@ export interface GoogleBook {
       extraLarge?: string
     }
   }
+  saleInfo?: {
+    saleability?: string
+    isEbook?: boolean
+  }
+  accessInfo?: {
+    epub?: { isAvailable?: boolean }
+    pdf?: { isAvailable?: boolean }
+  }
 }
 
 export async function searchGoogleBooks(query: string, maxResults = 20): Promise<Book[]> {
@@ -150,6 +158,16 @@ function transformGoogleBookToBook(googleBook: GoogleBook): Book | null {
     : ''
   const googleCover = getBestCoverImage(volumeInfo.imageLinks)
 
+  // Detect formats
+  const isEbook = googleBook.saleInfo?.isEbook ||
+                  googleBook.accessInfo?.epub?.isAvailable ||
+                  googleBook.accessInfo?.pdf?.isAvailable || false
+  const formats = {
+    ebook: isEbook,
+    audiobook: false, // Google Books API doesn't indicate audiobook availability
+    paperback: !isEbook || (googleBook.saleInfo?.saleability === 'FOR_SALE'),
+  }
+
   return {
     id: googleBook.id,
     title: volumeInfo.title,
@@ -165,6 +183,8 @@ function transformGoogleBookToBook(googleBook: GoogleBook): Book | null {
                 'No description available.',
     publishedYear,
     readingTime: estimateReadingTime(pages),
+    isbn: isbn || undefined,
+    formats,
     metadata: {
       source: 'google' as const,
     }

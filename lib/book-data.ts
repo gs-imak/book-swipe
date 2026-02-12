@@ -6,6 +6,12 @@ export interface BookMetadata {
   source: 'sample' | 'google' | 'openlibrary'
 }
 
+export interface BookFormats {
+  ebook: boolean
+  audiobook: boolean
+  paperback: boolean
+}
+
 export interface Book {
   id: string
   title: string
@@ -19,6 +25,8 @@ export interface Book {
   description: string
   publishedYear: number
   readingTime: string
+  isbn?: string
+  formats?: BookFormats
   metadata?: BookMetadata
 }
 

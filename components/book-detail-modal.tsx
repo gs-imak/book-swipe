@@ -11,6 +11,8 @@ import { BookNotes } from "./book-notes"
 import { BookCover } from "@/components/book-cover"
 import { ShelfPicker } from "./shelf-picker"
 import { ShareCardGenerator } from "./share-card-generator"
+import { WhereToRead } from "./where-to-read"
+import { estimateReadingTime } from "@/lib/reading-time"
 
 interface BookDetailModalProps {
   book: Book | null
@@ -151,12 +153,23 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5 text-stone-400" />
-                    <span>{book.readingTime}</span>
+                    <span>{estimateReadingTime(book.pages)}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                     <span className="font-medium text-stone-700">{book.rating}</span>
                   </div>
+                  {/* Format badges */}
+                  {book.formats && (
+                    <>
+                      {book.formats.ebook && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-medium">eBook</span>
+                      )}
+                      {book.formats.audiobook && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-purple-600 font-medium">Audio</span>
+                      )}
+                    </>
+                  )}
                 </div>
 
                 {/* Action buttons */}
@@ -272,6 +285,14 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
                       </span>
                     ))}
                   </div>
+                </div>
+
+                {/* Where to Read */}
+                <div>
+                  <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2.5">
+                    Where to Read
+                  </h3>
+                  <WhereToRead book={book} />
                 </div>
 
                 {/* Existing Review Summary */}
