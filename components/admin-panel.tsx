@@ -23,9 +23,10 @@ import {
   getShelfAssignments,
   saveShelfAssignments,
 } from "@/lib/storage"
-import { Download, Upload, Shield, AlertTriangle, BookOpen } from "lucide-react"
+import { Download, Upload, Shield, AlertTriangle, BookOpen, FileSpreadsheet } from "lucide-react"
 import { useToast } from "./toast-provider"
 import { GoodreadsImport } from "./goodreads-import"
+import { exportToGoodreadsCSV, exportToNotionCSV, downloadCSV } from "@/lib/export-utils"
 
 interface AdminPanelProps {
   onBooksLoaded: (books: Book[]) => void
@@ -270,15 +271,44 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
         />
       </div>
 
-      {/* Goodreads Import */}
-      <div className="pt-2 border-t border-stone-200/60">
+      {/* Goodreads / Notion */}
+      <div className="pt-2 border-t border-stone-200/60 space-y-2">
+        <p className="text-xs text-stone-500 font-medium">Goodreads & Notion</p>
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            onClick={() => setShowGoodreadsImport(true)}
+            variant="outline"
+            className="h-10 border-stone-200 hover:bg-stone-50 text-stone-700 rounded-xl text-sm"
+          >
+            <Upload className="w-4 h-4 mr-1.5" />
+            Import GR
+          </Button>
+          <Button
+            onClick={() => {
+              const csv = exportToGoodreadsCSV()
+              const date = new Date().toISOString().split("T")[0]
+              downloadCSV(csv, `goodreads-export-${date}.csv`)
+              showToast("Goodreads CSV exported")
+            }}
+            variant="outline"
+            className="h-10 border-stone-200 hover:bg-stone-50 text-stone-700 rounded-xl text-sm"
+          >
+            <BookOpen className="w-4 h-4 mr-1.5" />
+            Export GR
+          </Button>
+        </div>
         <Button
-          onClick={() => setShowGoodreadsImport(true)}
+          onClick={() => {
+            const csv = exportToNotionCSV()
+            const date = new Date().toISOString().split("T")[0]
+            downloadCSV(csv, `notion-books-${date}.csv`)
+            showToast("Notion CSV exported")
+          }}
           variant="outline"
           className="w-full h-10 border-stone-200 hover:bg-stone-50 text-stone-700 rounded-xl text-sm"
         >
-          <BookOpen className="w-4 h-4 mr-2" />
-          Import from Goodreads
+          <FileSpreadsheet className="w-4 h-4 mr-2" />
+          Export for Notion
         </Button>
       </div>
 
