@@ -240,15 +240,25 @@ export function getBookReview(bookId: string): BookReview | null {
 }
 
 export function saveBookReview(review: BookReview): void {
-  const reviews = getBookReviews()
-  const existingIndex = reviews.findIndex(r => r.bookId === review.bookId)
-  
-  if (existingIndex !== -1) {
-    reviews[existingIndex] = { ...review, updatedAt: new Date().toISOString() }
-  } else {
-    reviews.push({ ...review, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() })
+  // Sanitize user-generated text: strip control characters, cap length
+  const sanitized: BookReview = {
+    ...review,
+    review: review.review
+      ? review.review.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, "").slice(0, 5000)
+      : undefined,
+    mood: review.mood ? review.mood.slice(0, 100) : "",
+    tags: review.tags?.map(t => t.replace(/[\x00-\x1f]/g, "").slice(0, 50)).slice(0, 20) || [],
   }
-  
+
+  const reviews = getBookReviews()
+  const existingIndex = reviews.findIndex(r => r.bookId === sanitized.bookId)
+
+  if (existingIndex !== -1) {
+    reviews[existingIndex] = { ...sanitized, updatedAt: new Date().toISOString() }
+  } else {
+    reviews.push({ ...sanitized, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() })
+  }
+
   saveBookReviews(reviews)
 }
 
@@ -406,10 +416,13 @@ export function saveShelves(shelves: Shelf[]): void {
 
 export function createShelf(name: string, emoji: string): Shelf {
   const shelves = getShelves()
+  // Sanitize inputs: cap length, strip control characters
+  const safeName = name.replace(/[\x00-\x1f]/g, "").slice(0, 50)
+  const safeEmoji = emoji.slice(0, 4)
   const newShelf: Shelf = {
     id: Date.now().toString() + Math.random().toString(36).substr(2, 6),
-    name,
-    emoji,
+    name: safeName,
+    emoji: safeEmoji,
     isDefault: false,
     createdAt: new Date().toISOString(),
   }
@@ -422,7 +435,9 @@ export function renameShelf(shelfId: string, name: string, emoji: string): void 
   const shelves = getShelves()
   const idx = shelves.findIndex(s => s.id === shelfId)
   if (idx !== -1) {
-    shelves[idx] = { ...shelves[idx], name, emoji }
+    const safeName = name.replace(/[\x00-\x1f]/g, "").slice(0, 50)
+    const safeEmoji = emoji.slice(0, 4)
+    shelves[idx] = { ...shelves[idx], name: safeName, emoji: safeEmoji }
     saveShelves(shelves)
   }
 }

@@ -82,11 +82,8 @@ export function updateWatchPrice(bookId: string, price: number | null): { droppe
 
 export async function fetchPriceInfo(googleBookId: string): Promise<PriceInfo | null> {
   try {
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY
-    const url = apiKey
-      ? `https://www.googleapis.com/books/v1/volumes/${googleBookId}?key=${apiKey}`
-      : `https://www.googleapis.com/books/v1/volumes/${googleBookId}`
-    const res = await fetch(url)
+    // Call our own API route (keeps API key server-side)
+    const res = await fetch(`/api/books?id=${encodeURIComponent(googleBookId)}`)
     if (!res.ok) return null
     const data = await res.json()
 

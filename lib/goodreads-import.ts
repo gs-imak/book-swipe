@@ -117,13 +117,19 @@ function parseCSVLine(line: string): string[] {
   return fields
 }
 
-// Match book via Google Books API
+// Sanitize shelf/input names against formula injection (CSV injection prevention)
+function sanitizeInput(value: string): string {
+  // Strip leading characters that spreadsheet apps interpret as formulas
+  return value.replace(/^[=+\-@\t\r]+/, "")
+}
+
+// Match book via our API route (keeps API key server-side)
 async function matchBookToAPI(row: GoodreadsRow): Promise<Book | null> {
   // Try ISBN first
   const isbn = row.isbn13 || row.isbn
   if (isbn && isbn.length >= 10) {
     try {
-      const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&maxResults=1`)
+      const res = await fetch(`/api/books?q=isbn:${encodeURIComponent(isbn)}&maxResults=1`)
       const data = await res.json()
       if (data.items && data.items.length > 0) {
         return googleBookToBook(data.items[0], isbn)
@@ -135,8 +141,8 @@ async function matchBookToAPI(row: GoodreadsRow): Promise<Book | null> {
 
   // Fallback: title + author
   try {
-    const query = encodeURIComponent(`intitle:${row.title} inauthor:${row.author}`)
-    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=1`)
+    const query = `intitle:${row.title} inauthor:${row.author}`
+    const res = await fetch(`/api/books?q=${encodeURIComponent(query)}&maxResults=1`)
     const data = await res.json()
     if (data.items && data.items.length > 0) {
       return googleBookToBook(data.items[0])
@@ -330,12 +336,13 @@ export async function importGoodreadsData(
   const existingShelfNames = new Set(existingShelves.map(s => s.name.toLowerCase()))
 
   customShelves.forEach(shelfName => {
-    const displayName = shelfName.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())
-    if (!existingShelfNames.has(displayName.toLowerCase())) {
-      createShelf(displayName, "\u{1F4D1}")
-      createdShelves.push(displayName)
-      existingShelfNames.add(displayName.toLowerCase())
+    const displayName = sanitizeInput(shelfName).replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())
+    if (!displayName.trim() || existingShelfNames.has(displayName.toLowerCase())) {
+      return // Skip empty or duplicate shelf names
     }
+    createShelf(displayName, "\u{1F4D1}")
+    createdShelves.push(displayName)
+    existingShelfNames.add(displayName.toLowerCase())
   })
 
   // Assign books to shelves
@@ -352,7 +359,7 @@ export async function importGoodreadsData(
       assignBookToShelf(bookId, mappedId)
     } else {
       // Custom shelf
-      const displayName = grShelf.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())
+      const displayName = sanitizeInput(grShelf).replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())
       const shelfId = shelfNameToId[displayName.toLowerCase()]
       if (shelfId) {
         assignBookToShelf(bookId, shelfId)

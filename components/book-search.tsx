@@ -94,6 +94,7 @@ export function BookSearch({ isOpen, onClose, onSaveBook, savedBookIds }: BookSe
                   value={query}
                   onChange={(e) => handleInputChange(e.target.value)}
                   placeholder="Search books or authors..."
+                  aria-label="Search books or authors"
                   className="flex-1 bg-transparent text-stone-900 text-base placeholder:text-stone-400 outline-none"
                 />
                 {query && (

@@ -2,6 +2,23 @@ import { Book } from "./book-data"
 import { getCachedBooks, addBooksToCache, isQueryCached, markQueryCompleted, queryCache } from "./book-cache"
 import { searchOpenLibrary } from "./openlibrary-api"
 
+// Strip HTML tags from API descriptions and truncate safely
+function sanitizeDescription(raw?: string): string {
+  if (!raw) return "No description available."
+  // Remove all HTML tags, then decode common entities
+  const text = raw
+    .replace(/<[^>]*>/g, "")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .trim()
+  if (!text) return "No description available."
+  return text.length > 200 ? text.slice(0, 200) + "..." : text
+}
+
 // Google Books API integration
 export interface GoogleBook {
   id: string
@@ -35,36 +52,40 @@ export interface GoogleBook {
 
 export async function searchGoogleBooks(query: string, maxResults = 20): Promise<Book[]> {
   try {
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY
-    
-    if (!apiKey) {
-      return []
-    }
+    // Call our own API route (keeps API key server-side)
+    const url = `/api/books?q=${encodeURIComponent(query)}&maxResults=${maxResults}`
 
-    // Enhanced query with better filters for quality books with covers
-    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=${maxResults}&printType=books&orderBy=relevance&langRestrict=en&projection=full&key=${apiKey}`
-    
     const response = await fetch(url)
-    
+
     if (!response.ok) {
       return []
     }
-    
+
     const data = await response.json()
-    
-    if (!data.items) {
+
+    if (!data.items || !Array.isArray(data.items)) {
       return []
     }
 
     return data.items.map(transformGoogleBookToBook).filter(Boolean)
-  } catch (error) {
+  } catch {
     return []
   }
 }
 
-function transformGoogleBookToBook(googleBook: GoogleBook): Book | null {
+// Validate that an API response item has the expected shape
+function isValidGoogleBook(item: unknown): item is GoogleBook {
+  if (typeof item !== "object" || item === null) return false
+  const obj = item as Record<string, unknown>
+  if (typeof obj.id !== "string") return false
+  if (typeof obj.volumeInfo !== "object" || obj.volumeInfo === null) return false
+  return true
+}
+
+function transformGoogleBookToBook(googleBook: unknown): Book | null {
+  if (!isValidGoogleBook(googleBook)) return null
   const { volumeInfo } = googleBook
-  
+
   // Filter out books without proper data or cover images
   if (!volumeInfo.title || !volumeInfo.authors?.[0] || !volumeInfo.imageLinks) {
     return null
@@ -179,8 +200,7 @@ function transformGoogleBookToBook(googleBook: GoogleBook): Book | null {
     pages,
     genre: volumeInfo.categories || ['General'],
     mood: mapCategoriesToMoods(volumeInfo.categories || []),
-    description: volumeInfo.description?.replace(/<[^>]*>/g, '').slice(0, 200) + '...' ||
-                'No description available.',
+    description: sanitizeDescription(volumeInfo.description),
     publishedYear,
     readingTime: estimateReadingTime(pages),
     isbn: isbn || undefined,
