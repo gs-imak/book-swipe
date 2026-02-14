@@ -10,7 +10,7 @@ import { AchievementsPanel } from "@/components/achievements-panel"
 import { ToastProvider } from "@/components/toast-provider"
 import { MobileNav } from "@/components/mobile-nav"
 import { UserPreferences } from "@/lib/book-data"
-import { getLikedBooks, migrateCoverUrls } from "@/lib/storage"
+import { getLikedBooks, migrateCoverUrls, isOnboarded, setOnboarded, getSavedPreferences, savePreferences } from "@/lib/storage"
 import { TasteProfile } from "@/components/taste-profile"
 import { InstallPrompt } from "@/components/install-prompt"
 import { motion, AnimatePresence } from "framer-motion"
@@ -29,6 +29,16 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   const [likedBooksCount, setLikedBooksCount] = useState(0)
   const [showTasteProfile, setShowTasteProfile] = useState(false)
 
+  // Restore session for returning users
+  useEffect(() => {
+    if (isOnboarded()) {
+      setIsLoggedIn(true)
+      setCurrentView("dashboard")
+      const saved = getSavedPreferences()
+      if (saved) setUserPreferences(saved)
+    }
+  }, [])
+
   // Update liked books count via custom event (no polling)
   useEffect(() => {
     if (isLoggedIn) {
@@ -45,6 +55,7 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   const handleLogin = () => {
     setIsLoggedIn(true)
     setCurrentView("dashboard")
+    setOnboarded()
   }
 
   const handleStartDiscovery = () => {
@@ -53,6 +64,7 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
 
   const handleQuestionnaireComplete = (preferences: UserPreferences) => {
     setUserPreferences(preferences)
+    savePreferences(preferences)
     setCurrentView("swipe")
   }
 

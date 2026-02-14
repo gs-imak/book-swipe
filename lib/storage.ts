@@ -1,6 +1,6 @@
 "use client"
 
-import { Book } from "./book-data"
+import { Book, UserPreferences } from "./book-data"
 
 // Safe localStorage helpers to prevent crashes from QuotaExceeded or corrupted data
 function safeGetJSON<T>(key: string, fallback: T): T {
@@ -37,6 +37,8 @@ const SHELF_ASSIGNMENTS_KEY = "bookswipe_shelf_assignments"
 const DAILY_PICK_KEY = "bookswipe_daily_pick"
 const LAST_EXPORT_KEY = "bookswipe_last_export"
 const BACKUP_DISMISSED_KEY = "bookswipe_backup_dismissed"
+const ONBOARDED_KEY = "bookswipe_onboarded"
+const USER_PREFERENCES_KEY = "bookswipe_user_preferences"
 
 export interface ReadingProgress {
   bookId: string
@@ -530,6 +532,23 @@ export function shouldShowBackupReminder(): boolean {
   // Never exported, or exported 30+ days ago? Show
   if (!lastExport) return true
   return now - new Date(lastExport).getTime() > thirtyDaysMs
+}
+
+// Onboarding & Preferences persistence
+export function isOnboarded(): boolean {
+  return safeGetJSON<boolean>(ONBOARDED_KEY, false)
+}
+
+export function setOnboarded(): void {
+  safeSetJSON(ONBOARDED_KEY, true)
+}
+
+export function getSavedPreferences(): UserPreferences | null {
+  return safeGetJSON<UserPreferences | null>(USER_PREFERENCES_KEY, null)
+}
+
+export function savePreferences(prefs: UserPreferences): void {
+  safeSetJSON(USER_PREFERENCES_KEY, prefs)
 }
 
 // Cover URL migration
