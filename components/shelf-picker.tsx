@@ -10,6 +10,7 @@ import {
   removeBookFromShelf,
   type Shelf,
 } from "@/lib/storage"
+import { useToast } from "./toast-provider"
 
 interface ShelfPickerProps {
   bookId: string
@@ -20,6 +21,7 @@ interface ShelfPickerProps {
 export function ShelfPicker({ bookId, isOpen, onClose }: ShelfPickerProps) {
   const [shelves, setShelves] = useState<Shelf[]>([])
   const [assignedIds, setAssignedIds] = useState<string[]>([])
+  const { showToast } = useToast()
 
   useEffect(() => {
     if (isOpen) {
@@ -31,12 +33,15 @@ export function ShelfPicker({ bookId, isOpen, onClose }: ShelfPickerProps) {
   if (!isOpen) return null
 
   const toggle = (shelfId: string) => {
+    const shelf = shelves.find(s => s.id === shelfId)
     if (assignedIds.includes(shelfId)) {
       removeBookFromShelf(bookId, shelfId)
       setAssignedIds(assignedIds.filter(id => id !== shelfId))
+      showToast(`Removed from ${shelf?.name || "shelf"}`, "info")
     } else {
       assignBookToShelf(bookId, shelfId)
       setAssignedIds([...assignedIds, shelfId])
+      showToast(`Added to ${shelf?.name || "shelf"}`)
     }
   }
 

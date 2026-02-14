@@ -104,7 +104,40 @@ export function SmartRecommendations({ onBookLike, onStartReading }: SmartRecomm
     onBookLike?.(book)
   }
 
-  if (likedBooks.length === 0) return null
+  if (likedBooks.length === 0) {
+    // Show popular books from cache for new users
+    const cachedBooks = getCachedBooks()
+    const popular = cachedBooks
+      .sort((a, b) => b.rating - a.rating)
+      .slice(0, 6)
+
+    if (popular.length === 0) return null
+
+    return (
+      <div className="space-y-6">
+        <div>
+          <div className="flex items-center gap-2 mb-3 px-0.5">
+            <Sparkles className="w-4 h-4 text-amber-600" />
+            <h3 className="text-sm font-semibold text-stone-900">Popular Books</h3>
+          </div>
+          <p className="text-xs text-stone-400 mb-3 px-0.5">Like a few books to get personalized recommendations</p>
+          <div className="overflow-x-auto hide-scrollbar -mx-4 px-4">
+            <div className="flex gap-3 pb-2">
+              {popular.map((book, index) => (
+                <MiniBookCard
+                  key={book.id}
+                  book={book}
+                  onLike={handleLikeBook}
+                  isLiked={false}
+                  index={index}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (isLoading) {
     return (

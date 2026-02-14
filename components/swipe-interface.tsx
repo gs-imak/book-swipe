@@ -113,40 +113,48 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   const [passedBooks, setPassedBooks] = useState<Book[]>([])
   const [lastAction, setLastAction] = useState<{ book: Book; direction: "left" | "right" } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [batchCount, setBatchCount] = useState(1)
   const { triggerActivity } = useGamification()
   const { showToast } = useToast()
 
-  useEffect(() => {
-    async function loadBooks() {
-      setIsLoading(true)
-      try {
-        let books = getCachedBooks()
-        if (books.length < 30) {
-          const fresh = await getMixedRecommendations(50)
-          addBooksToCache(fresh)
-          books = getCachedBooks()
-        }
-        const filtered = filterBooks(books, preferences)
-        if (filtered.length === 0 && books.length > 0) {
-          setFilteredBooks(books.sort((a, b) => b.rating - a.rating).slice(0, MAX_DECK_SIZE))
-        } else {
-          setFilteredBooks(filtered.slice(0, MAX_DECK_SIZE))
-        }
-        setCurrentIndex(0)
-        setLikedBooks(getLikedBooks())
-      } catch {
-        const cached = getCachedBooks()
-        if (cached.length > 0) {
-          const filtered = filterBooks(cached, preferences)
-          setFilteredBooks(
-            (filtered.length > 0 ? filtered : cached).slice(0, MAX_DECK_SIZE)
-          )
-        }
-        showToast("Couldn't load new books. Showing cached results.", "error")
-      } finally {
-        setIsLoading(false)
+  const loadBooks = async (excludeIds?: Set<string>) => {
+    setIsLoading(true)
+    try {
+      let books = getCachedBooks()
+      if (books.length < 30) {
+        const fresh = await getMixedRecommendations(50)
+        addBooksToCache(fresh)
+        books = getCachedBooks()
       }
+      // Exclude already-seen books from previous batches
+      if (excludeIds && excludeIds.size > 0) {
+        books = books.filter(b => !excludeIds.has(b.id))
+      }
+      const filtered = filterBooks(books, preferences)
+      if (filtered.length === 0 && books.length > 0) {
+        setFilteredBooks(books.sort((a, b) => b.rating - a.rating).slice(0, MAX_DECK_SIZE))
+      } else {
+        setFilteredBooks(filtered.slice(0, MAX_DECK_SIZE))
+      }
+      setCurrentIndex(0)
+      setPassedBooks([])
+      setLastAction(null)
+      setLikedBooks(getLikedBooks())
+    } catch {
+      const cached = getCachedBooks()
+      if (cached.length > 0) {
+        const filtered = filterBooks(cached, preferences)
+        setFilteredBooks(
+          (filtered.length > 0 ? filtered : cached).slice(0, MAX_DECK_SIZE)
+        )
+      }
+      showToast("Couldn't load new books. Showing cached results.", "error")
+    } finally {
+      setIsLoading(false)
     }
+  }
+
+  useEffect(() => {
     loadBooks()
   }, [preferences])
 
@@ -171,7 +179,10 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   }
 
   const handleUndo = () => {
-    if (!lastAction || currentIndex === 0) return
+    if (!lastAction || currentIndex === 0) {
+      showToast("Nothing to undo", "info")
+      return
+    }
     hapticMedium()
 
     if (lastAction.direction === "right") {
@@ -271,10 +282,10 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
           <h2
             className="text-2xl font-bold text-stone-900 mb-2 font-serif"
           >
-            All done!
+            Nice batch!
           </h2>
           <p className="text-stone-500 mb-6">
-            You&apos;ve explored all available books.
+            You&apos;ve gone through {filteredBooks.length} books. Ready for more or head to your library?
           </p>
 
           {/* Stats */}
@@ -322,12 +333,19 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
               View Library
             </Button>
             <Button
-              onClick={onRestart}
+              onClick={() => {
+                const seenIds = new Set([
+                  ...filteredBooks.map(b => b.id),
+                  ...likedBooks.map(b => b.id),
+                ])
+                setBatchCount(prev => prev + 1)
+                loadBooks(seenIds)
+              }}
               variant="outline"
               className="flex-1 h-11 border-stone-200 hover:bg-stone-50 text-stone-700 rounded-xl"
             >
               <RotateCcw className="w-4 h-4 mr-2" />
-              Start Over
+              More Books
             </Button>
           </div>
         </motion.div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Book } from "@/lib/book-data"
-import { getLikedBooks, clearLikedBooks, addBookToReading, saveLikedBooks } from "@/lib/storage"
+import { getLikedBooks, clearLikedBooks, addBookToReading, getReadingProgress, saveLikedBooks } from "@/lib/storage"
 import { Button } from "@/components/ui/button"
 import { AdminPanel } from "./admin-panel"
 import { ReadingProgressTracker } from "./reading-progress"
@@ -81,6 +81,16 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
     saveLikedBooks(updated)
     triggerActivity('like_book')
     showToast(`"${book.title}" saved to library`)
+  }
+
+  const handleStartReading = (book: Book) => {
+    const alreadyReading = getReadingProgress().some(p => p.bookId === book.id)
+    if (alreadyReading) {
+      showToast("Already in your reading list", "info")
+      return
+    }
+    addBookToReading(book)
+    showToast(`"${book.title}" added to reading list`)
   }
 
   const handleBookClick = (book: Book) => {
@@ -622,7 +632,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                     const updatedBooks = [...likedBooks, book]
                     setLikedBooks(updatedBooks)
                   }}
-                  onStartReading={addBookToReading}
+                  onStartReading={handleStartReading}
                 />
               </motion.div>
 
@@ -655,7 +665,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
         book={selectedBook}
         isOpen={isBookModalOpen}
         onClose={handleCloseModal}
-        onStartReading={addBookToReading}
+        onStartReading={handleStartReading}
       />
 
       {/* Book Search */}
