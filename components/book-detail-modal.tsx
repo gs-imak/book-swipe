@@ -29,13 +29,16 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
   const [showShelfPicker, setShowShelfPicker] = useState(false)
   const [showShareCard, setShowShareCard] = useState(false)
   const [assignedShelves, setAssignedShelves] = useState<Shelf[]>([])
+  const [descExpanded, setDescExpanded] = useState(false)
   const dialogRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (book) {
       const review = getBookReview(book.id)
       setExistingReview(review)
       setActiveTab("overview")
+      setDescExpanded(false)
       // Load assigned shelves
       const shelfIds = getShelvesForBook(book.id)
       const allShelves = getShelves()
@@ -76,6 +79,12 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
   const handleDeleteReview = () => {
     setExistingReview(null)
     setActiveTab("overview")
+  }
+
+  const handleTabChange = (tab: "overview" | "review" | "notes") => {
+    setActiveTab(tab)
+    // Scroll content area to top on tab switch
+    contentRef.current?.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   const tabs = [
@@ -232,7 +241,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabChange(tab.id)}
                   className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all tap-target touch-manipulation relative ${
                     activeTab === tab.id
                       ? "bg-white text-stone-900 shadow-sm"
@@ -249,7 +258,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
           </div>
 
           {/* Content */}
-          <div className="p-5 sm:p-6 overflow-y-auto flex-1 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div ref={contentRef} className="p-5 sm:p-6 overflow-y-auto flex-1 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
             {activeTab === "overview" && (
               <div className="space-y-5">
                 {/* Description */}
@@ -257,7 +266,19 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
                   <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
                     About this book
                   </h3>
-                  <p className="text-sm text-stone-600 leading-relaxed">{book.description}</p>
+                  <p className="text-sm text-stone-600 leading-relaxed">
+                    {descExpanded || book.description.length <= 200
+                      ? book.description
+                      : book.description.slice(0, 200) + "..."}
+                  </p>
+                  {book.description.length > 200 && (
+                    <button
+                      onClick={() => setDescExpanded(!descExpanded)}
+                      className="text-xs text-amber-700 hover:text-amber-800 font-medium mt-1.5 transition-colors"
+                    >
+                      {descExpanded ? "Show less" : "Read more"}
+                    </button>
+                  )}
                 </div>
 
                 {/* Genres & Moods */}

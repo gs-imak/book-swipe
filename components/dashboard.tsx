@@ -497,8 +497,16 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               </AnimatePresence>
 
               {/* Books Grid */}
-              {sortedBooks.length === 0 && likedBooks.length > 0 && (
-                <div className="text-center py-10">
+              <AnimatePresence mode="wait">
+              {sortedBooks.length === 0 && likedBooks.length > 0 ? (
+                <motion.div
+                  key="empty-filter"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                  className="text-center py-10"
+                >
                   <div className="w-36 h-28 mx-auto mb-3 opacity-60">
                     <LovingDoodle />
                   </div>
@@ -509,9 +517,16 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                   >
                     Clear filters
                   </button>
-                </div>
-              )}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5">
+                </motion.div>
+              ) : (
+              <motion.div
+                key="books-grid"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5"
+              >
                 {sortedBooks.map((book, index) => {
                   const review = getBookReview(book.id)
                   const bookShelfIds = getShelvesForBook(book.id)
@@ -582,7 +597,9 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                     </motion.div>
                   )
                 })}
-              </div>
+              </motion.div>
+              )}
+              </AnimatePresence>
             </motion.div>
 
             {/* ━━━ SECTION 4: Discovery Zone ━━━ */}

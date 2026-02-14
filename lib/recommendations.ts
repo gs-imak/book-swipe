@@ -72,21 +72,26 @@ export async function getSmartRecommendations(count = 8): Promise<RecommendedBoo
   let allBooks = getCachedBooks()
   let candidates = allBooks.filter((b) => !likedIds.has(b.id))
 
-  // If cache is too small, fetch personalized books
+  // If cache is too small, fetch personalized books with retry
   if (candidates.length < count * 2) {
-    try {
-      const fresh = await fetchPersonalizedBooks(liked)
-      const freshFiltered = fresh.filter((b) => !likedIds.has(b.id))
-      candidates = [...candidates, ...freshFiltered]
-      // Deduplicate
-      const seen = new Set<string>()
-      candidates = candidates.filter((b) => {
-        if (seen.has(b.id)) return false
-        seen.add(b.id)
-        return true
-      })
-    } catch {
-      // Continue with what we have
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const fresh = await fetchPersonalizedBooks(liked)
+        const freshFiltered = fresh.filter((b) => !likedIds.has(b.id))
+        candidates = [...candidates, ...freshFiltered]
+        // Deduplicate
+        const seen = new Set<string>()
+        candidates = candidates.filter((b) => {
+          if (seen.has(b.id)) return false
+          seen.add(b.id)
+          return true
+        })
+        break // Success — stop retrying
+      } catch {
+        if (attempt < 2) {
+          await new Promise((r) => setTimeout(r, 1000 * (attempt + 1))) // 1s, 2s backoff
+        }
+      }
     }
   }
 

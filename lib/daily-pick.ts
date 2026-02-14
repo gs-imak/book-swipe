@@ -15,7 +15,8 @@ export async function generateDailyPick(): Promise<DailyPick | null> {
   const existing = getDailyPick()
   const today = getTodayString()
 
-  if (existing && existing.date === today && !existing.dismissed) {
+  if (existing && existing.date === today) {
+    if (existing.dismissed) return null
     return existing
   }
 

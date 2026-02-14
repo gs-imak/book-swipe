@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { ReadingProgress, ReadingGoals, getReadingProgress, updateReadingProgress, removeFromReading, getReadingGoals, updateReadingGoals } from "@/lib/storage"
 import { BookOpen, Clock, Target, Flame, Plus, Minus, Play, Pause, CheckCircle, X } from "lucide-react"
@@ -15,6 +15,13 @@ interface ReadingProgressProps {
 export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps) {
   const [readingBooks, setReadingBooks] = useState<ReadingProgress[]>([])
   const [goals, setGoals] = useState<ReadingGoals | null>(null)
+  const [justUpdated, setJustUpdated] = useState<string | null>(null)
+
+  const flashUpdate = useCallback((bookId: string) => {
+    setJustUpdated(bookId)
+    const t = setTimeout(() => setJustUpdated(null), 600)
+    return () => clearTimeout(t)
+  }, [])
 
   useEffect(() => {
     setReadingBooks(getReadingProgress())
@@ -45,6 +52,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
     }
 
     setReadingBooks(getReadingProgress())
+    flashUpdate(bookId)
   }
 
   const handleRemoveBook = (bookId: string) => {
@@ -147,7 +155,14 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
 
                     <div className="flex items-center justify-between text-xs text-stone-400 mb-1">
                       <span>{book.currentPage} / {book.totalPages}p</span>
-                      <span>{Math.round(progressPercent)}%</span>
+                      <motion.span
+                        key={`${book.bookId}-${book.currentPage}`}
+                        initial={justUpdated === book.bookId ? { scale: 1.3, color: "#059669" } : false}
+                        animate={{ scale: 1, color: "#a8a29e" }}
+                        transition={{ duration: 0.4 }}
+                      >
+                        {Math.round(progressPercent)}%
+                      </motion.span>
                     </div>
                     <div className="w-full bg-stone-200 rounded-full h-1.5">
                       <div
