@@ -21,10 +21,11 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
     setGoals(getReadingGoals())
   }, [])
 
-  const handleProgressUpdate = (bookId: string, newPage: number) => {
+  const handleProgressUpdate = (bookId: string, rawPage: number) => {
     const book = readingBooks.find(b => b.bookId === bookId)
     if (!book) return
 
+    const newPage = Math.max(0, Math.min(rawPage, book.totalPages))
     const isCompleted = newPage >= book.totalPages
 
     updateReadingProgress(bookId, {
@@ -158,18 +159,21 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                     <div className="flex items-center gap-1.5 mt-2">
                       <button
                         onClick={() => handleProgressUpdate(book.bookId, Math.max(0, book.currentPage - 10))}
+                        aria-label="Go back 10 pages"
                         className="w-7 h-7 rounded-md bg-white border border-stone-200 flex items-center justify-center hover:bg-stone-50 transition-colors"
                       >
                         <Minus className="w-3 h-3 text-stone-500" />
                       </button>
                       <button
                         onClick={() => handleProgressUpdate(book.bookId, Math.min(book.totalPages, book.currentPage + 10))}
+                        aria-label="Advance 10 pages"
                         className="w-7 h-7 rounded-md bg-white border border-stone-200 flex items-center justify-center hover:bg-stone-50 transition-colors"
                       >
                         <Plus className="w-3 h-3 text-stone-500" />
                       </button>
                       <button
                         onClick={() => handleStatusToggle(book.bookId)}
+                        aria-label="Pause reading"
                         className="w-7 h-7 rounded-md bg-white border border-stone-200 flex items-center justify-center hover:bg-stone-50 transition-colors"
                       >
                         <Pause className="w-3 h-3 text-stone-500" />
@@ -183,6 +187,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                       </button>
                       <button
                         onClick={() => handleRemoveBook(book.bookId)}
+                        aria-label="Remove from reading"
                         className="w-7 h-7 rounded-md bg-white border border-stone-200 flex items-center justify-center hover:bg-red-50 hover:border-red-200 transition-colors ml-auto"
                       >
                         <X className="w-3 h-3 text-stone-400 hover:text-red-500" />
@@ -233,6 +238,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                     </button>
                     <button
                       onClick={() => handleRemoveBook(book.bookId)}
+                      aria-label="Remove from reading"
                       className="w-7 h-7 rounded-md bg-white border border-stone-200 flex items-center justify-center hover:bg-red-50 transition-colors"
                     >
                       <X className="w-3 h-3 text-stone-400" />

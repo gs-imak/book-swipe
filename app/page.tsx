@@ -28,18 +28,16 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   const [likedBooksCount, setLikedBooksCount] = useState(0)
   const [showTasteProfile, setShowTasteProfile] = useState(false)
 
-  // Update liked books count
+  // Update liked books count via custom event (no polling)
   useEffect(() => {
     if (isLoggedIn) {
-      const updateCount = () => {
-        const books = getLikedBooks()
-        setLikedBooksCount(books.length)
+      setLikedBooksCount(getLikedBooks().length)
+
+      const handleChange = (e: Event) => {
+        setLikedBooksCount((e as CustomEvent).detail ?? getLikedBooks().length)
       }
-      updateCount()
-      
-      // Poll for updates every 2 seconds when user is active
-      const interval = setInterval(updateCount, 2000)
-      return () => clearInterval(interval)
+      window.addEventListener('bookswipe:liked-changed', handleChange)
+      return () => window.removeEventListener('bookswipe:liked-changed', handleChange)
     }
   }, [isLoggedIn, currentView])
 

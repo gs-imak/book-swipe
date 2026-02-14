@@ -63,7 +63,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+      <div
+        aria-live="polite"
+        role="status"
+        className="fixed top-4 right-4 z-[100] flex flex-col gap-2 max-w-sm w-full pointer-events-none"
+      >
         <AnimatePresence>
           {toasts.map(toast => (
             <motion.div
@@ -80,6 +84,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               </span>
               <button
                 onClick={() => dismiss(toast.id)}
+                aria-label="Dismiss notification"
                 className="p-0.5 rounded-md hover:bg-black/5 transition-colors flex-shrink-0"
               >
                 <X className="w-3.5 h-3.5 text-stone-400" />

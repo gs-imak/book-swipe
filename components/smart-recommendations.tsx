@@ -108,10 +108,26 @@ export function SmartRecommendations({ onBookLike, onStartReading }: SmartRecomm
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-stone-200 border-t-amber-600 rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-stone-500">Loading recommendations...</p>
+      <div className="space-y-6">
+        <div className="bg-white rounded-xl p-4 sm:p-5 border border-stone-200/60 shadow-sm">
+          <div className="h-4 w-28 bg-stone-200 rounded animate-pulse mb-3" />
+          <div className="flex gap-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-8 w-20 bg-stone-100 rounded-full animate-pulse" />
+            ))}
+          </div>
+        </div>
+        <div>
+          <div className="h-4 w-20 bg-stone-200 rounded animate-pulse mb-3" />
+          <div className="flex gap-3 overflow-hidden">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex-shrink-0 w-[130px] sm:w-[150px]">
+                <div className="w-full aspect-[2/3] rounded-lg bg-stone-200 animate-pulse mb-2" />
+                <div className="h-3 w-24 bg-stone-200 rounded animate-pulse mb-1" />
+                <div className="h-3 w-16 bg-stone-100 rounded animate-pulse" />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     )

@@ -126,8 +126,14 @@ export function BookSearch({ isOpen, onClose, onSaveBook, savedBookIds }: BookSe
 
             {!isSearching && hasSearched && results.length === 0 && (
               <div className="text-center py-12">
+                <Search className="w-10 h-10 text-stone-200 mx-auto mb-3" />
                 <p className="text-stone-500 text-sm">No books found for &ldquo;{query}&rdquo;</p>
-                <p className="text-stone-400 text-xs mt-1">Try a different search term</p>
+                <div className="mt-3 space-y-1.5 text-xs text-stone-400">
+                  <p>Try:</p>
+                  <p>• Searching by author name instead</p>
+                  <p>• Using fewer or broader keywords</p>
+                  <p>• Checking the spelling</p>
+                </div>
               </div>
             )}
 
@@ -135,6 +141,17 @@ export function BookSearch({ isOpen, onClose, onSaveBook, savedBookIds }: BookSe
               <div className="text-center py-12">
                 <Search className="w-10 h-10 text-stone-200 mx-auto mb-3" />
                 <p className="text-stone-400 text-sm">Search for any book or author</p>
+                <div className="flex flex-wrap gap-2 justify-center mt-4">
+                  {["Dune", "Sapiens", "Project Hail Mary", "Atomic Habits"].map(term => (
+                    <button
+                      key={term}
+                      onClick={() => { setQuery(term); doSearch(term) }}
+                      className="px-3 py-1.5 rounded-full bg-stone-100 text-stone-600 text-xs font-medium hover:bg-stone-200 transition-colors"
+                    >
+                      {term}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 

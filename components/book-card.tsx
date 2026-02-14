@@ -23,7 +23,8 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = false }: 
   const nopeOpacity = useTransform(x, [-80, 0], [1, 0])
 
   const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const threshold = 80
+    // Scale threshold to screen width so small phones don't get accidental swipes
+    const threshold = Math.max(60, Math.min(100, window.innerWidth * 0.22))
     const velocity = info.velocity.x
     const offset = info.offset.x
 

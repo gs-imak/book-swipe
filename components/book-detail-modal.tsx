@@ -139,6 +139,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
 
                   <button
                     onClick={onClose}
+                    aria-label="Close book details"
                     className="p-2 -mr-2 -mt-1 rounded-lg hover:bg-stone-100 transition-colors flex-shrink-0 tap-target touch-manipulation"
                   >
                     <X className="w-5 h-5 text-stone-400" />

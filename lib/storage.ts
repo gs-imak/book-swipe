@@ -138,6 +138,9 @@ export interface DailyPick {
 // Liked Books Functions
 export function saveLikedBooks(books: Book[]): void {
   safeSetJSON(LIKED_BOOKS_KEY, books)
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('bookswipe:liked-changed', { detail: books.length }))
+  }
 }
 
 export function getLikedBooks(): Book[] {
@@ -147,6 +150,7 @@ export function getLikedBooks(): Book[] {
 export function clearLikedBooks(): void {
   if (typeof window !== 'undefined') {
     localStorage.removeItem(LIKED_BOOKS_KEY)
+    window.dispatchEvent(new CustomEvent('bookswipe:liked-changed', { detail: 0 }))
   }
 }
 
