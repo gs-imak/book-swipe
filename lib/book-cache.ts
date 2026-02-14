@@ -13,31 +13,38 @@ interface CacheMetadata {
 }
 
 function getCacheMetadata(): CacheMetadata {
-  if (typeof window === "undefined") {
-    return { lastUpdated: "", queriesCompleted: {}, totalBooks: 0 }
+  const fallback: CacheMetadata = { lastUpdated: "", queriesCompleted: {}, totalBooks: 0 }
+  if (typeof window === "undefined") return fallback
+  try {
+    const stored = localStorage.getItem(CACHE_METADATA_KEY)
+    return stored ? JSON.parse(stored) : fallback
+  } catch {
+    return fallback
   }
-  const stored = localStorage.getItem(CACHE_METADATA_KEY)
-  return stored
-    ? JSON.parse(stored)
-    : { lastUpdated: "", queriesCompleted: {}, totalBooks: 0 }
 }
 
 function saveCacheMetadata(meta: CacheMetadata): void {
-  if (typeof window !== "undefined") {
+  if (typeof window === "undefined") return
+  try {
     localStorage.setItem(CACHE_METADATA_KEY, JSON.stringify(meta))
+  } catch {
+    // Storage full — metadata is non-critical
   }
 }
 
 export function getCachedBooks(): Book[] {
   if (typeof window === "undefined") return [...sampleBooks]
-  const stored = localStorage.getItem(BOOK_CACHE_KEY)
-  if (!stored) {
-    // Seed with sample books on first access
-    seedCache()
+  try {
+    const stored = localStorage.getItem(BOOK_CACHE_KEY)
+    if (!stored) {
+      seedCache()
+      return [...sampleBooks]
+    }
+    const books: Book[] = JSON.parse(stored)
+    return books.length > 0 ? books : [...sampleBooks]
+  } catch {
     return [...sampleBooks]
   }
-  const books: Book[] = JSON.parse(stored)
-  return books.length > 0 ? books : [...sampleBooks]
 }
 
 function seedCache(): void {
@@ -45,13 +52,16 @@ function seedCache(): void {
     ...b,
     metadata: { ...b.metadata, source: "sample" as const },
   }))
-  if (typeof window !== "undefined") {
+  if (typeof window === "undefined") return
+  try {
     localStorage.setItem(BOOK_CACHE_KEY, JSON.stringify(seeded))
     saveCacheMetadata({
       lastUpdated: new Date().toISOString(),
       queriesCompleted: {},
       totalBooks: seeded.length,
     })
+  } catch {
+    // Storage full — will use sampleBooks in memory
   }
 }
 
@@ -76,7 +86,13 @@ export function addBooksToCache(books: Book[]): void {
     merged = [...liked, ...rest]
   }
 
-  localStorage.setItem(BOOK_CACHE_KEY, JSON.stringify(merged))
+  try {
+    localStorage.setItem(BOOK_CACHE_KEY, JSON.stringify(merged))
+  } catch {
+    // Storage full — evict more aggressively
+    const trimmed = merged.slice(-Math.floor(MAX_CACHE_SIZE / 2))
+    try { localStorage.setItem(BOOK_CACHE_KEY, JSON.stringify(trimmed)) } catch { /* give up */ }
+  }
   const meta = getCacheMetadata()
   meta.lastUpdated = new Date().toISOString()
   meta.totalBooks = merged.length

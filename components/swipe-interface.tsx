@@ -7,7 +7,7 @@ import { Book, UserPreferences } from "@/lib/book-data"
 import { saveLikedBooks, getLikedBooks } from "@/lib/storage"
 import { getMixedRecommendations } from "@/lib/books-api"
 import { getCachedBooks, addBooksToCache } from "@/lib/book-cache"
-import { Heart, X, RotateCcw, Settings, Library, BookOpen } from "lucide-react"
+import { Heart, X, Undo2, RotateCcw, Settings, Library, BookOpen } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useGamification } from "./gamification-provider"
 import { useToast } from "./toast-provider"
@@ -110,6 +110,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   const [currentIndex, setCurrentIndex] = useState(0)
   const [likedBooks, setLikedBooks] = useState<Book[]>([])
   const [passedBooks, setPassedBooks] = useState<Book[]>([])
+  const [lastAction, setLastAction] = useState<{ book: Book; direction: "left" | "right" } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const { triggerActivity } = useGamification()
   const { showToast } = useToast()
@@ -162,7 +163,24 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
       setPassedBooks(prev => [...prev, currentBook])
     }
 
+    setLastAction({ book: currentBook, direction })
     setCurrentIndex(prev => prev + 1)
+  }
+
+  const handleUndo = () => {
+    if (!lastAction || currentIndex === 0) return
+
+    if (lastAction.direction === "right") {
+      const newLikedBooks = likedBooks.filter(b => b.id !== lastAction.book.id)
+      setLikedBooks(newLikedBooks)
+      saveLikedBooks(newLikedBooks)
+    } else {
+      setPassedBooks(prev => prev.filter(b => b.id !== lastAction.book.id))
+    }
+
+    setCurrentIndex(prev => prev - 1)
+    setLastAction(null)
+    showToast("Undo — back to previous book", "info")
   }
 
   const currentBook = filteredBooks[currentIndex]
@@ -172,6 +190,11 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   // Keyboard navigation for swipe actions
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+        e.preventDefault()
+        handleUndo()
+        return
+      }
       if (!hasMoreBooks || !currentBook) return
       if (e.key === "ArrowLeft") {
         handleSwipe("left")
@@ -328,6 +351,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
           <div className="px-4 sm:px-6 py-3 flex justify-between items-center max-w-md mx-auto">
             <button
               onClick={onViewLibrary}
+              aria-label="View library"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-100 hover:bg-stone-200 transition-colors tap-target touch-manipulation"
             >
               <Library className="w-4 h-4 text-stone-600" />
@@ -347,6 +371,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
 
             <button
               onClick={onRestart}
+              aria-label="Update preferences"
               className="p-2 rounded-lg hover:bg-stone-100 transition-colors tap-target touch-manipulation"
             >
               <Settings className="w-5 h-5 text-stone-400" />
@@ -389,10 +414,10 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
         {/* Action buttons */}
         <div className="pb-16 sm:pb-6 pt-2">
           <div className="max-w-sm mx-auto px-4">
-            <div className="flex justify-center gap-5 mb-3">
+            <div className="flex justify-center items-center gap-4 mb-3">
               <motion.button
                 whileTap={{ scale: 0.9 }}
-                aria-label="Pass"
+                aria-label="Pass on this book"
                 className="w-14 h-14 rounded-full border-2 border-red-200 hover:border-red-300 bg-white shadow-sm flex items-center justify-center transition-colors tap-target touch-manipulation"
                 onClick={() => handleSwipe("left")}
               >
@@ -401,7 +426,21 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
 
               <motion.button
                 whileTap={{ scale: 0.9 }}
-                aria-label="Like"
+                aria-label="Undo last swipe"
+                disabled={!lastAction}
+                className={`w-10 h-10 rounded-full border-2 bg-white shadow-sm flex items-center justify-center transition-all tap-target touch-manipulation ${
+                  lastAction
+                    ? "border-amber-200 hover:border-amber-300 text-amber-500"
+                    : "border-stone-100 text-stone-200 cursor-not-allowed"
+                }`}
+                onClick={handleUndo}
+              >
+                <Undo2 className="w-4 h-4" />
+              </motion.button>
+
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                aria-label="Like this book"
                 className="w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-600 shadow-sm flex items-center justify-center transition-colors tap-target touch-manipulation"
                 onClick={() => handleSwipe("right")}
               >
@@ -410,7 +449,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
             </div>
 
             <p className="text-center text-xs text-stone-400">
-              Swipe or tap to discover
+              Swipe or tap · Ctrl+Z to undo
             </p>
           </div>
         </div>

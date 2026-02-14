@@ -162,6 +162,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               {showBackButton && onBack && (
                 <button
                   onClick={onBack}
+                  aria-label="Go back"
                   className="p-2 -ml-2 rounded-lg hover:bg-stone-100 transition-colors tap-target touch-manipulation"
                 >
                   <ArrowLeft className="w-5 h-5 text-stone-600" />
@@ -388,6 +389,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                 ))}
                 <button
                   onClick={() => setShowShelfManager(true)}
+                  aria-label="Manage shelves"
                   className="flex-shrink-0 px-2.5 py-1.5 rounded-full text-xs font-medium text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-all flex items-center gap-1"
                 >
                   <Library className="w-3 h-3" />

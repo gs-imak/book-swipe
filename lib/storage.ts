@@ -2,6 +2,29 @@
 
 import { Book } from "./book-data"
 
+// Safe localStorage helpers to prevent crashes from QuotaExceeded or corrupted data
+function safeGetJSON<T>(key: string, fallback: T): T {
+  try {
+    if (typeof window === 'undefined') return fallback
+    const stored = localStorage.getItem(key)
+    if (!stored) return fallback
+    return JSON.parse(stored) as T
+  } catch {
+    return fallback
+  }
+}
+
+function safeSetJSON(key: string, value: unknown): boolean {
+  try {
+    if (typeof window === 'undefined') return false
+    localStorage.setItem(key, JSON.stringify(value))
+    return true
+  } catch {
+    // QuotaExceededError or other storage failure
+    return false
+  }
+}
+
 const LIKED_BOOKS_KEY = "bookswipe_liked_books"
 const READING_PROGRESS_KEY = "bookswipe_reading_progress"
 const READING_GOALS_KEY = "bookswipe_reading_goals"
@@ -114,17 +137,11 @@ export interface DailyPick {
 
 // Liked Books Functions
 export function saveLikedBooks(books: Book[]): void {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(LIKED_BOOKS_KEY, JSON.stringify(books))
-  }
+  safeSetJSON(LIKED_BOOKS_KEY, books)
 }
 
 export function getLikedBooks(): Book[] {
-  if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem(LIKED_BOOKS_KEY)
-    return stored ? JSON.parse(stored) : []
-  }
-  return []
+  return safeGetJSON<Book[]>(LIKED_BOOKS_KEY, [])
 }
 
 export function clearLikedBooks(): void {
@@ -135,17 +152,11 @@ export function clearLikedBooks(): void {
 
 // Reading Progress Functions
 export function saveReadingProgress(progress: ReadingProgress[]): void {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(READING_PROGRESS_KEY, JSON.stringify(progress))
-  }
+  safeSetJSON(READING_PROGRESS_KEY, progress)
 }
 
 export function getReadingProgress(): ReadingProgress[] {
-  if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem(READING_PROGRESS_KEY)
-    return stored ? JSON.parse(stored) : []
-  }
-  return []
+  return safeGetJSON<ReadingProgress[]>(READING_PROGRESS_KEY, [])
 }
 
 export function addBookToReading(book: Book): void {
@@ -187,21 +198,11 @@ export function removeFromReading(bookId: string): void {
 
 // Reading Goals Functions
 export function saveReadingGoals(goals: ReadingGoals): void {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(READING_GOALS_KEY, JSON.stringify(goals))
-  }
+  safeSetJSON(READING_GOALS_KEY, goals)
 }
 
 export function getReadingGoals(): ReadingGoals {
-  if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem(READING_GOALS_KEY)
-    if (stored) {
-      return JSON.parse(stored)
-    }
-  }
-  
-  // Default goals for new users
-  return {
+  return safeGetJSON<ReadingGoals>(READING_GOALS_KEY, {
     yearlyTarget: 12,
     currentYear: new Date().getFullYear(),
     booksCompleted: 0,
@@ -209,7 +210,7 @@ export function getReadingGoals(): ReadingGoals {
     timeSpentMinutes: 0,
     streak: 0,
     lastReadDate: ""
-  }
+  })
 }
 
 export function updateReadingGoals(updates: Partial<ReadingGoals>): void {
@@ -220,17 +221,11 @@ export function updateReadingGoals(updates: Partial<ReadingGoals>): void {
 
 // Book Reviews Functions
 export function saveBookReviews(reviews: BookReview[]): void {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(BOOK_REVIEWS_KEY, JSON.stringify(reviews))
-  }
+  safeSetJSON(BOOK_REVIEWS_KEY, reviews)
 }
 
 export function getBookReviews(): BookReview[] {
-  if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem(BOOK_REVIEWS_KEY)
-    return stored ? JSON.parse(stored) : []
-  }
-  return []
+  return safeGetJSON<BookReview[]>(BOOK_REVIEWS_KEY, [])
 }
 
 export function getBookReview(bookId: string): BookReview | null {
@@ -259,17 +254,11 @@ export function deleteBookReview(bookId: string): void {
 
 // Book Notes Functions
 export function saveBookNotes(notes: BookNote[]): void {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(BOOK_NOTES_KEY, JSON.stringify(notes))
-  }
+  safeSetJSON(BOOK_NOTES_KEY, notes)
 }
 
 export function getBookNotes(): BookNote[] {
-  if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem(BOOK_NOTES_KEY)
-    return stored ? JSON.parse(stored) : []
-  }
-  return []
+  return safeGetJSON<BookNote[]>(BOOK_NOTES_KEY, [])
 }
 
 export function getBookNotesForBook(bookId: string): BookNote[] {
@@ -308,17 +297,11 @@ export function deleteBookNote(noteId: string): void {
 
 // Achievements Functions
 export function getUserAchievements(): Achievement[] {
-  if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem(USER_ACHIEVEMENTS_KEY)
-    return stored ? JSON.parse(stored) : []
-  }
-  return []
+  return safeGetJSON<Achievement[]>(USER_ACHIEVEMENTS_KEY, [])
 }
 
 export function saveUserAchievements(achievements: Achievement[]): void {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(USER_ACHIEVEMENTS_KEY, JSON.stringify(achievements))
-  }
+  safeSetJSON(USER_ACHIEVEMENTS_KEY, achievements)
 }
 
 export function unlockAchievement(achievementId: string): boolean {
@@ -341,15 +324,7 @@ export function unlockAchievement(achievementId: string): boolean {
 
 // User Stats Functions
 export function getUserStats(): UserStats {
-  if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem(USER_STATS_KEY)
-    if (stored) {
-      return JSON.parse(stored)
-    }
-  }
-  
-  // Default stats for new users
-  return {
+  return safeGetJSON<UserStats>(USER_STATS_KEY, {
     totalBooksLiked: 0,
     totalBooksRead: 0,
     totalPagesRead: 0,
@@ -366,13 +341,11 @@ export function getUserStats(): UserStats {
     averageRating: 0,
     favoritesCount: 0,
     joinDate: new Date().toISOString()
-  }
+  })
 }
 
 export function saveUserStats(stats: UserStats): void {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(USER_STATS_KEY, JSON.stringify(stats))
-  }
+  safeSetJSON(USER_STATS_KEY, stats)
 }
 
 export function updateUserStats(updates: Partial<UserStats>): void {
@@ -414,20 +387,15 @@ const DEFAULT_SHELVES: Shelf[] = [
 ]
 
 export function getShelves(): Shelf[] {
-  if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem(SHELVES_KEY)
-    if (stored) return JSON.parse(stored)
-    // Seed defaults on first access
-    localStorage.setItem(SHELVES_KEY, JSON.stringify(DEFAULT_SHELVES))
-    return DEFAULT_SHELVES
-  }
+  const stored = safeGetJSON<Shelf[] | null>(SHELVES_KEY, null)
+  if (stored) return stored
+  // Seed defaults on first access
+  safeSetJSON(SHELVES_KEY, DEFAULT_SHELVES)
   return DEFAULT_SHELVES
 }
 
 export function saveShelves(shelves: Shelf[]): void {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(SHELVES_KEY, JSON.stringify(shelves))
-  }
+  safeSetJSON(SHELVES_KEY, shelves)
 }
 
 export function createShelf(name: string, emoji: string): Shelf {
@@ -462,17 +430,11 @@ export function deleteShelf(shelfId: string): void {
 }
 
 export function getShelfAssignments(): BookShelfAssignment[] {
-  if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem(SHELF_ASSIGNMENTS_KEY)
-    return stored ? JSON.parse(stored) : []
-  }
-  return []
+  return safeGetJSON<BookShelfAssignment[]>(SHELF_ASSIGNMENTS_KEY, [])
 }
 
 export function saveShelfAssignments(assignments: BookShelfAssignment[]): void {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(SHELF_ASSIGNMENTS_KEY, JSON.stringify(assignments))
-  }
+  safeSetJSON(SHELF_ASSIGNMENTS_KEY, assignments)
 }
 
 export function assignBookToShelf(bookId: string, shelfId: string): void {
@@ -505,17 +467,11 @@ export function getBooksForShelf(shelfId: string): string[] {
 
 // Daily Pick Functions
 export function getDailyPick(): DailyPick | null {
-  if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem(DAILY_PICK_KEY)
-    return stored ? JSON.parse(stored) : null
-  }
-  return null
+  return safeGetJSON<DailyPick | null>(DAILY_PICK_KEY, null)
 }
 
 export function saveDailyPick(pick: DailyPick): void {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(DAILY_PICK_KEY, JSON.stringify(pick))
-  }
+  safeSetJSON(DAILY_PICK_KEY, pick)
 }
 
 // Cover URL migration
@@ -523,11 +479,15 @@ const COVER_MIGRATION_KEY = "bookswipe_cover_migration_v4"
 
 export function migrateCoverUrls(): void {
   if (typeof window === 'undefined') return
-  if (localStorage.getItem(COVER_MIGRATION_KEY)) return
+  try {
+    if (localStorage.getItem(COVER_MIGRATION_KEY)) return
 
-  // Nuclear clear: wipe the book cache so all books are re-fetched with new cover logic
-  const { clearBookCache } = require("./book-cache")
-  clearBookCache()
+    // Nuclear clear: wipe the book cache so all books are re-fetched with new cover logic
+    const { clearBookCache } = require("./book-cache")
+    clearBookCache()
 
-  localStorage.setItem(COVER_MIGRATION_KEY, new Date().toISOString())
+    localStorage.setItem(COVER_MIGRATION_KEY, new Date().toISOString())
+  } catch {
+    // Migration is best-effort
+  }
 }
