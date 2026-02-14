@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, BookOpen, Star, Clock, Heart, TrendingUp } from "lucide-react"
 import { ReadingDoodle, SittingReadingDoodle } from "./illustrations"
-import { getLikedBooks, getBookReviews, getUserStats, type BookReview } from "@/lib/storage"
+import { getLikedBooks, getBookReviews, getBookNotes, getReadingProgress, getUserStats, type BookReview } from "@/lib/storage"
 import { Book } from "@/lib/book-data"
 
 interface TasteProfileProps {
@@ -84,6 +84,62 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
   }, [isOpen, onClose])
 
   if (!isOpen) return null
+
+  // Compute activity heatmap (last 12 weeks)
+  const activityMap: Record<string, number> = {}
+  const progress = getReadingProgress()
+  const notes = getBookNotes()
+
+  progress.forEach(p => {
+    if (p.lastReadDate) {
+      const day = p.lastReadDate.split("T")[0]
+      activityMap[day] = (activityMap[day] || 0) + 1
+    }
+  })
+  reviews.forEach(r => {
+    if (r.createdAt) {
+      const day = r.createdAt.split("T")[0]
+      activityMap[day] = (activityMap[day] || 0) + 1
+    }
+  })
+  notes.forEach(n => {
+    if (n.createdAt) {
+      const day = n.createdAt.split("T")[0]
+      activityMap[day] = (activityMap[day] || 0) + 1
+    }
+  })
+
+  // Build 12 weeks of day cells (84 days)
+  const today = new Date()
+  const heatmapDays: { date: string; count: number; dayOfWeek: number }[] = []
+  for (let i = 83; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(d.getDate() - i)
+    const dateStr = d.toISOString().split("T")[0]
+    heatmapDays.push({
+      date: dateStr,
+      count: activityMap[dateStr] || 0,
+      dayOfWeek: d.getDay(),
+    })
+  }
+
+  const heatmapMax = Math.max(...heatmapDays.map(d => d.count), 1)
+  const totalActiveDays = heatmapDays.filter(d => d.count > 0).length
+
+  const getHeatColor = (count: number): string => {
+    if (count === 0) return "bg-stone-100"
+    const ratio = count / heatmapMax
+    if (ratio <= 0.25) return "bg-amber-200"
+    if (ratio <= 0.5) return "bg-amber-400"
+    if (ratio <= 0.75) return "bg-amber-500"
+    return "bg-amber-600"
+  }
+
+  // Group into weeks (columns)
+  const heatmapWeeks: typeof heatmapDays[] = []
+  for (let i = 0; i < heatmapDays.length; i += 7) {
+    heatmapWeeks.push(heatmapDays.slice(i, i + 7))
+  }
 
   // Compute genre data
   const genreCounts: Record<string, number> = {}
@@ -241,6 +297,40 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
                     </div>
                   ))}
                 </motion.div>
+
+                {/* Activity Heatmap */}
+                {heatmapDays.length > 0 && (
+                  <motion.div {...fadeIn(0.14)} className="bg-white rounded-2xl p-5 border border-stone-200/60 shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider">Activity</h3>
+                      <span className="text-xs text-stone-400">
+                        {totalActiveDays} active day{totalActiveDays !== 1 ? "s" : ""} in 12 weeks
+                      </span>
+                    </div>
+                    <div className="flex gap-[3px] overflow-x-auto hide-scrollbar">
+                      {heatmapWeeks.map((week, wi) => (
+                        <div key={wi} className="flex flex-col gap-[3px]">
+                          {week.map((day) => (
+                            <div
+                              key={day.date}
+                              className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-sm ${getHeatColor(day.count)}`}
+                              title={`${day.date}: ${day.count} activit${day.count === 1 ? "y" : "ies"}`}
+                            />
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-end gap-1.5 mt-3">
+                      <span className="text-[10px] text-stone-400">Less</span>
+                      <div className="w-2.5 h-2.5 rounded-sm bg-stone-100" />
+                      <div className="w-2.5 h-2.5 rounded-sm bg-amber-200" />
+                      <div className="w-2.5 h-2.5 rounded-sm bg-amber-400" />
+                      <div className="w-2.5 h-2.5 rounded-sm bg-amber-500" />
+                      <div className="w-2.5 h-2.5 rounded-sm bg-amber-600" />
+                      <span className="text-[10px] text-stone-400">More</span>
+                    </div>
+                  </motion.div>
+                )}
 
                 {/* Genre Donut Chart */}
                 {genreData.length > 0 && (

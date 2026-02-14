@@ -4,6 +4,7 @@ import { motion, PanInfo, useMotionValue, useTransform } from "framer-motion"
 import { Book } from "@/lib/book-data"
 import { Star, Clock, BookOpen, Info, Plus, ChevronDown } from "lucide-react"
 import { addBookToReading } from "@/lib/storage"
+import { hapticLight } from "@/lib/haptics"
 import { Button } from "@/components/ui/button"
 import { BookCover } from "@/components/book-cover"
 import { useState } from "react"
@@ -29,8 +30,10 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = false }: 
     const offset = info.offset.x
 
     if (offset > threshold || velocity > 400) {
+      hapticLight()
       onSwipe("right")
     } else if (offset < -threshold || velocity < -400) {
+      hapticLight()
       onSwipe("left")
     }
   }

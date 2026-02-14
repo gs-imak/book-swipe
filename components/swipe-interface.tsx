@@ -11,6 +11,7 @@ import { Heart, X, Undo2, RotateCcw, Settings, Library, BookOpen } from "lucide-
 import { motion, AnimatePresence } from "framer-motion"
 import { useGamification } from "./gamification-provider"
 import { useToast } from "./toast-provider"
+import { hapticLight, hapticMedium, hapticSuccess } from "@/lib/haptics"
 
 interface SwipeInterfaceProps {
   preferences: UserPreferences
@@ -154,12 +155,14 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
     if (!currentBook) return
 
     if (direction === "right") {
+      hapticSuccess()
       const newLikedBooks = [...likedBooks, currentBook]
       setLikedBooks(newLikedBooks)
       saveLikedBooks(newLikedBooks)
       triggerActivity('like_book')
       showToast(`"${currentBook.title}" saved to library`)
     } else {
+      hapticLight()
       setPassedBooks(prev => [...prev, currentBook])
     }
 
@@ -169,6 +172,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
 
   const handleUndo = () => {
     if (!lastAction || currentIndex === 0) return
+    hapticMedium()
 
     if (lastAction.direction === "right") {
       const newLikedBooks = likedBooks.filter(b => b.id !== lastAction.book.id)

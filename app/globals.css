@@ -100,12 +100,22 @@
   }
   body {
     @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    -webkit-text-size-adjust: 100%;
   }
-  
+
   /* Prevent overscroll bounce on iOS */
   html, body {
     overscroll-behavior-y: none;
     -webkit-overflow-scrolling: touch;
+  }
+
+  /* Selection color matching app theme */
+  ::selection {
+    background-color: #f59e0b;
+    color: #fff;
   }
 }
 
@@ -131,7 +141,13 @@
 }
 
 *:focus-visible {
-  outline: 2px solid #d97706;
+  outline: 2px solid #b45309;
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/* Ensure focus ring is visible on dark backgrounds */
+[class*="bg-stone-900"]:focus-visible,
+[class*="bg-emerald"]:focus-visible {
+  outline-color: #fbbf24;
 }

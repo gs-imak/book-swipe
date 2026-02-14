@@ -208,6 +208,21 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
                   )}
                 </motion.button>
               </div>
+
+              <div className="text-center mt-4">
+                <button
+                  onClick={() => onComplete({
+                    favoriteGenres: [],
+                    currentMood: [],
+                    readingTime: "30-60 minutes",
+                    preferredLength: "No preference",
+                    contentPreferences: []
+                  })}
+                  className="text-xs text-stone-400 hover:text-stone-600 transition-colors"
+                >
+                  Skip and explore everything
+                </button>
+              </div>
             </motion.div>
           </AnimatePresence>
         </div>

@@ -12,6 +12,7 @@ import { MobileNav } from "@/components/mobile-nav"
 import { UserPreferences } from "@/lib/book-data"
 import { getLikedBooks, migrateCoverUrls } from "@/lib/storage"
 import { TasteProfile } from "@/components/taste-profile"
+import { InstallPrompt } from "@/components/install-prompt"
 import { motion, AnimatePresence } from "framer-motion"
 
 type AppState = "login" | "dashboard" | "questionnaire" | "swipe"
@@ -204,6 +205,7 @@ export default function App() {
           isOpen={showAchievements}
           onClose={() => setShowAchievements(false)}
         />
+        <InstallPrompt />
       </GamificationProvider>
     </ToastProvider>
   )
