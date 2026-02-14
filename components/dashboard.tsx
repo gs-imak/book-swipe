@@ -633,6 +633,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                     setLikedBooks(updatedBooks)
                   }}
                   onStartReading={handleStartReading}
+                  onBookClick={handleBookClick}
                 />
               </motion.div>
 
@@ -648,6 +649,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                     saveLikedBooks(updated)
                   }}
                   savedBookIds={new Set(likedBooks.map(b => b.id))}
+                  onBookClick={handleBookClick}
                 />
               </motion.div>
 

@@ -121,7 +121,8 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
     setIsLoading(true)
     try {
       let books = getCachedBooks()
-      if (books.length < 30) {
+      if (books.length < 30 || excludeIds) {
+        // Always fetch fresh books when loading more batches
         const fresh = await getMixedRecommendations(50)
         addBooksToCache(fresh)
         books = getCachedBooks()

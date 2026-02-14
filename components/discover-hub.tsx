@@ -37,6 +37,7 @@ interface DiscoverHubProps {
   likedBooks: Book[]
   onSaveBook: (book: Book) => void
   savedBookIds: Set<string>
+  onBookClick?: (book: Book) => void
 }
 
 // ---------------------------------------------------------------------------
@@ -48,11 +49,13 @@ function ExploreBookCard({
   onSave,
   isSaved,
   index = 0,
+  onClick,
 }: {
   book: Book
   onSave: (book: Book) => void
   isSaved: boolean
   index?: number
+  onClick?: (book: Book) => void
 }) {
   return (
     <motion.div
@@ -66,7 +69,10 @@ function ExploreBookCard({
         delay: Math.min(index * 0.03, 0.2),
       }}
     >
-      <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-stone-200 mb-2 shadow-sm">
+      <div
+        className={`relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-stone-200 mb-2 shadow-sm${onClick ? ' cursor-pointer' : ''}`}
+        onClick={() => onClick?.(book)}
+      >
         <BookCover
           src={book.cover}
           fallbackSrc={book.coverFallback}
@@ -156,6 +162,7 @@ export function DiscoverHub({
   likedBooks,
   onSaveBook,
   savedBookIds,
+  onBookClick,
 }: DiscoverHubProps) {
   // Trending
   const [trending, setTrending] = useState<Book[]>([])
@@ -435,6 +442,7 @@ export function DiscoverHub({
                 onSave={handleSave}
                 isSaved={savedBookIds.has(book.id)}
                 index={i}
+                onClick={onBookClick}
               />
             ))}
           </HorizontalScroll>

@@ -3,10 +3,11 @@
 import { motion, PanInfo, useMotionValue, useTransform } from "framer-motion"
 import { Book } from "@/lib/book-data"
 import { Star, Clock, BookOpen, Info, Plus, ChevronDown } from "lucide-react"
-import { addBookToReading } from "@/lib/storage"
+import { addBookToReading, getReadingProgress } from "@/lib/storage"
 import { hapticLight } from "@/lib/haptics"
 import { Button } from "@/components/ui/button"
 import { BookCover } from "@/components/book-cover"
+import { useToast } from "./toast-provider"
 import { useState } from "react"
 
 interface BookCardProps {
@@ -16,8 +17,9 @@ interface BookCardProps {
   showActions?: boolean
 }
 
-export function BookCard({ book, onSwipe, isTop = false, showActions = false }: BookCardProps) {
+export function BookCard({ book, onSwipe, isTop = false, showActions = true }: BookCardProps) {
   const [infoExpanded, setInfoExpanded] = useState(false)
+  const { showToast } = useToast()
   const x = useMotionValue(0)
   const rotate = useTransform(x, [-200, 0, 200], [-12, 0, 12])
   const likeOpacity = useTransform(x, [0, 80], [0, 1])
@@ -39,7 +41,13 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = false }: 
   }
 
   const handleStartReading = () => {
+    const alreadyReading = getReadingProgress().some(p => p.bookId === book.id)
+    if (alreadyReading) {
+      showToast("Already in your reading list", "info")
+      return
+    }
     addBookToReading(book)
+    showToast(`"${book.title}" added to reading list`)
   }
 
   return (

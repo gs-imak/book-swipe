@@ -20,9 +20,10 @@ import { useToast } from "./toast-provider"
 interface SmartRecommendationsProps {
   onBookLike?: (book: Book) => void
   onStartReading?: (book: Book) => void
+  onBookClick?: (book: Book) => void
 }
 
-export function SmartRecommendations({ onBookLike, onStartReading }: SmartRecommendationsProps) {
+export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }: SmartRecommendationsProps) {
   const [recommendations, setRecommendations] = useState<Book[]>([])
   const [diverseBooks, setDiverseBooks] = useState<Book[]>([])
   const [selectedMood, setSelectedMood] = useState<string | null>(null)
@@ -130,6 +131,7 @@ export function SmartRecommendations({ onBookLike, onStartReading }: SmartRecomm
                   onLike={handleLikeBook}
                   isLiked={false}
                   index={index}
+                  onClick={onBookClick}
                 />
               ))}
             </div>
@@ -227,6 +229,7 @@ export function SmartRecommendations({ onBookLike, onStartReading }: SmartRecomm
                   onLike={handleLikeBook}
                   isLiked={likedBooks.some(l => l.id === book.id)}
                   index={index}
+                  onClick={onBookClick}
                 />
               ))}
             </div>
@@ -254,6 +257,7 @@ export function SmartRecommendations({ onBookLike, onStartReading }: SmartRecomm
                   isLiked={likedBooks.some(l => l.id === book.id)}
                   index={index}
                   reason={(book as any).reasons?.[0]?.description}
+                  onClick={onBookClick}
                 />
               ))}
             </div>
@@ -278,6 +282,7 @@ export function SmartRecommendations({ onBookLike, onStartReading }: SmartRecomm
                   isLiked={likedBooks.some(l => l.id === book.id)}
                   index={index}
                   reason="New genre for you"
+                  onClick={onBookClick}
                 />
               ))}
             </div>
@@ -294,12 +299,14 @@ function MiniBookCard({
   isLiked,
   index,
   reason,
+  onClick,
 }: {
   book: Book
   onLike: (book: Book) => void
   isLiked: boolean
   index?: number
   reason?: string
+  onClick?: (book: Book) => void
 }) {
   return (
     <motion.div
@@ -309,7 +316,10 @@ function MiniBookCard({
       transition={{ type: "spring", stiffness: 300, damping: 28, delay: Math.min((index || 0) * 0.03, 0.2) }}
     >
       {/* Cover */}
-      <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-stone-200 mb-2 shadow-sm">
+      <div
+        className={`relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-stone-200 mb-2 shadow-sm${onClick ? ' cursor-pointer' : ''}`}
+        onClick={() => onClick?.(book)}
+      >
         <BookCover
           src={book.cover}
           fallbackSrc={book.coverFallback}
