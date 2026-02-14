@@ -184,6 +184,15 @@ export default function App() {
     migrateCoverUrls()
   }, [])
 
+  // Register service worker for offline support
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {
+        // SW registration failed — app works fine without it
+      })
+    }
+  }, [])
+
   return (
     <ToastProvider>
       <GamificationProvider onShowAchievements={() => setShowAchievements(true)}>

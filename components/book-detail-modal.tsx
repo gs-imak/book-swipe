@@ -13,6 +13,7 @@ import { ShelfPicker } from "./shelf-picker"
 import { ShareCardGenerator } from "./share-card-generator"
 import { WhereToRead } from "./where-to-read"
 import { estimateReadingTime } from "@/lib/reading-time"
+import { useFocusTrap } from "@/lib/use-focus-trap"
 
 interface BookDetailModalProps {
   book: Book | null
@@ -56,12 +57,8 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
     }
   }, [isOpen, onClose])
 
-  // Focus the dialog on open
-  useEffect(() => {
-    if (isOpen && dialogRef.current) {
-      dialogRef.current.focus()
-    }
-  }, [isOpen])
+  // Trap focus inside dialog (disabled when sub-modals are active)
+  useFocusTrap(dialogRef, isOpen && !showShelfPicker && !showShareCard)
 
   if (!book || !isOpen) return null
 

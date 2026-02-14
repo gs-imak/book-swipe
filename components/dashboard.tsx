@@ -11,7 +11,7 @@ import { BookDetailModal } from "./book-detail-modal"
 import { StarRating } from "./star-rating"
 import { getBookReview, getUserStats } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
-import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy, Search, Library, SlidersHorizontal } from "lucide-react"
+import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy, Search, Library, SlidersHorizontal, Download, X as XIcon } from "lucide-react"
 import { SittingReadingDoodle, ReadingSideDoodle, ReadingDoodle, FloatDoodle, GroovyDoodle, LovingDoodle } from "./illustrations"
 import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
@@ -21,7 +21,7 @@ import { DiscoverHub } from "./discover-hub"
 import { DailyPickCard } from "./daily-pick-card"
 import { ShelfManager } from "./shelf-manager"
 import { ReadingPath } from "./reading-path"
-import { getShelves, getBooksForShelf, getShelvesForBook, type Shelf } from "@/lib/storage"
+import { getShelves, getBooksForShelf, getShelvesForBook, shouldShowBackupReminder, dismissBackupReminder, type Shelf } from "@/lib/storage"
 import { estimateReadingTime, getReadingSpeed, setReadingSpeed, getAllSpeeds, type ReadingSpeed } from "@/lib/reading-time"
 
 interface DashboardProps {
@@ -45,6 +45,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   const [formatFilter, setFormatFilter] = useState<"all" | "ebook" | "audio">("all")
   const [readingSpd, setReadingSpd] = useState<ReadingSpeed>("average")
   const [showFilters, setShowFilters] = useState(false)
+  const [showBackupBanner, setShowBackupBanner] = useState(false)
 
   const { triggerActivity, showAchievementsPanel } = useGamification()
   const { showToast } = useToast()
@@ -54,6 +55,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
     setUserStats(getUserStats())
     setShelves(getShelves())
     setReadingSpd(getReadingSpeed())
+    setShowBackupBanner(shouldShowBackupReminder())
   }, [])
 
   useEffect(() => {
@@ -260,6 +262,34 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
           </motion.div>
         ) : (
           <div className="space-y-10 py-6 sm:py-8">
+
+            {/* Backup reminder */}
+            {showBackupBanner && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-3 px-4 py-3 bg-amber-50 border border-amber-200/60 rounded-xl"
+              >
+                <Download className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <p className="text-xs text-amber-800 flex-1">
+                  Your library is stored in this browser only.{' '}
+                  <button
+                    onClick={() => { setShowAdmin(true); setShowBackupBanner(false) }}
+                    className="font-semibold underline underline-offset-2 hover:text-amber-900"
+                  >
+                    Export a backup
+                  </button>{' '}
+                  to keep it safe.
+                </p>
+                <button
+                  onClick={() => { dismissBackupReminder(); setShowBackupBanner(false) }}
+                  aria-label="Dismiss backup reminder"
+                  className="p-1 rounded-md hover:bg-amber-100 transition-colors flex-shrink-0"
+                >
+                  <XIcon className="w-3.5 h-3.5 text-amber-500" />
+                </button>
+              </motion.div>
+            )}
 
             {/* ━━━ SECTION 1: Personal Greeting + Stats ━━━ */}
             <motion.div {...fadeInUp(0)}>

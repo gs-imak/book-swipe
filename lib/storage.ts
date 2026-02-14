@@ -35,6 +35,8 @@ const USER_STATS_KEY = "bookswipe_user_stats"
 const SHELVES_KEY = "bookswipe_shelves"
 const SHELF_ASSIGNMENTS_KEY = "bookswipe_shelf_assignments"
 const DAILY_PICK_KEY = "bookswipe_daily_pick"
+const LAST_EXPORT_KEY = "bookswipe_last_export"
+const BACKUP_DISMISSED_KEY = "bookswipe_backup_dismissed"
 
 export interface ReadingProgress {
   bookId: string
@@ -481,6 +483,41 @@ export function saveDailyPick(pick: DailyPick): void {
 // Cover URL migration
 const COVER_MIGRATION_KEY = "bookswipe_cover_migration_v4"
 
+// Backup Tracking Functions
+export function markBackupExported(): void {
+  safeSetJSON(LAST_EXPORT_KEY, new Date().toISOString())
+}
+
+export function getLastExportDate(): string | null {
+  return safeGetJSON<string | null>(LAST_EXPORT_KEY, null)
+}
+
+export function dismissBackupReminder(): void {
+  safeSetJSON(BACKUP_DISMISSED_KEY, new Date().toISOString())
+}
+
+export function shouldShowBackupReminder(): boolean {
+  const likedBooks = getLikedBooks()
+  if (likedBooks.length < 10) return false
+
+  const lastExport = getLastExportDate()
+  const lastDismissed = safeGetJSON<string | null>(BACKUP_DISMISSED_KEY, null)
+
+  const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000
+  const sevenDaysMs = 7 * 24 * 60 * 60 * 1000
+  const now = Date.now()
+
+  // Dismissed within last 7 days? Don't show
+  if (lastDismissed && now - new Date(lastDismissed).getTime() < sevenDaysMs) {
+    return false
+  }
+
+  // Never exported, or exported 30+ days ago? Show
+  if (!lastExport) return true
+  return now - new Date(lastExport).getTime() > thirtyDaysMs
+}
+
+// Cover URL migration
 export function migrateCoverUrls(): void {
   if (typeof window === 'undefined') return
   try {

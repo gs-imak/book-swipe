@@ -22,6 +22,7 @@ import {
   saveShelves,
   getShelfAssignments,
   saveShelfAssignments,
+  markBackupExported,
 } from "@/lib/storage"
 import { Download, Upload, Shield, AlertTriangle, BookOpen, FileSpreadsheet } from "lucide-react"
 import { useToast } from "./toast-provider"
@@ -80,6 +81,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
     a.download = `bookswipe-backup-${date}.json`
     a.click()
     URL.revokeObjectURL(url)
+    markBackupExported()
     showToast("Backup downloaded successfully")
   }
 
