@@ -16,6 +16,8 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
   const [readingBooks, setReadingBooks] = useState<ReadingProgress[]>([])
   const [goals, setGoals] = useState<ReadingGoals | null>(null)
   const [justUpdated, setJustUpdated] = useState<string | null>(null)
+  const [editingPage, setEditingPage] = useState<string | null>(null)
+  const [pageInput, setPageInput] = useState("")
 
   const flashUpdate = useCallback((bookId: string) => {
     setJustUpdated(bookId)
@@ -154,7 +156,48 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                     <p className="text-xs text-stone-500 mb-2">{book.book.author}</p>
 
                     <div className="flex items-center justify-between text-xs text-stone-400 mb-1">
-                      <span>{book.currentPage} / {book.totalPages}p</span>
+                      {editingPage === book.bookId ? (
+                        <form
+                          onSubmit={(e) => {
+                            e.preventDefault()
+                            const page = parseInt(pageInput)
+                            if (!isNaN(page)) {
+                              handleProgressUpdate(book.bookId, page)
+                            }
+                            setEditingPage(null)
+                          }}
+                          className="flex items-center gap-1"
+                        >
+                          <input
+                            type="number"
+                            min={0}
+                            max={book.totalPages}
+                            value={pageInput}
+                            onChange={(e) => setPageInput(e.target.value)}
+                            onBlur={() => {
+                              const page = parseInt(pageInput)
+                              if (!isNaN(page)) {
+                                handleProgressUpdate(book.bookId, page)
+                              }
+                              setEditingPage(null)
+                            }}
+                            autoFocus
+                            className="w-14 h-6 text-xs text-stone-700 bg-white border border-stone-300 rounded px-1.5 text-center focus:outline-none focus:border-emerald-400"
+                          />
+                          <span>/ {book.totalPages}p</span>
+                        </form>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setEditingPage(book.bookId)
+                            setPageInput(String(book.currentPage))
+                          }}
+                          className="hover:text-stone-600 transition-colors"
+                          title="Tap to enter page number"
+                        >
+                          {book.currentPage} / {book.totalPages}p
+                        </button>
+                      )}
                       <motion.span
                         key={`${book.bookId}-${book.currentPage}`}
                         initial={justUpdated === book.bookId ? { scale: 1.3, color: "#059669" } : false}

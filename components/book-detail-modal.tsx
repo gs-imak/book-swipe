@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Star, Heart, MessageSquare, FileText, Calendar, Clock, BookOpen, Library, Share2 } from "lucide-react"
+import { X, Star, Heart, MessageSquare, FileText, Calendar, Clock, BookOpen, Library, Share2, Trash2 } from "lucide-react"
 import { Book } from "@/lib/book-data"
 import { BookReview, getBookReview, getShelvesForBook, getShelves, type Shelf } from "@/lib/storage"
 import { QuickReview } from "./quick-review"
@@ -20,9 +20,10 @@ interface BookDetailModalProps {
   isOpen: boolean
   onClose: () => void
   onStartReading?: (book: Book) => void
+  onRemoveBook?: (book: Book) => void
 }
 
-export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookDetailModalProps) {
+export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemoveBook }: BookDetailModalProps) {
   const [activeTab, setActiveTab] = useState<"overview" | "review" | "notes">("overview")
   const [existingReview, setExistingReview] = useState<BookReview | null>(null)
   const [isEditingReview, setIsEditingReview] = useState(false)
@@ -219,6 +220,20 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
                     <Share2 className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />
                     Share
                   </button>
+
+                  {onRemoveBook && (
+                    <button
+                      onClick={() => {
+                        if (confirm(`Remove "${book.title}" from your library?`)) {
+                          onRemoveBook(book)
+                          onClose()
+                        }
+                      }}
+                      className="h-9 px-3 bg-white border border-stone-200 hover:bg-red-50 hover:border-red-200 text-stone-400 hover:text-red-500 text-sm font-medium rounded-xl transition-all active:scale-[0.98] shadow-sm"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 inline -mt-0.5" />
+                    </button>
+                  )}
                 </div>
 
                 {/* Assigned shelf tags */}

@@ -668,6 +668,12 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
         isOpen={isBookModalOpen}
         onClose={handleCloseModal}
         onStartReading={handleStartReading}
+        onRemoveBook={(book) => {
+          const updated = likedBooks.filter(b => b.id !== book.id)
+          setLikedBooks(updated)
+          saveLikedBooks(updated)
+          showToast(`"${book.title}" removed from library`, "info")
+        }}
       />
 
       {/* Book Search */}
