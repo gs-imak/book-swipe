@@ -190,7 +190,7 @@ export function BookSearch({ isOpen, onClose, onSaveBook, savedBookIds }: BookSe
                           </div>
                           <span>{book.pages}p</span>
                           {book.genre[0] !== "General" && (
-                            <span className="text-stone-300">{book.genre[0]}</span>
+                            <span className="text-stone-400">{book.genre[0]}</span>
                           )}
                         </div>
                         <p className="text-xs text-stone-400 line-clamp-2 leading-relaxed">{book.description}</p>
@@ -204,7 +204,7 @@ export function BookSearch({ isOpen, onClose, onSaveBook, savedBookIds }: BookSe
                           className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                             isSaved
                               ? "bg-stone-100 text-stone-400"
-                              : "bg-stone-900 text-white hover:bg-stone-800"
+                              : "bg-stone-900 text-white hover:bg-stone-800 active:scale-[0.98]"
                           }`}
                         >
                           <Heart className={`w-3 h-3 ${isSaved ? "fill-current" : ""}`} />

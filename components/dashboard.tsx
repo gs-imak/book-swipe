@@ -151,7 +151,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   const fadeInUp = (delay: number) => ({
     initial: { opacity: 0, y: 8 },
     animate: { opacity: 1, y: 0 },
-    transition: { type: "spring" as const, stiffness: 380, damping: 30, delay },
+    transition: { type: "spring" as const, stiffness: 300, damping: 28, delay },
   })
 
   return (
@@ -443,10 +443,10 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                           <button
                             key={opt.value}
                             onClick={() => setSortBy(opt.value)}
-                            className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                               sortBy === opt.value
-                                ? "bg-amber-100 text-amber-800"
-                                : "text-stone-400 hover:text-stone-600 hover:bg-stone-50"
+                                ? "bg-stone-900 text-white"
+                                : "bg-stone-100 text-stone-500 hover:bg-stone-200"
                             }`}
                           >
                             {opt.label}
@@ -465,10 +465,10 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                           <button
                             key={f.value}
                             onClick={() => setFormatFilter(f.value)}
-                            className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                               formatFilter === f.value
-                                ? "bg-blue-50 text-blue-700"
-                                : "text-stone-400 hover:text-stone-600 hover:bg-stone-50"
+                                ? "bg-stone-900 text-white"
+                                : "bg-stone-100 text-stone-500 hover:bg-stone-200"
                             }`}
                           >
                             {f.label}
@@ -521,8 +521,8 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                       key={book.id}
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 24, delay: Math.min(index * 0.025, 0.2) }}
-                      whileHover={{ y: -3, transition: { type: "spring", stiffness: 400, damping: 25 } }}
+                      transition={{ type: "spring", stiffness: 300, damping: 28, delay: Math.min(index * 0.03, 0.2) }}
+                      whileHover={{ y: -3, transition: { type: "spring", stiffness: 400, damping: 30 } }}
                       className="group cursor-pointer"
                       onClick={() => handleBookClick(book)}
                     >

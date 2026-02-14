@@ -7,7 +7,7 @@ import { Book, UserPreferences } from "@/lib/book-data"
 import { saveLikedBooks, getLikedBooks } from "@/lib/storage"
 import { getMixedRecommendations } from "@/lib/books-api"
 import { getCachedBooks, addBooksToCache } from "@/lib/book-cache"
-import { Heart, X, Undo2, RotateCcw, Settings, Library, BookOpen } from "lucide-react"
+import { Heart, X, Undo2, RotateCcw, Settings, Library, BookOpen, Loader2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useGamification } from "./gamification-provider"
 import { useToast } from "./toast-provider"
@@ -217,12 +217,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="w-12 h-12 border-3 border-stone-300 border-t-amber-600 rounded-full mx-auto mb-4"
-            style={{ borderWidth: '3px' }}
-          />
+          <Loader2 className="w-8 h-8 text-amber-600 animate-spin mx-auto mb-4" />
           <p className="text-base font-medium text-stone-600">Finding books for you...</p>
         </div>
       </div>
@@ -306,7 +301,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
                     key={book.id}
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 + index * 0.05 }}
+                    transition={{ delay: Math.min(index * 0.03, 0.2) }}
                     className="text-sm text-stone-700 bg-stone-50 rounded-lg px-3 py-2"
                   >
                     <span className="font-medium">{book.title}</span>

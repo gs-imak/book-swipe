@@ -61,9 +61,9 @@ function ExploreBookCard({
       animate={{ opacity: 1, x: 0 }}
       transition={{
         type: "spring",
-        stiffness: 350,
+        stiffness: 300,
         damping: 28,
-        delay: index * 0.03,
+        delay: Math.min(index * 0.03, 0.2),
       }}
     >
       <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-stone-200 mb-2 shadow-sm">
@@ -96,7 +96,7 @@ function ExploreBookCard({
           className={`w-full flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium transition-all ${
             isSaved
               ? "bg-stone-100 text-stone-400"
-              : "bg-stone-900 text-white hover:bg-stone-800 active:scale-[0.97]"
+              : "bg-stone-900 text-white hover:bg-stone-800 active:scale-[0.98]"
           }`}
         >
           <Heart className={`w-3 h-3 ${isSaved ? "fill-current" : ""}`} />
@@ -120,7 +120,7 @@ function HorizontalScroll({ children }: { children: React.ReactNode }) {
 function InlineSpinner() {
   return (
     <div className="flex items-center justify-center py-6">
-      <Loader2 className="w-5 h-5 text-stone-300 animate-spin" />
+      <Loader2 className="w-5 h-5 text-stone-400 animate-spin" />
     </div>
   )
 }
@@ -335,7 +335,7 @@ export function DiscoverHub({
           {!surprise && !surpriseLoading && (
             <button
               onClick={handleSurprise}
-              className="w-full py-3 rounded-xl bg-stone-900 text-white text-sm font-medium hover:bg-stone-800 active:scale-[0.98] transition-all"
+              className="w-full py-3 rounded-xl bg-stone-900 text-white text-sm font-medium hover:bg-stone-800 active:scale-[0.98] transition-all tap-target touch-manipulation"
             >
               Show me something new
             </button>
@@ -350,7 +350,7 @@ export function DiscoverHub({
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                transition={{ type: "spring", stiffness: 350, damping: 28 }}
+                transition={{ type: "spring", stiffness: 300, damping: 28 }}
                 className="flex gap-4"
               >
                 <div className="relative w-[90px] aspect-[2/3] rounded-lg overflow-hidden bg-stone-200 flex-shrink-0 shadow-sm">
@@ -392,7 +392,7 @@ export function DiscoverHub({
                       className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                         savedBookIds.has(surprise.book.id)
                           ? "bg-stone-100 text-stone-400"
-                          : "bg-stone-900 text-white hover:bg-stone-800 active:scale-[0.97]"
+                          : "bg-stone-900 text-white hover:bg-stone-800 active:scale-[0.98]"
                       }`}
                     >
                       <Heart
@@ -402,7 +402,7 @@ export function DiscoverHub({
                     </button>
                     <button
                       onClick={handleSurprise}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-stone-500 hover:bg-stone-100 transition-all active:scale-[0.97]"
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-stone-500 hover:bg-stone-100 transition-all active:scale-[0.98]"
                     >
                       <RefreshCw className="w-3 h-3" />
                       Try another

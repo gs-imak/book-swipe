@@ -165,10 +165,10 @@ export function SmartRecommendations({ onBookLike, onStartReading }: SmartRecomm
               <button
                 key={time.id}
                 onClick={() => handleTimeFilter(time.id)}
-                className={`flex-shrink-0 px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                   selectedTime === time.id
-                    ? "bg-amber-100 text-amber-800"
-                    : "text-stone-400 hover:text-stone-600 hover:bg-stone-50"
+                    ? "bg-stone-900 text-white"
+                    : "bg-stone-100 text-stone-500 hover:bg-stone-200"
                 }`}
               >
                 {time.emoji} {time.name}
@@ -271,9 +271,9 @@ function MiniBookCard({
   return (
     <motion.div
       className="flex-shrink-0 w-[130px] sm:w-[150px]"
-      initial={{ opacity: 0, x: 16 }}
+      initial={{ opacity: 0, x: 12 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: (index || 0) * 0.05 }}
+      transition={{ type: "spring", stiffness: 300, damping: 28, delay: Math.min((index || 0) * 0.03, 0.2) }}
     >
       {/* Cover */}
       <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-stone-200 mb-2 shadow-sm">
@@ -306,7 +306,7 @@ function MiniBookCard({
           className={`w-full flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium transition-all min-h-[32px] ${
             isLiked
               ? "bg-stone-100 text-stone-400"
-              : "bg-stone-900 text-white hover:bg-stone-800"
+              : "bg-stone-900 text-white hover:bg-stone-800 active:scale-[0.98]"
           }`}
         >
           <Heart className={`w-3 h-3 ${isLiked ? 'fill-current' : ''}`} />

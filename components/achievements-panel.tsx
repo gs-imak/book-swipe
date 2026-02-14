@@ -398,7 +398,7 @@ function StatsTab({ stats }: { stats: UserStats }) {
           key={item.label}
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.04 }}
+          transition={{ delay: Math.min(index * 0.03, 0.2) }}
           className="bg-white rounded-xl p-3.5 border border-stone-200/60 shadow-sm flex items-center gap-3"
         >
           <span className="text-lg">{item.icon}</span>

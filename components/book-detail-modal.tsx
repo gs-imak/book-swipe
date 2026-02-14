@@ -175,7 +175,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
                   {onStartReading && (
                     <button
                       onClick={() => onStartReading(book)}
-                      className="h-9 px-4 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium rounded-xl transition-colors"
+                      className="h-9 px-4 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium rounded-xl transition-all active:scale-[0.98]"
                     >
                       <BookOpen className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" />
                       Start Reading
@@ -188,7 +188,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
                         setIsEditingReview(true)
                         setActiveTab("review")
                       }}
-                      className="h-9 px-4 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium rounded-xl transition-colors shadow-sm"
+                      className="h-9 px-4 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium rounded-xl transition-all active:scale-[0.98] shadow-sm"
                     >
                       <MessageSquare className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" />
                       Review
@@ -197,7 +197,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
 
                   <button
                     onClick={() => setShowShelfPicker(true)}
-                    className="h-9 px-3 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium rounded-xl transition-colors shadow-sm"
+                    className="h-9 px-3 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium rounded-xl transition-all active:scale-[0.98] shadow-sm"
                   >
                     <Library className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />
                     Shelves
@@ -205,7 +205,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading }: BookD
 
                   <button
                     onClick={() => setShowShareCard(true)}
-                    className="h-9 px-3 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium rounded-xl transition-colors shadow-sm"
+                    className="h-9 px-3 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium rounded-xl transition-all active:scale-[0.98] shadow-sm"
                   >
                     <Share2 className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />
                     Share

@@ -55,7 +55,7 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
     >
       <div className="flex items-center gap-2 mb-3">
         <Sparkles className="w-4 h-4 text-amber-600" />
-        <h2 className="text-lg font-semibold text-stone-900 font-serif">Today&apos;s Pick</h2>
+        <h3 className="text-lg font-semibold text-stone-900 font-serif">Today&apos;s Pick</h3>
       </div>
 
       <motion.div
@@ -109,7 +109,7 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
               ) : (
                 <button
                   onClick={handleLike}
-                  className="h-9 px-3.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5"
+                  className="h-9 px-3.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium rounded-xl transition-all active:scale-[0.98] flex items-center gap-1.5"
                 >
                   <Heart className="w-3.5 h-3.5" />
                   Save
@@ -117,7 +117,7 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
               )}
               <button
                 onClick={handleDismiss}
-                className="h-9 px-3 text-stone-400 hover:text-stone-600 hover:bg-white/60 text-xs rounded-lg transition-colors flex items-center gap-1"
+                className="h-9 px-3 text-stone-400 hover:text-stone-600 hover:bg-white/60 text-xs rounded-xl transition-all active:scale-[0.98] flex items-center gap-1"
               >
                 <X className="w-3.5 h-3.5" />
                 Pass
