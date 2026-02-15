@@ -8,7 +8,6 @@ import {
   getBookNotes,
   getShelves,
   getShelfAssignments,
-  getShelvesForBook,
   type BookReview,
   type ReadingProgress,
   type BookNote,
@@ -36,6 +35,12 @@ export function exportToGoodreadsCSV(): string {
   const progressMap: Record<string, ReadingProgress> = {}
   progress.forEach(p => { progressMap[p.bookId] = p })
 
+  const shelfAssignmentMap: Record<string, string[]> = {}
+  assignments.forEach(a => {
+    if (!shelfAssignmentMap[a.bookId]) shelfAssignmentMap[a.bookId] = []
+    shelfAssignmentMap[a.bookId].push(a.shelfId)
+  })
+
   // Goodreads CSV header
   const headers = [
     "Title", "Author", "ISBN", "ISBN13", "My Rating",
@@ -48,7 +53,7 @@ export function exportToGoodreadsCSV(): string {
     const prog = progressMap[book.id]
 
     // Map app shelves to Goodreads exclusive shelf
-    const bookShelfIds = getShelvesForBook(book.id)
+    const bookShelfIds = shelfAssignmentMap[book.id] || []
     const bookShelves = shelves.filter(s => bookShelfIds.includes(s.id))
     const shelfNames = bookShelves.map(s => s.name)
 
@@ -104,6 +109,7 @@ export function exportToNotionCSV(): string {
   const progress = getReadingProgress()
   const notes = getBookNotes()
   const shelves = getShelves()
+  const assignments = getShelfAssignments()
 
   const reviewMap: Record<string, BookReview> = {}
   reviews.forEach(r => { reviewMap[r.bookId] = r })
@@ -115,6 +121,12 @@ export function exportToNotionCSV(): string {
   notes.forEach(n => {
     if (!notesByBook[n.bookId]) notesByBook[n.bookId] = []
     notesByBook[n.bookId].push(n)
+  })
+
+  const shelfAssignmentMap: Record<string, string[]> = {}
+  assignments.forEach(a => {
+    if (!shelfAssignmentMap[a.bookId]) shelfAssignmentMap[a.bookId] = []
+    shelfAssignmentMap[a.bookId].push(a.shelfId)
   })
 
   // Notion-friendly headers (rich properties)
@@ -129,7 +141,7 @@ export function exportToNotionCSV(): string {
     const prog = progressMap[book.id]
     const bookNotes = notesByBook[book.id] || []
 
-    const bookShelfIds = getShelvesForBook(book.id)
+    const bookShelfIds = shelfAssignmentMap[book.id] || []
     const bookShelves = shelves.filter(s => bookShelfIds.includes(s.id))
     const shelfNames = bookShelves.map(s => s.name).join(", ")
 
