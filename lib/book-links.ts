@@ -11,11 +11,11 @@ export interface BookLink {
 }
 
 function getISBN(book: Book): string | null {
-  // Check if metadata has ISBN info from Google Books API
-  // The ISBN is often embedded in the cover URL for Open Library covers
+  // Prefer the explicit isbn field from the API
+  if (book.isbn) return book.isbn
+  // Fallback: ISBN sometimes embedded in Open Library cover URLs
   const olMatch = book.cover?.match(/\/isbn\/(\d{10,13})-/)
   if (olMatch) return olMatch[1]
-  // Check coverFallback too
   const fbMatch = book.coverFallback?.match(/\/isbn\/(\d{10,13})-/)
   if (fbMatch) return fbMatch[1]
   return null
@@ -67,12 +67,12 @@ export function getBookLinks(book: Book): BookLink[] {
     type: "buy",
   })
 
-  // Apple Books
+  // Apple Books (search — Apple uses numeric IDs so direct links aren't possible)
   links.push({
     id: "apple-books",
     name: "Apple Books",
     icon: "\u{1F34E}",
-    url: `https://books.apple.com/us/book/${encodeURIComponent(book.title.toLowerCase().replace(/\s+/g, "-"))}`,
+    url: `https://books.apple.com/us/search?term=${search}`,
     type: "buy",
   })
 

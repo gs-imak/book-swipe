@@ -252,7 +252,7 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
           className="overflow-y-auto overscroll-contain"
           style={{ height: "calc(100vh - 57px)", WebkitOverflowScrolling: "touch" as any }}
         >
-          <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8 pb-8">
+          <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8 pb-24">
             {likedBooks.length === 0 ? (
               <div className="text-center py-16">
                 <div className="w-40 h-32 mx-auto mb-4 opacity-60">
