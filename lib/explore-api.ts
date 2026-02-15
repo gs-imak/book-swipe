@@ -2,7 +2,7 @@
 
 import { Book } from "./book-data"
 import { searchGoogleBooks, bookSearchQueries } from "./books-api"
-import { searchOpenLibrary, searchOpenLibraryByQuery, transformToBook, OpenLibraryDoc } from "./openlibrary-api"
+import { searchOpenLibrary, searchOpenLibraryByQuery, fetchSubjectBooks, transformToBook, OpenLibraryDoc } from "./openlibrary-api"
 import { getCachedBooks, addBooksToCache } from "./book-cache"
 import { getLikedBooks } from "./storage"
 import { getOpenLibraryLanguageCodes } from "./language-preference"
@@ -86,67 +86,64 @@ export interface CuratedList {
   name: string
   emoji: string
   description: string
-  searchQuery: string       // Google Books free-text query
-  olSubject?: string        // Open Library subject (uses subject= endpoint)
-  olQuery?: string          // Open Library free-text fallback (uses q= endpoint)
+  searchQuery: string        // Google Books query
+  olSlug?: string            // OL /subjects/{slug}.json (best quality, curated)
+  olQuery?: string           // OL free-text search fallback (q= param)
+  yearMin?: number           // Post-fetch year filter (inclusive)
+  yearMax?: number           // Post-fetch year filter (inclusive)
 }
 
 export const curatedLists: CuratedList[] = [
   {
-    id: "best-recent",
-    name: "Best of 2025\u201326",
-    emoji: "trophy",
-    description: "Standout novels from the past year",
-    searchQuery: "best fiction novels 2025",
-    olQuery: "fiction 2025",
-  },
-  {
-    id: "hidden-gems",
-    name: "Hidden Gems",
-    emoji: "gem",
-    description: "Under-the-radar books worth discovering",
-    searchQuery: "literary fiction underrated novels",
-    olSubject: "literary fiction",
-  },
-  {
-    id: "staff-picks",
-    name: "Staff Picks",
-    emoji: "star",
-    description: "Handpicked favorites across all genres",
-    searchQuery: "award winning novels fiction",
-    olSubject: "award winners",
-  },
-  {
     id: "literary-classics",
     name: "Literary Classics",
     emoji: "scroll",
-    description: "Timeless masterpieces everyone should read",
+    description: "Timeless masterpieces from the literary canon",
     searchQuery: "subject:classics",
-    olSubject: "classics",
+    olSlug: "classics",
+    yearMax: 1980,
   },
   {
-    id: "20th-century-essentials",
-    name: "20th Century Essentials",
-    emoji: "book-open",
-    description: "Defining novels of the modern era",
-    searchQuery: "subject:\"classic literature\" 20th century novels",
-    olSubject: "classic literature",
+    id: "prize-winners",
+    name: "Prize Winners",
+    emoji: "trophy",
+    description: "Pulitzer, Booker & Nobel-winning fiction",
+    searchQuery: '"pulitzer prize" OR "booker prize" fiction',
+    olQuery: "pulitzer prize booker prize winning fiction",
   },
   {
     id: "modern-classics",
     name: "Modern Classics",
     emoji: "sparkles",
-    description: "Recent books already considered essential",
-    searchQuery: "contemporary literary fiction bestseller",
-    olSubject: "contemporary",
+    description: "21st century books already considered essential",
+    searchQuery: 'subject:"literary fiction"',
+    olSlug: "contemporary_fiction",
+    yearMin: 2000,
   },
   {
     id: "world-literature",
     name: "World Literature",
     emoji: "globe",
     description: "Must-read novels from around the globe",
-    searchQuery: "world literature translated novels",
-    olSubject: "world literature",
+    searchQuery: 'subject:"world literature"',
+    olSlug: "world_literature",
+  },
+  {
+    id: "best-recent",
+    name: "New Releases",
+    emoji: "star",
+    description: "Standout novels from the past two years",
+    searchQuery: "new fiction novel 2025",
+    olQuery: "fiction 2025 new novel",
+    yearMin: 2023,
+  },
+  {
+    id: "hidden-gems",
+    name: "Hidden Gems",
+    emoji: "gem",
+    description: "Under-the-radar books worth discovering",
+    searchQuery: '"debut novel" fiction literary',
+    olQuery: "debut novel literary fiction",
   },
 ]
 
@@ -273,19 +270,28 @@ export async function getSurpriseBook(
 export async function getListBooks(
   searchQuery: string,
   limit = 12,
-  options?: { olSubject?: string; olQuery?: string }
+  options?: {
+    olSlug?: string
+    olQuery?: string
+    yearMin?: number
+    yearMax?: number
+    excludeIds?: Set<string>
+  }
 ): Promise<Book[]> {
   try {
+    // Fetch more than needed to compensate for year/dedup filtering
+    const fetchLimit = limit * 2
+
     // Pick the best Open Library search strategy:
-    // 1. Subject search if a clean subject is provided (most reliable)
-    // 2. General query search for free-text phrases
+    // 1. Subjects endpoint (/subjects/{slug}.json) — curated, highest quality
+    // 2. General query search (q= param) for free-text phrases
     // 3. Fall back to the Google query as a general OL query
-    const olSearch = options?.olSubject
-      ? searchOpenLibrary(options.olSubject, limit)
-      : searchOpenLibraryByQuery(options?.olQuery || searchQuery, limit)
+    const olSearch = options?.olSlug
+      ? fetchSubjectBooks(options.olSlug, fetchLimit)
+      : searchOpenLibraryByQuery(options?.olQuery || searchQuery, fetchLimit)
 
     const [googleBooks, olBooks] = await Promise.allSettled([
-      searchGoogleBooks(searchQuery, limit),
+      searchGoogleBooks(searchQuery, fetchLimit),
       olSearch,
     ])
 
@@ -294,14 +300,15 @@ export async function getListBooks(
     const o =
       olBooks.status === "fulfilled" ? olBooks.value : ([] as Book[])
 
-    // Merge + dedupe by id
-    const seen = new Set<string>()
+    // Merge + dedupe by id, apply year filtering, exclude cross-list dupes
+    const seen = new Set<string>(options?.excludeIds || [])
     const merged: Book[] = []
     for (const book of [...g, ...o]) {
-      if (!seen.has(book.id)) {
-        seen.add(book.id)
-        merged.push(book)
-      }
+      if (seen.has(book.id)) continue
+      if (options?.yearMin && book.publishedYear < options.yearMin) continue
+      if (options?.yearMax && book.publishedYear > options.yearMax) continue
+      seen.add(book.id)
+      merged.push(book)
     }
 
     addBooksToCache(merged)

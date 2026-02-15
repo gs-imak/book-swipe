@@ -210,7 +210,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               <button
                 onClick={() => setShowSearch(true)}
                 aria-label="Search books"
-                className="p-2 rounded-lg hover:bg-stone-100 transition-colors tap-target touch-manipulation"
+                className="flex items-center justify-center p-2 rounded-lg hover:bg-stone-100 transition-colors tap-target touch-manipulation"
               >
                 <Search className="w-5 h-5 text-stone-500" />
               </button>
@@ -226,7 +226,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               <button
                 onClick={() => setShowAdmin(!showAdmin)}
                 aria-label="Settings"
-                className="p-2 rounded-lg hover:bg-stone-100 transition-colors tap-target touch-manipulation"
+                className="flex items-center justify-center p-2 rounded-lg hover:bg-stone-100 transition-colors tap-target touch-manipulation"
               >
                 <Settings className="w-5 h-5 text-stone-400" />
               </button>
@@ -234,7 +234,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                 <button
                   onClick={handleClearAll}
                   aria-label="Clear all books"
-                  className="p-2 rounded-lg hover:bg-red-50 text-stone-400 hover:text-red-500 transition-colors tap-target touch-manipulation"
+                  className="flex items-center justify-center p-2 rounded-lg hover:bg-red-50 text-stone-400 hover:text-red-500 transition-colors tap-target touch-manipulation"
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>

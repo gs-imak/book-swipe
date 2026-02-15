@@ -292,10 +292,21 @@ export function DiscoverHub({
       const list = curatedLists.find((l) => l.id === listId)
       if (!list) return
 
+      // Collect IDs from all already-loaded lists for cross-collection dedup
+      const excludeIds = new Set<string>()
+      Object.entries(listBooksMap).forEach(([id, books]) => {
+        if (id !== listId) {
+          books.forEach((b) => excludeIds.add(b.id))
+        }
+      })
+
       setListLoading(listId)
       const books = await getListBooks(list.searchQuery, 12, {
-        olSubject: list.olSubject,
+        olSlug: list.olSlug,
         olQuery: list.olQuery,
+        yearMin: list.yearMin,
+        yearMax: list.yearMax,
+        excludeIds,
       })
       setListBooksMap((prev) => ({ ...prev, [listId]: books }))
       setListLoading(null)

@@ -268,6 +268,62 @@ export async function searchOpenLibraryByQuery(
   }
 }
 
+/** Fetch curated books from OL's /subjects/{slug}.json endpoint. */
+export async function fetchSubjectBooks(
+  slug: string,
+  limit: number = 12
+): Promise<Book[]> {
+  try {
+    const url = `https://openlibrary.org/subjects/${slug}.json?limit=${limit}`
+    const response = await fetch(url)
+    if (!response.ok) return []
+
+    const data = await response.json()
+    const works: Array<{
+      key: string
+      title: string
+      authors?: { key: string; name: string }[]
+      cover_id?: number
+      subject?: string[]
+      first_publish_year?: number
+      edition_count?: number
+    }> = data.works || []
+
+    return works
+      .filter((w) => w.title && w.authors?.length && w.cover_id)
+      .map((w) => {
+        const subjects = w.subject || []
+        const genres = mapSubjectsToGenres(subjects)
+        if (genres.length === 0) genres.push("Classics")
+
+        const moods = mapSubjectsToMoods(subjects)
+        if (moods.length === 0) moods.push("Interesting")
+
+        const pages = 300 // subjects endpoint lacks page count
+        return {
+          id: `ol_${w.key.replace("/works/", "")}`,
+          title: w.title,
+          author: w.authors![0].name,
+          cover: getOpenLibraryCover(w.cover_id!),
+          rating: Math.round((Math.random() * 1 + 3.8) * 10) / 10,
+          pages,
+          genre: genres,
+          mood: moods,
+          description: "Discover this book on your reading journey.",
+          publishedYear: w.first_publish_year || 2000,
+          readingTime: estimateReadingTime(pages),
+          metadata: {
+            subjects: subjects.slice(0, 20),
+            source: "openlibrary" as const,
+          },
+        } satisfies Book
+      })
+      .slice(0, limit)
+  } catch {
+    return []
+  }
+}
+
 export async function getRelatedSubjects(
   subject: string
 ): Promise<string[]> {
