@@ -16,7 +16,7 @@ function sanitizeDescription(raw?: string): string {
     .replace(/&nbsp;/g, " ")
     .trim()
   if (!text) return "No description available."
-  return text.length > 200 ? text.slice(0, 200) + "..." : text
+  return text
 }
 
 // Google Books API integration

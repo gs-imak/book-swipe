@@ -28,8 +28,9 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [likedBooksCount, setLikedBooksCount] = useState(0)
   const [showTasteProfile, setShowTasteProfile] = useState(false)
+  const [ready, setReady] = useState(false)
 
-  // Restore session for returning users
+  // Restore session for returning users (runs before first paint matters)
   useEffect(() => {
     if (isOnboarded()) {
       setIsLoggedIn(true)
@@ -37,6 +38,7 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
       const saved = getSavedPreferences()
       if (saved) setUserPreferences(saved)
     }
+    setReady(true)
   }, [])
 
   // Update liked books count via custom event (no polling)
@@ -115,6 +117,11 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   }
 
   const showNav = isLoggedIn && currentView !== "questionnaire"
+
+  // Prevent flash of login screen while checking localStorage
+  if (!ready) {
+    return <div className="min-h-screen bg-background" />
+  }
 
   return (
     <>
