@@ -166,9 +166,15 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
 
     if (direction === "right") {
       hapticSuccess()
-      const newLikedBooks = [...likedBooks, currentBook]
-      setLikedBooks(newLikedBooks)
-      saveLikedBooks(newLikedBooks)
+      // Read fresh from localStorage to avoid overwriting books saved by other components
+      const current = getLikedBooks()
+      if (!current.some(b => b.id === currentBook.id)) {
+        const newLikedBooks = [...current, currentBook]
+        setLikedBooks(newLikedBooks)
+        saveLikedBooks(newLikedBooks)
+      } else {
+        setLikedBooks(current)
+      }
       setSessionLikedBooks(prev => [...prev, currentBook])
       triggerActivity('like_book')
       showToast(`"${currentBook.title}" saved to library`)
@@ -189,7 +195,9 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
     hapticMedium()
 
     if (lastAction.direction === "right") {
-      const newLikedBooks = likedBooks.filter(b => b.id !== lastAction.book.id)
+      // Read fresh from localStorage to avoid overwriting other saves
+      const current = getLikedBooks()
+      const newLikedBooks = current.filter(b => b.id !== lastAction.book.id)
       setLikedBooks(newLikedBooks)
       saveLikedBooks(newLikedBooks)
       setSessionLikedBooks(prev => prev.filter(b => b.id !== lastAction.book.id))

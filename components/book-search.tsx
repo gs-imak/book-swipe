@@ -101,7 +101,8 @@ export function BookSearch({ isOpen, onClose, onSaveBook, savedBookIds }: BookSe
                   <button
                     type="button"
                     onClick={() => { setQuery(""); setResults([]); setHasSearched(false); inputRef.current?.focus() }}
-                    className="p-1 rounded-md hover:bg-stone-100"
+                    aria-label="Clear search"
+                    className="p-2 rounded-md hover:bg-stone-100 tap-target touch-manipulation"
                   >
                     <X className="w-4 h-4 text-stone-400" />
                   </button>
