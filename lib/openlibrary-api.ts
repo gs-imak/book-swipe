@@ -1,4 +1,5 @@
 import { Book } from "./book-data"
+import { getOpenLibraryLanguageCodes } from "./language-preference"
 
 export interface OpenLibraryDoc {
   key: string
@@ -12,6 +13,7 @@ export interface OpenLibraryDoc {
   ratings_count?: number
   number_of_pages_median?: number
   first_publish_year?: number
+  language?: string[]
 }
 
 interface OpenLibrarySearchResponse {
@@ -180,11 +182,16 @@ export async function searchOpenLibrary(
       "ratings_count",
       "number_of_pages_median",
       "first_publish_year",
+      "language",
     ].join(",")
+
+    const olLangCodes = getOpenLibraryLanguageCodes()
+    // Fetch extra to compensate for language filtering
+    const fetchLimit = olLangCodes ? limit * 2 : limit
 
     const url = `https://openlibrary.org/search.json?subject=${encodeURIComponent(
       subject
-    )}&fields=${fields}&limit=${limit}&sort=rating`
+    )}&fields=${fields}&limit=${fetchLimit}&sort=rating`
 
     const response = await fetch(url)
     if (!response.ok) return []
@@ -192,9 +199,19 @@ export async function searchOpenLibrary(
     const data: OpenLibrarySearchResponse = await response.json()
     if (!data.docs) return []
 
-    return data.docs
+    let docs = data.docs
+    // Post-filter by language: keep matches or books with no language data
+    if (olLangCodes) {
+      docs = docs.filter((doc) => {
+        if (!doc.language || doc.language.length === 0) return true
+        return doc.language.some((l) => olLangCodes.includes(l))
+      })
+    }
+
+    return docs
       .map((doc) => transformToBook(doc, subject))
       .filter((b): b is Book => b !== null)
+      .slice(0, limit)
   } catch (error) {
     return []
   }

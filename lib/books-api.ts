@@ -1,6 +1,7 @@
 import { Book } from "./book-data"
 import { getCachedBooks, addBooksToCache, isQueryCached, markQueryCompleted, queryCache } from "./book-cache"
 import { searchOpenLibrary } from "./openlibrary-api"
+import { getLanguagePreference } from "./language-preference"
 
 // Strip HTML tags from API descriptions and truncate safely
 function sanitizeDescription(raw?: string): string {
@@ -50,10 +51,11 @@ export interface GoogleBook {
   }
 }
 
-export async function searchGoogleBooks(query: string, maxResults = 20): Promise<Book[]> {
+export async function searchGoogleBooks(query: string, maxResults = 20, lang?: string): Promise<Book[]> {
   try {
     // Call our own API route (keeps API key server-side)
-    const url = `/api/books?q=${encodeURIComponent(query)}&maxResults=${maxResults}`
+    const resolvedLang = lang ?? getLanguagePreference()
+    const url = `/api/books?q=${encodeURIComponent(query)}&maxResults=${maxResults}&lang=${encodeURIComponent(resolvedLang)}`
 
     const response = await fetch(url)
 

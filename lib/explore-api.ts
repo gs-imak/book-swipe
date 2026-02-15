@@ -5,6 +5,7 @@ import { searchGoogleBooks, bookSearchQueries } from "./books-api"
 import { searchOpenLibrary, transformToBook, OpenLibraryDoc } from "./openlibrary-api"
 import { getCachedBooks, addBooksToCache } from "./book-cache"
 import { getLikedBooks } from "./storage"
+import { getOpenLibraryLanguageCodes } from "./language-preference"
 
 // ---------------------------------------------------------------------------
 // Sub-genre definitions
@@ -122,15 +123,26 @@ interface TrendingResponse {
 
 export async function getTrendingBooks(limit = 12): Promise<Book[]> {
   try {
+    const olLangCodes = getOpenLibraryLanguageCodes()
+    const fetchLimit = olLangCodes ? limit * 2 : limit
+
     const res = await fetch(
-      `https://openlibrary.org/trending/daily.json?limit=${limit}`
+      `https://openlibrary.org/trending/daily.json?limit=${fetchLimit}`
     )
     if (!res.ok) throw new Error("trending fetch failed")
 
     const data: TrendingResponse = await res.json()
     if (!data.works?.length) throw new Error("no works")
 
-    const books = data.works
+    let works = data.works
+    if (olLangCodes) {
+      works = works.filter((w) => {
+        if (!w.language || w.language.length === 0) return true
+        return w.language.some((l) => olLangCodes.includes(l))
+      })
+    }
+
+    const books = works
       .map((w) => transformToBook(w, "fiction"))
       .filter((b): b is Book => b !== null)
 

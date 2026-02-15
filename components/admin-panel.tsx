@@ -24,7 +24,13 @@ import {
   saveShelfAssignments,
   markBackupExported,
 } from "@/lib/storage"
-import { Download, Upload, Shield, AlertTriangle, BookOpen, FileSpreadsheet } from "lucide-react"
+import { Download, Upload, Shield, AlertTriangle, BookOpen, FileSpreadsheet, Globe } from "lucide-react"
+import {
+  type BookLanguage,
+  LANGUAGE_LABELS,
+  getLanguagePreference,
+  setLanguagePreference,
+} from "@/lib/language-preference"
 import { useToast } from "./toast-provider"
 import { GoodreadsImport } from "./goodreads-import"
 import { exportToGoodreadsCSV, exportToNotionCSV, downloadCSV } from "@/lib/export-utils"
@@ -52,8 +58,15 @@ interface ExportData {
 export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
   const [importing, setImporting] = useState(false)
   const [showGoodreadsImport, setShowGoodreadsImport] = useState(false)
+  const [language, setLanguage] = useState<BookLanguage>(getLanguagePreference)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { showToast } = useToast()
+
+  const handleLanguageChange = (lang: BookLanguage) => {
+    setLanguage(lang)
+    setLanguagePreference(lang)
+    showToast(`Language set to ${LANGUAGE_LABELS[lang]}. Book cache cleared.`)
+  }
 
   const handleExport = () => {
     const exportData: ExportData = {
@@ -216,6 +229,30 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
 
   return (
     <div className="bg-white rounded-xl p-5 border border-stone-200/60 shadow-sm space-y-5">
+      {/* Book Language */}
+      <div>
+        <h3 className="text-base font-semibold text-stone-900 flex items-center gap-2 mb-1">
+          <Globe className="w-4 h-4 text-stone-500" />
+          Book Language
+        </h3>
+        <p className="text-xs text-stone-500 mb-2">
+          Choose the language for book recommendations and search results.
+        </p>
+        <select
+          value={language}
+          onChange={(e) => handleLanguageChange(e.target.value as BookLanguage)}
+          className="w-full h-10 px-3 rounded-xl border border-stone-200 bg-stone-50 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-300"
+        >
+          {Object.entries(LANGUAGE_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="border-t border-stone-200/60" />
+
       <div>
         <h3 className="text-base font-semibold text-stone-900 flex items-center gap-2 mb-1">
           <Shield className="w-4 h-4 text-stone-500" />

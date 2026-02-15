@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
   const q = searchParams.get("q")
   const id = searchParams.get("id") // For single volume fetch (price-tracker)
   const maxResults = searchParams.get("maxResults") || "20"
+  const lang = searchParams.get("lang") || "en"
 
   if (!API_KEY) {
     return NextResponse.json({ error: "API key not configured" }, { status: 500 })
@@ -60,7 +61,8 @@ export async function GET(request: NextRequest) {
       const sanitizedQuery = q.slice(0, 500) // Cap query length
       const safeMaxResults = Math.min(Math.max(1, parseInt(maxResults) || 20), 40)
 
-      url = `${GOOGLE_BOOKS_BASE}?q=${encodeURIComponent(sanitizedQuery)}&maxResults=${safeMaxResults}&printType=books&orderBy=relevance&langRestrict=en&projection=full&key=${API_KEY}`
+      const langParam = lang !== "all" ? `&langRestrict=${encodeURIComponent(lang)}` : ""
+      url = `${GOOGLE_BOOKS_BASE}?q=${encodeURIComponent(sanitizedQuery)}&maxResults=${safeMaxResults}&printType=books&orderBy=relevance${langParam}&projection=full&key=${API_KEY}`
     } else {
       return NextResponse.json({ error: "Missing query parameter" }, { status: 400 })
     }

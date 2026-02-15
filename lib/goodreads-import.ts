@@ -129,7 +129,7 @@ async function matchBookToAPI(row: GoodreadsRow): Promise<Book | null> {
   const isbn = row.isbn13 || row.isbn
   if (isbn && isbn.length >= 10) {
     try {
-      const res = await fetch(`/api/books?q=isbn:${encodeURIComponent(isbn)}&maxResults=1`)
+      const res = await fetch(`/api/books?q=isbn:${encodeURIComponent(isbn)}&maxResults=1&lang=all`)
       const data = await res.json()
       if (data.items && data.items.length > 0) {
         return googleBookToBook(data.items[0], isbn)
@@ -142,7 +142,7 @@ async function matchBookToAPI(row: GoodreadsRow): Promise<Book | null> {
   // Fallback: title + author
   try {
     const query = `intitle:${row.title} inauthor:${row.author}`
-    const res = await fetch(`/api/books?q=${encodeURIComponent(query)}&maxResults=1`)
+    const res = await fetch(`/api/books?q=${encodeURIComponent(query)}&maxResults=1&lang=all`)
     const data = await res.json()
     if (data.items && data.items.length > 0) {
       return googleBookToBook(data.items[0])
