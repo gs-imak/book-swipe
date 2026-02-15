@@ -360,7 +360,10 @@ export function DiscoverHub({
                 transition={{ type: "spring", stiffness: 300, damping: 28 }}
                 className="flex gap-4"
               >
-                <div className="relative w-[90px] aspect-[2/3] rounded-lg overflow-hidden bg-stone-200 flex-shrink-0 shadow-sm">
+                <div
+                  className="relative w-[90px] aspect-[2/3] rounded-lg overflow-hidden bg-stone-200 flex-shrink-0 shadow-sm cursor-pointer"
+                  onClick={() => onBookClick?.(surprise.book)}
+                >
                   <BookCover
                     src={surprise.book.cover}
                     fallbackSrc={surprise.book.coverFallback}
@@ -482,6 +485,7 @@ export function DiscoverHub({
                   onSave={handleSave}
                   isSaved={savedBookIds.has(book.id)}
                   index={i}
+                  onClick={onBookClick}
                 />
               ))}
             </HorizontalScroll>
@@ -550,6 +554,7 @@ export function DiscoverHub({
                                 onSave={handleSave}
                                 isSaved={savedBookIds.has(book.id)}
                                 index={i}
+                                onClick={onBookClick}
                               />
                             ))}
                           </HorizontalScroll>
@@ -648,6 +653,7 @@ export function DiscoverHub({
                                 onSave={handleSave}
                                 isSaved={savedBookIds.has(book.id)}
                                 index={i}
+                                onClick={onBookClick}
                               />
                             ))}
                           </HorizontalScroll>
