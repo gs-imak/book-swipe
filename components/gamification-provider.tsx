@@ -41,7 +41,7 @@ export function GamificationProvider({ children, onShowAchievements }: Gamificat
       )
       
       if (significantEvents.length > 0) {
-        setEvents(significantEvents)
+        setEvents(prev => [...prev, ...significantEvents])
         
         // Check for special celebrations
         const hasAchievement = significantEvents.some(e => e.type === 'achievement_unlocked')
@@ -66,14 +66,6 @@ export function GamificationProvider({ children, onShowAchievements }: Gamificat
 
   const handleEventShown = useCallback((event: GamificationEvent) => {
     setEvents(prev => prev.filter(e => e !== event))
-    // Refresh achievements/stats so the panel shows latest progress
-    try {
-      // Re-run a passive check to update progress (no new activity)
-      const updated = handleUserActivity('daily_reading')
-      if (updated.length === 0) {
-        // noop, just ensures streak/lastActivity updated
-      }
-    } catch {}
   }, [])
 
   const handleConfettiComplete = useCallback(() => {

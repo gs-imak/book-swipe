@@ -21,14 +21,22 @@ export function BookSearch({ isOpen, onClose, onSaveBook, savedBookIds }: BookSe
   const [hasSearched, setHasSearched] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const activeRef = useRef(false)
 
   useEffect(() => {
     if (isOpen) {
+      activeRef.current = true
       setTimeout(() => inputRef.current?.focus(), 100)
     } else {
+      activeRef.current = false
+      if (debounceRef.current) clearTimeout(debounceRef.current)
       setQuery("")
       setResults([])
       setHasSearched(false)
+      setIsSearching(false)
+    }
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
     }
   }, [isOpen])
 
@@ -53,11 +61,13 @@ export function BookSearch({ isOpen, onClose, onSaveBook, savedBookIds }: BookSe
     setHasSearched(true)
     try {
       const books = await searchGoogleBooks(searchQuery, 20)
+      if (!activeRef.current) return // modal closed while searching
       setResults(books)
     } catch {
+      if (!activeRef.current) return
       setResults([])
     } finally {
-      setIsSearching(false)
+      if (activeRef.current) setIsSearching(false)
     }
   }, [])
 

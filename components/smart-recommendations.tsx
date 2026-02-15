@@ -43,25 +43,30 @@ export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }
   const { showToast } = useToast()
 
   useEffect(() => {
+    let cancelled = false
     async function loadRecommendations() {
       setIsLoading(true)
       const liked = getLikedBooks()
+      if (cancelled) return
       setLikedBooks(liked)
 
       if (liked.length > 0) {
         try {
           const smartRecs = await getSmartRecommendations(8)
+          if (cancelled) return
           setRecommendations(smartRecs)
           const diverseRecs = getDiverseRecommendations(6)
           setDiverseBooks(diverseRecs)
         } catch {
+          if (cancelled) return
           const cached = getCachedBooks()
           setRecommendations(cached.sort((a, b) => b.rating - a.rating).slice(0, 8))
         }
       }
-      setIsLoading(false)
+      if (!cancelled) setIsLoading(false)
     }
     loadRecommendations()
+    return () => { cancelled = true }
   }, [])
 
   const handleMoodFilter = (moodId: string) => {

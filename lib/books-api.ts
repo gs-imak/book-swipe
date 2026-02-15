@@ -3,6 +3,16 @@ import { getCachedBooks, addBooksToCache, isQueryCached, markQueryCompleted, que
 import { searchOpenLibrary } from "./openlibrary-api"
 import { getLanguagePreference } from "./language-preference"
 
+// Deterministic pseudo-rating from a string (always returns the same value for the same input)
+function stableRating(seed: string, min = 3.5, max = 4.5): number {
+  let hash = 0
+  for (let i = 0; i < seed.length; i++) {
+    hash = ((hash << 5) - hash + seed.charCodeAt(i)) | 0
+  }
+  const norm = (Math.abs(hash) % 1000) / 1000 // 0..1
+  return Math.round((min + norm * (max - min)) * 10) / 10
+}
+
 // Strip HTML tags from API descriptions and truncate safely
 function sanitizeDescription(raw?: string): string {
   if (!raw) return "No description available."
@@ -69,7 +79,7 @@ export async function searchGoogleBooks(query: string, maxResults = 20, lang?: s
       return []
     }
 
-    return data.items.map(transformGoogleBookToBook).filter(Boolean)
+    return data.items.map(transformGoogleBookToBook).filter((b: Book | null): b is Book => b !== null)
   } catch {
     return []
   }
@@ -138,7 +148,7 @@ function transformGoogleBookToBook(googleBook: unknown): Book | null {
   }
   
   const pages = volumeInfo.pageCount || 200
-  const rating = volumeInfo.averageRating || Math.random() * 2 + 3 // Random rating between 3-5 if none
+  const rating = volumeInfo.averageRating || stableRating(`${volumeInfo.title}:${volumeInfo.authors?.[0] || ""}`)
   const publishedYear = volumeInfo.publishedDate ? 
     parseInt(volumeInfo.publishedDate.split('-')[0]) : 2020
   

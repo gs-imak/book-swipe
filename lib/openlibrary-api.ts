@@ -1,6 +1,16 @@
 import { Book } from "./book-data"
 import { getOpenLibraryLanguageCodes } from "./language-preference"
 
+// Deterministic pseudo-rating from a string (always returns the same value for the same input)
+function stableRating(seed: string, min = 3.5, max = 4.5): number {
+  let hash = 0
+  for (let i = 0; i < seed.length; i++) {
+    hash = ((hash << 5) - hash + seed.charCodeAt(i)) | 0
+  }
+  const norm = (Math.abs(hash) % 1000) / 1000 // 0..1
+  return Math.round((min + norm * (max - min)) * 10) / 10
+}
+
 export interface OpenLibraryDoc {
   key: string
   title: string
@@ -141,14 +151,14 @@ export function transformToBook(doc: OpenLibraryDoc, searchedSubject: string): B
     : 0
 
   // Skip books with very low or no ratings
-  if (rating < 2.5 && doc.ratings_count && doc.ratings_count > 10) return null
+  if (rating < 2.5 && doc.ratings_count && doc.ratings_count >= 10) return null
 
   return {
     id: `ol_${doc.key.replace("/works/", "")}`,
     title: doc.title,
     author: doc.author_name[0],
     cover: getOpenLibraryCover(doc.cover_i),
-    rating: rating || Math.round((Math.random() * 1.5 + 3.5) * 10) / 10,
+    rating: rating || stableRating(`${doc.title}:${doc.author_name[0]}`),
     pages,
     genre: genres,
     mood: moods,
@@ -305,7 +315,7 @@ export async function fetchSubjectBooks(
           title: w.title,
           author: w.authors![0].name,
           cover: getOpenLibraryCover(w.cover_id!),
-          rating: Math.round((Math.random() * 1 + 3.8) * 10) / 10,
+          rating: stableRating(`${w.title}:${w.authors![0].name}`, 3.8, 4.8),
           pages,
           genre: genres,
           mood: moods,

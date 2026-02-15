@@ -124,8 +124,8 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   // Memoize Set of saved book IDs to avoid creating new references every render
   const savedBookIds = useMemo(() => new Set(likedBooks.map(b => b.id)), [likedBooks])
 
-  const shelfBookIds = shelfFilter ? new Set(getBooksForShelf(shelfFilter)) : null
-  const filteredBooks = likedBooks.filter(book => {
+  const shelfBookIds = useMemo(() => shelfFilter ? new Set(getBooksForShelf(shelfFilter)) : null, [shelfFilter])
+  const filteredBooks = useMemo(() => likedBooks.filter(book => {
     if (shelfBookIds && !shelfBookIds.has(book.id)) return false
     if (formatFilter === "ebook" && !book.formats?.ebook) return false
     if (formatFilter === "audio" && !book.formats?.audiobook) return false
@@ -133,7 +133,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
     return book.genre.some(genre =>
       genre.toLowerCase().includes(filter.toLowerCase())
     )
-  })
+  }), [likedBooks, shelfBookIds, formatFilter, filter])
 
   const sortedBooks = [...filteredBooks].sort((a, b) => {
     switch (sortBy) {
