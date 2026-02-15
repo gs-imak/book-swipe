@@ -293,7 +293,10 @@ export function DiscoverHub({
       if (!list) return
 
       setListLoading(listId)
-      const books = await getListBooks(list.searchQuery, 12)
+      const books = await getListBooks(list.searchQuery, 12, {
+        olSubject: list.olSubject,
+        olQuery: list.olQuery,
+      })
       setListBooksMap((prev) => ({ ...prev, [listId]: books }))
       setListLoading(null)
     },

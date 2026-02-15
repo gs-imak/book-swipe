@@ -2,7 +2,7 @@
 
 import { Book } from "./book-data"
 import { searchGoogleBooks, bookSearchQueries } from "./books-api"
-import { searchOpenLibrary, transformToBook, OpenLibraryDoc } from "./openlibrary-api"
+import { searchOpenLibrary, searchOpenLibraryByQuery, transformToBook, OpenLibraryDoc } from "./openlibrary-api"
 import { getCachedBooks, addBooksToCache } from "./book-cache"
 import { getLikedBooks } from "./storage"
 import { getOpenLibraryLanguageCodes } from "./language-preference"
@@ -86,7 +86,9 @@ export interface CuratedList {
   name: string
   emoji: string
   description: string
-  searchQuery: string
+  searchQuery: string       // Google Books free-text query
+  olSubject?: string        // Open Library subject (uses subject= endpoint)
+  olQuery?: string          // Open Library free-text fallback (uses q= endpoint)
 }
 
 export const curatedLists: CuratedList[] = [
@@ -95,49 +97,56 @@ export const curatedLists: CuratedList[] = [
     name: "Best of 2025\u201326",
     emoji: "trophy",
     description: "Standout novels from the past year",
-    searchQuery: "best fiction 2025 2026",
+    searchQuery: "best fiction novels 2025",
+    olQuery: "fiction 2025",
   },
   {
     id: "hidden-gems",
     name: "Hidden Gems",
     emoji: "gem",
     description: "Under-the-radar books worth discovering",
-    searchQuery: "underrated literary fiction",
+    searchQuery: "literary fiction underrated novels",
+    olSubject: "literary fiction",
   },
   {
     id: "staff-picks",
     name: "Staff Picks",
     emoji: "star",
     description: "Handpicked favorites across all genres",
-    searchQuery: "award winning fiction novels",
+    searchQuery: "award winning novels fiction",
+    olSubject: "award winners",
   },
   {
     id: "literary-classics",
     name: "Literary Classics",
     emoji: "scroll",
     description: "Timeless masterpieces everyone should read",
-    searchQuery: "classic literature greatest novels of all time",
+    searchQuery: "subject:classics",
+    olSubject: "classics",
   },
   {
     id: "20th-century-essentials",
     name: "20th Century Essentials",
     emoji: "book-open",
     description: "Defining novels of the modern era",
-    searchQuery: "best 20th century novels essential fiction",
+    searchQuery: "subject:\"classic literature\" 20th century novels",
+    olSubject: "classic literature",
   },
   {
     id: "modern-classics",
     name: "Modern Classics",
     emoji: "sparkles",
     description: "Recent books already considered essential",
-    searchQuery: "modern classic novels 2000s 2010s literary",
+    searchQuery: "contemporary literary fiction bestseller",
+    olSubject: "contemporary",
   },
   {
     id: "world-literature",
     name: "World Literature",
     emoji: "globe",
     description: "Must-read novels from around the globe",
-    searchQuery: "best world literature translated fiction international",
+    searchQuery: "world literature translated novels",
+    olSubject: "world literature",
   },
 ]
 
@@ -263,12 +272,21 @@ export async function getSurpriseBook(
 
 export async function getListBooks(
   searchQuery: string,
-  limit = 12
+  limit = 12,
+  options?: { olSubject?: string; olQuery?: string }
 ): Promise<Book[]> {
   try {
+    // Pick the best Open Library search strategy:
+    // 1. Subject search if a clean subject is provided (most reliable)
+    // 2. General query search for free-text phrases
+    // 3. Fall back to the Google query as a general OL query
+    const olSearch = options?.olSubject
+      ? searchOpenLibrary(options.olSubject, limit)
+      : searchOpenLibraryByQuery(options?.olQuery || searchQuery, limit)
+
     const [googleBooks, olBooks] = await Promise.allSettled([
       searchGoogleBooks(searchQuery, limit),
-      searchOpenLibrary(searchQuery, limit),
+      olSearch,
     ])
 
     const g =

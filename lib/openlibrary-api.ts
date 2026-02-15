@@ -217,6 +217,57 @@ export async function searchOpenLibrary(
   }
 }
 
+/** General free-text search (uses `q=` instead of `subject=`). */
+export async function searchOpenLibraryByQuery(
+  query: string,
+  limit: number = 20
+): Promise<Book[]> {
+  try {
+    const fields = [
+      "key",
+      "title",
+      "author_name",
+      "subject",
+      "cover_i",
+      "ratings_average",
+      "readinglog_count",
+      "want_to_read_count",
+      "ratings_count",
+      "number_of_pages_median",
+      "first_publish_year",
+      "language",
+    ].join(",")
+
+    const olLangCodes = getOpenLibraryLanguageCodes()
+    const fetchLimit = olLangCodes ? limit * 2 : limit
+
+    const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(
+      query
+    )}&fields=${fields}&limit=${fetchLimit}&sort=rating`
+
+    const response = await fetch(url)
+    if (!response.ok) return []
+
+    const data: OpenLibrarySearchResponse = await response.json()
+    if (!data.docs) return []
+
+    let docs = data.docs
+    if (olLangCodes) {
+      docs = docs.filter((doc) => {
+        if (!doc.language || doc.language.length === 0) return true
+        return doc.language.some((l) => olLangCodes.includes(l))
+      })
+    }
+
+    return docs
+      .map((doc) => transformToBook(doc, query))
+      .filter((b): b is Book => b !== null)
+      .slice(0, limit)
+  } catch {
+    return []
+  }
+}
+
 export async function getRelatedSubjects(
   subject: string
 ): Promise<string[]> {
