@@ -111,6 +111,34 @@ export const curatedLists: CuratedList[] = [
     description: "Handpicked favorites across all genres",
     searchQuery: "award winning fiction novels",
   },
+  {
+    id: "literary-classics",
+    name: "Literary Classics",
+    emoji: "scroll",
+    description: "Timeless masterpieces everyone should read",
+    searchQuery: "classic literature greatest novels of all time",
+  },
+  {
+    id: "20th-century-essentials",
+    name: "20th Century Essentials",
+    emoji: "book-open",
+    description: "Defining novels of the modern era",
+    searchQuery: "best 20th century novels essential fiction",
+  },
+  {
+    id: "modern-classics",
+    name: "Modern Classics",
+    emoji: "sparkles",
+    description: "Recent books already considered essential",
+    searchQuery: "modern classic novels 2000s 2010s literary",
+  },
+  {
+    id: "world-literature",
+    name: "World Literature",
+    emoji: "globe",
+    description: "Must-read novels from around the globe",
+    searchQuery: "best world literature translated fiction international",
+  },
 ]
 
 // ---------------------------------------------------------------------------

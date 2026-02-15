@@ -31,6 +31,7 @@ import {
   Globe,
   Trophy,
   Gem,
+  Scroll,
   type LucideIcon,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -326,7 +327,8 @@ export function DiscoverHub({
     swords: Swords, sparkles: Sparkles, globe: Globe,
   }
   const curatedIconMap: Record<string, LucideIcon> = {
-    trophy: Trophy, gem: Gem, star: Star,
+    trophy: Trophy, gem: Gem, star: Star, scroll: Scroll,
+    "book-open": BookOpen, sparkles: Sparkles, globe: Globe,
   }
 
   // Color map for sub-genre badges
