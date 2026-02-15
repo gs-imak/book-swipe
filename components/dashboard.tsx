@@ -120,6 +120,9 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
     setSelectedBook(null)
   }
 
+  // Memoize Set of saved book IDs to avoid creating new references every render
+  const savedBookIds = useMemo(() => new Set(likedBooks.map(b => b.id)), [likedBooks])
+
   const shelfBookIds = shelfFilter ? new Set(getBooksForShelf(shelfFilter)) : null
   const filteredBooks = likedBooks.filter(book => {
     if (shelfBookIds && !shelfBookIds.has(book.id)) return false
@@ -664,7 +667,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                     setLikedBooks(updated)
                     saveLikedBooks(updated)
                   }}
-                  savedBookIds={new Set(likedBooks.map(b => b.id))}
+                  savedBookIds={savedBookIds}
                   onBookClick={handleBookClick}
                 />
               </motion.div>

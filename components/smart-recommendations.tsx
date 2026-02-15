@@ -97,7 +97,10 @@ export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }
   }
 
   const handleLikeBook = (book: Book) => {
-    const updatedLiked = [...likedBooks, book]
+    // Read fresh from localStorage to avoid overwriting books saved by other components
+    const current = getLikedBooks()
+    if (current.some(b => b.id === book.id)) return
+    const updatedLiked = [...current, book]
     setLikedBooks(updatedLiked)
     saveLikedBooks(updatedLiked)
     triggerActivity('like_book')
