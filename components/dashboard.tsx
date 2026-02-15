@@ -87,12 +87,13 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   }
 
   const handleSearchSave = (book: Book) => {
-    const alreadySaved = likedBooks.some(b => b.id === book.id)
-    if (alreadySaved) {
+    // Read fresh from localStorage to avoid overwriting books saved by other components
+    const current = getLikedBooks()
+    if (current.some(b => b.id === book.id)) {
       showToast("Already in your library", "info")
       return
     }
-    const updated = [...likedBooks, book]
+    const updated = [...current, book]
     setLikedBooks(updated)
     saveLikedBooks(updated)
     triggerActivity('like_book')
@@ -365,7 +366,12 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                 <DailyPickCard
                   onBookClick={handleBookClick}
                   onBookLiked={(book) => {
-                    setLikedBooks([...likedBooks, book])
+                    const current = getLikedBooks()
+                    if (!current.some(b => b.id === book.id)) {
+                      const updated = [...current, book]
+                      setLikedBooks(updated)
+                      saveLikedBooks(updated)
+                    }
                     showToast(`"${book.title}" saved to library`)
                   }}
                 />
@@ -648,8 +654,12 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               <motion.div {...fadeInUp(0.1)}>
                 <SmartRecommendations
                   onBookLike={(book) => {
-                    const updatedBooks = [...likedBooks, book]
-                    setLikedBooks(updatedBooks)
+                    const current = getLikedBooks()
+                    if (!current.some(b => b.id === book.id)) {
+                      const updated = [...current, book]
+                      setLikedBooks(updated)
+                      saveLikedBooks(updated)
+                    }
                   }}
                   onStartReading={handleStartReading}
                   onBookClick={handleBookClick}
@@ -661,9 +671,9 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                 <DiscoverHub
                   likedBooks={likedBooks}
                   onSaveBook={(book) => {
-                    const alreadySaved = likedBooks.some(b => b.id === book.id)
-                    if (alreadySaved) return
-                    const updated = [...likedBooks, book]
+                    const current = getLikedBooks()
+                    if (current.some(b => b.id === book.id)) return
+                    const updated = [...current, book]
                     setLikedBooks(updated)
                     saveLikedBooks(updated)
                   }}
@@ -688,7 +698,8 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
         onClose={handleCloseModal}
         onStartReading={handleStartReading}
         onRemoveBook={(book) => {
-          const updated = likedBooks.filter(b => b.id !== book.id)
+          const current = getLikedBooks()
+          const updated = current.filter(b => b.id !== book.id)
           setLikedBooks(updated)
           saveLikedBooks(updated)
           showToast(`"${book.title}" removed from library`, "info")
