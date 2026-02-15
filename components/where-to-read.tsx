@@ -10,6 +10,10 @@ interface WhereToReadProps {
   book: Book
 }
 
+// Cache price info so we don't refetch on every book detail view
+const priceCache = new Map<string, { info: PriceInfo | null; ts: number }>()
+const PRICE_CACHE_TTL = 10 * 60 * 1000 // 10 minutes
+
 export function WhereToRead({ book }: WhereToReadProps) {
   const [priceInfo, setPriceInfo] = useState<PriceInfo | null>(null)
   const [loadingPrice, setLoadingPrice] = useState(false)
@@ -23,8 +27,14 @@ export function WhereToRead({ book }: WhereToReadProps) {
     setWatching(isOnWatchList(book.id))
     // Fetch price info if book is from Google Books
     if (book.id && !book.id.match(/^\d+$/)) {
+      const cached = priceCache.get(book.id)
+      if (cached && Date.now() - cached.ts < PRICE_CACHE_TTL) {
+        setPriceInfo(cached.info)
+        return
+      }
       setLoadingPrice(true)
       fetchPriceInfo(book.id).then(info => {
+        priceCache.set(book.id, { info, ts: Date.now() })
         setPriceInfo(info)
         setLoadingPrice(false)
       })

@@ -47,11 +47,11 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
     }
   }, [book])
 
-  // Close on Escape key
+  // Close on Escape key (only if no sub-modal is open)
   useEffect(() => {
     if (!isOpen) return
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === "Escape" && !showShelfPicker && !showShareCard) {
         onClose()
       }
     }
@@ -59,7 +59,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
     return () => {
       document.removeEventListener("keydown", handleKeyDown)
     }
-  }, [isOpen, onClose])
+  }, [isOpen, onClose, showShelfPicker, showShareCard])
 
   // Trap focus inside dialog (disabled when sub-modals are active)
   useFocusTrap(dialogRef, isOpen && !showShelfPicker && !showShareCard)

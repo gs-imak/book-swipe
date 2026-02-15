@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { BookCard } from "./book-card"
 import { Button } from "@/components/ui/button"
 import { Book, UserPreferences } from "@/lib/book-data"
@@ -206,26 +206,36 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   const nextBook = filteredBooks[currentIndex + 1]
   const hasMoreBooks = currentIndex < filteredBooks.length
 
+  // Refs to avoid stale closures in keyboard handler
+  const handleSwipeRef = useRef(handleSwipe)
+  const handleUndoRef = useRef(handleUndo)
+  const hasMoreRef = useRef(hasMoreBooks)
+  const currentBookRef = useRef(currentBook)
+  handleSwipeRef.current = handleSwipe
+  handleUndoRef.current = handleUndo
+  hasMoreRef.current = hasMoreBooks
+  currentBookRef.current = currentBook
+
   // Keyboard navigation for swipe actions
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "z") {
         e.preventDefault()
-        handleUndo()
+        handleUndoRef.current()
         return
       }
-      if (!hasMoreBooks || !currentBook) return
+      if (!hasMoreRef.current || !currentBookRef.current) return
       if (e.key === "ArrowLeft") {
-        handleSwipe("left")
+        handleSwipeRef.current("left")
       } else if (e.key === "ArrowRight") {
-        handleSwipe("right")
+        handleSwipeRef.current("right")
       }
     }
     document.addEventListener("keydown", handleKeyDown)
     return () => {
       document.removeEventListener("keydown", handleKeyDown)
     }
-  }, [hasMoreBooks, currentBook])
+  }, [])
 
   // Loading
   if (isLoading) {
