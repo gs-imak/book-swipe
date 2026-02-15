@@ -285,7 +285,7 @@ function updateStatsForActivity(activity: string, data?: Record<string, unknown>
     case 'write_review':
       updateUserStats({
         totalReviews: stats.totalReviews + 1,
-        averageRating: calculateNewAverageRating(data?.rating as number | undefined)
+        averageRating: calculateNewAverageRating()
       })
 
       if (data?.favorite) {
@@ -313,12 +313,11 @@ function updateStatsForActivity(activity: string, data?: Record<string, unknown>
   }
 }
 
-// Calculate new average rating
-function calculateNewAverageRating(newRating?: number): number {
-  if (!newRating) return 0
-  
+// Calculate average rating from all saved reviews
+function calculateNewAverageRating(): number {
   const reviews = getBookReviews()
-  const totalRating = reviews.reduce((sum, review) => sum + review.rating, newRating)
+  if (reviews.length === 0) return 0
+  const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0)
   return totalRating / reviews.length
 }
 
