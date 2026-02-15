@@ -137,7 +137,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
 
           <div className="space-y-3">
             {currentlyReading.map((book) => {
-              const progressPercent = (book.currentPage / book.totalPages) * 100
+              const progressPercent = book.totalPages > 0 ? (book.currentPage / book.totalPages) * 100 : 0
               return (
                 <div key={book.bookId} className="flex gap-3 p-3 bg-stone-50 rounded-lg">
                   <div className="relative w-12 h-16 flex-shrink-0">
@@ -269,7 +269,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
 
           <div className="space-y-2">
             {pausedBooks.map((book) => {
-              const progressPercent = (book.currentPage / book.totalPages) * 100
+              const progressPercent = book.totalPages > 0 ? (book.currentPage / book.totalPages) * 100 : 0
               return (
                 <div key={book.bookId} className="flex items-center gap-3 p-2.5 bg-stone-50 rounded-lg">
                   <div className="relative w-8 h-11 flex-shrink-0">

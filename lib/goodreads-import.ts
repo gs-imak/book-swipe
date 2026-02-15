@@ -226,10 +226,19 @@ async function processBatch<T, R>(
   return results
 }
 
+export interface ImportOptions {
+  importRatings?: boolean
+  importShelves?: boolean
+}
+
 export async function importGoodreadsData(
   text: string,
-  onProgress?: (progress: ImportProgress) => void
+  onProgress?: (progress: ImportProgress) => void,
+  options?: ImportOptions
 ): Promise<ImportResult> {
+  const shouldImportRatings = options?.importRatings !== false
+  const shouldImportShelves = options?.importShelves !== false
+
   const rows = parseGoodreadsCSV(text)
   const existingBooks = getLikedBooks()
   const existingTitles = new Set(existingBooks.map(b => `${b.title.toLowerCase()}|${b.author.toLowerCase()}`))
@@ -281,24 +290,26 @@ export async function importGoodreadsData(
       progress.matched++
 
       // Collect review data
-      if (row.myRating > 0) {
+      if (shouldImportRatings && row.myRating > 0) {
         newReviews.push({ bookId: book.id, row })
       }
 
       // Collect shelf assignments
-      if (row.exclusiveShelf) {
-        shelfAssignments.push({ bookId: book.id, grShelf: row.exclusiveShelf })
-      }
+      if (shouldImportShelves) {
+        if (row.exclusiveShelf) {
+          shelfAssignments.push({ bookId: book.id, grShelf: row.exclusiveShelf })
+        }
 
-      // Custom shelves from "Bookshelves" column
-      if (row.bookshelves) {
-        row.bookshelves.split(",").forEach(s => {
-          const shelfName = s.trim()
-          if (shelfName && !SHELF_MAP[shelfName]) {
-            customShelves.add(shelfName)
-            shelfAssignments.push({ bookId: book.id, grShelf: shelfName })
-          }
-        })
+        // Custom shelves from "Bookshelves" column
+        if (row.bookshelves) {
+          row.bookshelves.split(",").forEach(s => {
+            const shelfName = s.trim()
+            if (shelfName && !SHELF_MAP[shelfName]) {
+              customShelves.add(shelfName)
+              shelfAssignments.push({ bookId: book.id, grShelf: shelfName })
+            }
+          })
+        }
       }
     } catch {
       progress.errors++

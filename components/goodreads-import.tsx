@@ -43,7 +43,7 @@ export function GoodreadsImport({ isOpen, onClose, onComplete }: GoodreadsImport
     setStep("progress")
     const result = await importGoodreadsData(csvText, (p) => {
       setProgress({ ...p })
-    })
+    }, { importRatings, importShelves })
     setResult(result)
     setStep("results")
   }
@@ -93,7 +93,8 @@ export function GoodreadsImport({ isOpen, onClose, onComplete }: GoodreadsImport
             {step !== "progress" && (
               <button
                 onClick={handleClose}
-                className="p-2 -mr-2 rounded-lg hover:bg-stone-100 transition-colors"
+                aria-label="Close import"
+                className="p-2 -mr-2 rounded-lg hover:bg-stone-100 transition-colors tap-target touch-manipulation"
               >
                 <X className="w-5 h-5 text-stone-400" />
               </button>
