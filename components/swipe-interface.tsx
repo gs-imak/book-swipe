@@ -114,6 +114,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   const [lastAction, setLastAction] = useState<{ book: Book; direction: "left" | "right" } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [batchCount, setBatchCount] = useState(1)
+  const [sessionLikedBooks, setSessionLikedBooks] = useState<Book[]>([])
   const { triggerActivity } = useGamification()
   const { showToast } = useToast()
 
@@ -168,6 +169,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
       const newLikedBooks = [...likedBooks, currentBook]
       setLikedBooks(newLikedBooks)
       saveLikedBooks(newLikedBooks)
+      setSessionLikedBooks(prev => [...prev, currentBook])
       triggerActivity('like_book')
       showToast(`"${currentBook.title}" saved to library`)
     } else {
@@ -190,6 +192,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
       const newLikedBooks = likedBooks.filter(b => b.id !== lastAction.book.id)
       setLikedBooks(newLikedBooks)
       saveLikedBooks(newLikedBooks)
+      setSessionLikedBooks(prev => prev.filter(b => b.id !== lastAction.book.id))
     } else {
       setPassedBooks(prev => prev.filter(b => b.id !== lastAction.book.id))
     }
@@ -292,7 +295,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
           {/* Stats */}
           <div className="flex justify-center gap-8 mb-6">
             <div className="text-center">
-              <p className="text-2xl font-bold text-emerald-600">{likedBooks.length}</p>
+              <p className="text-2xl font-bold text-emerald-600">{sessionLikedBooks.length}</p>
               <p className="text-xs text-stone-500">Liked</p>
             </div>
             <div className="text-center">
@@ -302,13 +305,13 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
           </div>
 
           {/* Liked books list */}
-          {likedBooks.length > 0 && (
+          {sessionLikedBooks.length > 0 && (
             <div className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm mb-6 text-left">
               <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-3">
                 Your picks
               </h3>
               <div className="max-h-32 overflow-y-auto space-y-1.5">
-                {likedBooks.map((book, index) => (
+                {sessionLikedBooks.map((book, index) => (
                   <motion.div
                     key={book.id}
                     initial={{ opacity: 0, x: -8 }}

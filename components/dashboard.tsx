@@ -1,15 +1,15 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Book } from "@/lib/book-data"
-import { getLikedBooks, clearLikedBooks, addBookToReading, getReadingProgress, saveLikedBooks } from "@/lib/storage"
+import { getLikedBooks, clearLikedBooks, addBookToReading, getReadingProgress, saveLikedBooks, getBookReviews, getShelfAssignments } from "@/lib/storage"
 import { Button } from "@/components/ui/button"
 import { AdminPanel } from "./admin-panel"
 import { ReadingProgressTracker } from "./reading-progress"
 import { SmartRecommendations } from "./smart-recommendations"
 import { BookDetailModal } from "./book-detail-modal"
 import { StarRating } from "./star-rating"
-import { getBookReview, getUserStats } from "@/lib/storage"
+import { getUserStats } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
 import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy, Search, Library, SlidersHorizontal, Download, X as XIcon } from "lucide-react"
 import { SittingReadingDoodle, ReadingSideDoodle, ReadingDoodle, FloatDoodle, GroovyDoodle, LovingDoodle } from "./illustrations"
@@ -21,7 +21,7 @@ import { DiscoverHub } from "./discover-hub"
 import { DailyPickCard } from "./daily-pick-card"
 import { ShelfManager } from "./shelf-manager"
 import { ReadingPath } from "./reading-path"
-import { getShelves, getBooksForShelf, getShelvesForBook, shouldShowBackupReminder, dismissBackupReminder, type Shelf } from "@/lib/storage"
+import { getShelves, getBooksForShelf, shouldShowBackupReminder, dismissBackupReminder, type Shelf } from "@/lib/storage"
 import { estimateReadingTime, getReadingSpeed, setReadingSpeed, getAllSpeeds, type ReadingSpeed } from "@/lib/reading-time"
 
 interface DashboardProps {
@@ -61,6 +61,22 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   useEffect(() => {
     setUserStats(getUserStats())
   }, [likedBooks])
+
+  // Pre-compute review and shelf lookups once instead of per-book in render
+  const reviewMap = useMemo(() => {
+    const map: Record<string, ReturnType<typeof getBookReviews>[number]> = {}
+    getBookReviews().forEach(r => { map[r.bookId] = r })
+    return map
+  }, [likedBooks, isBookModalOpen])
+
+  const shelfMap = useMemo(() => {
+    const map: Record<string, string[]> = {}
+    getShelfAssignments().forEach(a => {
+      if (!map[a.bookId]) map[a.bookId] = []
+      map[a.bookId].push(a.shelfId)
+    })
+    return map
+  }, [likedBooks, isBookModalOpen, showShelfManager])
 
   const handleClearAll = () => {
     if (confirm("Are you sure you want to clear all your liked books? This action cannot be undone.")) {
@@ -538,8 +554,8 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                 className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5"
               >
                 {sortedBooks.map((book, index) => {
-                  const review = getBookReview(book.id)
-                  const bookShelfIds = getShelvesForBook(book.id)
+                  const review = reviewMap[book.id] || null
+                  const bookShelfIds = shelfMap[book.id] || []
                   const firstShelf = bookShelfIds.length > 0 ? shelves.find(s => s.id === bookShelfIds[0]) : null
                   return (
                     <motion.div
