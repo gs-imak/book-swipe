@@ -66,7 +66,8 @@ export function ShelfPicker({ bookId, isOpen, onClose }: ShelfPickerProps) {
             <h3 className="text-base font-bold text-stone-900 font-serif">Add to Shelf</h3>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-stone-100 transition-colors"
+              aria-label="Close shelf picker"
+              className="p-2 -mr-1 rounded-lg hover:bg-stone-100 transition-colors tap-target touch-manipulation"
             >
               <X className="w-4 h-4 text-stone-400" />
             </button>

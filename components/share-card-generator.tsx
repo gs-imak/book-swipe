@@ -118,7 +118,8 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
             <h2 className="text-lg font-bold text-stone-900 font-serif">Share Card</h2>
             <button
               onClick={onClose}
-              className="p-2 -mr-2 rounded-lg hover:bg-stone-100 transition-colors"
+              aria-label="Close share card"
+              className="p-2 -mr-2 rounded-lg hover:bg-stone-100 transition-colors tap-target touch-manipulation"
             >
               <X className="w-5 h-5 text-stone-400" />
             </button>

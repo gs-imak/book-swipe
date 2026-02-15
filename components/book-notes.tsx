@@ -84,11 +84,6 @@ export function BookNotes({ bookId, compact = false }: BookNotesProps) {
   if (compact) {
     return (
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h4 className="font-medium text-stone-900">Notes & Highlights</h4>
-          <span className="text-sm text-stone-500">{notes.length}</span>
-        </div>
-        
         {notes.length > 0 ? (
           <div className="space-y-2">
             {notes.slice(0, 2).map((note) => (

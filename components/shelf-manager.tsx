@@ -165,20 +165,22 @@ export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManager
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-stone-50 transition-colors group">
+                  <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-stone-50 transition-colors">
                     <span className="text-lg">{shelf.emoji}</span>
                     <span className="flex-1 text-sm font-medium text-stone-800">{shelf.name}</span>
                     <span className="text-xs text-stone-400">{getBooksForShelf(shelf.id).length}</span>
                     <button
                       onClick={() => startEdit(shelf)}
-                      className="p-1.5 rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 opacity-0 group-hover:opacity-100 transition-all"
+                      aria-label={`Edit ${shelf.name}`}
+                      className="p-1.5 rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-all tap-target touch-manipulation"
                     >
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
                     {!shelf.isDefault && (
                       <button
                         onClick={() => handleDelete(shelf.id)}
-                        className="p-1.5 rounded-lg text-stone-400 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
+                        aria-label={`Delete ${shelf.name}`}
+                        className="p-1.5 rounded-lg text-stone-400 hover:text-red-500 hover:bg-red-50 transition-all tap-target touch-manipulation"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
