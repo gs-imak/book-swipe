@@ -24,7 +24,10 @@ export function WhereToRead({ book }: WhereToReadProps) {
   const borrowLinks = links.filter(l => l.type === "borrow")
 
   useEffect(() => {
+    let cancelled = false
     setWatching(isOnWatchList(book.id))
+    setPriceInfo(null)
+    setLoadingPrice(false)
     // Fetch price info if book is from Google Books
     if (book.id && !book.id.match(/^\d+$/)) {
       const cached = priceCache.get(book.id)
@@ -34,11 +37,13 @@ export function WhereToRead({ book }: WhereToReadProps) {
       }
       setLoadingPrice(true)
       fetchPriceInfo(book.id).then(info => {
+        if (cancelled) return
         priceCache.set(book.id, { info, ts: Date.now() })
         setPriceInfo(info)
         setLoadingPrice(false)
       })
     }
+    return () => { cancelled = true }
   }, [book.id])
 
   const toggleWatch = () => {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Trophy, Star, Zap, Award } from "lucide-react"
 import { GamificationEvent } from "@/lib/gamification"
@@ -14,10 +14,16 @@ interface GamificationToastProps {
 export function GamificationToast({ events, onEventShown, onOpenAchievements }: GamificationToastProps) {
   const [currentEvent, setCurrentEvent] = useState<GamificationEvent | null>(null)
   const [eventQueue, setEventQueue] = useState<GamificationEvent[]>([])
+  const seenEventsRef = useRef(new WeakSet<GamificationEvent>())
 
   useEffect(() => {
     if (events.length > 0) {
-      setEventQueue(prev => [...prev, ...events])
+      // Deduplicate: only queue events we haven't seen before
+      const newEvents = events.filter(e => !seenEventsRef.current.has(e))
+      if (newEvents.length > 0) {
+        newEvents.forEach(e => seenEventsRef.current.add(e))
+        setEventQueue(prev => [...prev, ...newEvents])
+      }
     }
   }, [events])
 
