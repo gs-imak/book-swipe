@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Heart, MessageSquare, Tag, Calendar, Clock } from "lucide-react"
+import { Heart, MessageSquare, Tag, Calendar, Clock, Smile, PartyPopper, Brain, Sparkles, Cloud, type LucideIcon } from "lucide-react"
 import { Button } from "./ui/button"
 import { StarRating } from "./star-rating"
 import { BookCover } from "@/components/book-cover"
@@ -16,13 +16,18 @@ interface QuickReviewProps {
   existingReview?: BookReview | null
 }
 
+const moodIconMap: Record<string, LucideIcon> = {
+  smile: Smile, "party-popper": PartyPopper, brain: Brain,
+  heart: Heart, sparkles: Sparkles, cloud: Cloud,
+}
+
 const moodOptions = [
-  { id: "happy", emoji: "😊", label: "Happy" },
-  { id: "excited", emoji: "🤩", label: "Excited" },
-  { id: "thoughtful", emoji: "🤔", label: "Thoughtful" },
-  { id: "emotional", emoji: "🥺", label: "Emotional" },
-  { id: "inspired", emoji: "✨", label: "Inspired" },
-  { id: "relaxed", emoji: "😌", label: "Relaxed" },
+  { id: "happy", icon: "smile", label: "Happy" },
+  { id: "excited", icon: "party-popper", label: "Excited" },
+  { id: "thoughtful", icon: "brain", label: "Thoughtful" },
+  { id: "emotional", icon: "heart", label: "Emotional" },
+  { id: "inspired", icon: "sparkles", label: "Inspired" },
+  { id: "relaxed", icon: "cloud", label: "Relaxed" },
 ]
 
 const quickTags = [
@@ -138,7 +143,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
               onClick={() => setSelectedMood(mood.id)}
               className="h-auto p-2 flex flex-col gap-1 text-center"
             >
-              <span className="text-lg">{mood.emoji}</span>
+              {(() => { const MIcon = moodIconMap[mood.icon]; return MIcon ? <MIcon className="w-5 h-5" /> : null })()}
               <span className="text-xs">{mood.label}</span>
             </Button>
           ))}

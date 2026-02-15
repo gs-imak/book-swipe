@@ -24,7 +24,7 @@ export const subGenres: SubGenre[] = [
   {
     id: "solarpunk",
     name: "Solarpunk",
-    emoji: "\u{1F331}",
+    emoji: "sprout",
     description:
       "Optimistic sci-fi imagining sustainable, green futures. Think renewable cities, cooperative societies, and hopeful technology.",
     searchQuery: "solarpunk fiction",
@@ -33,7 +33,7 @@ export const subGenres: SubGenre[] = [
   {
     id: "dark-academia",
     name: "Dark Academia",
-    emoji: "\u{1F3DB}",
+    emoji: "landmark",
     description:
       "Gothic aesthetics meet intellectual pursuits. Secret societies, ancient libraries, classical languages, and moral ambiguity.",
     searchQuery: "dark academia fiction",
@@ -42,7 +42,7 @@ export const subGenres: SubGenre[] = [
   {
     id: "cozy-mystery",
     name: "Cozy Mystery",
-    emoji: "\u{1F575}",
+    emoji: "search",
     description:
       "Light-hearted whodunits with charming settings. No graphic violence — just tea, clever sleuthing, and small-town secrets.",
     searchQuery: "cozy mystery",
@@ -51,7 +51,7 @@ export const subGenres: SubGenre[] = [
   {
     id: "grimdark",
     name: "Grimdark",
-    emoji: "\u{2694}",
+    emoji: "swords",
     description:
       "Morally complex fantasy where heroes are deeply flawed and the world is brutal. Gritty, violent, and unapologetically dark.",
     searchQuery: "grimdark fantasy",
@@ -60,7 +60,7 @@ export const subGenres: SubGenre[] = [
   {
     id: "magical-realism",
     name: "Magical Realism",
-    emoji: "\u{2728}",
+    emoji: "sparkles",
     description:
       "Magic woven seamlessly into the everyday world. The extraordinary feels perfectly ordinary, blurring the line between real and surreal.",
     searchQuery: "magical realism fiction",
@@ -69,7 +69,7 @@ export const subGenres: SubGenre[] = [
   {
     id: "afrofuturism",
     name: "Afrofuturism",
-    emoji: "\u{1F30D}",
+    emoji: "globe",
     description:
       "African culture and diaspora meet futuristic settings. Technology, tradition, and imagination collide in bold, original worlds.",
     searchQuery: "afrofuturism fiction",
@@ -93,21 +93,21 @@ export const curatedLists: CuratedList[] = [
   {
     id: "best-recent",
     name: "Best of 2025\u201326",
-    emoji: "\u{1F3C6}",
+    emoji: "trophy",
     description: "Standout novels from the past year",
     searchQuery: "best fiction 2025 2026",
   },
   {
     id: "hidden-gems",
     name: "Hidden Gems",
-    emoji: "\u{1F48E}",
+    emoji: "gem",
     description: "Under-the-radar books worth discovering",
     searchQuery: "underrated literary fiction",
   },
   {
     id: "staff-picks",
     name: "Staff Picks",
-    emoji: "\u{2B50}",
+    emoji: "star",
     description: "Handpicked favorites across all genres",
     searchQuery: "award winning fiction novels",
   },

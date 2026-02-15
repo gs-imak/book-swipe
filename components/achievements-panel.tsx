@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Trophy, Star, Target, TrendingUp, Lock, X } from "lucide-react"
+import { Trophy, Star, Target, TrendingUp, X, Search, BookOpen, Flame, MessageCircle, Heart, CheckCircle, FileText, Clock, Pencil, StickyNote, Zap } from "lucide-react"
 import { Progress } from "./ui/progress"
 import { getUserStats, getUserAchievements, getPointsForNextLevel, type Achievement, type UserStats } from "@/lib/storage"
 import { ACHIEVEMENTS, getAchievementsByCategory } from "@/lib/achievements"
+import { AchievementBadge } from "./achievement-badge"
+import { IconBadge } from "./icon-badge"
+import type { LucideIcon } from "lucide-react"
 
 interface AchievementsPanelProps {
   isOpen: boolean
@@ -190,9 +193,7 @@ function OverviewTab({ stats, achievements, completionPercentage }: OverviewTabP
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-white rounded-xl p-3.5 border border-stone-200/60 shadow-sm">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
-              <Star className="w-4 h-4 text-teal-600" />
-            </div>
+            <IconBadge icon={Star} color="teal" />
             <div className="min-w-0">
               <p className="text-lg font-bold text-stone-900">{stats.totalPoints}</p>
               <p className="text-xs text-stone-500">Points</p>
@@ -202,9 +203,7 @@ function OverviewTab({ stats, achievements, completionPercentage }: OverviewTabP
 
         <div className="bg-white rounded-xl p-3.5 border border-stone-200/60 shadow-sm">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
-              <TrendingUp className="w-4 h-4 text-emerald-600" />
-            </div>
+            <IconBadge icon={TrendingUp} color="emerald" />
             <div className="min-w-0">
               <p className="text-lg font-bold text-stone-900">{stats.currentStreak}</p>
               <p className="text-xs text-stone-500">Day streak</p>
@@ -214,9 +213,7 @@ function OverviewTab({ stats, achievements, completionPercentage }: OverviewTabP
 
         <div className="bg-white rounded-xl p-3.5 border border-stone-200/60 shadow-sm">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
-              <Trophy className="w-4 h-4 text-amber-600" />
-            </div>
+            <IconBadge icon={Trophy} color="amber" />
             <div className="min-w-0">
               <p className="text-lg font-bold text-stone-900">{achievements.filter((a: Achievement) => a.unlockedAt).length}</p>
               <p className="text-xs text-stone-500">Unlocked</p>
@@ -226,9 +223,7 @@ function OverviewTab({ stats, achievements, completionPercentage }: OverviewTabP
 
         <div className="bg-white rounded-xl p-3.5 border border-stone-200/60 shadow-sm">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-rose-50 flex items-center justify-center flex-shrink-0">
-              <Target className="w-4 h-4 text-rose-600" />
-            </div>
+            <IconBadge icon={Target} color="rose" />
             <div className="min-w-0">
               <p className="text-lg font-bold text-stone-900">{stats.totalBooksRead}</p>
               <p className="text-xs text-stone-500">Books read</p>
@@ -258,7 +253,7 @@ function OverviewTab({ stats, achievements, completionPercentage }: OverviewTabP
           <div className="space-y-2">
             {recentAchievements.map((achievement: Achievement) => (
               <div key={achievement.id} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-stone-200/60 shadow-sm">
-                <span className="text-xl">{achievement.icon}</span>
+                <AchievementBadge iconKey={achievement.icon} tier={achievement.type as "bronze" | "silver" | "gold" | "platinum"} unlocked={true} />
                 <div className="flex-1 min-w-0">
                   <h4 className="font-medium text-sm text-stone-900">{achievement.name}</h4>
                   <p className="text-xs text-stone-500 truncate">{achievement.description}</p>
@@ -279,30 +274,41 @@ interface AchievementsTabProps {
   categorizedAchievements: Record<string, Achievement[]>
 }
 
+const categoryIcons: Record<string, { icon: LucideIcon; color: string }> = {
+  discovery: { icon: Search, color: "violet" },
+  reading: { icon: BookOpen, color: "blue" },
+  consistency: { icon: Flame, color: "orange" },
+  social: { icon: MessageCircle, color: "teal" },
+  milestone: { icon: Trophy, color: "amber" },
+}
+
 function AchievementsTab({ categorizedAchievements }: AchievementsTabProps) {
   const categories = [
-    { key: 'discovery', name: 'Discovery', icon: '🔍' },
-    { key: 'reading', name: 'Reading', icon: '📚' },
-    { key: 'consistency', name: 'Consistency', icon: '🔥' },
-    { key: 'social', name: 'Social', icon: '💬' },
-    { key: 'milestone', name: 'Milestones', icon: '🏆' },
+    { key: 'discovery', name: 'Discovery' },
+    { key: 'reading', name: 'Reading' },
+    { key: 'consistency', name: 'Consistency' },
+    { key: 'social', name: 'Social' },
+    { key: 'milestone', name: 'Milestones' },
   ]
 
   return (
     <div className="space-y-6">
-      {categories.map((category) => (
-        <div key={category.key}>
-          <h3 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
-            <span>{category.icon}</span>
-            {category.name}
-          </h3>
-          <div className="space-y-2">
-            {categorizedAchievements[category.key]?.map((achievement: Achievement) => (
-              <AchievementCard key={achievement.id} achievement={achievement} />
-            ))}
+      {categories.map((category) => {
+        const catIcon = categoryIcons[category.key]
+        return (
+          <div key={category.key}>
+            <h3 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
+              <IconBadge icon={catIcon.icon} color={catIcon.color} size="sm" />
+              {category.name}
+            </h3>
+            <div className="space-y-2">
+              {categorizedAchievements[category.key]?.map((achievement: Achievement) => (
+                <AchievementCard key={achievement.id} achievement={achievement} />
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
@@ -320,11 +326,11 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
         : 'bg-stone-50/50 border-stone-100'
     }`}>
       <div className="flex items-start gap-3">
-        <div className={`text-xl w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
-          isUnlocked ? 'bg-amber-50' : 'bg-stone-100'
-        }`}>
-          {isUnlocked ? achievement.icon : <Lock className="w-4 h-4 text-stone-400" />}
-        </div>
+        <AchievementBadge
+          iconKey={achievement.icon}
+          tier={achievement.type as "bronze" | "silver" | "gold" | "platinum"}
+          unlocked={isUnlocked}
+        />
 
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-0.5">
@@ -377,23 +383,36 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
   )
 }
 
+const statIconMap: { label: string; icon: LucideIcon; color: string }[] = [
+  { label: 'Books Liked', icon: Heart, color: 'rose' },
+  { label: 'Books Completed', icon: CheckCircle, color: 'emerald' },
+  { label: 'Pages Read', icon: FileText, color: 'blue' },
+  { label: 'Reading Time', icon: Clock, color: 'violet' },
+  { label: 'Reviews Written', icon: Pencil, color: 'amber' },
+  { label: 'Notes & Highlights', icon: StickyNote, color: 'teal' },
+  { label: 'Current Streak', icon: Flame, color: 'orange' },
+  { label: 'Longest Streak', icon: Zap, color: 'yellow' },
+  { label: 'Average Rating', icon: Star, color: 'amber' },
+  { label: 'Favorites', icon: Heart, color: 'pink' },
+]
+
 function StatsTab({ stats }: { stats: UserStats }) {
-  const statItems = [
-    { label: 'Books Liked', value: stats.totalBooksLiked, icon: '❤️' },
-    { label: 'Books Completed', value: stats.totalBooksRead, icon: '✅' },
-    { label: 'Pages Read', value: stats.totalPagesRead.toLocaleString(), icon: '📄' },
-    { label: 'Reading Time', value: `${Math.round(stats.totalReadingTime / 60)}h`, icon: '⏱️' },
-    { label: 'Reviews Written', value: stats.totalReviews, icon: '✍️' },
-    { label: 'Notes & Highlights', value: stats.totalNotes, icon: '📝' },
-    { label: 'Current Streak', value: `${stats.currentStreak} days`, icon: '🔥' },
-    { label: 'Longest Streak', value: `${stats.longestStreak} days`, icon: '⚡' },
-    { label: 'Average Rating', value: stats.averageRating.toFixed(1), icon: '⭐' },
-    { label: 'Favorites', value: stats.favoritesCount, icon: '💖' },
+  const statValues = [
+    stats.totalBooksLiked,
+    stats.totalBooksRead,
+    stats.totalPagesRead.toLocaleString(),
+    `${Math.round(stats.totalReadingTime / 60)}h`,
+    stats.totalReviews,
+    stats.totalNotes,
+    `${stats.currentStreak} days`,
+    `${stats.longestStreak} days`,
+    stats.averageRating.toFixed(1),
+    stats.favoritesCount,
   ]
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-      {statItems.map((item, index) => (
+      {statIconMap.map((item, index) => (
         <motion.div
           key={item.label}
           initial={{ opacity: 0, y: 12 }}
@@ -401,9 +420,9 @@ function StatsTab({ stats }: { stats: UserStats }) {
           transition={{ delay: Math.min(index * 0.03, 0.2) }}
           className="bg-white rounded-xl p-3.5 border border-stone-200/60 shadow-sm flex items-center gap-3"
         >
-          <span className="text-lg">{item.icon}</span>
+          <IconBadge icon={item.icon} color={item.color} />
           <div>
-            <p className="text-base font-bold text-stone-900">{item.value}</p>
+            <p className="text-base font-bold text-stone-900">{statValues[index]}</p>
             <p className="text-xs text-stone-500">{item.label}</p>
           </div>
         </motion.div>

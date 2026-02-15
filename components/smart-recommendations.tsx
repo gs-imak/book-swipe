@@ -11,7 +11,7 @@ import {
   getDiverseRecommendations,
 } from "../lib/recommendations"
 import { getCachedBooks } from "@/lib/book-cache"
-import { Star, Clock, BookOpen, Heart, Sparkles, Zap } from "lucide-react"
+import { Star, Clock, BookOpen, Heart, Sparkles, Zap, Sun, Search, Swords, Brain, Laugh, Moon, Coffee, Sunset, Rocket, type LucideIcon } from "lucide-react"
 import { motion } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
 import { useGamification } from "./gamification-provider"
@@ -21,6 +21,14 @@ interface SmartRecommendationsProps {
   onBookLike?: (book: Book) => void
   onStartReading?: (book: Book) => void
   onBookClick?: (book: Book) => void
+}
+
+const moodIconMap: Record<string, LucideIcon> = {
+  sun: Sun, heart: Heart, search: Search, swords: Swords,
+  brain: Brain, laugh: Laugh, sparkles: Sparkles, moon: Moon,
+}
+const timeIconMap: Record<string, LucideIcon> = {
+  zap: Zap, coffee: Coffee, sunset: Sunset, "book-open": BookOpen, rocket: Rocket,
 }
 
 export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }: SmartRecommendationsProps) {
@@ -187,7 +195,7 @@ export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }
                   : "bg-stone-100 text-stone-600 hover:bg-stone-200"
               }`}
             >
-              <span className="text-sm">{mood.emoji}</span>
+              {(() => { const MIcon = moodIconMap[mood.emoji]; return MIcon ? <MIcon className="w-3.5 h-3.5" /> : null })()}
               {mood.name}
             </button>
           ))}
@@ -203,13 +211,14 @@ export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }
               <button
                 key={time.id}
                 onClick={() => handleTimeFilter(time.id)}
-                className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                   selectedTime === time.id
                     ? "bg-stone-900 text-white"
                     : "bg-stone-100 text-stone-500 hover:bg-stone-200"
                 }`}
               >
-                {time.emoji} {time.name}
+                {(() => { const TIcon = timeIconMap[time.emoji]; return TIcon ? <TIcon className="w-3 h-3" /> : null })()}
+                {time.name}
               </button>
             ))}
           </div>

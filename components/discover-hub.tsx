@@ -23,6 +23,15 @@ import {
   BookOpen,
   RefreshCw,
   Loader2,
+  Sprout,
+  Landmark,
+  Search,
+  Swords,
+  Sparkles,
+  Globe,
+  Trophy,
+  Gem,
+  type LucideIcon,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
@@ -312,6 +321,14 @@ export function DiscoverHub({
     [expandedGenre, genreBooksMap]
   )
 
+  const subGenreIconMap: Record<string, LucideIcon> = {
+    sprout: Sprout, landmark: Landmark, search: Search,
+    swords: Swords, sparkles: Sparkles, globe: Globe,
+  }
+  const curatedIconMap: Record<string, LucideIcon> = {
+    trophy: Trophy, gem: Gem, star: Star,
+  }
+
   // Color map for sub-genre badges
   const colorMap: Record<string, string> = {
     emerald: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -516,7 +533,9 @@ export function DiscoverHub({
                   onClick={() => handleToggleList(list.id)}
                   className="w-full flex items-center gap-3 p-3.5 text-left hover:bg-stone-50/50 transition-colors"
                 >
-                  <span className="text-lg">{list.emoji}</span>
+                  <span className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                    {(() => { const CIcon = curatedIconMap[list.emoji]; return CIcon ? <CIcon className="w-4 h-4 text-amber-600" /> : null })()}
+                  </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-stone-900">
                       {list.name}
@@ -578,9 +597,7 @@ export function DiscoverHub({
       {/* ----------------------------------------------------------------- */}
       <div>
         <SectionHeader
-          icon={
-            <span className="text-base leading-none">{"\u{1F50D}"}</span>
-          }
+          icon={<Search className="w-4 h-4 text-violet-500" />}
           title="Genre Deep-Dives"
           subtitle="Explore sub-genres"
         />
@@ -606,7 +623,7 @@ export function DiscoverHub({
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-base">{genre.emoji}</span>
+                    {(() => { const GIcon = subGenreIconMap[genre.emoji]; return GIcon ? <GIcon className="w-4 h-4" /> : null })()}
                     <span className="text-xs font-semibold truncate">
                       {genre.name}
                     </span>

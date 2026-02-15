@@ -140,7 +140,7 @@ export function checkAchievements(): GamificationEvent[] {
         
         events.push({
           type: 'achievement_unlocked',
-          title: `${achievement.icon} ${achievement.name}`,
+          title: achievement.name,
           description: achievement.description,
           achievement: achievements.find(a => a.id === achievement.id) || achievement
         })

@@ -35,22 +35,22 @@ export interface TimeSuggestion {
 }
 
 export const moodFilters: MoodFilter[] = [
-  { id: "uplifting", name: "Uplifting", emoji: "😊", description: "Feel-good and heartwarming reads", keywords: ["Uplifting", "Heartwarming", "Feel-good", "Cozy", "Beautiful"] },
-  { id: "romantic", name: "Romantic", emoji: "💖", description: "Love stories and tender moments", keywords: ["Romantic", "Emotional", "Heartwarming"] },
-  { id: "suspenseful", name: "Suspenseful", emoji: "🕵️", description: "Twists, tension, and fast plots", keywords: ["Suspenseful", "Thrilling", "Dark", "Twisty", "Gripping"] },
-  { id: "epic", name: "Epic", emoji: "🗡️", description: "Big worlds and long adventures", keywords: ["Epic", "Magical", "Adventure", "Immersive"] },
-  { id: "thoughtful", name: "Thoughtful", emoji: "🧠", description: "Philosophical and contemplative", keywords: ["Philosophical", "Thought-provoking", "Contemplative", "Reflective"] },
-  { id: "funny", name: "Funny", emoji: "😄", description: "Humorous and light reads", keywords: ["Humorous", "Funny", "Light-hearted"] },
-  { id: "inspiring", name: "Inspiring", emoji: "🌟", description: "Motivating and empowering", keywords: ["Inspiring", "Motivational", "Empowering", "Practical"] },
-  { id: "dark", name: "Dark", emoji: "🌒", description: "Brooding, heavy, and intense", keywords: ["Dark", "Melancholic", "Powerful"] },
+  { id: "uplifting", name: "Uplifting", emoji: "sun", description: "Feel-good and heartwarming reads", keywords: ["Uplifting", "Heartwarming", "Feel-good", "Cozy", "Beautiful"] },
+  { id: "romantic", name: "Romantic", emoji: "heart", description: "Love stories and tender moments", keywords: ["Romantic", "Emotional", "Heartwarming"] },
+  { id: "suspenseful", name: "Suspenseful", emoji: "search", description: "Twists, tension, and fast plots", keywords: ["Suspenseful", "Thrilling", "Dark", "Twisty", "Gripping"] },
+  { id: "epic", name: "Epic", emoji: "swords", description: "Big worlds and long adventures", keywords: ["Epic", "Magical", "Adventure", "Immersive"] },
+  { id: "thoughtful", name: "Thoughtful", emoji: "brain", description: "Philosophical and contemplative", keywords: ["Philosophical", "Thought-provoking", "Contemplative", "Reflective"] },
+  { id: "funny", name: "Funny", emoji: "laugh", description: "Humorous and light reads", keywords: ["Humorous", "Funny", "Light-hearted"] },
+  { id: "inspiring", name: "Inspiring", emoji: "sparkles", description: "Motivating and empowering", keywords: ["Inspiring", "Motivational", "Empowering", "Practical"] },
+  { id: "dark", name: "Dark", emoji: "moon", description: "Brooding, heavy, and intense", keywords: ["Dark", "Melancholic", "Powerful"] },
 ]
 
 export const timeBasedSuggestions: TimeSuggestion[] = [
-  { id: "quick-bite", name: "< 2 hrs", emoji: "⚡", description: "Perfect for a quick session", maxHours: 2 },
-  { id: "short-session", name: "2–4 hrs", emoji: "☕", description: "Nice afternoon read", minHours: 2, maxHours: 4 },
-  { id: "unwind", name: "4–6 hrs", emoji: "🌆", description: "Unwind in the evening", minHours: 4, maxHours: 6 },
-  { id: "weekend", name: "6–8 hrs", emoji: "📚", description: "Great for a weekend", minHours: 6, maxHours: 8 },
-  { id: "marathon", name: "> 8 hrs", emoji: "🚀", description: "Settle in for a long ride", minHours: 8 },
+  { id: "quick-bite", name: "< 2 hrs", emoji: "zap", description: "Perfect for a quick session", maxHours: 2 },
+  { id: "short-session", name: "2–4 hrs", emoji: "coffee", description: "Nice afternoon read", minHours: 2, maxHours: 4 },
+  { id: "unwind", name: "4–6 hrs", emoji: "sunset", description: "Unwind in the evening", minHours: 4, maxHours: 6 },
+  { id: "weekend", name: "6–8 hrs", emoji: "book-open", description: "Great for a weekend", minHours: 6, maxHours: 8 },
+  { id: "marathon", name: "> 8 hrs", emoji: "rocket", description: "Settle in for a long ride", minHours: 8 },
 ]
 
 function estimateHoursFromString(readingTime: string): number {

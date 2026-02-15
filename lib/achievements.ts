@@ -6,16 +6,16 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "first_like",
     name: "First Discovery",
     description: "Like your first book",
-    icon: "❤️",
+    icon: "heart",
     type: "bronze",
     category: "discovery",
     maxProgress: 1
   },
   {
     id: "book_lover",
-    name: "Book Lover", 
+    name: "Book Lover",
     description: "Like 10 books",
-    icon: "📚",
+    icon: "book-open",
     type: "silver",
     category: "discovery",
     maxProgress: 10
@@ -24,7 +24,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "collector",
     name: "The Collector",
     description: "Like 50 books",
-    icon: "📖",
+    icon: "library",
     type: "gold",
     category: "discovery",
     maxProgress: 50
@@ -33,7 +33,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "library_master",
     name: "Library Master",
     description: "Like 100 books",
-    icon: "🏛️",
+    icon: "crown",
     type: "platinum",
     category: "discovery",
     maxProgress: 100
@@ -44,7 +44,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "first_review",
     name: "Critic's Corner",
     description: "Write your first review",
-    icon: "⭐",
+    icon: "star",
     type: "bronze",
     category: "reading",
     maxProgress: 1
@@ -53,8 +53,8 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "reviewer",
     name: "Thoughtful Reviewer",
     description: "Write 10 reviews",
-    icon: "📝",
-    type: "silver", 
+    icon: "message-square",
+    type: "silver",
     category: "reading",
     maxProgress: 10
   },
@@ -62,7 +62,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "book_critic",
     name: "Book Critic",
     description: "Write 25 reviews",
-    icon: "🎭",
+    icon: "award",
     type: "gold",
     category: "reading",
     maxProgress: 25
@@ -71,7 +71,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "reading_expert",
     name: "Reading Expert",
     description: "Complete 50 books",
-    icon: "🎓",
+    icon: "graduation-cap",
     type: "platinum",
     category: "reading",
     maxProgress: 50
@@ -82,7 +82,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "daily_reader",
     name: "Daily Reader",
     description: "Read 3 days in a row",
-    icon: "🔥",
+    icon: "flame",
     type: "bronze",
     category: "consistency",
     maxProgress: 3
@@ -91,16 +91,16 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "week_warrior",
     name: "Week Warrior",
     description: "Read 7 days in a row",
-    icon: "⚡",
+    icon: "zap",
     type: "silver",
-    category: "consistency", 
+    category: "consistency",
     maxProgress: 7
   },
   {
     id: "streak_master",
     name: "Streak Master",
     description: "Read 30 days in a row",
-    icon: "🏆",
+    icon: "trophy",
     type: "gold",
     category: "consistency",
     maxProgress: 30
@@ -109,7 +109,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "unstoppable",
     name: "Unstoppable",
     description: "Read 100 days in a row",
-    icon: "💎",
+    icon: "gem",
     type: "platinum",
     category: "consistency",
     maxProgress: 100
@@ -120,7 +120,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "note_taker",
     name: "Note Taker",
     description: "Add your first note or highlight",
-    icon: "📄",
+    icon: "sticky-note",
     type: "bronze",
     category: "social",
     maxProgress: 1
@@ -129,7 +129,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "scholar",
     name: "Scholar",
     description: "Add 25 notes and highlights",
-    icon: "🎒",
+    icon: "book-marked",
     type: "silver",
     category: "social",
     maxProgress: 25
@@ -138,7 +138,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "annotator",
     name: "Master Annotator",
     description: "Add 100 notes and highlights",
-    icon: "📋",
+    icon: "pen-tool",
     type: "gold",
     category: "social",
     maxProgress: 100
@@ -147,7 +147,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "quote_collector",
     name: "Quote Collector",
     description: "Save 50 favorite quotes",
-    icon: "💭",
+    icon: "quote",
     type: "gold",
     category: "social",
     maxProgress: 50
@@ -158,7 +158,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "page_turner",
     name: "Page Turner",
     description: "Read 1,000 pages",
-    icon: "📃",
+    icon: "book-open",
     type: "bronze",
     category: "milestone",
     maxProgress: 1000
@@ -167,7 +167,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "bookworm",
     name: "Bookworm",
     description: "Read 10,000 pages",
-    icon: "🐛",
+    icon: "glasses",
     type: "silver",
     category: "milestone",
     maxProgress: 10000
@@ -176,7 +176,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "literary_giant",
     name: "Literary Giant",
     description: "Read 50,000 pages",
-    icon: "📚",
+    icon: "medal",
     type: "gold",
     category: "milestone",
     maxProgress: 50000
@@ -185,7 +185,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "reading_legend",
     name: "Reading Legend",
     description: "Read 100,000 pages",
-    icon: "👑",
+    icon: "crown",
     type: "platinum",
     category: "milestone",
     maxProgress: 100000
@@ -196,7 +196,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "genre_explorer",
     name: "Genre Explorer", 
     description: "Like books from 5 different genres",
-    icon: "🗺️",
+    icon: "compass",
     type: "silver",
     category: "discovery",
     maxProgress: 5
@@ -205,8 +205,8 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "mood_master",
     name: "Mood Master",
     description: "Experience 10 different reading moods",
-    icon: "🎭",
-    type: "gold", 
+    icon: "palette",
+    type: "gold",
     category: "reading",
     maxProgress: 10
   },
@@ -214,7 +214,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "five_star_fan",
     name: "Five Star Fan",
     description: "Give 5-star ratings to 10 books",
-    icon: "🌟",
+    icon: "sparkles",
     type: "gold",
     category: "reading",
     maxProgress: 10
@@ -223,7 +223,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "speed_reader",
     name: "Speed Reader",
     description: "Read 10 hours in one week",
-    icon: "💨",
+    icon: "rocket",
     type: "silver",
     category: "milestone",
     maxProgress: 600 // 10 hours in minutes

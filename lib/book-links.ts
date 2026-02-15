@@ -35,7 +35,7 @@ export function getBookLinks(book: Book): BookLink[] {
     links.push({
       id: "amazon",
       name: "Amazon / Kindle",
-      icon: "\u{1F6D2}",
+      icon: "shopping-cart",
       url: `https://www.amazon.com/dp/${isbn}`,
       type: "buy",
     })
@@ -43,7 +43,7 @@ export function getBookLinks(book: Book): BookLink[] {
     links.push({
       id: "amazon",
       name: "Amazon / Kindle",
-      icon: "\u{1F6D2}",
+      icon: "shopping-cart",
       url: `https://www.amazon.com/s?k=${search}&i=stripbooks`,
       type: "buy",
     })
@@ -53,7 +53,7 @@ export function getBookLinks(book: Book): BookLink[] {
   links.push({
     id: "google-play",
     name: "Google Play Books",
-    icon: "\u{1F4F1}",
+    icon: "smartphone",
     url: `https://play.google.com/store/search?q=${search}&c=books`,
     type: "buy",
   })
@@ -62,7 +62,7 @@ export function getBookLinks(book: Book): BookLink[] {
   links.push({
     id: "audible",
     name: "Audible",
-    icon: "\u{1F3A7}",
+    icon: "headphones",
     url: `https://www.audible.com/search?keywords=${search}`,
     type: "buy",
   })
@@ -71,7 +71,7 @@ export function getBookLinks(book: Book): BookLink[] {
   links.push({
     id: "apple-books",
     name: "Apple Books",
-    icon: "\u{1F34E}",
+    icon: "book-open",
     url: `https://books.apple.com/us/search?term=${search}`,
     type: "buy",
   })
@@ -81,7 +81,7 @@ export function getBookLinks(book: Book): BookLink[] {
     links.push({
       id: "openlibrary",
       name: "Open Library",
-      icon: "\u{1F4D6}",
+      icon: "library",
       url: `https://openlibrary.org/isbn/${isbn}`,
       type: "borrow",
     })
@@ -89,7 +89,7 @@ export function getBookLinks(book: Book): BookLink[] {
     links.push({
       id: "openlibrary",
       name: "Open Library",
-      icon: "\u{1F4D6}",
+      icon: "library",
       url: `https://openlibrary.org/search?q=${search}`,
       type: "borrow",
     })
@@ -99,7 +99,7 @@ export function getBookLinks(book: Book): BookLink[] {
   links.push({
     id: "worldcat",
     name: "Find in Library",
-    icon: "\u{1F3DB}\uFE0F",
+    icon: "landmark",
     url: isbn
       ? `https://www.worldcat.org/isbn/${isbn}`
       : `https://www.worldcat.org/search?q=${search}`,

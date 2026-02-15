@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ExternalLink, Tag, Eye } from "lucide-react"
+import { ExternalLink, Tag, Eye, ShoppingCart, Smartphone, Headphones, BookOpen, Library, Landmark, type LucideIcon } from "lucide-react"
 import { Book } from "@/lib/book-data"
 import { getBookLinks, type BookLink } from "@/lib/book-links"
 import { fetchPriceInfo, type PriceInfo, isOnWatchList, addToWatchList, removeFromWatchList } from "@/lib/price-tracker"
@@ -13,6 +13,15 @@ interface WhereToReadProps {
 // Cache price info so we don't refetch on every book detail view
 const priceCache = new Map<string, { info: PriceInfo | null; ts: number }>()
 const PRICE_CACHE_TTL = 10 * 60 * 1000 // 10 minutes
+
+const linkIconMap: Record<string, LucideIcon> = {
+  "shopping-cart": ShoppingCart,
+  smartphone: Smartphone,
+  headphones: Headphones,
+  "book-open": BookOpen,
+  library: Library,
+  landmark: Landmark,
+}
 
 export function WhereToRead({ book }: WhereToReadProps) {
   const [priceInfo, setPriceInfo] = useState<PriceInfo | null>(null)
@@ -132,19 +141,22 @@ export function WhereToRead({ book }: WhereToReadProps) {
       <div>
         <h4 className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider mb-2">Buy / Download</h4>
         <div className="grid grid-cols-2 gap-1.5">
-          {buyLinks.map(link => (
-            <a
-              key={link.id}
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-stone-200/80 hover:border-stone-300 hover:bg-stone-50 transition-all group"
-            >
-              <span className="text-sm">{link.icon}</span>
-              <span className="text-xs font-medium text-stone-700 group-hover:text-stone-900 truncate">{link.name}</span>
-              <ExternalLink className="w-3 h-3 text-stone-300 group-hover:text-stone-400 ml-auto flex-shrink-0" />
-            </a>
-          ))}
+          {buyLinks.map(link => {
+            const LinkIcon = linkIconMap[link.icon]
+            return (
+              <a
+                key={link.id}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-stone-200/80 hover:border-stone-300 hover:bg-stone-50 transition-all group"
+              >
+                {LinkIcon && <LinkIcon className="w-4 h-4 text-stone-500 group-hover:text-stone-700 flex-shrink-0" />}
+                <span className="text-xs font-medium text-stone-700 group-hover:text-stone-900 truncate">{link.name}</span>
+                <ExternalLink className="w-3 h-3 text-stone-300 group-hover:text-stone-400 ml-auto flex-shrink-0" />
+              </a>
+            )
+          })}
         </div>
       </div>
 
@@ -152,19 +164,22 @@ export function WhereToRead({ book }: WhereToReadProps) {
       <div>
         <h4 className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider mb-2">Borrow / Free</h4>
         <div className="grid grid-cols-2 gap-1.5">
-          {borrowLinks.map(link => (
-            <a
-              key={link.id}
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-stone-200/80 hover:border-stone-300 hover:bg-stone-50 transition-all group"
-            >
-              <span className="text-sm">{link.icon}</span>
-              <span className="text-xs font-medium text-stone-700 group-hover:text-stone-900 truncate">{link.name}</span>
-              <ExternalLink className="w-3 h-3 text-stone-300 group-hover:text-stone-400 ml-auto flex-shrink-0" />
-            </a>
-          ))}
+          {borrowLinks.map(link => {
+            const LinkIcon = linkIconMap[link.icon]
+            return (
+              <a
+                key={link.id}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-stone-200/80 hover:border-stone-300 hover:bg-stone-50 transition-all group"
+              >
+                {LinkIcon && <LinkIcon className="w-4 h-4 text-stone-500 group-hover:text-stone-700 flex-shrink-0" />}
+                <span className="text-xs font-medium text-stone-700 group-hover:text-stone-900 truncate">{link.name}</span>
+                <ExternalLink className="w-3 h-3 text-stone-300 group-hover:text-stone-400 ml-auto flex-shrink-0" />
+              </a>
+            )
+          })}
         </div>
       </div>
     </div>
