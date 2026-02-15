@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Book } from "@/lib/book-data"
-import { searchGoogleBooks } from "@/lib/books-api"
+import { searchAllBooks } from "@/lib/books-api"
 import { Search, X, Heart, Star, Loader2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
@@ -60,7 +60,7 @@ export function BookSearch({ isOpen, onClose, onSaveBook, savedBookIds }: BookSe
     setIsSearching(true)
     setHasSearched(true)
     try {
-      const books = await searchGoogleBooks(searchQuery, 20)
+      const books = await searchAllBooks(searchQuery, 20)
       if (!activeRef.current) return // modal closed while searching
       setResults(books)
     } catch {

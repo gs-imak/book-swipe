@@ -1,6 +1,6 @@
 import { Book } from "./book-data"
 import { getCachedBooks, addBooksToCache, isQueryCached, markQueryCompleted, queryCache } from "./book-cache"
-import { searchOpenLibrary } from "./openlibrary-api"
+import { searchOpenLibrary, searchOpenLibraryByQuery } from "./openlibrary-api"
 import { getLanguagePreference } from "./language-preference"
 
 // Deterministic pseudo-rating from a string (always returns the same value for the same input)
@@ -83,6 +83,47 @@ export async function searchGoogleBooks(query: string, maxResults = 20, lang?: s
   } catch {
     return []
   }
+}
+
+// Combined search across Google Books + Open Library for better results.
+// Google Books langRestrict can be unreliable (geo-IP override), so Open Library
+// provides a reliable fallback with proper language filtering.
+export async function searchAllBooks(query: string, limit = 20): Promise<Book[]> {
+  const [googleBooks, olBooks] = await Promise.allSettled([
+    searchGoogleBooks(query, limit),
+    searchOpenLibraryByQuery(query, limit),
+  ])
+
+  const g = googleBooks.status === "fulfilled" ? googleBooks.value : []
+  const o = olBooks.status === "fulfilled" ? olBooks.value : []
+
+  // Merge + deduplicate by normalized title+author
+  const seen = new Set<string>()
+  const merged: Book[] = []
+
+  const dedupeKey = (book: Book) =>
+    `${book.title.toLowerCase().trim()}::${book.author.toLowerCase().trim()}`
+
+  // Prefer OL results first (better language filtering), then Google
+  for (const book of [...o, ...g]) {
+    const key = dedupeKey(book)
+    if (seen.has(key)) continue
+    seen.add(book.id)
+    seen.add(key)
+    merged.push(book)
+  }
+
+  // Sort by relevance: title match first, then rating
+  const queryLower = query.toLowerCase()
+  merged.sort((a, b) => {
+    const aMatch = a.title.toLowerCase().includes(queryLower) ? 1 : 0
+    const bMatch = b.title.toLowerCase().includes(queryLower) ? 1 : 0
+    if (aMatch !== bMatch) return bMatch - aMatch
+    return b.rating - a.rating
+  })
+
+  addBooksToCache(merged)
+  return merged.slice(0, limit)
 }
 
 // Validate that an API response item has the expected shape
