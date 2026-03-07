@@ -134,7 +134,9 @@ export async function fetchBookText(book: GutenbergBook): Promise<string | null>
 
   let raw: string;
   try {
-    const res = await fetch(textUrl);
+    // Proxy through our API to avoid CORS issues with gutenberg.org
+    const proxyUrl = `/api/gutenberg-text?url=${encodeURIComponent(textUrl)}`;
+    const res = await fetch(proxyUrl);
     if (!res.ok) return null;
     raw = await res.text();
   } catch {
