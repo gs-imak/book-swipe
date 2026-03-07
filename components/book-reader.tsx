@@ -18,24 +18,30 @@ interface BookReaderProps {
 
 const THEME_KEY = "bookswipe_reader_theme"
 
-const themes: Record<ReaderTheme, { bg: string; text: string; border: string; barBg: string }> = {
+const themes: Record<ReaderTheme, { bg: string; text: string; border: string; barBg: string; progressTrack: string; progressFill: string }> = {
   light: {
     bg: "#FDFBF7",
     text: "#1c1917",
     border: "rgba(0,0,0,0.08)",
-    barBg: "rgba(253,251,247,0.85)",
+    barBg: "rgba(253,251,247,0.88)",
+    progressTrack: "rgba(0,0,0,0.1)",
+    progressFill: "#d97706",
   },
   sepia: {
     bg: "#F5EFE0",
     text: "#3d2b1f",
     border: "rgba(0,0,0,0.08)",
-    barBg: "rgba(245,239,224,0.85)",
+    barBg: "rgba(245,239,224,0.88)",
+    progressTrack: "rgba(0,0,0,0.1)",
+    progressFill: "#d97706",
   },
   dark: {
     bg: "#1c1917",
     text: "#e7e5e4",
     border: "rgba(255,255,255,0.08)",
-    barBg: "rgba(28,25,23,0.85)",
+    barBg: "rgba(28,25,23,0.88)",
+    progressTrack: "rgba(255,255,255,0.15)",
+    progressFill: "#fbbf24",
   },
 }
 
@@ -218,10 +224,10 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
               <div className="flex-1 mx-4 min-w-0 text-center">
                 <p className="text-xs font-medium truncate opacity-70">{bookTitle}</p>
                 <div className="flex items-center justify-center gap-2 mt-0.5">
-                  <div className="w-24 h-0.5 rounded-full overflow-hidden" style={{ backgroundColor: currentTheme.border }}>
+                  <div className="max-w-[100px] w-full h-[3px] rounded-full overflow-hidden" style={{ backgroundColor: currentTheme.progressTrack }}>
                     <motion.div
                       className="h-full rounded-full"
-                      style={{ backgroundColor: "#d97706" }}
+                      style={{ backgroundColor: currentTheme.progressFill }}
                       initial={{ width: 0 }}
                       animate={{ width: `${progress}%` }}
                       transition={{ duration: 0.3, ease: "easeOut" }}
@@ -238,7 +244,17 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 style={{ color: currentTheme.text }}
                 aria-label={`Switch theme, currently ${theme}`}
               >
-                <ThemeIcon className="w-5 h-5" />
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={theme}
+                    initial={{ opacity: 0, scale: 0.7 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.7 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <ThemeIcon className="w-5 h-5" />
+                  </motion.div>
+                </AnimatePresence>
               </motion.button>
             </div>
           </div>
@@ -288,7 +304,9 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                       style={{
                         fontFamily: "Georgia, 'Source Serif 4', serif",
                         fontSize: `${fontSize}px`,
-                        lineHeight: 1.75,
+                        lineHeight: "1.85",
+                        letterSpacing: "0.01em",
+                        color: currentTheme.text,
                       }}
                     >
                       {p.trim()}
@@ -305,7 +323,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                   backdropFilter: "blur(12px)",
                   WebkitBackdropFilter: "blur(12px)",
                   borderTop: `1px solid ${currentTheme.border}`,
-                  paddingBottom: "env(safe-area-inset-bottom)",
+                  paddingBottom: "max(12px, env(safe-area-inset-bottom, 12px))",
                 }}
               >
                 <div className="flex items-center justify-center gap-6 px-4 h-12">
@@ -320,9 +338,9 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                     <Minus className="w-4 h-4" />
                   </motion.button>
 
-                  <div className="flex items-center gap-1.5 opacity-50">
-                    <BookOpen className="w-4 h-4" />
-                    <span className="text-xs tabular-nums font-medium">{fontSize}px</span>
+                  <div className="flex items-center gap-1.5">
+                    <BookOpen className="w-4 h-4 opacity-50" />
+                    <span className="text-xs tabular-nums opacity-50">{fontSize}</span>
                   </div>
 
                   <motion.button
