@@ -94,7 +94,7 @@ export function DedicationOverlay({ isOpen, onClose }: DedicationOverlayProps) {
               className="space-y-4 text-stone-400 text-sm leading-loose text-left"
             >
               <p>
-                This app began as your idea — a simple spark you shared, and probably never thought
+                This app began as your idea, a simple spark you shared, and probably never thought
                 it would go this far. Somehow, that spark turned into something real, and now something
                 that I hope you can use, and that brings you joy, just as much as making this for you did for me.
               </p>
@@ -104,7 +104,7 @@ export function DedicationOverlay({ isOpen, onClose }: DedicationOverlayProps) {
                 inspiring, as you always have been.
               </p>
               <p>
-                I hope that every book you discover here feels like it was waiting quietly for you to find it —
+                I hope that every book you discover here feels like it was waiting quietly for you to find it,
                 where you can always find peace and calm.
               </p>
             </motion.div>
