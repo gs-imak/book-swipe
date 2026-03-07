@@ -1,6 +1,6 @@
 "use client"
 
-import { motion, PanInfo, useMotionValue, useTransform } from "framer-motion"
+import { motion, PanInfo, useMotionValue, useTransform, useAnimation } from "framer-motion"
 import { Book } from "@/lib/book-data"
 import { Star, Clock, BookOpen, Info, Plus, ChevronDown } from "lucide-react"
 import { addBookToReading, getReadingProgress } from "@/lib/storage"
@@ -19,6 +19,7 @@ interface BookCardProps {
 
 export function BookCard({ book, onSwipe, isTop = false, showActions = true }: BookCardProps) {
   const [infoExpanded, setInfoExpanded] = useState(false)
+  const sheetY = useMotionValue(0)
   const { showToast } = useToast()
   const x = useMotionValue(0)
   const rotate = useTransform(x, [-200, 0, 200], [-12, 0, 12])
@@ -176,14 +177,26 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true }: B
           animate={{ y: infoExpanded ? 0 : '100%' }}
           transition={{ type: "spring", damping: 30, stiffness: 300 }}
           className="absolute inset-0 bg-background z-30 flex flex-col"
-          style={{ touchAction: infoExpanded ? 'pan-y' : 'none' }}
+          style={{ y: sheetY, touchAction: 'pan-y' }}
+          drag={infoExpanded ? "y" : false}
+          dragConstraints={{ top: 0, bottom: 0 }}
+          dragElastic={{ top: 0, bottom: 0.3 }}
+          onDragEnd={(_e, info) => {
+            if (info.offset.y > 80 || info.velocity.y > 400) {
+              sheetY.set(0)
+              setInfoExpanded(false)
+            } else {
+              sheetY.set(0)
+            }
+          }}
         >
           {/* Handle bar */}
-          <div className="flex-shrink-0 py-3 flex justify-center border-b border-stone-100">
+          <div className="flex-shrink-0 pt-2 pb-1 flex flex-col items-center border-b border-stone-100">
+            <div className="w-10 h-1 rounded-full bg-stone-200 mb-2" />
             <button
               onClick={() => setInfoExpanded(false)}
               aria-label="Close details"
-              className="flex items-center gap-1 text-stone-400 hover:text-stone-600 transition-colors px-3 py-2.5 min-h-[44px]"
+              className="flex items-center gap-1 text-stone-400 hover:text-stone-600 transition-colors px-3 py-2 min-h-[44px]"
             >
               <ChevronDown className="w-5 h-5" />
               <span className="text-xs font-medium">Close</span>

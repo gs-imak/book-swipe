@@ -113,7 +113,8 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 30, scale: 0.97 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="bg-background rounded-2xl shadow-2xl max-w-3xl w-full max-h-[calc(100vh-64px)] sm:max-h-[85vh] overflow-hidden flex flex-col border border-stone-200/60"
+          className="bg-background rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden flex flex-col border border-stone-200/60"
+          style={{ maxHeight: "calc(100dvh - 64px)" }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header with cover */}
@@ -180,14 +181,14 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                   )}
                 </div>
 
-                {/* Action buttons */}
-                <div className="flex items-center gap-2 pt-0.5 flex-wrap">
+                {/* Action buttons — primary row */}
+                <div className="flex items-center gap-2 pt-0.5">
                   {onStartReading && (
                     <button
                       onClick={() => onStartReading(book)}
-                      className="h-9 px-4 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium rounded-xl transition-all active:scale-[0.98]"
+                      className="h-9 px-4 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium rounded-xl transition-all active:scale-[0.98] flex items-center gap-1.5"
                     >
-                      <BookOpen className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" />
+                      <BookOpen className="w-3.5 h-3.5" />
                       Start Reading
                     </button>
                   )}
@@ -198,26 +199,29 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                         setIsEditingReview(true)
                         setActiveTab("review")
                       }}
-                      className="h-9 px-4 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium rounded-xl transition-all active:scale-[0.98] shadow-sm"
+                      className="h-9 px-4 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium rounded-xl transition-all active:scale-[0.98] shadow-sm flex items-center gap-1.5"
                     >
-                      <MessageSquare className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" />
+                      <MessageSquare className="w-3.5 h-3.5" />
                       Review
                     </button>
                   )}
+                </div>
 
+                {/* Secondary actions row */}
+                <div className="flex items-center gap-2">
                   <button
                     onClick={() => setShowShelfPicker(true)}
-                    className="h-9 px-3 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium rounded-xl transition-all active:scale-[0.98] shadow-sm"
+                    className="h-8 px-3 bg-stone-50 border border-stone-200 hover:bg-stone-100 text-stone-600 text-xs font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1"
                   >
-                    <Library className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />
+                    <Library className="w-3 h-3" />
                     Shelves
                   </button>
 
                   <button
                     onClick={() => setShowShareCard(true)}
-                    className="h-9 px-3 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium rounded-xl transition-all active:scale-[0.98] shadow-sm"
+                    className="h-8 px-3 bg-stone-50 border border-stone-200 hover:bg-stone-100 text-stone-600 text-xs font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1"
                   >
-                    <Share2 className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />
+                    <Share2 className="w-3 h-3" />
                     Share
                   </button>
 
@@ -229,9 +233,10 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                           onClose()
                         }
                       }}
-                      className="h-9 px-3 bg-white border border-stone-200 hover:bg-red-50 hover:border-red-200 text-stone-400 hover:text-red-500 text-sm font-medium rounded-xl transition-all active:scale-[0.98] shadow-sm"
+                      className="h-8 px-3 bg-stone-50 border border-stone-200 hover:bg-red-50 hover:border-red-200 text-stone-400 hover:text-red-500 text-xs font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1"
                     >
-                      <Trash2 className="w-3.5 h-3.5 inline -mt-0.5" />
+                      <Trash2 className="w-3 h-3" />
+                      Remove
                     </button>
                   )}
                 </div>

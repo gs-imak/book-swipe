@@ -78,7 +78,23 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
           : [...currentAnswers, answer]
         return { ...prev, [questionId]: newAnswers }
       } else {
-        return { ...prev, [questionId]: [answer] }
+        const updated = { ...prev, [questionId]: [answer] }
+        // Auto-advance single-choice questions after a brief delay
+        setTimeout(() => {
+          if (currentQuestion < questions.length - 1) {
+            setCurrentQuestion(q => q + 1)
+          } else {
+            const preferences: UserPreferences = {
+              favoriteGenres: updated.genres || [],
+              currentMood: updated.mood || [],
+              readingTime: updated.readingTime?.[0] || "30-60 minutes",
+              preferredLength: updated.length?.[0] || "No preference",
+              contentPreferences: updated.content || []
+            }
+            onComplete(preferences)
+          }
+        }, 180)
+        return updated
       }
     })
   }
@@ -109,9 +125,12 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
   const isLastQuestion = currentQuestion === questions.length - 1
 
   return (
-    <div className="min-h-screen flex flex-col p-4 sm:p-6 bg-background">
+    <div className="flex flex-col p-4 sm:p-6 bg-background" style={{ minHeight: "100dvh" }}>
       {/* Header */}
-      <div className="w-full max-w-2xl mx-auto mb-6 flex items-center justify-between">
+      <div
+        className="w-full max-w-2xl mx-auto mb-6 flex items-center justify-between flex-shrink-0"
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+      >
         {onBack ? (
           <button
             onClick={onBack}
@@ -127,8 +146,8 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
         </span>
       </div>
 
-      <div className="flex-1 flex items-center justify-center">
-        <div className="w-full max-w-2xl mx-auto">
+      <div className="flex-1 overflow-y-auto">
+        <div className="w-full max-w-2xl mx-auto pb-6">
           {/* Progress bar */}
           <div className="mb-8">
             <div className="h-1.5 w-full rounded-full bg-stone-100 overflow-hidden">
@@ -218,9 +237,9 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
                     preferredLength: "No preference",
                     contentPreferences: []
                   })}
-                  className="text-xs text-stone-400 hover:text-stone-600 transition-colors"
+                  className="text-sm text-stone-500 hover:text-stone-700 font-medium underline underline-offset-2 transition-colors"
                 >
-                  Skip and explore everything
+                  Skip setup, show me everything
                 </button>
               </div>
             </motion.div>
