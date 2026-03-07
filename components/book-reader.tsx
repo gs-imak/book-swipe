@@ -101,14 +101,26 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     setError(null)
     setText(null)
 
-    fetchBookText(gutenbergBook).then((result) => {
-      if (result === null) {
-        setError("Could not load book text. The file may be unavailable.")
-      } else {
-        setText(result)
-      }
-      setLoading(false)
-    })
+    let cancelled = false
+    fetchBookText(gutenbergBook)
+      .then((result) => {
+        if (!cancelled) {
+          if (!result) {
+            setError("Could not load book text. The file may be unavailable.")
+          } else {
+            setText(result)
+          }
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setError("Could not load book text. The file may be unavailable.")
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [isOpen, gutenbergBook])
 
   useEffect(() => {
@@ -246,7 +258,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={onClose}
-                className="mt-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                className="tap-target mt-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                 style={{
                   backgroundColor: currentTheme.border,
                   color: currentTheme.text,
