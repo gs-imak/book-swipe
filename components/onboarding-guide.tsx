@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Home, Sparkles, BookOpen, BarChart3, Trophy, ArrowRight, X } from "lucide-react"
+import { ArrowRight, X } from "lucide-react"
 import { GroovyDoodle, SittingReadingDoodle, LovingDoodle, ReadingSideDoodle, MeditatingDoodle, FloatDoodle } from "@/components/illustrations"
 
 interface OnboardingGuideProps {
@@ -11,49 +11,31 @@ interface OnboardingGuideProps {
 
 const STEPS = [
   {
-    icon: Sparkles,
-    iconBg: "bg-amber-100",
-    iconColor: "text-amber-600",
     title: "Welcome to BookSwipe",
     description: "Discover your next favorite book by swiping \u2014 like Tinder, but for books. Let\u2019s show you around!",
     Doodle: GroovyDoodle,
   },
   {
-    icon: Home,
-    iconBg: "bg-stone-100",
-    iconColor: "text-stone-700",
     title: "Your Library",
     description: "All your liked books live here. Organize them into shelves, track reading progress, and get personalized recommendations.",
     Doodle: SittingReadingDoodle,
   },
   {
-    icon: Sparkles,
-    iconBg: "bg-violet-100",
-    iconColor: "text-violet-600",
     title: "Discover Books",
     description: "Swipe right to like a book, left to skip. The more you swipe, the smarter your recommendations get!",
     Doodle: LovingDoodle,
   },
   {
-    icon: BookOpen,
-    iconBg: "bg-amber-100",
-    iconColor: "text-amber-600",
     title: "Read Free Classics",
     description: "Browse 70,000+ free classic books from Project Gutenberg. Read them right in the app with a beautiful reader.",
     Doodle: ReadingSideDoodle,
   },
   {
-    icon: BarChart3,
-    iconBg: "bg-teal-100",
-    iconColor: "text-teal-600",
     title: "Your Taste Profile",
     description: "See what genres and moods you gravitate towards. Your profile builds as you discover more books.",
     Doodle: MeditatingDoodle,
   },
   {
-    icon: Trophy,
-    iconBg: "bg-yellow-100",
-    iconColor: "text-yellow-600",
     title: "Earn Awards",
     description: "Unlock achievements as you explore \u2014 from your first like to becoming a genre master. Have fun!",
     Doodle: FloatDoodle,
@@ -65,7 +47,6 @@ export function OnboardingGuide({ onComplete }: OnboardingGuideProps) {
 
   const step = STEPS[currentStep]
   const isLast = currentStep === STEPS.length - 1
-  const Icon = step.icon
   const Doodle = step.Doodle
 
   const handleNext = useCallback(() => {
@@ -126,11 +107,6 @@ export function OnboardingGuide({ onComplete }: OnboardingGuideProps) {
               >
                 <Doodle className="w-full h-full" />
               </motion.div>
-
-              {/* Icon badge */}
-              <div className={`w-10 h-10 rounded-xl ${step.iconBg} flex items-center justify-center mb-3`}>
-                <Icon className={`w-5 h-5 ${step.iconColor}`} />
-              </div>
 
               {/* Text */}
               <h2 className="text-lg font-bold text-stone-900 mb-2">{step.title}</h2>
