@@ -48,6 +48,60 @@ function getTextPlainUrl(formats: Record<string, string>): string | null {
   return fallback;
 }
 
+function getHtmlUrl(formats: Record<string, string>): string | null {
+  const keys = Object.keys(formats);
+  let fallback: string | null = null;
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    if (key.startsWith("text/html")) {
+      if (key.includes("utf-8")) return formats[key];
+      if (fallback === null) fallback = formats[key];
+    }
+  }
+  return fallback;
+}
+
+/**
+ * Fetch illustration image URLs from the book's HTML version.
+ * Returns an ordered array of absolute image URLs.
+ */
+export async function fetchBookImages(book: GutenbergBook): Promise<string[]> {
+  const htmlUrl = getHtmlUrl(book.formats);
+  if (!htmlUrl) return [];
+
+  try {
+    const proxyUrl = `/api/gutenberg-text?url=${encodeURIComponent(htmlUrl)}`;
+    const res = await fetch(proxyUrl);
+    if (!res.ok) return [];
+    const html = await res.text();
+
+    // Base URL for resolving relative paths
+    const baseUrl = htmlUrl.substring(0, htmlUrl.lastIndexOf("/") + 1);
+
+    const imgRegex = /<img[^>]+src=["']([^"']+)["'][^>]*>/gi;
+    const images: string[] = [];
+    let match: RegExpExecArray | null;
+    while ((match = imgRegex.exec(html)) !== null) {
+      let src = match[1];
+      if (src.length < 5) continue;
+      // Resolve relative URLs
+      if (!src.startsWith("http")) {
+        try {
+          src = new URL(src, baseUrl).href;
+        } catch {
+          continue;
+        }
+      }
+      // Skip tiny tracking pixels or icons
+      if (src.includes("1x1") || src.includes("pixel")) continue;
+      images.push(src);
+    }
+    return images;
+  } catch {
+    return [];
+  }
+}
+
 export async function searchGutenberg(
   title: string,
   author: string

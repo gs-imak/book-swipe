@@ -337,7 +337,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
           animate={{ y: 0 }}
           exit={{ y: "100%" }}
           transition={{ type: "spring", stiffness: 280, damping: 32 }}
-          className="fixed inset-0 z-50 flex flex-col"
+          className="fixed inset-0 z-[60] flex flex-col"
           style={{ backgroundColor: currentTheme.bg, color: currentTheme.text }}
           role="dialog"
           aria-modal="true"
@@ -548,11 +548,9 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
               {/* Bottom controls */}
               <div
-                className="sticky bottom-0 z-10 flex-shrink-0"
+                className="flex-shrink-0 z-20"
                 style={{
-                  backgroundColor: currentTheme.barBg,
-                  backdropFilter: "blur(12px)",
-                  WebkitBackdropFilter: "blur(12px)",
+                  backgroundColor: currentTheme.bg,
                   borderTop: `1px solid ${currentTheme.border}`,
                   paddingBottom: "max(12px, env(safe-area-inset-bottom, 12px))",
                 }}
