@@ -740,6 +740,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
         isOpen={showSearch}
         onClose={() => setShowSearch(false)}
         onSaveBook={handleSearchSave}
+        onBookClick={handleBookClick}
         savedBookIds={likedBooks.map(b => b.id)}
       />
 

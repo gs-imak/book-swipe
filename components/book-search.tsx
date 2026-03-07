@@ -11,10 +11,11 @@ interface BookSearchProps {
   isOpen: boolean
   onClose: () => void
   onSaveBook: (book: Book) => void
+  onBookClick?: (book: Book) => void
   savedBookIds: string[]
 }
 
-export function BookSearch({ isOpen, onClose, onSaveBook, savedBookIds }: BookSearchProps) {
+export function BookSearch({ isOpen, onClose, onSaveBook, onBookClick, savedBookIds }: BookSearchProps) {
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<Book[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -179,33 +180,37 @@ export function BookSearch({ isOpen, onClose, onSaveBook, savedBookIds }: BookSe
                       transition={{ delay: Math.min(index * 0.03, 0.3) }}
                       className="flex gap-3 p-3 rounded-xl bg-white border border-stone-200/60 shadow-sm"
                     >
-                      {/* Cover */}
-                      <div className="relative w-16 h-24 rounded-lg overflow-hidden bg-stone-200 flex-shrink-0">
-                        <BookCover
-                          src={book.cover}
-                          fallbackSrc={book.coverFallback}
-                          alt={book.title}
-                          fill
-                          className="object-contain"
-                          sizes="128px"
-                        />
-                      </div>
-
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-sm text-stone-900 line-clamp-1">{book.title}</h4>
-                        <p className="text-xs text-stone-500 mb-1">{book.author}</p>
-                        <div className="flex items-center gap-2 text-xs text-stone-400 mb-2">
-                          <div className="flex items-center gap-0.5">
-                            <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                            <span>{book.rating}</span>
-                          </div>
-                          <span>{book.pages}p</span>
-                          {book.genre[0] !== "General" && (
-                            <span className="text-stone-400">{book.genre[0]}</span>
-                          )}
+                      {/* Cover + Info (clickable) */}
+                      <div
+                        className="flex gap-3 flex-1 min-w-0 cursor-pointer"
+                        onClick={() => onBookClick?.(book)}
+                      >
+                        <div className="relative w-16 h-24 rounded-lg overflow-hidden bg-stone-200 flex-shrink-0">
+                          <BookCover
+                            src={book.cover}
+                            fallbackSrc={book.coverFallback}
+                            alt={book.title}
+                            fill
+                            className="object-contain"
+                            sizes="128px"
+                          />
                         </div>
-                        <p className="text-xs text-stone-400 line-clamp-2 leading-relaxed">{book.description}</p>
+
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-sm text-stone-900 line-clamp-1">{book.title}</h4>
+                          <p className="text-xs text-stone-500 mb-1">{book.author}</p>
+                          <div className="flex items-center gap-2 text-xs text-stone-400 mb-2">
+                            <div className="flex items-center gap-0.5">
+                              <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                              <span>{book.rating}</span>
+                            </div>
+                            <span>{book.pages}p</span>
+                            {book.genre[0] !== "General" && (
+                              <span className="text-stone-400">{book.genre[0]}</span>
+                            )}
+                          </div>
+                          <p className="text-xs text-stone-400 line-clamp-2 leading-relaxed">{book.description}</p>
+                        </div>
                       </div>
 
                       {/* Save button */}

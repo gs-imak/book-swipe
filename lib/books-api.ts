@@ -246,9 +246,9 @@ function transformGoogleBookToBook(googleBook: unknown): Book | null {
     id: googleBook.id,
     title: volumeInfo.title,
     author: volumeInfo.authors[0],
-    // Prefer OL ISBN cover (better curated), fall back to Google Books cover
-    cover: olIsbnCover || googleCover,
-    coverFallback: olIsbnCover ? googleCover : undefined,
+    // Prefer Google Books cover (matches the actual entry), OL ISBN as fallback
+    cover: googleCover || olIsbnCover,
+    coverFallback: googleCover ? olIsbnCover || undefined : undefined,
     rating: Math.round(rating * 10) / 10,
     pages,
     genre: volumeInfo.categories || ['General'],
