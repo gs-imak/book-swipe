@@ -66,8 +66,10 @@ export interface BookNote {
   id: string
   bookId: string
   content: string
-  type: 'highlight' | 'note' | 'quote'
+  type: 'highlight' | 'note' | 'quote' | 'bookmark'
   page?: number
+  blockIndex?: number
+  selectedText?: string
   createdAt: string
   updatedAt: string
 }

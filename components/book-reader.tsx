@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ArrowLeft, ChevronLeft, ChevronRight, Sun, Coffee, Moon, Loader2, AlertCircle, BookOpen, Minus, Plus, List, X, Search } from "lucide-react"
+import { ArrowLeft, ChevronLeft, ChevronRight, Sun, Coffee, Moon, Loader2, AlertCircle, BookOpen, Minus, Plus, List, X, Search, Bookmark, BookmarkCheck, Highlighter, StickyNote, Copy, Trash2, MessageSquare } from "lucide-react"
 import { GutenbergBook, fetchBookText, fetchBookImages } from "@/lib/gutenberg-api"
-import { saveReadingPosition, getReadingPosition } from "@/lib/storage"
+import { saveReadingPosition, getReadingPosition, getBookNotesForBook, saveBookNote, deleteBookNote, type BookNote } from "@/lib/storage"
 
 type ReaderTheme = "light" | "sepia" | "dark"
 
@@ -18,7 +18,7 @@ interface BookReaderProps {
 
 const THEME_KEY = "bookswipe_reader_theme"
 
-const themes: Record<ReaderTheme, { bg: string; text: string; border: string; barBg: string; progressTrack: string; progressFill: string }> = {
+const themes: Record<ReaderTheme, { bg: string; text: string; border: string; barBg: string; progressTrack: string; progressFill: string; highlight: string }> = {
   light: {
     bg: "#FDFBF7",
     text: "#1c1917",
@@ -26,6 +26,7 @@ const themes: Record<ReaderTheme, { bg: string; text: string; border: string; ba
     barBg: "rgba(253,251,247,0.88)",
     progressTrack: "rgba(0,0,0,0.1)",
     progressFill: "#d97706",
+    highlight: "rgba(251,191,36,0.3)",
   },
   sepia: {
     bg: "#F5EFE0",
@@ -34,6 +35,7 @@ const themes: Record<ReaderTheme, { bg: string; text: string; border: string; ba
     barBg: "rgba(245,239,224,0.88)",
     progressTrack: "rgba(0,0,0,0.1)",
     progressFill: "#d97706",
+    highlight: "rgba(217,119,6,0.25)",
   },
   dark: {
     bg: "#1c1917",
@@ -42,6 +44,7 @@ const themes: Record<ReaderTheme, { bg: string; text: string; border: string; ba
     barBg: "rgba(28,25,23,0.88)",
     progressTrack: "rgba(255,255,255,0.15)",
     progressFill: "#fbbf24",
+    highlight: "rgba(251,191,36,0.2)",
   },
 }
 
@@ -100,6 +103,84 @@ function typographicText(src: string): string {
  * Renders inline text with Gutenberg formatting:
  * _text_ → italic, [1] → superscript footnote, ALL CAPS words → small-caps
  */
+/** Splits text around highlighted passages, then renders each segment with RenderInlineText */
+function HighlightedText({ text, highlights, blockIndex, skipTypography, highlightColor }: {
+  text: string
+  highlights: BookNote[]
+  blockIndex: number
+  skipTypography?: boolean
+  highlightColor: string
+}) {
+  // Find highlights that match this block
+  const blockHighlights = highlights.filter(
+    h => h.selectedText && (h.blockIndex === blockIndex || (h.blockIndex === undefined && text.includes(h.selectedText)))
+  )
+
+  if (blockHighlights.length === 0) {
+    return <RenderInlineText text={text} skipTypography={skipTypography} />
+  }
+
+  // Build segments: find all highlight ranges in the text
+  type Seg = { text: string; highlighted: boolean; noteId?: string; hasNote?: boolean }
+  const segments: Seg[] = []
+  let remaining = text
+  let offset = 0
+
+  // Sort highlights by their position in the text
+  const sorted = blockHighlights
+    .map(h => ({ ...h, idx: text.indexOf(h.selectedText!) }))
+    .filter(h => h.idx >= 0)
+    .sort((a, b) => a.idx - b.idx)
+
+  for (const h of sorted) {
+    const idx = text.indexOf(h.selectedText!, offset)
+    if (idx < 0) continue
+    if (idx > offset) {
+      segments.push({ text: text.slice(offset, idx), highlighted: false })
+    }
+    segments.push({
+      text: h.selectedText!,
+      highlighted: true,
+      noteId: h.id,
+      hasNote: h.type === "note" && !!h.content,
+    })
+    offset = idx + h.selectedText!.length
+  }
+  if (offset < text.length) {
+    segments.push({ text: text.slice(offset), highlighted: false })
+  }
+
+  if (segments.length === 0) {
+    return <RenderInlineText text={text} skipTypography={skipTypography} />
+  }
+
+  return (
+    <>
+      {segments.map((seg, i) =>
+        seg.highlighted ? (
+          <mark
+            key={i}
+            style={{
+              backgroundColor: highlightColor,
+              borderRadius: "2px",
+              padding: "0 1px",
+              color: "inherit",
+            }}
+            title={seg.hasNote ? "Has note" : undefined}
+          >
+            <RenderInlineText text={seg.text} skipTypography={skipTypography} />
+            {seg.hasNote && (
+              <sup style={{ fontSize: "0.6em", opacity: 0.6, marginLeft: "1px" }}>*</sup>
+            )}
+          </mark>
+        ) : (
+          <RenderInlineText key={i} text={seg.text} skipTypography={skipTypography} />
+        )
+      )}
+    </>
+  )
+}
+
 function RenderInlineText({ text, skipTypography }: { text: string; skipTypography?: boolean }) {
   // Apply typography (unless already applied by caller)
   const typod = skipTypography ? text : typographicText(text)
@@ -152,10 +233,28 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const [progress, setProgress] = useState(0)
   const [showNavPanel, setShowNavPanel] = useState(false)
   const [images, setImages] = useState<string[]>([])
+  const [readerNotes, setReaderNotes] = useState<BookNote[]>([])
+  const [navTab, setNavTab] = useState<"contents" | "notes">("contents")
+  const [selectionBar, setSelectionBar] = useState<{ x: number; y: number; text: string; blockIndex: number } | null>(null)
+  const [noteInputFor, setNoteInputFor] = useState<{ text: string; blockIndex: number } | null>(null)
+  const [noteInputValue, setNoteInputValue] = useState("")
+  const [isBookmarked, setIsBookmarked] = useState(false)
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hasRestoredRef = useRef(false)
+  const noteInputRef = useRef<HTMLTextAreaElement>(null)
+
+  // Load notes for this book
+  const loadNotes = useCallback(() => {
+    const notes = getBookNotesForBook(bookId)
+    setReaderNotes(notes)
+    setIsBookmarked(notes.some(n => n.type === "bookmark"))
+  }, [bookId])
+
+  useEffect(() => {
+    if (isOpen) loadNotes()
+  }, [isOpen, loadNotes])
 
   type TextBlock =
     | { type: "heading"; text: string; subtitle?: string }
@@ -549,6 +648,143 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     }
   }, [])
 
+  // Text selection handler — show floating bar when user selects text in reader
+  useEffect(() => {
+    if (!isOpen || !text) return
+
+    const handleSelectionChange = () => {
+      const sel = window.getSelection()
+      if (!sel || sel.isCollapsed || !sel.rangeCount) {
+        // Don't dismiss immediately — let click handler on bar work
+        return
+      }
+      const range = sel.getRangeAt(0)
+      const selectedStr = sel.toString().trim()
+      if (selectedStr.length < 2 || selectedStr.length > 500) return
+
+      // Check that selection is within the reader scroll area
+      const container = scrollRef.current
+      if (!container || !container.contains(range.commonAncestorContainer)) return
+
+      // Find blockIndex from data attribute
+      let node: Node | null = range.startContainer
+      let blockIdx = -1
+      while (node && node !== container) {
+        if (node instanceof HTMLElement) {
+          const attr = node.getAttribute("data-block-index")
+          if (attr !== null) { blockIdx = parseInt(attr); break }
+        }
+        node = node.parentNode
+      }
+
+      const rect = range.getBoundingClientRect()
+      const containerRect = container.getBoundingClientRect()
+      setSelectionBar({
+        x: rect.left + rect.width / 2 - containerRect.left,
+        y: rect.top - containerRect.top - 8,
+        text: selectedStr,
+        blockIndex: blockIdx,
+      })
+    }
+
+    document.addEventListener("selectionchange", handleSelectionChange)
+    return () => document.removeEventListener("selectionchange", handleSelectionChange)
+  }, [isOpen, text])
+
+  // Dismiss selection bar on tap outside
+  useEffect(() => {
+    if (!selectionBar) return
+    const dismiss = (e: PointerEvent) => {
+      const target = e.target as HTMLElement
+      if (target.closest("[data-selection-bar]")) return
+      // Small delay to allow button clicks to register
+      setTimeout(() => setSelectionBar(null), 150)
+    }
+    document.addEventListener("pointerdown", dismiss)
+    return () => document.removeEventListener("pointerdown", dismiss)
+  }, [selectionBar])
+
+  const handleHighlight = useCallback(() => {
+    if (!selectionBar) return
+    saveBookNote({
+      bookId,
+      content: "",
+      type: "highlight",
+      page: currentPage,
+      blockIndex: selectionBar.blockIndex,
+      selectedText: selectionBar.text,
+    })
+    loadNotes()
+    setSelectionBar(null)
+    window.getSelection()?.removeAllRanges()
+  }, [selectionBar, bookId, currentPage, loadNotes])
+
+  const handleAddNoteToSelection = useCallback(() => {
+    if (!selectionBar) return
+    setNoteInputFor({ text: selectionBar.text, blockIndex: selectionBar.blockIndex })
+    setNoteInputValue("")
+    setSelectionBar(null)
+    window.getSelection()?.removeAllRanges()
+    setTimeout(() => noteInputRef.current?.focus(), 100)
+  }, [selectionBar])
+
+  const handleSaveNote = useCallback(() => {
+    if (!noteInputFor || !noteInputValue.trim()) return
+    saveBookNote({
+      bookId,
+      content: noteInputValue.trim(),
+      type: "note",
+      page: currentPage,
+      blockIndex: noteInputFor.blockIndex,
+      selectedText: noteInputFor.text,
+    })
+    loadNotes()
+    setNoteInputFor(null)
+    setNoteInputValue("")
+  }, [noteInputFor, noteInputValue, bookId, currentPage, loadNotes])
+
+  const handleCopySelection = useCallback(() => {
+    if (!selectionBar) return
+    navigator.clipboard?.writeText(selectionBar.text)
+    setSelectionBar(null)
+    window.getSelection()?.removeAllRanges()
+  }, [selectionBar])
+
+  const handleToggleBookmark = useCallback(() => {
+    const existing = readerNotes.find(n => n.type === "bookmark")
+    if (existing) {
+      deleteBookNote(existing.id)
+    } else {
+      saveBookNote({
+        bookId,
+        content: currentChapter?.title || `Page ${currentPage}`,
+        type: "bookmark",
+        page: currentPage,
+      })
+    }
+    loadNotes()
+  }, [readerNotes, bookId, currentPage, currentChapter, loadNotes])
+
+  const handleDeleteReaderNote = useCallback((noteId: string) => {
+    deleteBookNote(noteId)
+    loadNotes()
+  }, [loadNotes])
+
+  const jumpToNote = useCallback((note: BookNote) => {
+    if (note.page && totalPages > 0) {
+      jumpToPage(note.page)
+    } else if (note.blockIndex !== undefined) {
+      jumpToBlock(note.blockIndex)
+    }
+    setShowNavPanel(false)
+  }, [totalPages, jumpToPage, jumpToBlock])
+
+  // Only highlights/notes for rendering
+  const inlineHighlights = useMemo(() =>
+    readerNotes.filter(n => n.selectedText && (n.type === "highlight" || n.type === "note")),
+    [readerNotes]
+  )
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -601,25 +837,36 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 </div>
               </div>
 
-              <motion.button
-                whileTap={{ scale: 0.9 }}
-                onClick={cycleTheme}
-                className="tap-target flex items-center justify-center rounded-lg p-2 -mr-2 transition-colors"
-                style={{ color: currentTheme.text }}
-                aria-label={`Switch theme, currently ${theme}`}
-              >
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={theme}
-                    initial={{ opacity: 0, scale: 0.7 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.7 }}
-                    transition={{ duration: 0.15 }}
-                  >
-                    <ThemeIcon className="w-5 h-5" />
-                  </motion.div>
-                </AnimatePresence>
-              </motion.button>
+              <div className="flex items-center gap-0.5">
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={handleToggleBookmark}
+                  className="tap-target flex items-center justify-center rounded-lg p-2 transition-colors"
+                  style={{ color: isBookmarked ? currentTheme.progressFill : currentTheme.text }}
+                  aria-label={isBookmarked ? "Remove bookmark" : "Bookmark this page"}
+                >
+                  {isBookmarked ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={cycleTheme}
+                  className="tap-target flex items-center justify-center rounded-lg p-2 -mr-2 transition-colors"
+                  style={{ color: currentTheme.text }}
+                  aria-label={`Switch theme, currently ${theme}`}
+                >
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={theme}
+                      initial={{ opacity: 0, scale: 0.7 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.7 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <ThemeIcon className="w-5 h-5" />
+                    </motion.div>
+                  </AnimatePresence>
+                </motion.button>
+              </div>
             </div>
           </div>
 
@@ -654,7 +901,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
               <div
                 ref={scrollRef}
                 onScroll={handleScroll}
-                className="flex-1 overflow-y-auto"
+                className="flex-1 overflow-y-auto relative"
                 style={{ overscrollBehavior: "contain" }}
               >
                 <div
@@ -711,7 +958,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                               color: currentTheme.text,
                             }}
                           >
-                            <RenderInlineText text={block.text} />
+                            <HighlightedText text={block.text} highlights={inlineHighlights} blockIndex={i} highlightColor={currentTheme.highlight} />
                           </h2>
                           {block.subtitle && (
                             <p
@@ -734,6 +981,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                         <div
                           key={i}
                           className="my-8 text-center"
+                          data-block-index={i}
                           style={{
                             fontFamily: "Georgia, 'Source Serif 4', serif",
                             fontSize: `${fontSize}px`,
@@ -755,6 +1003,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                         <blockquote
                           key={i}
                           className="mb-5 pl-4 italic"
+                          data-block-index={i}
                           style={{
                             fontFamily: "Georgia, 'Source Serif 4', serif",
                             fontSize: `${fontSize}px`,
@@ -765,7 +1014,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                             opacity: 0.85,
                           }}
                         >
-                          <RenderInlineText text={block.text} />
+                          <HighlightedText text={block.text} highlights={inlineHighlights} blockIndex={i} highlightColor={currentTheme.highlight} />
                         </blockquote>
                       )
                     }
@@ -775,6 +1024,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                         <p
                           key={i}
                           className="mb-5 text-right italic"
+                          data-block-index={i}
                           style={{
                             fontFamily: "Georgia, 'Source Serif 4', serif",
                             fontSize: `${fontSize}px`,
@@ -793,6 +1043,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                         <div
                           key={i}
                           className="mb-5 whitespace-pre-line"
+                          data-block-index={i}
                           style={{
                             fontFamily: "Georgia, 'Source Serif 4', serif",
                             fontSize: `${fontSize}px`,
@@ -822,6 +1073,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                         <p
                           key={i}
                           className="mb-5 leading-relaxed text-justify"
+                          data-block-index={i}
                           style={{
                             fontFamily: "Georgia, 'Source Serif 4', serif",
                             fontSize: `${fontSize}px`,
@@ -844,7 +1096,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           >
                             {dropChars}
                           </span>
-                          <RenderInlineText text={rest} skipTypography />
+                          <HighlightedText text={rest} highlights={inlineHighlights} blockIndex={i} skipTypography highlightColor={currentTheme.highlight} />
                         </p>
                       )
                     }
@@ -853,6 +1105,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                       <p
                         key={i}
                         className="mb-5 leading-relaxed text-justify"
+                        data-block-index={i}
                         style={{
                           fontFamily: "Georgia, 'Source Serif 4', serif",
                           fontSize: `${fontSize}px`,
@@ -861,12 +1114,107 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           color: currentTheme.text,
                         }}
                       >
-                        <RenderInlineText text={block.text} />
+                        <HighlightedText text={block.text} highlights={inlineHighlights} blockIndex={i} highlightColor={currentTheme.highlight} />
                       </p>
                     )
                   })}
                 </div>
               </div>
+
+              {/* Floating selection bar */}
+              {selectionBar && scrollRef.current && (
+                <div
+                  data-selection-bar
+                  className="absolute z-40 flex items-center gap-0.5 px-1.5 py-1 rounded-xl shadow-lg"
+                  style={{
+                    left: Math.max(8, Math.min(selectionBar.x - 80, (scrollRef.current?.clientWidth || 300) - 168)),
+                    top: Math.max(8, selectionBar.y + scrollRef.current.scrollTop - 48),
+                    backgroundColor: currentTheme.text === "#e7e5e4" ? "#292524" : "#fafaf9",
+                    border: `1px solid ${currentTheme.border}`,
+                  }}
+                >
+                  <button
+                    onClick={handleHighlight}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors hover:opacity-80"
+                    style={{ color: "#d97706" }}
+                  >
+                    <Highlighter className="w-3.5 h-3.5" />
+                    Highlight
+                  </button>
+                  <div className="w-px h-4" style={{ backgroundColor: currentTheme.border }} />
+                  <button
+                    onClick={handleAddNoteToSelection}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors hover:opacity-80"
+                    style={{ color: currentTheme.text === "#e7e5e4" ? "#e7e5e4" : "#44403c" }}
+                  >
+                    <StickyNote className="w-3.5 h-3.5" />
+                    Note
+                  </button>
+                  <div className="w-px h-4" style={{ backgroundColor: currentTheme.border }} />
+                  <button
+                    onClick={handleCopySelection}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors hover:opacity-80"
+                    style={{ color: currentTheme.text === "#e7e5e4" ? "#a8a29e" : "#78716c" }}
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+
+              {/* Note input overlay */}
+              <AnimatePresence>
+                {noteInputFor && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute bottom-0 left-0 right-0 z-40 p-4"
+                    style={{
+                      backgroundColor: currentTheme.bg,
+                      borderTop: `1px solid ${currentTheme.border}`,
+                      paddingBottom: "max(16px, env(safe-area-inset-bottom, 16px))",
+                    }}
+                  >
+                    <div className="max-w-2xl mx-auto">
+                      <div className="flex items-start gap-2 mb-3">
+                        <Highlighter className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: currentTheme.progressFill }} />
+                        <p className="text-xs italic opacity-60 line-clamp-2">&ldquo;{noteInputFor.text}&rdquo;</p>
+                      </div>
+                      <textarea
+                        ref={noteInputRef}
+                        value={noteInputValue}
+                        onChange={(e) => setNoteInputValue(e.target.value)}
+                        placeholder="Add your note..."
+                        rows={2}
+                        className="w-full px-3 py-2 rounded-lg text-sm resize-none outline-none"
+                        style={{
+                          backgroundColor: `${currentTheme.text}08`,
+                          color: currentTheme.text,
+                          border: `1px solid ${currentTheme.border}`,
+                        }}
+                      />
+                      <div className="flex justify-end gap-2 mt-2">
+                        <button
+                          onClick={() => { setNoteInputFor(null); setNoteInputValue("") }}
+                          className="px-3 py-1.5 rounded-lg text-xs font-medium opacity-60 hover:opacity-80"
+                          style={{ color: currentTheme.text }}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleSaveNote}
+                          disabled={!noteInputValue.trim()}
+                          className="px-4 py-1.5 rounded-lg text-xs font-semibold text-white disabled:opacity-40"
+                          style={{ backgroundColor: currentTheme.progressFill }}
+                        >
+                          Save Note
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Bottom controls */}
               <div
@@ -888,18 +1236,49 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                       className="fixed inset-0 z-30 flex flex-col"
                       style={{ backgroundColor: currentTheme.bg, color: currentTheme.text }}
                     >
-                      {/* Nav header */}
+                      {/* Nav header with tabs */}
                       <div
-                        className="flex items-center justify-between px-4 h-12 flex-shrink-0"
+                        className="flex-shrink-0"
                         style={{
                           borderBottom: `1px solid ${currentTheme.border}`,
                           paddingTop: "env(safe-area-inset-top)",
                         }}
                       >
-                        <h3 className="text-sm font-semibold">Contents</h3>
-                        <button onClick={() => { setShowNavPanel(false); setSearchOpen(false) }} className="p-2 -mr-2 rounded-lg">
-                          <X className="w-5 h-5 opacity-60" />
-                        </button>
+                        <div className="flex items-center justify-between px-4 h-12">
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => setNavTab("contents")}
+                              className="px-3 py-1 rounded-lg text-xs font-semibold transition-all"
+                              style={{
+                                backgroundColor: navTab === "contents" ? `${currentTheme.progressFill}20` : "transparent",
+                                color: navTab === "contents" ? currentTheme.progressFill : `${currentTheme.text}80`,
+                              }}
+                            >
+                              Contents
+                            </button>
+                            <button
+                              onClick={() => setNavTab("notes")}
+                              className="px-3 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5"
+                              style={{
+                                backgroundColor: navTab === "notes" ? `${currentTheme.progressFill}20` : "transparent",
+                                color: navTab === "notes" ? currentTheme.progressFill : `${currentTheme.text}80`,
+                              }}
+                            >
+                              Notes
+                              {readerNotes.length > 0 && (
+                                <span
+                                  className="text-[9px] px-1.5 py-0.5 rounded-full font-bold"
+                                  style={{ backgroundColor: `${currentTheme.text}10`, color: `${currentTheme.text}80` }}
+                                >
+                                  {readerNotes.length}
+                                </span>
+                              )}
+                            </button>
+                          </div>
+                          <button onClick={() => { setShowNavPanel(false); setSearchOpen(false) }} className="p-2 -mr-2 rounded-lg">
+                            <X className="w-5 h-5 opacity-60" />
+                          </button>
+                        </div>
                       </div>
 
                       {/* Search bar */}
@@ -920,121 +1299,184 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                         </div>
                       </div>
 
-                      {/* Search results or chapter list */}
+                      {/* Tab content */}
                       <div className="flex-1 overflow-y-auto overscroll-contain">
-                        {searchOpen && searchQuery.length > 1 ? (
-                          <div className="px-4 py-2">
-                            <p className="text-[10px] uppercase tracking-wider opacity-40 font-semibold mb-2">
-                              {searchResults.length} result{searchResults.length !== 1 ? "s" : ""}
-                            </p>
-                            {searchResults.length === 0 && (
-                              <p className="text-sm opacity-40 py-8 text-center">No matches found</p>
+                        {navTab === "contents" ? (
+                          <>
+                            {searchOpen && searchQuery.length > 1 ? (
+                              <div className="px-4 py-2">
+                                <p className="text-[10px] uppercase tracking-wider opacity-40 font-semibold mb-2">
+                                  {searchResults.length} result{searchResults.length !== 1 ? "s" : ""}
+                                </p>
+                                {searchResults.length === 0 && (
+                                  <p className="text-sm opacity-40 py-8 text-center">No matches found</p>
+                                )}
+                                {searchResults.map((r, i) => (
+                                  <button
+                                    key={i}
+                                    onClick={() => jumpToSearchResult(r.charOffset)}
+                                    className="w-full text-left px-3 py-2.5 rounded-lg text-xs mb-1 transition-opacity hover:opacity-80"
+                                    style={{ backgroundColor: `${currentTheme.text}06` }}
+                                  >
+                                    <span className="opacity-60 line-clamp-2" style={{ fontSize: "11px" }}>{r.text}</span>
+                                    <span className="text-[10px] opacity-30 mt-0.5 block tabular-nums">Page {r.page}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="px-4 py-2">
+                                {/* Page scrubber */}
+                                <div className="mb-4">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="text-[10px] font-semibold uppercase tracking-wider opacity-40">
+                                      Go to page
+                                    </span>
+                                    <span className="text-xs tabular-nums opacity-60">
+                                      {currentPage} of {totalPages}
+                                    </span>
+                                  </div>
+                                  <input
+                                    type="range"
+                                    min={1}
+                                    max={totalPages}
+                                    value={currentPage}
+                                    onChange={(e) => jumpToPage(parseInt(e.target.value))}
+                                    className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                                    style={{
+                                      accentColor: currentTheme.progressFill,
+                                      background: `linear-gradient(to right, ${currentTheme.progressFill} ${progress}%, ${currentTheme.progressTrack} ${progress}%)`,
+                                    }}
+                                  />
+                                </div>
+
+                                {/* Chapter list */}
+                                {chapters.length > 0 && (
+                                  <div>
+                                    <div className="flex items-center gap-1.5 mb-2">
+                                      <List className="w-3.5 h-3.5 opacity-40" />
+                                      <span className="text-[10px] font-semibold uppercase tracking-wider opacity-40">
+                                        {chapters.length} Chapter{chapters.length !== 1 ? "s" : ""}
+                                      </span>
+                                    </div>
+                                    <div className="space-y-0.5">
+                                      {chapters.map((ch, i) => {
+                                        const isCurrent = i === currentChapterIndex
+                                        const isPast = i < currentChapterIndex
+                                        return (
+                                          <button
+                                            key={i}
+                                            onClick={() => jumpToChapter(ch)}
+                                            className="w-full text-left px-3 py-2.5 rounded-lg text-[13px] transition-all flex items-start gap-3"
+                                            style={{
+                                              backgroundColor: isCurrent ? `${currentTheme.progressFill}20` : "transparent",
+                                              fontWeight: isCurrent ? 600 : 400,
+                                              opacity: isPast ? 0.5 : 1,
+                                            }}
+                                          >
+                                            <span
+                                              className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5"
+                                              style={{
+                                                backgroundColor: isCurrent ? currentTheme.progressFill : isPast ? currentTheme.progressFill : `${currentTheme.text}20`,
+                                              }}
+                                            />
+                                            <div className="min-w-0">
+                                              <span className="block truncate">{ch.title}</span>
+                                              {ch.subtitle && (
+                                                <span className="text-[11px] opacity-50 block truncate">{ch.subtitle}</span>
+                                              )}
+                                            </div>
+                                          </button>
+                                        )
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {chapters.length === 0 && (
+                                  <p className="text-sm opacity-40 py-8 text-center">No chapters detected</p>
+                                )}
+
+                                {/* Reading stats */}
+                                <div
+                                  className="mt-6 p-3 rounded-xl grid grid-cols-3 gap-3 text-center"
+                                  style={{ backgroundColor: `${currentTheme.text}06` }}
+                                >
+                                  <div>
+                                    <div className="text-lg font-bold tabular-nums" style={{ color: currentTheme.progressFill }}>{currentPage}</div>
+                                    <div className="text-[10px] opacity-40">of {totalPages} pages</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-lg font-bold tabular-nums" style={{ color: currentTheme.progressFill }}>{progress}%</div>
+                                    <div className="text-[10px] opacity-40">complete</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-lg font-bold tabular-nums" style={{ color: currentTheme.progressFill }}>
+                                      {minsRemaining < 60 ? `${minsRemaining}m` : `${Math.floor(minsRemaining / 60)}h${minsRemaining % 60}m`}
+                                    </div>
+                                    <div className="text-[10px] opacity-40">remaining</div>
+                                  </div>
+                                </div>
+                              </div>
                             )}
-                            {searchResults.map((r, i) => (
-                              <button
-                                key={i}
-                                onClick={() => jumpToSearchResult(r.charOffset)}
-                                className="w-full text-left px-3 py-2.5 rounded-lg text-xs mb-1 transition-opacity hover:opacity-80"
-                                style={{ backgroundColor: `${currentTheme.text}06` }}
-                              >
-                                <span className="opacity-60 line-clamp-2" style={{ fontSize: "11px" }}>{r.text}</span>
-                                <span className="text-[10px] opacity-30 mt-0.5 block tabular-nums">Page {r.page}</span>
-                              </button>
-                            ))}
-                          </div>
+                          </>
                         ) : (
+                          /* Notes tab */
                           <div className="px-4 py-2">
-                            {/* Page scrubber */}
-                            <div className="mb-4">
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="text-[10px] font-semibold uppercase tracking-wider opacity-40">
-                                  Go to page
-                                </span>
-                                <span className="text-xs tabular-nums opacity-60">
-                                  {currentPage} of {totalPages}
-                                </span>
+                            {readerNotes.length === 0 ? (
+                              <div className="text-center py-12">
+                                <StickyNote className="w-8 h-8 mx-auto mb-3 opacity-20" />
+                                <p className="text-sm opacity-40">No notes yet</p>
+                                <p className="text-xs opacity-30 mt-1">Select text while reading to highlight or add notes</p>
                               </div>
-                              <input
-                                type="range"
-                                min={1}
-                                max={totalPages}
-                                value={currentPage}
-                                onChange={(e) => jumpToPage(parseInt(e.target.value))}
-                                className="w-full h-2 rounded-full appearance-none cursor-pointer"
-                                style={{
-                                  accentColor: currentTheme.progressFill,
-                                  background: `linear-gradient(to right, ${currentTheme.progressFill} ${progress}%, ${currentTheme.progressTrack} ${progress}%)`,
-                                }}
-                              />
-                            </div>
-
-                            {/* Chapter list */}
-                            {chapters.length > 0 && (
-                              <div>
-                                <div className="flex items-center gap-1.5 mb-2">
-                                  <List className="w-3.5 h-3.5 opacity-40" />
-                                  <span className="text-[10px] font-semibold uppercase tracking-wider opacity-40">
-                                    {chapters.length} Chapter{chapters.length !== 1 ? "s" : ""}
-                                  </span>
-                                </div>
-                                <div className="space-y-0.5">
-                                  {chapters.map((ch, i) => {
-                                    const isCurrent = i === currentChapterIndex
-                                    const isPast = i < currentChapterIndex
-                                    return (
-                                      <button
-                                        key={i}
-                                        onClick={() => jumpToChapter(ch)}
-                                        className="w-full text-left px-3 py-2.5 rounded-lg text-[13px] transition-all flex items-start gap-3"
-                                        style={{
-                                          backgroundColor: isCurrent ? `${currentTheme.progressFill}20` : "transparent",
-                                          fontWeight: isCurrent ? 600 : 400,
-                                          opacity: isPast ? 0.5 : 1,
-                                        }}
-                                      >
-                                        <span
-                                          className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5"
-                                          style={{
-                                            backgroundColor: isCurrent ? currentTheme.progressFill : isPast ? currentTheme.progressFill : `${currentTheme.text}20`,
-                                          }}
-                                        />
-                                        <div className="min-w-0">
-                                          <span className="block truncate">{ch.title}</span>
-                                          {ch.subtitle && (
-                                            <span className="text-[11px] opacity-50 block truncate">{ch.subtitle}</span>
+                            ) : (
+                              <div className="space-y-2">
+                                {readerNotes.map((note) => {
+                                  const isHighlight = note.type === "highlight"
+                                  const isNote = note.type === "note"
+                                  const isBm = note.type === "bookmark"
+                                  return (
+                                    <div
+                                      key={note.id}
+                                      className="rounded-lg p-3 transition-colors"
+                                      style={{ backgroundColor: `${currentTheme.text}06` }}
+                                    >
+                                      <div className="flex items-start justify-between gap-2">
+                                        <button
+                                          onClick={() => jumpToNote(note)}
+                                          className="flex-1 text-left min-w-0"
+                                        >
+                                          <div className="flex items-center gap-1.5 mb-1">
+                                            {isBm && <BookmarkCheck className="w-3 h-3 flex-shrink-0" style={{ color: currentTheme.progressFill }} />}
+                                            {isHighlight && <Highlighter className="w-3 h-3 flex-shrink-0" style={{ color: currentTheme.progressFill }} />}
+                                            {isNote && <MessageSquare className="w-3 h-3 flex-shrink-0" style={{ color: currentTheme.progressFill }} />}
+                                            {note.type === "quote" && <BookOpen className="w-3 h-3 flex-shrink-0" style={{ color: currentTheme.progressFill }} />}
+                                            <span className="text-[10px] uppercase tracking-wider opacity-40 font-semibold">
+                                              {note.type}{note.page ? ` · p.${note.page}` : ""}
+                                            </span>
+                                          </div>
+                                          {note.selectedText && (
+                                            <p className="text-xs italic opacity-50 line-clamp-2 mb-1">
+                                              &ldquo;{note.selectedText}&rdquo;
+                                            </p>
                                           )}
-                                        </div>
-                                      </button>
-                                    )
-                                  })}
-                                </div>
+                                          {note.content && (
+                                            <p className="text-xs opacity-70 line-clamp-2">
+                                              {isBm ? note.content : note.content}
+                                            </p>
+                                          )}
+                                        </button>
+                                        <button
+                                          onClick={() => handleDeleteReaderNote(note.id)}
+                                          className="p-1.5 rounded-md opacity-30 hover:opacity-60 flex-shrink-0"
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  )
+                                })}
                               </div>
                             )}
-
-                            {chapters.length === 0 && (
-                              <p className="text-sm opacity-40 py-8 text-center">No chapters detected</p>
-                            )}
-
-                            {/* Reading stats */}
-                            <div
-                              className="mt-6 p-3 rounded-xl grid grid-cols-3 gap-3 text-center"
-                              style={{ backgroundColor: `${currentTheme.text}06` }}
-                            >
-                              <div>
-                                <div className="text-lg font-bold tabular-nums" style={{ color: currentTheme.progressFill }}>{currentPage}</div>
-                                <div className="text-[10px] opacity-40">of {totalPages} pages</div>
-                              </div>
-                              <div>
-                                <div className="text-lg font-bold tabular-nums" style={{ color: currentTheme.progressFill }}>{progress}%</div>
-                                <div className="text-[10px] opacity-40">complete</div>
-                              </div>
-                              <div>
-                                <div className="text-lg font-bold tabular-nums" style={{ color: currentTheme.progressFill }}>
-                                  {minsRemaining < 60 ? `${minsRemaining}m` : `${Math.floor(minsRemaining / 60)}h${minsRemaining % 60}m`}
-                                </div>
-                                <div className="text-[10px] opacity-40">remaining</div>
-                              </div>
-                            </div>
                           </div>
                         )}
                       </div>
