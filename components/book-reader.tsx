@@ -65,23 +65,73 @@ function getStoredTheme(): ReaderTheme {
 }
 
 /**
+ * Apply typographic transforms to plain text:
+ * -- → em dash, ... → ellipsis, straight quotes → curly quotes
+ */
+function typographicText(src: string): string {
+  let t = src
+  // Em dashes: -- → —  (but not inside --- separators)
+  t = t.replace(/(?<!-)--(?!-)/g, "\u2014")
+  // Ellipsis
+  t = t.replace(/\.\.\./g, "\u2026")
+  // Smart double quotes: "word" → \u201C word \u201D
+  // Opening: after whitespace/start or after em dash/open paren
+  t = t.replace(/(^|[\s\u2014(])"(?=\S)/g, "$1\u201C")
+  // Closing: before whitespace/end/punctuation
+  t = t.replace(/"(?=[\s.,;:!?\u2014)\]]|$)/g, "\u201D")
+  // Any remaining straight double quotes → closing
+  t = t.replace(/"/g, "\u201D")
+  // Smart single quotes / apostrophes
+  // Opening: after whitespace/start
+  t = t.replace(/(^|[\s\u2014(])'(?=\S)/g, "$1\u2018")
+  // Apostrophes and closing
+  t = t.replace(/'/g, "\u2019")
+  return t
+}
+
+/**
  * Renders inline text with Gutenberg formatting:
- * _text_ → italic (Gutenberg convention for emphasis)
+ * _text_ → italic, [1] → superscript footnote, ALL CAPS words → small-caps
  */
 function RenderInlineText({ text }: { text: string }) {
+  // Apply typography first
+  const typod = typographicText(text)
   const parts: React.ReactNode[] = []
-  const re = /_([^_\n]{2,}?)_/g
+  // Combined regex: _italic_, [footnote number], or ALL CAPS words (3+ letters)
+  const re = /_([^_\n]{2,}?)_|\[(\d{1,3})\]|\b([A-Z]{3,})\b/g
   let lastIndex = 0
   let match: RegExpExecArray | null
-  while ((match = re.exec(text)) !== null) {
+  while ((match = re.exec(typod)) !== null) {
     if (match.index > lastIndex) {
-      parts.push(text.slice(lastIndex, match.index))
+      parts.push(typod.slice(lastIndex, match.index))
     }
-    parts.push(<em key={match.index}>{match[1]}</em>)
+    if (match[1] !== undefined) {
+      // Italic
+      parts.push(<em key={match.index}>{match[1]}</em>)
+    } else if (match[2] !== undefined) {
+      // Footnote superscript
+      parts.push(
+        <sup key={match.index} className="text-[0.7em] opacity-60 ml-px">
+          {match[2]}
+        </sup>
+      )
+    } else if (match[3] !== undefined) {
+      // ALL CAPS → small-caps (skip common short words that are genuine acronyms)
+      const word = match[3]
+      if (word.length >= 4) {
+        parts.push(
+          <span key={match.index} style={{ fontVariant: "small-caps", letterSpacing: "0.05em" }}>
+            {word.toLowerCase()}
+          </span>
+        )
+      } else {
+        parts.push(word)
+      }
+    }
     lastIndex = match.index + match[0].length
   }
-  if (parts.length === 0) return <>{text}</>
-  if (lastIndex < text.length) parts.push(text.slice(lastIndex))
+  if (parts.length === 0) return <>{typod}</>
+  if (lastIndex < typod.length) parts.push(typod.slice(lastIndex))
   return <>{parts}</>
 }
 
@@ -101,12 +151,13 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
   type TextBlock =
     | { type: "heading"; text: string; subtitle?: string }
-    | { type: "paragraph"; text: string }
+    | { type: "paragraph"; text: string; dropCap?: boolean }
     | { type: "separator" }
     | { type: "verse"; lines: string[] }
     | { type: "centered"; lines: string[] }
     | { type: "blockquote"; text: string }
     | { type: "image"; src: string; caption?: string }
+    | { type: "signature"; text: string }
 
   const blocks = useMemo<TextBlock[]>(() => {
     if (!text) return []
@@ -244,10 +295,21 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
         }
       }
 
+      // --- Signature / date lines ---
+      // Short lines at end of letters: "Yours truly," or "December 3, 1818" etc.
+      const signatureRe = /^(?:yours?\s|sincerely|faithfully|truly|affectionately|respectfully|cordially|ever yours|[A-Z][a-z]+\s\d{1,2},?\s\d{4})/i
+      if (nonEmptyLines.length === 1 && trimmed.length < 60 && signatureRe.test(trimmed)) {
+        result.push({ type: "signature", text: trimmed })
+        continue
+      }
+
       // --- Regular paragraph ---
       // Unwrap hard line-wrapping (Gutenberg wraps at ~70 chars) into flowing text
       const unwrapped = trimmed.replace(/\n/g, " ").replace(/\s{2,}/g, " ")
-      result.push({ type: "paragraph", text: unwrapped })
+      // Drop cap: first paragraph after a heading or separator
+      const prev = result.length > 0 ? result[result.length - 1] : null
+      const isAfterHeading = prev !== null && (prev.type === "heading" || prev.type === "separator")
+      result.push({ type: "paragraph", text: unwrapped, dropCap: isAfterHeading && unwrapped.length > 40 })
     }
 
     return result
@@ -696,6 +758,24 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                       )
                     }
 
+                    if (block.type === "signature") {
+                      return (
+                        <p
+                          key={i}
+                          className="mb-5 text-right italic"
+                          style={{
+                            fontFamily: "Georgia, 'Source Serif 4', serif",
+                            fontSize: `${fontSize}px`,
+                            lineHeight: "1.85",
+                            color: currentTheme.text,
+                            opacity: 0.75,
+                          }}
+                        >
+                          <RenderInlineText text={block.text} />
+                        </p>
+                      )
+                    }
+
                     if (block.type === "verse") {
                       return (
                         <div
@@ -716,6 +796,40 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                             </span>
                           ))}
                         </div>
+                      )
+                    }
+
+                    if (block.dropCap && block.text.length > 1) {
+                      const firstChar = block.text[0]
+                      const rest = block.text.slice(1)
+                      return (
+                        <p
+                          key={i}
+                          className="mb-5 leading-relaxed text-justify"
+                          style={{
+                            fontFamily: "Georgia, 'Source Serif 4', serif",
+                            fontSize: `${fontSize}px`,
+                            lineHeight: "1.85",
+                            letterSpacing: "0.01em",
+                            color: currentTheme.text,
+                          }}
+                        >
+                          <span
+                            style={{
+                              float: "left",
+                              fontFamily: "Georgia, 'Source Serif 4', serif",
+                              fontSize: `${fontSize * 3.2}px`,
+                              lineHeight: "0.8",
+                              paddingTop: "0.07em",
+                              paddingRight: "0.08em",
+                              fontWeight: 700,
+                              color: currentTheme.progressFill,
+                            }}
+                          >
+                            {firstChar}
+                          </span>
+                          <RenderInlineText text={rest} />
+                        </p>
                       )
                     }
 
