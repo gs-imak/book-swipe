@@ -6,6 +6,7 @@ import { X, BookOpen, Star, Clock, Heart, TrendingUp } from "lucide-react"
 import { ReadingDoodle, SittingReadingDoodle } from "./illustrations"
 import { getLikedBooks, getBookReviews, getBookNotes, getReadingProgress, getUserStats, type BookReview } from "@/lib/storage"
 import { Book } from "@/lib/book-data"
+import { DedicationOverlay } from "./dedication-overlay"
 
 interface TasteProfileProps {
   isOpen: boolean
@@ -58,6 +59,7 @@ function getArchetype(topGenre: string, topMood: string): string {
 export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
   const [likedBooks, setLikedBooks] = useState<Book[]>([])
   const [reviews, setReviews] = useState<BookReview[]>([])
+  const [showDedication, setShowDedication] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
@@ -447,8 +449,26 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
                 )}
               </>
             )}
+            {/* Hidden dedication trigger */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.2 }}
+              className="flex justify-center pt-4"
+            >
+              <button
+                onClick={() => setShowDedication(true)}
+                aria-label="A message for you"
+                className="w-6 h-6 flex items-center justify-center rounded-full text-stone-300 hover:text-rose-400 transition-colors duration-300"
+                title="A message for you"
+              >
+                <Heart className="w-3.5 h-3.5" />
+              </button>
+            </motion.div>
           </div>
         </div>
+
+        <DedicationOverlay isOpen={showDedication} onClose={() => setShowDedication(false)} />
       </motion.div>
     </AnimatePresence>
   )

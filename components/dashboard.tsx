@@ -21,6 +21,8 @@ import { DiscoverHub } from "./discover-hub"
 import { DailyPickCard } from "./daily-pick-card"
 import { ShelfManager } from "./shelf-manager"
 import { ReadingPath } from "./reading-path"
+import { ReadingGoalSetter } from "./reading-goal-setter"
+import { QuotesGallery } from "./quotes-gallery"
 import { getShelves, getBooksForShelf, shouldShowBackupReminder, dismissBackupReminder, type Shelf } from "@/lib/storage"
 import { estimateReadingTime, getReadingSpeed, setReadingSpeed, getAllSpeeds, type ReadingSpeed } from "@/lib/reading-time"
 
@@ -223,13 +225,6 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                 <span className="hidden sm:inline">Lv.{userStats.level}</span>
                 <span className="sm:hidden">{userStats.level}</span>
               </button>
-              <button
-                onClick={() => setShowAdmin(!showAdmin)}
-                aria-label="Settings"
-                className="flex items-center justify-center p-2 rounded-lg hover:bg-stone-100 transition-colors tap-target touch-manipulation"
-              >
-                <Settings className="w-5 h-5 text-stone-400" />
-              </button>
               {likedBooks.length > 0 && (
                 <button
                   onClick={handleClearAll}
@@ -377,6 +372,9 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                 />
               )}
             </motion.div>
+
+            {/* ━━━ Reading Goal Setter (shown once until user sets a goal) ━━━ */}
+            <ReadingGoalSetter />
 
             {/* ━━━ SECTION 2: Reading Progress (currently reading up front) ━━━ */}
             <motion.div {...fadeInUp(0.05)}>
@@ -635,6 +633,11 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               </motion.div>
               )}
               </AnimatePresence>
+            </motion.div>
+
+            {/* ━━━ Quotes Gallery (shown when user has saved quotes) ━━━ */}
+            <motion.div {...fadeInUp(0.09)}>
+              <QuotesGallery />
             </motion.div>
 
             {/* ━━━ SECTION 4: Discovery Zone ━━━ */}
