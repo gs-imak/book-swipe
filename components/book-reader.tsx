@@ -77,9 +77,50 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hasRestoredRef = useRef(false)
 
-  const paragraphs = useMemo(() => {
+  type TextBlock =
+    | { type: "heading"; text: string }
+    | { type: "paragraph"; text: string }
+    | { type: "separator" }
+
+  const blocks = useMemo<TextBlock[]>(() => {
     if (!text) return []
-    return text.split(/\n{2,}/).filter((p) => p.trim().length > 0)
+    const raw = text.split(/\n{2,}/).filter((p) => p.trim().length > 0)
+    const result: TextBlock[] = []
+
+    const chapterRe = /^(?:chapter|book|part|act|section|prologue|epilogue|introduction|preface|foreword|contents)\b/i
+    const separatorRe = /^\s*(?:[*\-_]{3,}|\*\s+\*\s+\*)\s*$/
+
+    for (let idx = 0; idx < raw.length; idx++) {
+      const trimmed = raw[idx].trim()
+
+      // Scene break separators (*** or --- or ___)
+      if (separatorRe.test(trimmed)) {
+        result.push({ type: "separator" })
+        continue
+      }
+
+      // Chapter / section headings
+      if (chapterRe.test(trimmed) && trimmed.length < 120) {
+        result.push({ type: "heading", text: trimmed })
+        continue
+      }
+
+      // ALL CAPS short lines → likely headings (e.g. "THE ADVENTURE BEGINS")
+      if (
+        trimmed.length > 2 &&
+        trimmed.length < 80 &&
+        trimmed === trimmed.toUpperCase() &&
+        /[A-Z]/.test(trimmed) &&
+        !/[a-z]/.test(trimmed)
+      ) {
+        result.push({ type: "heading", text: trimmed })
+        continue
+      }
+
+      result.push({ type: "paragraph", text: trimmed })
+    }
+
+    return result
   }, [text])
 
   // Page & time calculations
@@ -344,21 +385,51 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                   className="max-w-2xl mx-auto px-5 sm:px-8 py-8"
                   style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom))" }}
                 >
-                  {paragraphs.map((p, i) => (
-                    <p
-                      key={i}
-                      className="mb-5 leading-relaxed text-justify"
-                      style={{
-                        fontFamily: "Georgia, 'Source Serif 4', serif",
-                        fontSize: `${fontSize}px`,
-                        lineHeight: "1.85",
-                        letterSpacing: "0.01em",
-                        color: currentTheme.text,
-                      }}
-                    >
-                      {p.trim()}
-                    </p>
-                  ))}
+                  {blocks.map((block, i) => {
+                    if (block.type === "separator") {
+                      return (
+                        <div key={i} className="flex items-center justify-center gap-3 py-8 opacity-25">
+                          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: currentTheme.text }} />
+                          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: currentTheme.text }} />
+                          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: currentTheme.text }} />
+                        </div>
+                      )
+                    }
+
+                    if (block.type === "heading") {
+                      return (
+                        <h2
+                          key={i}
+                          className="text-center font-bold mt-14 mb-8"
+                          style={{
+                            fontFamily: "Georgia, 'Source Serif 4', serif",
+                            fontSize: `${fontSize + 4}px`,
+                            lineHeight: "1.4",
+                            letterSpacing: "0.02em",
+                            color: currentTheme.text,
+                          }}
+                        >
+                          {block.text}
+                        </h2>
+                      )
+                    }
+
+                    return (
+                      <p
+                        key={i}
+                        className="mb-5 leading-relaxed text-justify"
+                        style={{
+                          fontFamily: "Georgia, 'Source Serif 4', serif",
+                          fontSize: `${fontSize}px`,
+                          lineHeight: "1.85",
+                          letterSpacing: "0.01em",
+                          color: currentTheme.text,
+                        }}
+                      >
+                        {block.text}
+                      </p>
+                    )
+                  })}
                 </div>
               </div>
 
