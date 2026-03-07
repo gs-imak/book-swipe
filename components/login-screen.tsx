@@ -19,13 +19,14 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden flex flex-col">
+    <div className="bg-background relative overflow-hidden flex flex-col" style={{ minHeight: "100dvh" }}>
       {/* Header */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative z-10 px-6 sm:px-8 pt-8 sm:pt-10"
+        className="relative z-10 px-6 sm:px-8"
+        style={{ paddingTop: "max(32px, env(safe-area-inset-top, 32px))" }}
       >
         <div className="max-w-6xl mx-auto flex items-center gap-3">
           <Image

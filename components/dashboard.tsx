@@ -189,7 +189,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   })
 
   return (
-    <div className="min-h-screen bg-background smooth-scroll pb-20">
+    <div className="bg-background smooth-scroll pb-20" style={{ minHeight: "100dvh" }}>
       {/* Header */}
       <div className="bg-background/90 backdrop-blur-md border-b border-stone-200/60 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4">

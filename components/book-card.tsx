@@ -124,7 +124,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true }: B
           <div className="flex items-end justify-between gap-3 mb-3">
             <div className="flex-1 min-w-0">
               <h3
-                className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight mb-1 drop-shadow-lg font-serif"
+                className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight mb-1 drop-shadow-lg font-serif line-clamp-3"
               >
                 {book.title}
               </h3>

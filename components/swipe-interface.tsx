@@ -248,7 +248,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   // Loading
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="bg-background flex items-center justify-center" style={{ minHeight: "100dvh" }}>
         <div className="text-center">
           <Loader2 className="w-8 h-8 text-amber-600 animate-spin mx-auto mb-4" />
           <p className="text-base font-medium text-stone-600">Finding books for you...</p>
@@ -260,7 +260,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   // No matches
   if (filteredBooks.length === 0) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6 pb-16">
+      <div className="bg-background flex items-center justify-center p-6 pb-16" style={{ minHeight: "100dvh" }}>
         <motion.div
           className="text-center max-w-sm"
           initial={{ opacity: 0, y: 20 }}
@@ -292,7 +292,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   // Done swiping
   if (!hasMoreBooks) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6 pb-16">
+      <div className="bg-background flex items-center justify-center p-6 pb-16" style={{ minHeight: "100dvh" }}>
         <motion.div
           className="text-center max-w-sm w-full"
           initial={{ opacity: 0, y: 20 }}
@@ -376,8 +376,8 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   }
 
   return (
-    <div className="min-h-screen bg-background relative">
-      <div className="relative z-10 min-h-screen flex flex-col">
+    <div className="bg-background relative" style={{ minHeight: "100dvh" }}>
+      <div className="relative z-10 flex flex-col" style={{ minHeight: "100dvh" }}>
         {/* Screen reader announcement */}
         <div aria-live="polite" className="sr-only">
           {currentBook
@@ -423,7 +423,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
           <div className="relative w-full max-w-sm">
             <motion.div
               className="relative sm:h-[560px] md:h-[600px]"
-              style={{ height: "min(500px, 65vh)" }}
+              style={{ height: "min(500px, 60svh, 60vh)" }}
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.4 }}
@@ -488,7 +488,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
             </div>
 
             <p className="text-center text-xs text-stone-400">
-              Swipe or tap · Ctrl+Z to undo
+              Swipe left to pass · right to save
             </p>
           </div>
         </div>
