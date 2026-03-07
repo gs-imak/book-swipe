@@ -255,8 +255,8 @@ export default function App() {
         const newWorker = reg.installing
         if (!newWorker) return
         newWorker.addEventListener('statechange', () => {
-          if (newWorker.state === 'activated') {
-            // New SW activated — reload to get fresh assets
+          // Only reload on SW update, not on first install
+          if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
             window.location.reload()
           }
         })

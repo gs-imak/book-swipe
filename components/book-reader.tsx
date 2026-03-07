@@ -72,9 +72,9 @@ function typographicText(src: string): string {
   let t = src
   // Em dashes: -- → — (but not inside --- separators)
   // Use capture groups instead of lookbehind for Safari compatibility
-  t = t.replace(/---/g, "\uFFFE")             // protect triple dashes
+  t = t.replace(/---/g, "\uE000")             // protect triple dashes (PUA char)
   t = t.replace(/--/g, "\u2014")              // all double dashes → em dash
-  t = t.replace(/\uFFFE/g, "---")            // restore triple dashes
+  t = t.replace(/\uE000/g, "---")            // restore triple dashes
   // Ellipsis
   t = t.replace(/\.\.\./g, "\u2026")
   // Smart double quotes: "word" → \u201C word \u201D
@@ -91,7 +91,7 @@ function typographicText(src: string): string {
   t = t.replace(/'/g, "\u2019")
   // Fix elision apostrophes that were wrongly made opening quotes
   // Decade shortenings ('90s, '40s) and archaic elisions ('twas, 'tis, 'em, etc.)
-  t = t.replace(/\u2018(\d\ds\b)/g, "\u2019$1")
+  t = t.replace(/\u2018(\d+s\b)/g, "\u2019$1")
   t = t.replace(/\u2018(twas|tis|em|til|bout|cause|round|scuse)/gi, "\u2019$1")
   return t
 }
@@ -307,7 +307,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       // Short lines at end of letters: "Yours truly," or "December 3, 1818" etc.
       // Case-sensitive to avoid false positives like "Your mother..." or "Truly, it was..."
       // Keep patterns tight: letter-closing words must be near end (< 35 chars total)
-      const signatureRe = /^(?:Yours\s|Sincerely|Faithfully|Affectionately|Respectfully|Cordially|Ever yours|[A-Z][a-z]+\s\d{1,2},?\s\d{4}\s*$)/
+      const signatureRe = /^(?:Yours\s|Sincerely\b|Faithfully\b|Affectionately\b|Respectfully\b|Cordially\b|Ever yours\b|[A-Z][a-z]+\s\d{1,2},?\s\d{4})\s*$/
       if (nonEmptyLines.length === 1 && trimmed.length < 35 && signatureRe.test(trimmed)) {
         result.push({ type: "signature", text: trimmed })
         continue

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Search, BookOpen, Loader2, AlertCircle } from "lucide-react"
 import { GutenbergBook } from "@/lib/gutenberg-api"
@@ -23,8 +23,6 @@ export function FreeBooksBrowser() {
   const [searchQuery, setSearchQuery] = useState("")
   const [readerBook, setReaderBook] = useState<GutenbergBook | null>(null)
   const [readerOpen, setReaderOpen] = useState(false)
-  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
   // Load by category
   useEffect(() => {
     if (searchQuery) return
@@ -48,15 +46,14 @@ export function FreeBooksBrowser() {
     return () => { cancelled = true }
   }, [selectedCategory, searchQuery])
 
-  // Debounced search
+  // Debounced search — cancelled flag hoisted outside setTimeout
   useEffect(() => {
     if (!searchQuery) return
-    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    let cancelled = false
     setLoading(true)
     setError(false)
 
-    searchDebounceRef.current = setTimeout(() => {
-      let cancelled = false
+    const timer = setTimeout(() => {
       searchFreeBooks(searchQuery)
         .then(result => {
           if (!cancelled) setBooks(result.results.filter(hasReadableText))
@@ -67,11 +64,11 @@ export function FreeBooksBrowser() {
         .finally(() => {
           if (!cancelled) setLoading(false)
         })
-      return () => { cancelled = true }
     }, 400)
 
     return () => {
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+      cancelled = true
+      clearTimeout(timer)
     }
   }, [searchQuery])
 
