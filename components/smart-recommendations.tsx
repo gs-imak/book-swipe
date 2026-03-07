@@ -353,7 +353,7 @@ function MiniBookCard({
 
       {/* Info */}
       <div className="px-0.5">
-        <h4 className="font-semibold text-xs text-stone-900 line-clamp-2 leading-tight">{book.title}</h4>
+        <h4 className="font-semibold text-xs text-stone-900 line-clamp-2 leading-tight min-h-[1.875rem]">{book.title}</h4>
         <p className="text-xs text-stone-400 mb-1.5 truncate">{book.author}</p>
 
         {reason && (

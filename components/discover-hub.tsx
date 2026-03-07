@@ -100,7 +100,7 @@ function ExploreBookCard({
       </div>
 
       <div className="px-0.5">
-        <h4 className="font-semibold text-xs text-stone-900 line-clamp-2 leading-tight">
+        <h4 className="font-semibold text-xs text-stone-900 line-clamp-2 leading-tight min-h-[1.875rem]">
           {book.title}
         </h4>
         <p className="text-[11px] text-stone-400 mb-1.5 truncate">

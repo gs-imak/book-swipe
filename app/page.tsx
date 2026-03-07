@@ -13,9 +13,10 @@ import { UserPreferences } from "@/lib/book-data"
 import { getLikedBooks, migrateCoverUrls, isOnboarded, setOnboarded, getSavedPreferences, savePreferences } from "@/lib/storage"
 import { TasteProfile } from "@/components/taste-profile"
 import { InstallPrompt } from "@/components/install-prompt"
+import { FreeBooksBrowser } from "@/components/free-books-browser"
 import { motion, AnimatePresence } from "framer-motion"
 
-type AppState = "login" | "dashboard" | "questionnaire" | "swipe"
+type AppState = "login" | "dashboard" | "questionnaire" | "swipe" | "read"
 
 interface HomeProps {
   onShowAchievements: (show: boolean) => void
@@ -87,13 +88,15 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
     setCurrentView("swipe")
   }
 
-  const handleMobileNavigation = (view: "dashboard" | "swipe" | "achievements" | "profile") => {
+  const handleMobileNavigation = (view: "dashboard" | "swipe" | "read" | "achievements" | "profile") => {
     if (view === "profile") {
       onShowAchievements(false)
       setShowTasteProfile(true)
+      setCurrentView("dashboard")
     } else if (view === "achievements") {
       setShowTasteProfile(false)
       onShowAchievements(true)
+      setCurrentView("dashboard")
     } else if (view === "swipe") {
       setShowTasteProfile(false)
       onShowAchievements(false)
@@ -102,6 +105,10 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
       } else {
         setCurrentView("swipe")
       }
+    } else if (view === "read") {
+      setShowTasteProfile(false)
+      onShowAchievements(false)
+      setCurrentView("read")
     } else {
       setShowTasteProfile(false)
       onShowAchievements(false)
@@ -109,10 +116,11 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
     }
   }
 
-  const getCurrentNavView = (): "dashboard" | "swipe" | "achievements" | "profile" => {
+  const getCurrentNavView = (): "dashboard" | "swipe" | "read" | "achievements" | "profile" => {
     if (showTasteProfile) return "profile"
     if (isAchievementsOpen) return "achievements"
     if (currentView === "swipe") return "swipe"
+    if (currentView === "read") return "read"
     return "dashboard"
   }
 
@@ -154,11 +162,21 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
             exit={{ opacity: 0, transition: { duration: 0.1 } }}
             transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
           >
-            <SwipeInterface 
-              preferences={userPreferences} 
+            <SwipeInterface
+              preferences={userPreferences}
               onRestart={handleRestart}
               onViewLibrary={handleViewLibrary}
             />
+          </motion.div>
+        ) : currentView === "read" ? (
+          <motion.div
+            key="read"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.1 } }}
+            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+          >
+            <FreeBooksBrowser />
           </motion.div>
         ) : (
           <motion.div
