@@ -50,7 +50,8 @@ export function DedicationOverlay({ isOpen, onClose }: DedicationOverlayProps) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.97 }}
             transition={{ type: "spring", stiffness: 220, damping: 26, delay: 0.1 }}
-            className="max-w-xs w-full text-center space-y-7"
+            className="max-w-sm w-full text-center space-y-6 overflow-y-auto overscroll-contain"
+            style={{ maxHeight: "calc(100dvh - 80px)" }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Top ornament */}
@@ -82,7 +83,7 @@ export function DedicationOverlay({ isOpen, onClose }: DedicationOverlayProps) {
               transition={{ delay: 0.65 }}
               className="text-white/90 text-xl font-serif leading-relaxed italic font-light"
             >
-              "Every story begins with someone who believes in it."
+              &ldquo;Every dream begins with someone who believes in it.&rdquo;
             </motion.p>
 
             {/* Body */}
@@ -90,15 +91,21 @@ export function DedicationOverlay({ isOpen, onClose }: DedicationOverlayProps) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.78 }}
-              className="space-y-4 text-stone-400 text-sm leading-loose"
+              className="space-y-4 text-stone-400 text-sm leading-loose text-left"
             >
               <p>
-                This app started as your idea — and became something real because
-                you make the people around you want to build beautiful things.
+                This app began as your idea — a simple spark you shared, and probably never thought
+                it would go this far. Somehow, that spark turned into something real, and now something
+                that I hope you can use, and that brings you joy, just as much as making this for you did for me.
               </p>
               <p>
-                May every book you discover here feel like it was waiting
-                just for you.
+                You have a rare way of making the people around you want to build things, create things,
+                and believe a little more in what&apos;s possible. Thank you for being an angel and for
+                inspiring, as you always have been.
+              </p>
+              <p>
+                I hope that every book you discover here feels like it was waiting quietly for you to find it —
+                where you can always find peace and calm.
               </p>
             </motion.div>
 
@@ -119,10 +126,10 @@ export function DedicationOverlay({ isOpen, onClose }: DedicationOverlayProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1 }}
-              className="space-y-1.5"
+              className="space-y-2 pb-2"
             >
-              <p className="text-stone-600 text-xs tracking-wide">Happy International Women&apos;s Day</p>
-              <p className="text-amber-600/80 text-sm font-serif">With love ♥</p>
+              <p className="text-stone-500 text-xs tracking-wide">Happy International Women&apos;s Day</p>
+              <p className="text-amber-600/80 text-sm font-serif">With love ♥ your Georgie</p>
             </motion.div>
           </motion.div>
         </motion.div>
