@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ArrowLeft, Sun, Coffee, Moon, Loader2, AlertCircle, BookOpen, Minus, Plus } from "lucide-react"
+import { ArrowLeft, Sun, Coffee, Moon, Loader2, AlertCircle, BookOpen, Minus, Plus, List, ChevronsUp } from "lucide-react"
 import { GutenbergBook, fetchBookText } from "@/lib/gutenberg-api"
 import { saveReadingPosition, getReadingPosition } from "@/lib/storage"
 
@@ -71,6 +71,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState(0)
+  const [showNavPanel, setShowNavPanel] = useState(false)
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -80,6 +81,50 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     if (!text) return []
     return text.split(/\n{2,}/).filter((p) => p.trim().length > 0)
   }, [text])
+
+  // Page & time calculations
+  const CHARS_PER_PAGE = 1500
+  const totalPages = text ? Math.ceil(text.length / CHARS_PER_PAGE) : 0
+  const currentPage = totalPages > 0 ? Math.max(1, Math.ceil((progress / 100) * totalPages)) : 0
+  const totalWords = text ? Math.round(text.length / 5) : 0
+  const minsRemaining = totalWords > 0 ? Math.max(1, Math.round((totalWords * (1 - progress / 100)) / 250)) : 0
+
+  // Chapter detection
+  interface Chapter { title: string; charOffset: number; page: number }
+  const chapters = useMemo<Chapter[]>(() => {
+    if (!text) return []
+    const result: Chapter[] = []
+    const regex = /^(?:chapter|book|part|act|section|prologue|epilogue)\s*[\divxlcdm]*[.:)\-—]*\s*.{0,60}$/gim
+    let match: RegExpExecArray | null
+    while ((match = regex.exec(text)) !== null) {
+      const title = match[0].trim()
+      if (title.length < 4) continue // skip noise
+      result.push({
+        title: title.slice(0, 60),
+        charOffset: match.index,
+        page: Math.max(1, Math.ceil(match.index / CHARS_PER_PAGE)),
+      })
+    }
+    return result
+  }, [text])
+
+  const jumpToRatio = useCallback((ratio: number) => {
+    const el = scrollRef.current
+    if (!el) return
+    const scrollable = el.scrollHeight - el.clientHeight
+    el.scrollTop = Math.max(0, Math.min(1, ratio)) * scrollable
+  }, [])
+
+  const jumpToPage = useCallback((page: number) => {
+    if (totalPages <= 1) return
+    jumpToRatio((page - 1) / (totalPages - 1))
+  }, [totalPages, jumpToRatio])
+
+  const jumpToChapter = useCallback((ch: { charOffset: number }) => {
+    if (!text) return
+    jumpToRatio(ch.charOffset / text.length)
+    setShowNavPanel(false)
+  }, [text, jumpToRatio])
 
   const currentTheme = themes[theme]
   const ThemeIcon = themeIcons[theme]
@@ -328,33 +373,134 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                   paddingBottom: "max(12px, env(safe-area-inset-bottom, 12px))",
                 }}
               >
-                <div className="flex items-center justify-center gap-6 px-4 h-12">
-                  <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => setFontSize((s) => Math.max(14, s - 1))}
-                    disabled={fontSize <= 14}
-                    className="tap-target w-10 h-10 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
-                    style={{ color: currentTheme.text }}
-                    aria-label="Decrease font size"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </motion.button>
+                {/* Navigation panel (slides up) */}
+                <AnimatePresence>
+                  {showNavPanel && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                      style={{ borderBottom: `1px solid ${currentTheme.border}` }}
+                    >
+                      <div className="px-4 pt-3 pb-2 space-y-3">
+                        {/* Page scrubber */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-semibold uppercase tracking-wider opacity-40">
+                              Go to page
+                            </span>
+                            <span className="text-xs tabular-nums opacity-60">
+                              {currentPage} of {totalPages}
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min={1}
+                            max={totalPages}
+                            value={currentPage}
+                            onChange={(e) => jumpToPage(parseInt(e.target.value))}
+                            className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                            style={{
+                              accentColor: currentTheme.progressFill,
+                              background: `linear-gradient(to right, ${currentTheme.progressFill} ${progress}%, ${currentTheme.progressTrack} ${progress}%)`,
+                            }}
+                          />
+                          <div className="flex justify-between text-[10px] opacity-30 mt-0.5 tabular-nums">
+                            <span>1</span>
+                            <span>{totalPages}</span>
+                          </div>
+                        </div>
 
-                  <div className="flex items-center gap-1.5">
-                    <BookOpen className="w-4 h-4 opacity-50" />
-                    <span className="text-xs tabular-nums opacity-50">{fontSize}</span>
+                        {/* Chapters */}
+                        {chapters.length > 0 && (
+                          <div>
+                            <div className="flex items-center gap-1.5 mb-1.5">
+                              <List className="w-3 h-3 opacity-40" />
+                              <span className="text-[10px] font-semibold uppercase tracking-wider opacity-40">
+                                Chapters
+                              </span>
+                            </div>
+                            <div className="max-h-44 overflow-y-auto overscroll-contain space-y-0.5 -mx-1">
+                              {chapters.map((ch, i) => {
+                                const isCurrentOrPast = ch.page <= currentPage
+                                return (
+                                  <button
+                                    key={i}
+                                    onClick={() => jumpToChapter(ch)}
+                                    className="w-full text-left px-2 py-1.5 rounded-lg text-xs transition-opacity hover:opacity-80 flex justify-between items-center gap-2"
+                                    style={{
+                                      backgroundColor: isCurrentOrPast ? `${currentTheme.progressFill}18` : "transparent",
+                                      fontWeight: isCurrentOrPast ? 500 : 400,
+                                    }}
+                                  >
+                                    <span className="truncate">{ch.title}</span>
+                                    <span className="text-[10px] opacity-40 flex-shrink-0 tabular-nums">
+                                      p.{ch.page}
+                                    </span>
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Main controls bar */}
+                <div className="flex items-center justify-between px-4 h-12">
+                  {/* Page info (tappable) */}
+                  <button
+                    onClick={() => setShowNavPanel((p) => !p)}
+                    className="flex items-center gap-1.5 min-w-[70px] transition-opacity hover:opacity-80"
+                    aria-label="Open navigation"
+                  >
+                    <ChevronsUp
+                      className="w-3.5 h-3.5 opacity-40 transition-transform"
+                      style={{ transform: showNavPanel ? "rotate(180deg)" : "rotate(0deg)" }}
+                    />
+                    <span className="text-[11px] tabular-nums font-medium opacity-60">
+                      {currentPage}/{totalPages}
+                    </span>
+                  </button>
+
+                  {/* Font controls */}
+                  <div className="flex items-center gap-3">
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => setFontSize((s) => Math.max(14, s - 1))}
+                      disabled={fontSize <= 14}
+                      className="tap-target w-9 h-9 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
+                      style={{ color: currentTheme.text }}
+                      aria-label="Decrease font size"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </motion.button>
+
+                    <div className="flex items-center gap-1">
+                      <BookOpen className="w-3.5 h-3.5 opacity-40" />
+                      <span className="text-[11px] tabular-nums opacity-50">{fontSize}</span>
+                    </div>
+
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => setFontSize((s) => Math.min(24, s + 1))}
+                      disabled={fontSize >= 24}
+                      className="tap-target w-9 h-9 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
+                      style={{ color: currentTheme.text }}
+                      aria-label="Increase font size"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </motion.button>
                   </div>
 
-                  <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => setFontSize((s) => Math.min(24, s + 1))}
-                    disabled={fontSize >= 24}
-                    className="tap-target w-10 h-10 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
-                    style={{ color: currentTheme.text }}
-                    aria-label="Increase font size"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </motion.button>
+                  {/* Time remaining */}
+                  <span className="text-[10px] tabular-nums opacity-40 min-w-[70px] text-right">
+                    {progress >= 98 ? "Finished!" : `~${minsRemaining}m left`}
+                  </span>
                 </div>
               </div>
             </>
