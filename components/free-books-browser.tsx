@@ -129,17 +129,18 @@ export function FreeBooksBrowser() {
       {/* Categories */}
       {!searchQuery && (
         <div className="flex-shrink-0 bg-white border-b border-stone-100 overflow-x-auto hide-scrollbar">
-          <div className="px-4 py-2.5 flex gap-2 w-max">
+          <div className="max-w-2xl mx-auto px-4 py-2.5 flex flex-wrap justify-center gap-1.5">
             {BROWSE_CATEGORIES.map(cat => (
               <button
                 key={cat.id}
                 onClick={() => handleCategorySelect(cat.id)}
-                className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                className={`flex-shrink-0 px-2.5 py-1.5 rounded-full text-[11px] font-medium transition-all ${
                   selectedCategory === cat.id
-                    ? "bg-stone-900 text-white"
+                    ? "bg-stone-900 text-white shadow-sm"
                     : "bg-stone-100 text-stone-600 hover:bg-stone-200"
                 }`}
               >
+                <span className="mr-1">{cat.emoji}</span>
                 {cat.label}
               </button>
             ))}

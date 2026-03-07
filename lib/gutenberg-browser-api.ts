@@ -7,15 +7,25 @@ export interface GutenbergBrowseResult {
 }
 
 export const BROWSE_CATEGORIES = [
-  { id: "popular", label: "Popular", topic: "" },
-  { id: "fiction", label: "Fiction", topic: "fiction" },
-  { id: "mystery", label: "Mystery", topic: "mystery" },
-  { id: "romance", label: "Romance", topic: "love stories" },
-  { id: "adventure", label: "Adventure", topic: "adventure stories" },
-  { id: "philosophy", label: "Philosophy", topic: "philosophy" },
-  { id: "history", label: "History", topic: "history" },
-  { id: "poetry", label: "Poetry", topic: "poetry" },
-  { id: "science", label: "Science", topic: "science" },
+  { id: "popular", label: "Popular", emoji: "\uD83D\uDD25", topic: "" },
+  { id: "fiction", label: "Fiction", emoji: "\uD83D\uDCD6", topic: "fiction" },
+  { id: "scifi", label: "Sci-Fi", emoji: "\uD83D\uDE80", topic: "science fiction" },
+  { id: "mystery", label: "Mystery", emoji: "\uD83D\uDD0D", topic: "mystery" },
+  { id: "romance", label: "Romance", emoji: "\u2764\uFE0F", topic: "love stories" },
+  { id: "horror", label: "Horror", emoji: "\uD83D\uDC80", topic: "horror" },
+  { id: "fantasy", label: "Fantasy", emoji: "\uD83E\uDDD9", topic: "fantasy" },
+  { id: "adventure", label: "Adventure", emoji: "\u2693", topic: "adventure stories" },
+  { id: "children", label: "Children", emoji: "\uD83E\uDDF8", topic: "children" },
+  { id: "drama", label: "Drama", emoji: "\uD83C\uDFAD", topic: "drama" },
+  { id: "poetry", label: "Poetry", emoji: "\u270D\uFE0F", topic: "poetry" },
+  { id: "philosophy", label: "Philosophy", emoji: "\uD83E\uDDD0", topic: "philosophy" },
+  { id: "history", label: "History", emoji: "\uD83C\uDFDB\uFE0F", topic: "history" },
+  { id: "biography", label: "Biography", emoji: "\uD83D\uDC64", topic: "biography" },
+  { id: "short-stories", label: "Short Stories", emoji: "\uD83D\uDCDD", topic: "short stories" },
+  { id: "humor", label: "Humor", emoji: "\uD83D\uDE02", topic: "humor" },
+  { id: "fairy-tales", label: "Fairy Tales", emoji: "\uD83E\uDDDA", topic: "fairy tales" },
+  { id: "science", label: "Science", emoji: "\uD83E\uDD2F", topic: "science" },
+  { id: "travel", label: "Travel", emoji: "\uD83C\uDF0D", topic: "travel" },
 ] as const
 
 export async function browseGutenberg(topic: string): Promise<GutenbergBrowseResult> {
