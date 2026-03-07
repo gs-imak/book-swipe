@@ -567,3 +567,18 @@ export function migrateCoverUrls(): void {
     // Migration is best-effort
   }
 }
+
+// ── Gutenberg reading positions ──────────────────────────────────────────────
+
+const READING_POSITION_KEY = "bookswipe_reading_positions"
+
+export function saveReadingPosition(bookId: string, charOffset: number): void {
+  const positions = safeGetJSON<Record<string, number>>(READING_POSITION_KEY, {})
+  positions[bookId] = charOffset
+  safeSetJSON(READING_POSITION_KEY, positions)
+}
+
+export function getReadingPosition(bookId: string): number {
+  const positions = safeGetJSON<Record<string, number>>(READING_POSITION_KEY, {})
+  return positions[bookId] ?? 0
+}
