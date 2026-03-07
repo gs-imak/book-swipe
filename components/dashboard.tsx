@@ -23,6 +23,7 @@ import { ShelfManager } from "./shelf-manager"
 import { ReadingPath } from "./reading-path"
 import { ReadingGoalSetter } from "./reading-goal-setter"
 import { QuotesGallery } from "./quotes-gallery"
+import { ReadingWrapped } from "./reading-wrapped"
 import { getShelves, getBooksForShelf, shouldShowBackupReminder, dismissBackupReminder, type Shelf } from "@/lib/storage"
 import { estimateReadingTime, getReadingSpeed, setReadingSpeed, getAllSpeeds, type ReadingSpeed } from "@/lib/reading-time"
 
@@ -48,6 +49,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   const [readingSpd, setReadingSpd] = useState<ReadingSpeed>("average")
   const [showFilters, setShowFilters] = useState(false)
   const [showBackupBanner, setShowBackupBanner] = useState(false)
+  const [showWrapped, setShowWrapped] = useState(false)
 
   const { triggerActivity, showAchievementsPanel } = useGamification()
   const { showToast } = useToast()
@@ -355,6 +357,29 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                   <span className="hidden sm:inline">Discover</span>
                 </Button>
               </div>
+
+              {/* Reading Wrapped banner */}
+              {likedBooks.length >= 5 && (
+                <motion.button
+                  onClick={() => setShowWrapped(true)}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, type: "spring", stiffness: 280, damping: 26 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-stone-900 to-stone-800 text-white text-left hover:from-stone-800 hover:to-stone-700 transition-all shadow-sm mb-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold leading-tight">Your {new Date().getFullYear()} Reading Wrapped</p>
+                      <p className="text-[11px] text-stone-400 mt-0.5">{likedBooks.length} books · tap to see your year</p>
+                    </div>
+                  </div>
+                  <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                    <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                  </div>
+                </motion.button>
+              )}
 
               {/* Daily Pick — inline within the greeting zone */}
               {likedBooks.length >= 3 && (
@@ -723,6 +748,9 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
         onClose={() => setShowShelfManager(false)}
         onShelvesChanged={() => setShelves(getShelves())}
       />
+
+      {/* Reading Wrapped */}
+      <ReadingWrapped isOpen={showWrapped} onClose={() => setShowWrapped(false)} />
     </div>
   )
 }

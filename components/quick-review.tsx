@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Heart, MessageSquare, Tag, Calendar, Clock, Smile, PartyPopper, Brain, Sparkles, Cloud, type LucideIcon } from "lucide-react"
+import { Heart, MessageSquare, Tag, Calendar, Clock, Smile, PartyPopper, Brain, Sparkles, Cloud, AlertTriangle, type LucideIcon } from "lucide-react"
 import { Button } from "./ui/button"
 import { StarRating } from "./star-rating"
 import { BookCover } from "@/components/book-cover"
@@ -35,12 +35,18 @@ const quickTags = [
   "Funny", "Heartwarming", "Suspenseful", "Educational", "Life-changing", "Quick read"
 ]
 
+const CONTENT_WARNINGS = [
+  "Violence", "Death / Grief", "Mental Health", "Sexual Content",
+  "Abuse", "Substance Use", "War / Trauma", "Animal Harm",
+]
+
 export function QuickReview({ book, onReviewSaved, existingReview }: QuickReviewProps) {
   const [rating, setRating] = useState(existingReview?.rating || 0)
   const [review, setReview] = useState(existingReview?.review || "")
   const [selectedMood, setSelectedMood] = useState(existingReview?.mood || "")
   const [selectedTags, setSelectedTags] = useState<string[]>(existingReview?.tags || [])
   const [favorite, setFavorite] = useState(existingReview?.favorite || false)
+  const [selectedWarnings, setSelectedWarnings] = useState<string[]>(existingReview?.contentWarnings || [])
   const [isSubmitting, setIsSubmitting] = useState(false)
   
   const { triggerActivity } = useGamification()
@@ -65,6 +71,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
       favorite,
       tags: selectedTags,
       mood: selectedMood,
+      contentWarnings: selectedWarnings.length > 0 ? selectedWarnings : undefined,
       createdAt: existingReview?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
@@ -181,6 +188,32 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
           className="w-full p-3 border border-stone-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
           rows={3}
         />
+      </div>
+
+      {/* Content Warnings */}
+      <div className="space-y-3">
+        <label className="text-sm font-semibold text-stone-700 flex items-center gap-2">
+          <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+          Content warnings <span className="text-stone-400 font-normal">(optional)</span>
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {CONTENT_WARNINGS.map((w) => (
+            <button
+              key={w}
+              type="button"
+              onClick={() => setSelectedWarnings(prev =>
+                prev.includes(w) ? prev.filter(x => x !== w) : [...prev, w]
+              )}
+              className={`h-7 px-3 rounded-full text-xs font-medium border transition-all ${
+                selectedWarnings.includes(w)
+                  ? "bg-amber-50 border-amber-400 text-amber-800"
+                  : "bg-stone-50 border-stone-200 text-stone-500 hover:border-stone-300"
+              }`}
+            >
+              {w}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Favorite Toggle */}

@@ -49,7 +49,7 @@ export interface ReadingProgress {
   lastReadDate: string
   timeSpentMinutes: number
   notes?: string
-  status: "reading" | "paused" | "completed"
+  status: "reading" | "paused" | "completed" | "dnf"
 }
 
 export interface ReadingGoals {
@@ -82,6 +82,7 @@ export interface BookReview {
   readingTime?: number // minutes
   tags: string[]
   mood: string
+  contentWarnings?: string[]
   createdAt: string
   updatedAt: string
 }

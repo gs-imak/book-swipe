@@ -40,6 +40,7 @@ export function DedicationOverlay({ isOpen, onClose }: DedicationOverlayProps) {
             onClick={onClose}
             aria-label="Close"
             className="absolute top-5 right-5 p-2 rounded-full text-stone-600 hover:text-stone-300 transition-colors"
+            style={{ top: "max(20px, env(safe-area-inset-top, 20px))" }}
           >
             <X className="w-5 h-5" />
           </button>

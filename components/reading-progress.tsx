@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { ReadingProgress, ReadingGoals, getReadingProgress, updateReadingProgress, removeFromReading, getReadingGoals, updateReadingGoals } from "@/lib/storage"
-import { BookOpen, Clock, Target, Flame, Plus, Minus, Play, Pause, CheckCircle, X } from "lucide-react"
+import { BookOpen, Clock, Target, Flame, Plus, Minus, Play, Pause, CheckCircle, X, Ban, RotateCcw } from "lucide-react"
 import { motion } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
 import { MeditatingDoodle } from "./illustrations"
@@ -82,7 +82,19 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
 
   const currentlyReading = readingBooks.filter(book => book.status === "reading")
   const pausedBooks = readingBooks.filter(book => book.status === "paused")
-  const hasReadingActivity = readingBooks.length > 0 || (goals && goals.booksCompleted > 0)
+  const dnfBooks = readingBooks.filter(book => book.status === "dnf")
+  const activeBooks = readingBooks.filter(book => book.status !== "dnf")
+  const hasReadingActivity = activeBooks.length > 0 || (goals && goals.booksCompleted > 0)
+
+  const handleMarkDNF = (bookId: string) => {
+    updateReadingProgress(bookId, { status: "dnf", lastReadDate: new Date().toISOString() })
+    setReadingBooks(getReadingProgress())
+  }
+
+  const handleRestoreFromDNF = (bookId: string) => {
+    updateReadingProgress(bookId, { status: "reading" })
+    setReadingBooks(getReadingProgress())
+  }
 
   return (
     <div className="space-y-4">
@@ -244,11 +256,13 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                         Done
                       </button>
                       <button
-                        onClick={() => handleRemoveBook(book.bookId)}
-                        aria-label="Remove from reading"
-                        className="w-7 h-7 rounded-md bg-white border border-stone-200 flex items-center justify-center hover:bg-red-50 hover:border-red-200 transition-colors ml-auto"
+                        onClick={() => handleMarkDNF(book.bookId)}
+                        aria-label="Did not finish"
+                        title="Did Not Finish"
+                        className="h-7 px-2 rounded-md bg-white border border-stone-200 flex items-center gap-1 hover:bg-red-50 hover:border-red-200 transition-colors text-xs text-stone-500 hover:text-red-500 ml-auto"
                       >
-                        <X className="w-3 h-3 text-stone-400 hover:text-red-500" />
+                        <Ban className="w-3 h-3" />
+                        DNF
                       </button>
                     </div>
                   </div>
@@ -309,8 +323,57 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
         </div>
       )}
 
+      {/* Did Not Finish */}
+      {dnfBooks.length > 0 && (
+        <div className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <Ban className="w-4 h-4 text-stone-400" />
+            <h3 className="text-sm font-semibold text-stone-500">Did Not Finish</h3>
+            <span className="text-[11px] bg-stone-100 text-stone-500 px-1.5 py-0.5 rounded-full font-medium">
+              {dnfBooks.length}
+            </span>
+          </div>
+          <div className="space-y-2">
+            {dnfBooks.map((book) => (
+              <div key={book.bookId} className="flex items-center gap-3 p-2.5 bg-stone-50 rounded-lg opacity-60">
+                <div className="relative w-8 h-11 flex-shrink-0">
+                  <BookCover
+                    src={book.book.cover}
+                    fallbackSrc={book.book.coverFallback}
+                    alt={book.book.title}
+                    fill
+                    className="object-contain rounded grayscale"
+                    sizes="64px"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium text-xs text-stone-600 line-clamp-1">{book.book.title}</h4>
+                  <p className="text-[11px] text-stone-400">{book.book.author}</p>
+                </div>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => handleRestoreFromDNF(book.bookId)}
+                    className="h-7 px-2 rounded-md bg-white border border-stone-200 flex items-center gap-1 hover:bg-stone-50 transition-colors text-xs text-stone-500"
+                  >
+                    <RotateCcw className="w-2.5 h-2.5" />
+                    Restart
+                  </button>
+                  <button
+                    onClick={() => handleRemoveBook(book.bookId)}
+                    aria-label="Remove"
+                    className="w-7 h-7 rounded-md bg-white border border-stone-200 flex items-center justify-center hover:bg-red-50 transition-colors"
+                  >
+                    <X className="w-3 h-3 text-stone-400" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Empty State */}
-      {readingBooks.length === 0 && (
+      {activeBooks.length === 0 && dnfBooks.length === 0 && (
         <div className="text-center py-8 bg-white rounded-xl border border-stone-200/60 shadow-sm">
           <div className="w-32 h-24 mx-auto mb-2 opacity-60">
             <MeditatingDoodle />
