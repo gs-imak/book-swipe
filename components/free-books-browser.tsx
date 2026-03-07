@@ -129,7 +129,7 @@ export function FreeBooksBrowser() {
       {/* Categories */}
       {!searchQuery && (
         <div className="flex-shrink-0 bg-white border-b border-stone-100 overflow-x-auto hide-scrollbar">
-          <div className="px-4 py-2.5 flex gap-2 max-w-md mx-auto">
+          <div className="px-4 py-2.5 flex gap-2 w-max">
             {BROWSE_CATEGORIES.map(cat => (
               <button
                 key={cat.id}
@@ -203,11 +203,15 @@ function BookGridCard({
   onRead: (book: GutenbergBook) => void
   index: number
 }) {
+  const [imgError, setImgError] = useState(false)
   const coverUrl = getCoverUrl(book)
   const rawAuthor = book.authors[0]?.name ?? "Unknown"
   const author = rawAuthor.includes(",")
     ? rawAuthor.split(",").reverse().join(" ").trim()
     : rawAuthor
+
+  // Generate a deterministic pastel background from book id for placeholder
+  const hue = (book.id * 37) % 360
 
   return (
     <motion.div
@@ -220,7 +224,7 @@ function BookGridCard({
         className="relative w-full aspect-[2/3] rounded-xl overflow-hidden bg-stone-200 mb-2 shadow-sm cursor-pointer"
         onClick={() => onRead(book)}
       >
-        {coverUrl ? (
+        {coverUrl && !imgError ? (
           <Image
             src={coverUrl}
             alt={book.title}
@@ -228,10 +232,20 @@ function BookGridCard({
             className="object-cover"
             sizes="(max-width: 640px) 50vw, 200px"
             unoptimized
+            onError={() => setImgError(true)}
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-amber-50 to-stone-200">
-            <BookOpen className="w-8 h-8 text-stone-400" />
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-2"
+            style={{ background: `hsl(${hue}, 35%, 88%)` }}
+          >
+            <BookOpen className="w-7 h-7 flex-shrink-0" style={{ color: `hsl(${hue}, 40%, 40%)` }} />
+            <p
+              className="text-[9px] font-semibold text-center leading-tight line-clamp-3 px-1"
+              style={{ color: `hsl(${hue}, 40%, 35%)` }}
+            >
+              {book.title}
+            </p>
           </div>
         )}
         <div className="absolute top-1.5 left-1.5 bg-amber-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md">

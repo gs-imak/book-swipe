@@ -58,7 +58,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' https: data: blob:",
               "font-src 'self'",
-              "connect-src 'self' https://www.googleapis.com https://openlibrary.org https://covers.openlibrary.org https://gutendex.com",
+              "connect-src 'self' https://www.googleapis.com https://openlibrary.org https://covers.openlibrary.org https://gutendex.com https://www.gutenberg.org",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
