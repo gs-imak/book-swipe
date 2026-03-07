@@ -2,7 +2,8 @@
 
 import { useState, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Home, Sparkles, BookOpen, BarChart3, Trophy, ArrowRight, X, ChevronRight } from "lucide-react"
+import { Home, Sparkles, BookOpen, BarChart3, Trophy, ArrowRight, X } from "lucide-react"
+import { GroovyDoodle, SittingReadingDoodle, LovingDoodle, ReadingSideDoodle, MeditatingDoodle, FloatDoodle } from "@/components/illustrations"
 
 interface OnboardingGuideProps {
   onComplete: () => void
@@ -14,8 +15,8 @@ const STEPS = [
     iconBg: "bg-amber-100",
     iconColor: "text-amber-600",
     title: "Welcome to BookSwipe",
-    description: "Discover your next favorite book by swiping — like Tinder, but for books. Let\u2019s show you around!",
-    illustration: "wave",
+    description: "Discover your next favorite book by swiping \u2014 like Tinder, but for books. Let\u2019s show you around!",
+    Doodle: GroovyDoodle,
   },
   {
     icon: Home,
@@ -23,7 +24,7 @@ const STEPS = [
     iconColor: "text-stone-700",
     title: "Your Library",
     description: "All your liked books live here. Organize them into shelves, track reading progress, and get personalized recommendations.",
-    illustration: "library",
+    Doodle: SittingReadingDoodle,
   },
   {
     icon: Sparkles,
@@ -31,7 +32,7 @@ const STEPS = [
     iconColor: "text-violet-600",
     title: "Discover Books",
     description: "Swipe right to like a book, left to skip. The more you swipe, the smarter your recommendations get!",
-    illustration: "swipe",
+    Doodle: LovingDoodle,
   },
   {
     icon: BookOpen,
@@ -39,7 +40,7 @@ const STEPS = [
     iconColor: "text-amber-600",
     title: "Read Free Classics",
     description: "Browse 70,000+ free classic books from Project Gutenberg. Read them right in the app with a beautiful reader.",
-    illustration: "read",
+    Doodle: ReadingSideDoodle,
   },
   {
     icon: BarChart3,
@@ -47,7 +48,7 @@ const STEPS = [
     iconColor: "text-teal-600",
     title: "Your Taste Profile",
     description: "See what genres and moods you gravitate towards. Your profile builds as you discover more books.",
-    illustration: "profile",
+    Doodle: MeditatingDoodle,
   },
   {
     icon: Trophy,
@@ -55,133 +56,9 @@ const STEPS = [
     iconColor: "text-yellow-600",
     title: "Earn Awards",
     description: "Unlock achievements as you explore \u2014 from your first like to becoming a genre master. Have fun!",
-    illustration: "awards",
+    Doodle: FloatDoodle,
   },
 ] as const
-
-function StepIllustration({ type, step }: { type: string; step: number }) {
-  const colors = [
-    { from: "from-amber-400", to: "to-orange-500" },
-    { from: "from-stone-400", to: "to-stone-600" },
-    { from: "from-violet-400", to: "to-purple-500" },
-    { from: "from-amber-400", to: "to-amber-600" },
-    { from: "from-teal-400", to: "to-cyan-500" },
-    { from: "from-yellow-400", to: "to-orange-400" },
-  ]
-  const { from, to } = colors[step] || colors[0]
-
-  if (type === "wave") {
-    return (
-      <div className="relative w-32 h-32 mx-auto">
-        <motion.div
-          className={`absolute inset-0 rounded-full bg-gradient-to-br ${from} ${to} opacity-20`}
-          animate={{ scale: [1, 1.15, 1] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className={`absolute inset-3 rounded-full bg-gradient-to-br ${from} ${to} opacity-30`}
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
-        />
-        <div className={`absolute inset-6 rounded-full bg-gradient-to-br ${from} ${to} flex items-center justify-center`}>
-          <span className="text-4xl">👋</span>
-        </div>
-      </div>
-    )
-  }
-
-  if (type === "swipe") {
-    return (
-      <div className="relative w-40 h-32 mx-auto flex items-center justify-center">
-        {/* Background card */}
-        <div className="absolute w-20 h-28 rounded-xl bg-stone-200 rotate-[-4deg] translate-x-[-6px]" />
-        {/* Main card */}
-        <motion.div
-          className={`relative w-20 h-28 rounded-xl bg-gradient-to-br ${from} ${to} shadow-lg flex items-center justify-center`}
-          animate={{ x: [0, 12, 0], rotate: [0, 3, 0] }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <BookOpen className="w-8 h-8 text-white/80" />
-        </motion.div>
-        {/* Arrow hint */}
-        <motion.div
-          className="absolute right-2 top-1/2 -translate-y-1/2"
-          animate={{ x: [0, 6, 0], opacity: [0.4, 0.8, 0.4] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-        >
-          <ChevronRight className="w-6 h-6 text-emerald-500" />
-        </motion.div>
-      </div>
-    )
-  }
-
-  if (type === "library") {
-    return (
-      <div className="relative w-40 h-28 mx-auto flex items-end justify-center gap-1.5 pb-2">
-        {[0.6, 0.8, 1, 0.75, 0.9, 0.65, 0.85].map((h, i) => (
-          <motion.div
-            key={i}
-            className={`w-4 rounded-t-sm bg-gradient-to-t ${from} ${to}`}
-            initial={{ height: 0 }}
-            animate={{ height: `${h * 90}px` }}
-            transition={{ delay: i * 0.08, type: "spring", stiffness: 200, damping: 15 }}
-          />
-        ))}
-      </div>
-    )
-  }
-
-  if (type === "read") {
-    return (
-      <div className="relative w-28 h-32 mx-auto">
-        <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${from} ${to} shadow-md flex flex-col items-center justify-center gap-2 px-3`}>
-          <BookOpen className="w-8 h-8 text-white/90" />
-          <div className="space-y-1 w-full">
-            <div className="h-1 bg-white/30 rounded-full w-full" />
-            <div className="h-1 bg-white/30 rounded-full w-4/5" />
-            <div className="h-1 bg-white/30 rounded-full w-full" />
-            <div className="h-1 bg-white/30 rounded-full w-3/5" />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (type === "profile") {
-    return (
-      <div className="relative w-40 h-28 mx-auto flex items-end justify-center gap-3 pb-2">
-        {[40, 70, 55, 85, 35].map((h, i) => (
-          <motion.div
-            key={i}
-            className="w-5 rounded-t-md"
-            style={{ background: `linear-gradient(to top, hsl(${170 + i * 15}, 60%, 45%), hsl(${170 + i * 15}, 70%, 55%))` }}
-            initial={{ height: 0 }}
-            animate={{ height: `${h}%` }}
-            transition={{ delay: i * 0.1, type: "spring", stiffness: 180, damping: 14 }}
-          />
-        ))}
-      </div>
-    )
-  }
-
-  // awards
-  return (
-    <div className="relative w-32 h-32 mx-auto flex items-center justify-center">
-      <motion.div
-        className={`absolute inset-0 rounded-full bg-gradient-to-br ${from} ${to} opacity-15`}
-        animate={{ rotate: 360 }}
-        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-      />
-      <motion.div
-        className={`w-20 h-20 rounded-full bg-gradient-to-br ${from} ${to} flex items-center justify-center shadow-lg`}
-        animate={{ scale: [1, 1.06, 1] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <Trophy className="w-9 h-9 text-white" />
-      </motion.div>
-    </div>
-  )
-}
 
 export function OnboardingGuide({ onComplete }: OnboardingGuideProps) {
   const [currentStep, setCurrentStep] = useState(0)
@@ -189,6 +66,7 @@ export function OnboardingGuide({ onComplete }: OnboardingGuideProps) {
   const step = STEPS[currentStep]
   const isLast = currentStep === STEPS.length - 1
   const Icon = step.icon
+  const Doodle = step.Doodle
 
   const handleNext = useCallback(() => {
     if (isLast) {
@@ -229,7 +107,7 @@ export function OnboardingGuide({ onComplete }: OnboardingGuideProps) {
         )}
 
         {/* Content */}
-        <div className="px-6 pt-8 pb-6">
+        <div className="px-6 pt-6 pb-5">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStep}
@@ -239,10 +117,15 @@ export function OnboardingGuide({ onComplete }: OnboardingGuideProps) {
               transition={{ duration: 0.2 }}
               className="flex flex-col items-center text-center"
             >
-              {/* Illustration */}
-              <div className="mb-5 h-32 flex items-center">
-                <StepIllustration type={step.illustration} step={currentStep} />
-              </div>
+              {/* Doodle illustration */}
+              <motion.div
+                className="w-44 h-36 mb-4"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1, type: "spring", stiffness: 200, damping: 20 }}
+              >
+                <Doodle className="w-full h-full" />
+              </motion.div>
 
               {/* Icon badge */}
               <div className={`w-10 h-10 rounded-xl ${step.iconBg} flex items-center justify-center mb-3`}>
