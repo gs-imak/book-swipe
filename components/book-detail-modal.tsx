@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Star, Heart, MessageSquare, FileText, Calendar, Clock, BookOpen, Library, Share2, Trash2 } from "lucide-react"
+import { X, Star, Heart, MessageSquare, FileText, Calendar, Clock, BookOpen, Library, Share2, Trash2, Loader2 } from "lucide-react"
 import { Book } from "@/lib/book-data"
 import { BookReview, getBookReview, getShelvesForBook, getShelves, type Shelf } from "@/lib/storage"
 import { QuickReview } from "./quick-review"
@@ -14,6 +14,8 @@ import { ShareCardGenerator } from "./share-card-generator"
 import { WhereToRead } from "./where-to-read"
 import { estimateReadingTime } from "@/lib/reading-time"
 import { useFocusTrap } from "@/lib/use-focus-trap"
+import { searchGutenberg, type GutenbergBook } from "@/lib/gutenberg-api"
+import BookReader from "./book-reader"
 
 interface BookDetailModalProps {
   book: Book | null
@@ -31,11 +33,17 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
   const [showShareCard, setShowShareCard] = useState(false)
   const [assignedShelves, setAssignedShelves] = useState<Shelf[]>([])
   const [descExpanded, setDescExpanded] = useState(false)
+  const [gutenbergBook, setGutenbergBook] = useState<GutenbergBook | null | undefined>(undefined)
+  // undefined = still searching, null = no match found, GutenbergBook = match found
+  const [showReader, setShowReader] = useState(false)
   const dialogRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (book) {
+      setGutenbergBook(undefined)
+      setShowReader(false)
+      searchGutenberg(book.title, book.author).then(setGutenbergBook)
       const review = getBookReview(book.id)
       setExistingReview(review)
       setActiveTab("overview")
@@ -204,6 +212,23 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                       <MessageSquare className="w-3.5 h-3.5" />
                       Review
                     </button>
+                  )}
+
+                  {/* Show Read Free when Gutenberg match found */}
+                  {gutenbergBook && (
+                    <button
+                      onClick={() => setShowReader(true)}
+                      className="h-9 px-4 bg-amber-700 hover:bg-amber-800 text-white text-sm font-medium rounded-xl transition-all active:scale-[0.98] flex items-center gap-1.5"
+                    >
+                      <BookOpen className="w-3.5 h-3.5" />
+                      Read Free
+                    </button>
+                  )}
+                  {/* Subtle spinner while search is in progress */}
+                  {gutenbergBook === undefined && (
+                    <div className="h-9 flex items-center px-2">
+                      <Loader2 className="w-3.5 h-3.5 text-stone-300 animate-spin" />
+                    </div>
                   )}
                 </div>
 
@@ -413,6 +438,16 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
           onClose={() => setShowShareCard(false)}
         />
       </motion.div>
+
+      {book && gutenbergBook && (
+        <BookReader
+          bookId={book.id}
+          bookTitle={book.title}
+          gutenbergBook={gutenbergBook}
+          isOpen={showReader}
+          onClose={() => setShowReader(false)}
+        />
+      )}
     </AnimatePresence>
   )
 }
