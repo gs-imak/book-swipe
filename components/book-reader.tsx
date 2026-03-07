@@ -100,6 +100,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   useEffect(() => {
     if (!isOpen) {
       hasRestoredRef.current = false
+      if (debounceRef.current) clearTimeout(debounceRef.current)
       return
     }
 
@@ -127,7 +128,8 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     return () => {
       cancelled = true
     }
-  }, [isOpen, gutenbergBook])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, gutenbergBook.id])
 
   useEffect(() => {
     if (!text || !scrollRef.current || hasRestoredRef.current) return

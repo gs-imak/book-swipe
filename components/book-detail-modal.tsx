@@ -41,9 +41,12 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
 
   useEffect(() => {
     if (book) {
+      let cancelled = false
       setGutenbergBook(undefined)
       setShowReader(false)
-      searchGutenberg(book.title, book.author).then(setGutenbergBook)
+      searchGutenberg(book.title, book.author).then((result) => {
+        if (!cancelled) setGutenbergBook(result)
+      })
       const review = getBookReview(book.id)
       setExistingReview(review)
       setActiveTab("overview")
@@ -52,6 +55,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
       const shelfIds = getShelvesForBook(book.id)
       const allShelves = getShelves()
       setAssignedShelves(allShelves.filter(s => shelfIds.includes(s.id)))
+      return () => { cancelled = true }
     }
   }, [book])
 

@@ -156,5 +156,6 @@ export async function fetchBookText(book: GutenbergBook): Promise<string | null>
   }
 
   const text = raw.trim();
+  setSessionItem(cacheKey, text);
   return text;
 }
