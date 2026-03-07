@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { motion } from "framer-motion"
 import { Search, BookOpen, Loader2, AlertCircle } from "lucide-react"
 import { GutenbergBook } from "@/lib/gutenberg-api"
@@ -204,6 +204,7 @@ function BookGridCard({
   index: number
 }) {
   const [imgError, setImgError] = useState(false)
+  const [imgLoaded, setImgLoaded] = useState(false)
   const coverUrl = getCoverUrl(book)
   const rawAuthor = book.authors[0]?.name ?? "Unknown"
   const author = rawAuthor.includes(",")
@@ -212,6 +213,13 @@ function BookGridCard({
 
   // Generate a deterministic pastel background from book id for placeholder
   const hue = (book.id * 37) % 360
+
+  // Timeout: if cover doesn't load in 5s, give up and show placeholder
+  useEffect(() => {
+    if (!coverUrl || imgLoaded || imgError) return
+    const timer = setTimeout(() => setImgError(true), 5000)
+    return () => clearTimeout(timer)
+  }, [coverUrl, imgLoaded, imgError])
 
   return (
     <motion.div
@@ -232,6 +240,7 @@ function BookGridCard({
             className="object-cover"
             sizes="(max-width: 640px) 50vw, 200px"
             unoptimized
+            onLoad={() => setImgLoaded(true)}
             onError={() => setImgError(true)}
           />
         ) : (
