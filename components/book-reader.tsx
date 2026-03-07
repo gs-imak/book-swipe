@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ArrowLeft, ChevronLeft, ChevronRight, Sun, Coffee, Moon, Loader2, AlertCircle, BookOpen, Minus, Plus, List, X, Search, Bookmark, BookmarkCheck, Highlighter, StickyNote, Copy, Trash2, MessageSquare } from "lucide-react"
+import { ArrowLeft, ChevronLeft, ChevronRight, Sun, Coffee, Moon, Loader2, AlertCircle, BookOpen, Minus, Plus, List, X, Search, Bookmark, BookmarkCheck, Highlighter, StickyNote, Copy, Trash2, MessageSquare, Quote, Globe, BookText, Share2 } from "lucide-react"
 import { GutenbergBook, fetchBookText, fetchBookImages } from "@/lib/gutenberg-api"
 import { saveReadingPosition, getReadingPosition, getBookNotesForBook, saveBookNote, deleteBookNote, type BookNote } from "@/lib/storage"
 
@@ -750,6 +750,50 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     window.getSelection()?.removeAllRanges()
   }, [selectionBar])
 
+  const handleSaveQuote = useCallback(() => {
+    if (!selectionBar) return
+    saveBookNote({
+      bookId,
+      content: "",
+      type: "quote",
+      page: currentPage,
+      blockIndex: selectionBar.blockIndex,
+      selectedText: selectionBar.text,
+    })
+    loadNotes()
+    setSelectionBar(null)
+    window.getSelection()?.removeAllRanges()
+  }, [selectionBar, bookId, currentPage, loadNotes])
+
+  const handleDefine = useCallback(() => {
+    if (!selectionBar) return
+    const word = selectionBar.text.split(/\s+/)[0] // first word if multi-word
+    window.open(`https://en.wiktionary.org/wiki/${encodeURIComponent(word.toLowerCase())}`, "_blank")
+    setSelectionBar(null)
+    window.getSelection()?.removeAllRanges()
+  }, [selectionBar])
+
+  const handleWebSearch = useCallback(() => {
+    if (!selectionBar) return
+    window.open(`https://www.google.com/search?q=${encodeURIComponent(selectionBar.text)}`, "_blank")
+    setSelectionBar(null)
+    window.getSelection()?.removeAllRanges()
+  }, [selectionBar])
+
+  const handleShareQuote = useCallback(() => {
+    if (!selectionBar) return
+    const formatted = `"${selectionBar.text}" — ${bookTitle}`
+    if (navigator.share) {
+      navigator.share({ text: formatted }).catch(() => {
+        navigator.clipboard?.writeText(formatted)
+      })
+    } else {
+      navigator.clipboard?.writeText(formatted)
+    }
+    setSelectionBar(null)
+    window.getSelection()?.removeAllRanges()
+  }, [selectionBar, bookTitle])
+
   const handleToggleBookmark = useCallback(() => {
     const existing = readerNotes.find(n => n.type === "bookmark")
     if (existing) {
@@ -779,9 +823,9 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     setShowNavPanel(false)
   }, [totalPages, jumpToPage, jumpToBlock])
 
-  // Only highlights/notes for rendering
+  // Only highlights/notes/quotes for rendering
   const inlineHighlights = useMemo(() =>
-    readerNotes.filter(n => n.selectedText && (n.type === "highlight" || n.type === "note")),
+    readerNotes.filter(n => n.selectedText && (n.type === "highlight" || n.type === "note" || n.type === "quote")),
     [readerNotes]
   )
 
@@ -1122,44 +1166,97 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
               </div>
 
               {/* Floating selection bar */}
-              {selectionBar && scrollRef.current && (
-                <div
-                  data-selection-bar
-                  className="absolute z-40 flex items-center gap-0.5 px-1.5 py-1 rounded-xl shadow-lg"
-                  style={{
-                    left: Math.max(8, Math.min(selectionBar.x - 80, (scrollRef.current?.clientWidth || 300) - 168)),
-                    top: Math.max(8, selectionBar.y + scrollRef.current.scrollTop - 48),
-                    backgroundColor: currentTheme.text === "#e7e5e4" ? "#292524" : "#fafaf9",
-                    border: `1px solid ${currentTheme.border}`,
-                  }}
-                >
-                  <button
-                    onClick={handleHighlight}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors hover:opacity-80"
-                    style={{ color: "#d97706" }}
+              {selectionBar && scrollRef.current && (() => {
+                const isDark = currentTheme.text === "#e7e5e4"
+                const barBg = isDark ? "#292524" : "#fafaf9"
+                const primaryColor = "#d97706"
+                const textColor = isDark ? "#e7e5e4" : "#44403c"
+                const mutedColor = isDark ? "#a8a29e" : "#78716c"
+                const divider = <div className="w-px h-4" style={{ backgroundColor: currentTheme.border }} />
+                const barWidth = 300
+                return (
+                  <div
+                    data-selection-bar
+                    className="absolute z-40 flex flex-col rounded-xl shadow-lg overflow-hidden"
+                    style={{
+                      left: Math.max(8, Math.min(selectionBar.x - barWidth / 2, (scrollRef.current?.clientWidth || 300) - barWidth - 8)),
+                      top: Math.max(8, selectionBar.y + scrollRef.current.scrollTop - 48),
+                      backgroundColor: barBg,
+                      border: `1px solid ${currentTheme.border}`,
+                    }}
                   >
-                    <Highlighter className="w-3.5 h-3.5" />
-                    Highlight
-                  </button>
-                  <div className="w-px h-4" style={{ backgroundColor: currentTheme.border }} />
-                  <button
-                    onClick={handleAddNoteToSelection}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors hover:opacity-80"
-                    style={{ color: currentTheme.text === "#e7e5e4" ? "#e7e5e4" : "#44403c" }}
-                  >
-                    <StickyNote className="w-3.5 h-3.5" />
-                    Note
-                  </button>
-                  <div className="w-px h-4" style={{ backgroundColor: currentTheme.border }} />
-                  <button
-                    onClick={handleCopySelection}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors hover:opacity-80"
-                    style={{ color: currentTheme.text === "#e7e5e4" ? "#a8a29e" : "#78716c" }}
-                  >
-                    <Copy className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              )}
+                    {/* Primary actions row */}
+                    <div className="flex items-center gap-0.5 px-1 py-0.5">
+                      <button
+                        onClick={handleHighlight}
+                        className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium transition-colors hover:opacity-80"
+                        style={{ color: primaryColor }}
+                      >
+                        <Highlighter className="w-3.5 h-3.5" />
+                        Highlight
+                      </button>
+                      {divider}
+                      <button
+                        onClick={handleAddNoteToSelection}
+                        className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium transition-colors hover:opacity-80"
+                        style={{ color: textColor }}
+                      >
+                        <StickyNote className="w-3.5 h-3.5" />
+                        Note
+                      </button>
+                      {divider}
+                      <button
+                        onClick={handleSaveQuote}
+                        className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium transition-colors hover:opacity-80"
+                        style={{ color: textColor }}
+                      >
+                        <Quote className="w-3.5 h-3.5" />
+                        Quote
+                      </button>
+                      {divider}
+                      <button
+                        onClick={handleCopySelection}
+                        className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium transition-colors hover:opacity-80"
+                        style={{ color: mutedColor }}
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    {/* Secondary actions row */}
+                    <div
+                      className="flex items-center gap-0.5 px-1 py-0.5"
+                      style={{ borderTop: `1px solid ${currentTheme.border}` }}
+                    >
+                      <button
+                        onClick={handleDefine}
+                        className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium transition-colors hover:opacity-80"
+                        style={{ color: mutedColor }}
+                      >
+                        <BookText className="w-3.5 h-3.5" />
+                        Define
+                      </button>
+                      {divider}
+                      <button
+                        onClick={handleWebSearch}
+                        className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium transition-colors hover:opacity-80"
+                        style={{ color: mutedColor }}
+                      >
+                        <Globe className="w-3.5 h-3.5" />
+                        Search
+                      </button>
+                      {divider}
+                      <button
+                        onClick={handleShareQuote}
+                        className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium transition-colors hover:opacity-80"
+                        style={{ color: mutedColor }}
+                      >
+                        <Share2 className="w-3.5 h-3.5" />
+                        Share
+                      </button>
+                    </div>
+                  </div>
+                )
+              })()}
 
               {/* Note input overlay */}
               <AnimatePresence>
@@ -1449,7 +1546,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                                             {isBm && <BookmarkCheck className="w-3 h-3 flex-shrink-0" style={{ color: currentTheme.progressFill }} />}
                                             {isHighlight && <Highlighter className="w-3 h-3 flex-shrink-0" style={{ color: currentTheme.progressFill }} />}
                                             {isNote && <MessageSquare className="w-3 h-3 flex-shrink-0" style={{ color: currentTheme.progressFill }} />}
-                                            {note.type === "quote" && <BookOpen className="w-3 h-3 flex-shrink-0" style={{ color: currentTheme.progressFill }} />}
+                                            {note.type === "quote" && <Quote className="w-3 h-3 flex-shrink-0" style={{ color: currentTheme.progressFill }} />}
                                             <span className="text-[10px] uppercase tracking-wider opacity-40 font-semibold">
                                               {note.type}{note.page ? ` · p.${note.page}` : ""}
                                             </span>
