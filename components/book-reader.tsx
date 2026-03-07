@@ -64,6 +64,27 @@ function getStoredTheme(): ReaderTheme {
   return "sepia"
 }
 
+/**
+ * Renders inline text with Gutenberg formatting:
+ * _text_ → italic (Gutenberg convention for emphasis)
+ */
+function RenderInlineText({ text }: { text: string }) {
+  const parts: React.ReactNode[] = []
+  const re = /_([^_\n]{2,}?)_/g
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+  while ((match = re.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index))
+    }
+    parts.push(<em key={match.index}>{match[1]}</em>)
+    lastIndex = match.index + match[0].length
+  }
+  if (parts.length === 0) return <>{text}</>
+  if (lastIndex < text.length) parts.push(text.slice(lastIndex))
+  return <>{parts}</>
+}
+
 export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, onClose }: BookReaderProps) {
   const [theme, setTheme] = useState<ReaderTheme>(getStoredTheme)
   const [fontSize, setFontSize] = useState(17)
@@ -83,6 +104,8 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     | { type: "paragraph"; text: string }
     | { type: "separator" }
     | { type: "verse"; lines: string[] }
+    | { type: "centered"; lines: string[] }
+    | { type: "blockquote"; text: string }
     | { type: "image"; src: string; caption?: string }
 
   const blocks = useMemo<TextBlock[]>(() => {
@@ -90,14 +113,15 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     const raw = text.split(/\n{2,}/).filter((p) => p.trim().length > 0)
     const result: TextBlock[] = []
 
-    const chapterRe = /^(?:chapter|book|part|act|section|prologue|epilogue|introduction|preface|foreword|contents)\b/i
+    const chapterRe = /^(?:chapter|book|part|act|section|prologue|epilogue|introduction|preface|foreword|contents|letter)\b/i
     const separatorRe = /^\s*(?:[*\-_]{3,}|\*\s+\*\s+\*)\s*$/
     const illustrationRe = /\[Illustration(?::?\s*(.+?))?\]/i
 
     let imgIndex = 0
 
     for (let idx = 0; idx < raw.length; idx++) {
-      const trimmed = raw[idx].trim()
+      const block = raw[idx]
+      const trimmed = block.trim()
 
       // Scene break separators (*** or --- or ___)
       if (separatorRe.test(trimmed)) {
@@ -112,10 +136,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
         if (images.length > imgIndex) {
           result.push({ type: "image", src: images[imgIndex], caption })
           imgIndex++
-        } else if (images.length > 0) {
-          // More markers than images — skip the marker
         }
-        // If the block has more text around the illustration marker, add it too
         const remaining = trimmed.replace(illustrationRe, "").trim()
         if (remaining.length > 10) {
           result.push({ type: "paragraph", text: remaining.replace(/\n/g, " ").replace(/\s{2,}/g, " ") })
@@ -123,18 +144,36 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
         continue
       }
 
+      const lines = block.split("\n")
+
+      // Centered text detection: most lines have significant leading whitespace (>5 spaces)
+      // Common in title pages, dedications, epigraphs
+      const nonEmptyLines = lines.filter((l) => l.trim().length > 0)
+      if (nonEmptyLines.length > 0) {
+        const indentedCount = nonEmptyLines.filter((l) => /^ {5,}/.test(l)).length
+        if (indentedCount >= nonEmptyLines.length * 0.6 && nonEmptyLines.length >= 2) {
+          const trimmedLines = nonEmptyLines.map((l) => l.trim()).filter((l) => l.length > 0)
+          // Check if it's really a short centered block (not a massive indented paragraph)
+          const avgLen = trimmedLines.reduce((s, l) => s + l.length, 0) / trimmedLines.length
+          if (avgLen < 60) {
+            result.push({ type: "centered", lines: trimmedLines })
+            continue
+          }
+        }
+      }
+
       // Chapter / section headings (may have subtitle on next line)
       if (chapterRe.test(trimmed)) {
         const headLines = trimmed.split("\n").map((l) => l.trim())
         const mainLine = headLines[0]
         if (mainLine.length < 120) {
-          const subtitle = headLines.length > 1 ? headLines.slice(1).join(" ") : undefined
-          result.push({ type: "heading", text: mainLine, subtitle })
+          const subtitle = headLines.length > 1 ? headLines.slice(1).join(" ").trim() : undefined
+          result.push({ type: "heading", text: mainLine, subtitle: subtitle || undefined })
           continue
         }
       }
 
-      // ALL CAPS short lines → likely headings
+      // ALL CAPS short lines → likely headings or section breaks
       const firstLine = trimmed.split("\n")[0].trim()
       if (
         firstLine.length > 2 &&
@@ -155,12 +194,33 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
         }
       }
 
+      // Detect blocks where ALL non-empty lines are indented (block quotes, letters)
+      if (nonEmptyLines.length > 0) {
+        const allIndented = nonEmptyLines.every((l) => /^ {2,}/.test(l))
+        if (allIndented && nonEmptyLines.length >= 2) {
+          const trimmedLines = nonEmptyLines.map((l) => l.trim())
+          const avgLen = trimmedLines.reduce((s, l) => s + l.length, 0) / trimmedLines.length
+          // Short indented lines → verse or TOC
+          if (avgLen < 50) {
+            result.push({ type: "verse", lines: trimmedLines })
+            continue
+          }
+          // Longer indented text → block quote
+          const unwrapped = trimmedLines.join(" ").replace(/\s{2,}/g, " ")
+          result.push({ type: "blockquote", text: unwrapped })
+          continue
+        }
+      }
+
       // Check if this block has intentional short lines (verse, TOC, addresses, poetry)
-      const lines = trimmed.split("\n")
-      if (lines.length > 1) {
-        const avgLen = lines.reduce((s, l) => s + l.trim().length, 0) / lines.length
-        if (avgLen < 50) {
-          result.push({ type: "verse", lines: lines.map((l) => l.trim()) })
+      if (nonEmptyLines.length > 1) {
+        const trimmedLines = nonEmptyLines.map((l) => l.trim())
+        const avgLen = trimmedLines.reduce((s, l) => s + l.length, 0) / trimmedLines.length
+        // More nuanced: also check if lines DON'T look like hard-wrapped prose
+        // Hard-wrapped prose has most lines near 65-75 chars; verse/poetry is shorter
+        const longLineCount = trimmedLines.filter((l) => l.length > 55).length
+        if (avgLen < 45 && longLineCount < trimmedLines.length * 0.3) {
+          result.push({ type: "verse", lines: trimmedLines })
           continue
         }
       }
@@ -491,7 +551,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                               color: currentTheme.text,
                             }}
                           >
-                            {block.text}
+                            <RenderInlineText text={block.text} />
                           </h2>
                           {block.subtitle && (
                             <p
@@ -502,10 +562,51 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                                 color: currentTheme.text,
                               }}
                             >
-                              {block.subtitle}
+                              <RenderInlineText text={block.subtitle} />
                             </p>
                           )}
                         </div>
+                      )
+                    }
+
+                    if (block.type === "centered") {
+                      return (
+                        <div
+                          key={i}
+                          className="my-8 text-center"
+                          style={{
+                            fontFamily: "Georgia, 'Source Serif 4', serif",
+                            fontSize: `${fontSize}px`,
+                            lineHeight: "1.7",
+                            color: currentTheme.text,
+                          }}
+                        >
+                          {block.lines.map((line, j) => (
+                            <div key={j} className={line.length < 30 ? "opacity-70" : ""}>
+                              <RenderInlineText text={line} />
+                            </div>
+                          ))}
+                        </div>
+                      )
+                    }
+
+                    if (block.type === "blockquote") {
+                      return (
+                        <blockquote
+                          key={i}
+                          className="mb-5 pl-4 italic"
+                          style={{
+                            fontFamily: "Georgia, 'Source Serif 4', serif",
+                            fontSize: `${fontSize}px`,
+                            lineHeight: "1.85",
+                            letterSpacing: "0.01em",
+                            color: currentTheme.text,
+                            borderLeft: `3px solid ${currentTheme.progressFill}`,
+                            opacity: 0.85,
+                          }}
+                        >
+                          <RenderInlineText text={block.text} />
+                        </blockquote>
                       )
                     }
 
@@ -522,7 +623,12 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                             color: currentTheme.text,
                           }}
                         >
-                          {block.lines.join("\n")}
+                          {block.lines.map((line, j) => (
+                            <span key={j}>
+                              <RenderInlineText text={line} />
+                              {j < block.lines.length - 1 ? "\n" : ""}
+                            </span>
+                          ))}
                         </div>
                       )
                     }
@@ -539,7 +645,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           color: currentTheme.text,
                         }}
                       >
-                        {block.text}
+                        <RenderInlineText text={block.text} />
                       </p>
                     )
                   })}
