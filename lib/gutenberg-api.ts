@@ -197,6 +197,9 @@ export async function fetchBookText(book: GutenbergBook): Promise<string | null>
     return null;
   }
 
+  // Normalize line endings: \r\n → \n, stray \r → \n
+  raw = raw.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+
   // Strip Project Gutenberg header (everything before START line)
   const startPattern = /\*{3}\s*START OF THE PROJECT GUTENBERG[^\n]*\n/i;
   const endPattern = /\*{3}\s*END OF THE PROJECT GUTENBERG[^\n]*/i;

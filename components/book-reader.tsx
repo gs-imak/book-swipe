@@ -110,18 +110,24 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
   const blocks = useMemo<TextBlock[]>(() => {
     if (!text) return []
-    const raw = text.split(/\n{2,}/).filter((p) => p.trim().length > 0)
+    // Normalize line endings (safety net for cached text with \r\n)
+    const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n")
+    const raw = normalized.split(/\n{2,}/).filter((p) => p.trim().length > 0)
     const result: TextBlock[] = []
 
     const chapterRe = /^(?:chapter|book|part|act|section|prologue|epilogue|introduction|preface|foreword|contents|letter)\b/i
     const separatorRe = /^\s*(?:[*\-_]{3,}|\*\s+\*\s+\*)\s*$/
-    const illustrationRe = /\[Illustration(?::?\s*(.+?))?\]/i
+    const illustrationRe = /\[Illustration(?::?\s*([\s\S]+?))?\]/i
 
     let imgIndex = 0
+    let firstHeadingSeen = false
 
     for (let idx = 0; idx < raw.length; idx++) {
       const block = raw[idx]
       const trimmed = block.trim()
+
+      // Skip empty/whitespace blocks
+      if (trimmed.length === 0) continue
 
       // Scene break separators (*** or --- or ___)
       if (separatorRe.test(trimmed)) {
@@ -130,6 +136,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       }
 
       // Illustration markers — [Illustration] or [Illustration: caption]
+      // Use dotAll (s flag) to match across newlines within the marker
       const illMatch = illustrationRe.exec(trimmed)
       if (illMatch) {
         const caption = illMatch[1]?.trim()
@@ -137,6 +144,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
           result.push({ type: "image", src: images[imgIndex], caption })
           imgIndex++
         }
+        // Check for text outside the illustration marker
         const remaining = trimmed.replace(illustrationRe, "").trim()
         if (remaining.length > 10) {
           result.push({ type: "paragraph", text: remaining.replace(/\n/g, " ").replace(/\s{2,}/g, " ") })
@@ -144,80 +152,91 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
         continue
       }
 
-      const lines = block.split("\n")
+      // Skip standalone bracket fragments from split illustration markers
+      if (/^\]?\s*$/.test(trimmed) || /^\[Illustration/.test(trimmed)) continue
 
-      // Centered text detection: most lines have significant leading whitespace (>5 spaces)
-      // Common in title pages, dedications, epigraphs
+      const lines = block.split("\n")
       const nonEmptyLines = lines.filter((l) => l.trim().length > 0)
-      if (nonEmptyLines.length > 0) {
-        const indentedCount = nonEmptyLines.filter((l) => /^ {5,}/.test(l)).length
-        if (indentedCount >= nonEmptyLines.length * 0.6 && nonEmptyLines.length >= 2) {
-          const trimmedLines = nonEmptyLines.map((l) => l.trim()).filter((l) => l.length > 0)
-          // Check if it's really a short centered block (not a massive indented paragraph)
-          const avgLen = trimmedLines.reduce((s, l) => s + l.length, 0) / trimmedLines.length
-          if (avgLen < 60) {
-            result.push({ type: "centered", lines: trimmedLines })
-            continue
-          }
+      if (nonEmptyLines.length === 0) continue
+
+      // --- Centered text detection ---
+      // Lines with significant leading whitespace (>5 spaces) = centered
+      // Common in title pages, dedications, epigraphs
+      const indentedCount = nonEmptyLines.filter((l) => /^ {5,}/.test(l)).length
+      if (indentedCount >= nonEmptyLines.length * 0.6 && nonEmptyLines.length >= 2) {
+        const trimmedLines = nonEmptyLines.map((l) => l.trim())
+        const avgLen = trimmedLines.reduce((s, l) => s + l.length, 0) / trimmedLines.length
+        if (avgLen < 65) {
+          result.push({ type: "centered", lines: trimmedLines })
+          continue
         }
       }
 
-      // Chapter / section headings (may have subtitle on next line)
-      if (chapterRe.test(trimmed)) {
-        const headLines = trimmed.split("\n").map((l) => l.trim())
-        const mainLine = headLines[0]
-        if (mainLine.length < 120) {
+      // --- Chapter/section headings ---
+      // Must be short and match chapter keywords
+      const headLines = trimmed.split("\n").map((l) => l.trim())
+      const mainLine = headLines[0]
+      if (chapterRe.test(trimmed) && mainLine.length < 100) {
+        // Multi-line block starting with chapter keyword: check if it's a TOC
+        if (headLines.length > 5) {
+          // Many lines = this is a table of contents, not a heading
+          result.push({ type: "verse", lines: headLines })
+        } else {
           const subtitle = headLines.length > 1 ? headLines.slice(1).join(" ").trim() : undefined
           result.push({ type: "heading", text: mainLine, subtitle: subtitle || undefined })
-          continue
+          firstHeadingSeen = true
         }
+        continue
       }
 
-      // ALL CAPS short lines → likely headings or section breaks
-      const firstLine = trimmed.split("\n")[0].trim()
+      // --- ALL CAPS detection ---
+      const firstLineTrim = headLines[0]
+      const alphaChars = firstLineTrim.replace(/[^A-Za-z]/g, "")
       if (
-        firstLine.length > 2 &&
-        firstLine.length < 80 &&
-        firstLine === firstLine.toUpperCase() &&
-        /[A-Z]/.test(firstLine) &&
-        !/[a-z]/.test(firstLine)
+        alphaChars.length >= 3 &&
+        firstLineTrim.length < 80 &&
+        firstLineTrim === firstLineTrim.toUpperCase() &&
+        /[A-Z]/.test(firstLineTrim) &&
+        !/[a-z]/.test(firstLineTrim)
       ) {
-        const allLines = trimmed.split("\n").map((l) => l.trim())
-        if (allLines.length === 1) {
-          result.push({ type: "heading", text: firstLine })
+        if (nonEmptyLines.length === 1) {
+          result.push({ type: "heading", text: firstLineTrim })
+          firstHeadingSeen = true
           continue
         }
-        const avgLen = allLines.reduce((s, l) => s + l.length, 0) / allLines.length
+        const allTrimmed = nonEmptyLines.map((l) => l.trim())
+        const avgLen = allTrimmed.reduce((s, l) => s + l.length, 0) / allTrimmed.length
         if (avgLen < 50) {
-          result.push({ type: "verse", lines: allLines })
+          result.push({ type: "verse", lines: allTrimmed })
           continue
         }
       }
 
-      // Detect blocks where ALL non-empty lines are indented (block quotes, letters)
-      if (nonEmptyLines.length > 0) {
-        const allIndented = nonEmptyLines.every((l) => /^ {2,}/.test(l))
-        if (allIndented && nonEmptyLines.length >= 2) {
-          const trimmedLines = nonEmptyLines.map((l) => l.trim())
-          const avgLen = trimmedLines.reduce((s, l) => s + l.length, 0) / trimmedLines.length
-          // Short indented lines → verse or TOC
-          if (avgLen < 50) {
-            result.push({ type: "verse", lines: trimmedLines })
-            continue
-          }
-          // Longer indented text → block quote
-          const unwrapped = trimmedLines.join(" ").replace(/\s{2,}/g, " ")
-          result.push({ type: "blockquote", text: unwrapped })
-          continue
-        }
+      // --- Pre-heading title page lines ---
+      // Short single lines before any chapter heading = title/author info → center them
+      if (!firstHeadingSeen && nonEmptyLines.length === 1 && trimmed.length < 60) {
+        result.push({ type: "centered", lines: [trimmed] })
+        continue
       }
 
-      // Check if this block has intentional short lines (verse, TOC, addresses, poetry)
+      // --- Indented blocks (block quotes, letters, dedications) ---
+      const allIndented = nonEmptyLines.every((l) => /^ {2,}/.test(l))
+      if (allIndented && nonEmptyLines.length >= 2) {
+        const trimmedLines = nonEmptyLines.map((l) => l.trim())
+        const avgLen = trimmedLines.reduce((s, l) => s + l.length, 0) / trimmedLines.length
+        if (avgLen < 50) {
+          result.push({ type: "verse", lines: trimmedLines })
+          continue
+        }
+        const unwrapped = trimmedLines.join(" ").replace(/\s{2,}/g, " ")
+        result.push({ type: "blockquote", text: unwrapped })
+        continue
+      }
+
+      // --- Verse / poetry / TOC / short-line blocks ---
       if (nonEmptyLines.length > 1) {
         const trimmedLines = nonEmptyLines.map((l) => l.trim())
         const avgLen = trimmedLines.reduce((s, l) => s + l.length, 0) / trimmedLines.length
-        // More nuanced: also check if lines DON'T look like hard-wrapped prose
-        // Hard-wrapped prose has most lines near 65-75 chars; verse/poetry is shorter
         const longLineCount = trimmedLines.filter((l) => l.length > 55).length
         if (avgLen < 45 && longLineCount < trimmedLines.length * 0.3) {
           result.push({ type: "verse", lines: trimmedLines })
@@ -225,7 +244,8 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
         }
       }
 
-      // Regular paragraph — unwrap hard line-wrapping into flowing text
+      // --- Regular paragraph ---
+      // Unwrap hard line-wrapping (Gutenberg wraps at ~70 chars) into flowing text
       const unwrapped = trimmed.replace(/\n/g, " ").replace(/\s{2,}/g, " ")
       result.push({ type: "paragraph", text: unwrapped })
     }
