@@ -334,7 +334,7 @@ function MiniBookCard({
     >
       {/* Cover */}
       <div
-        className={`relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-stone-200 mb-2 shadow-sm${onClick ? ' cursor-pointer' : ''}`}
+        className={`relative w-full aspect-[2/3] rounded-xl overflow-hidden bg-stone-200 mb-2 shadow-sm${onClick ? ' cursor-pointer' : ''}`}
         onClick={() => onClick?.(book)}
       >
         <BookCover
@@ -353,7 +353,7 @@ function MiniBookCard({
 
       {/* Info */}
       <div className="px-0.5">
-        <h4 className="font-semibold text-xs text-stone-900 line-clamp-1 leading-tight">{book.title}</h4>
+        <h4 className="font-semibold text-xs text-stone-900 line-clamp-2 leading-tight">{book.title}</h4>
         <p className="text-xs text-stone-400 mb-1.5 truncate">{book.author}</p>
 
         {reason && (

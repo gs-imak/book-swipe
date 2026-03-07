@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Sparkles, Heart, X, Bookmark } from "lucide-react"
+import { Sparkles, Heart, X, Bookmark, Star } from "lucide-react"
 import { Book } from "@/lib/book-data"
 import { type DailyPick, saveLikedBooks, getLikedBooks } from "@/lib/storage"
 import { generateDailyPick, dismissDailyPick, saveDailyPickToLibrary } from "@/lib/daily-pick"
@@ -74,6 +74,10 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
               className="object-contain"
               sizes="(max-width: 640px) 160px, 192px"
             />
+            <div className="absolute top-1.5 right-1.5 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
+              <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+              <span className="text-[10px] font-bold text-stone-700">{pick.book.rating}</span>
+            </div>
           </div>
 
           {/* Info */}
@@ -102,10 +106,18 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
             {/* Actions */}
             <div className="flex items-center gap-2 mt-3">
               {pick.saved ? (
-                <span className="flex items-center gap-1.5 text-xs text-amber-700 font-medium">
-                  <Bookmark className="w-3.5 h-3.5 fill-amber-600" />
-                  Saved
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-1.5 text-xs text-amber-700 font-medium">
+                    <Bookmark className="w-3.5 h-3.5 fill-amber-600" />
+                    In Library
+                  </span>
+                  <button
+                    onClick={() => onBookClick?.(pick.book)}
+                    className="h-9 px-3.5 bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs font-medium rounded-xl transition-all active:scale-[0.98]"
+                  >
+                    View Details
+                  </button>
+                </div>
               ) : (
                 <button
                   onClick={handleLike}
