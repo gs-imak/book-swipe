@@ -14,7 +14,10 @@ import { getLikedBooks, migrateCoverUrls, isOnboarded, setOnboarded, getSavedPre
 import { TasteProfile } from "@/components/taste-profile"
 import { InstallPrompt } from "@/components/install-prompt"
 import { FreeBooksBrowser } from "@/components/free-books-browser"
+import { OnboardingGuide } from "@/components/onboarding-guide"
 import { motion, AnimatePresence } from "framer-motion"
+
+const GUIDE_SEEN_KEY = "bookswipe_guide_seen"
 
 type AppState = "login" | "dashboard" | "questionnaire" | "swipe" | "read"
 
@@ -29,6 +32,7 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [likedBooksCount, setLikedBooksCount] = useState(0)
   const [showTasteProfile, setShowTasteProfile] = useState(false)
+  const [showGuide, setShowGuide] = useState(false)
   const [ready, setReady] = useState(false)
 
   // Restore session for returning users (runs before first paint matters)
@@ -38,6 +42,10 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
       setCurrentView("dashboard")
       const saved = getSavedPreferences()
       if (saved) setUserPreferences(saved)
+      // Show guide if not yet seen
+      try {
+        if (!localStorage.getItem(GUIDE_SEEN_KEY)) setShowGuide(true)
+      } catch { /* ignore */ }
     }
     setReady(true)
   }, [])
@@ -59,6 +67,12 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
     setIsLoggedIn(true)
     setCurrentView("dashboard")
     setOnboarded()
+    setShowGuide(true)
+  }
+
+  const handleGuideComplete = () => {
+    setShowGuide(false)
+    try { localStorage.setItem(GUIDE_SEEN_KEY, "1") } catch { /* ignore */ }
   }
 
   const handleStartDiscovery = () => {
@@ -193,6 +207,11 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
             />
           </motion.div>
         )}
+      </AnimatePresence>
+
+      {/* Onboarding Guide */}
+      <AnimatePresence>
+        {showGuide && <OnboardingGuide onComplete={handleGuideComplete} />}
       </AnimatePresence>
 
       {/* Taste Profile Panel */}
