@@ -1,10 +1,17 @@
-const CACHE_NAME = 'bookswipe-v2'
+const CACHE_NAME = 'bookswipe-v3'
 
 const PRECACHE_URLS = [
   '/',
   '/manifest.json',
   '/favicon.ico',
 ]
+
+// Listen for skip-waiting message from the app
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
+})
 
 // Install: precache app shell
 self.addEventListener('install', (event) => {
@@ -16,7 +23,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting()
 })
 
-// Activate: clean up old caches
+// Activate: clean up ALL old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -30,18 +37,20 @@ self.addEventListener('activate', (event) => {
   self.clients.claim()
 })
 
-// Fetch: network-first for pages, cache-first for static assets
+// Fetch: network-first for everything, cache fallback only for offline
 self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
 
-  // Skip non-GET and cross-origin API calls
+  // Skip non-GET and cross-origin
   if (request.method !== 'GET') return
   if (url.origin !== self.location.origin) return
 
-  // Static assets: stale-while-revalidate (serve cache, fetch update in background)
+  // Skip API routes entirely — never cache them
+  if (url.pathname.startsWith('/api/')) return
+
+  // Images and fonts: stale-while-revalidate
   if (
-    url.pathname.startsWith('/_next/static/') ||
     url.pathname.startsWith('/logo/') ||
     url.pathname.startsWith('/doodles/') ||
     url.pathname.match(/\.(png|jpg|jpeg|svg|ico|woff2?)$/)
@@ -61,23 +70,20 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Pages: network-first with cache fallback
-  if (request.headers.get('accept')?.includes('text/html')) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const clone = response.clone()
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
-          }
-          return response
+  // Everything else (pages, JS, CSS): network-first
+  event.respondWith(
+    fetch(request)
+      .then((response) => {
+        if (response.ok) {
+          const clone = response.clone()
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
+        }
+        return response
+      })
+      .catch(() => {
+        return caches.match(request).then((cached) => {
+          return cached || caches.match('/')
         })
-        .catch(() => {
-          return caches.match(request).then((cached) => {
-            return cached || caches.match('/')
-          })
-        })
-    )
-    return
-  }
+      })
+  )
 })

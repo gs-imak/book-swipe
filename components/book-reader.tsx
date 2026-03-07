@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ArrowLeft, Sun, Coffee, Moon, Loader2, AlertCircle, BookOpen, Minus, Plus, List, ChevronsUp } from "lucide-react"
-import { GutenbergBook, fetchBookText } from "@/lib/gutenberg-api"
+import { GutenbergBook, fetchBookText, fetchBookImages } from "@/lib/gutenberg-api"
 import { saveReadingPosition, getReadingPosition } from "@/lib/storage"
 
 type ReaderTheme = "light" | "sepia" | "dark"
@@ -72,6 +72,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState(0)
   const [showNavPanel, setShowNavPanel] = useState(false)
+  const [images, setImages] = useState<string[]>([])
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -82,6 +83,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     | { type: "paragraph"; text: string }
     | { type: "separator" }
     | { type: "verse"; lines: string[] }
+    | { type: "image"; src: string; caption?: string }
 
   const blocks = useMemo<TextBlock[]>(() => {
     if (!text) return []
@@ -90,6 +92,9 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
     const chapterRe = /^(?:chapter|book|part|act|section|prologue|epilogue|introduction|preface|foreword|contents)\b/i
     const separatorRe = /^\s*(?:[*\-_]{3,}|\*\s+\*\s+\*)\s*$/
+    const illustrationRe = /\[Illustration(?::?\s*(.+?))?\]/i
+
+    let imgIndex = 0
 
     for (let idx = 0; idx < raw.length; idx++) {
       const trimmed = raw[idx].trim()
@@ -97,6 +102,24 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       // Scene break separators (*** or --- or ___)
       if (separatorRe.test(trimmed)) {
         result.push({ type: "separator" })
+        continue
+      }
+
+      // Illustration markers — [Illustration] or [Illustration: caption]
+      const illMatch = illustrationRe.exec(trimmed)
+      if (illMatch) {
+        const caption = illMatch[1]?.trim()
+        if (images.length > imgIndex) {
+          result.push({ type: "image", src: images[imgIndex], caption })
+          imgIndex++
+        } else if (images.length > 0) {
+          // More markers than images — skip the marker
+        }
+        // If the block has more text around the illustration marker, add it too
+        const remaining = trimmed.replace(illustrationRe, "").trim()
+        if (remaining.length > 10) {
+          result.push({ type: "paragraph", text: remaining.replace(/\n/g, " ").replace(/\s{2,}/g, " ") })
+        }
         continue
       }
 
@@ -120,13 +143,11 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
         /[A-Z]/.test(firstLine) &&
         !/[a-z]/.test(firstLine)
       ) {
-        // If there are more lines, check if they're all short too (e.g. TOC)
         const allLines = trimmed.split("\n").map((l) => l.trim())
         if (allLines.length === 1) {
           result.push({ type: "heading", text: firstLine })
           continue
         }
-        // Multi-line ALL-CAPS block with short lines → verse/TOC
         const avgLen = allLines.reduce((s, l) => s + l.length, 0) / allLines.length
         if (avgLen < 50) {
           result.push({ type: "verse", lines: allLines })
@@ -150,7 +171,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     }
 
     return result
-  }, [text])
+  }, [text, images])
 
   // Page & time calculations
   const CHARS_PER_PAGE = 1500
@@ -240,6 +261,12 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       .finally(() => {
         if (!cancelled) setLoading(false)
       })
+    // Fetch illustrations in parallel
+    fetchBookImages(gutenbergBook)
+      .then((imgs) => {
+        if (!cancelled) setImages(imgs)
+      })
+      .catch(() => {})
     return () => {
       cancelled = true
     }
@@ -421,6 +448,32 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: currentTheme.text }} />
                           <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: currentTheme.text }} />
                           <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: currentTheme.text }} />
+                        </div>
+                      )
+                    }
+
+                    if (block.type === "image") {
+                      return (
+                        <div key={i} className="my-6 flex flex-col items-center gap-2">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={block.src}
+                            alt={block.caption || "Illustration"}
+                            className="max-w-full rounded-lg shadow-sm"
+                            style={{ maxHeight: "60vh" }}
+                            loading="lazy"
+                          />
+                          {block.caption && (
+                            <p
+                              className="text-center italic opacity-50"
+                              style={{
+                                fontFamily: "Georgia, 'Source Serif 4', serif",
+                                fontSize: `${fontSize - 2}px`,
+                              }}
+                            >
+                              {block.caption}
+                            </p>
+                          )}
                         </div>
                       )
                     }

@@ -222,13 +222,35 @@ export default function App() {
     migrateCoverUrls()
   }, [])
 
-  // Register service worker for offline support
+  // Register service worker for offline support + force update stale caches
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {
-        // SW registration failed — app works fine without it
+    if (!('serviceWorker' in navigator)) return
+    navigator.serviceWorker.register('/sw.js').then((reg) => {
+      // Force check for SW updates on every page load
+      reg.update().catch(() => {})
+      // When a new SW is waiting, tell it to activate immediately
+      if (reg.waiting) {
+        reg.waiting.postMessage({ type: 'SKIP_WAITING' })
+      }
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing
+        if (!newWorker) return
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'activated') {
+            // New SW activated — reload to get fresh assets
+            window.location.reload()
+          }
+        })
       })
-    }
+    }).catch(() => {})
+    // If controller changes (new SW took over), reload
+    let refreshing = false
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) {
+        refreshing = true
+        window.location.reload()
+      }
+    })
   }, [])
 
   return (
