@@ -75,8 +75,9 @@ export async function fetchBookImages(book: GutenbergBook): Promise<string[]> {
     if (!res.ok) return [];
     const html = await res.text();
 
-    // Base URL for resolving relative paths
-    const baseUrl = htmlUrl.substring(0, htmlUrl.lastIndexOf("/") + 1);
+    // Gutenberg redirects /ebooks/{id}.html.images → /cache/epub/{id}/pg{id}-images.html
+    // Use the cache path as base URL so relative image paths resolve correctly
+    const baseUrl = `https://www.gutenberg.org/cache/epub/${book.id}/`;
 
     const imgRegex = /<img[^>]+src=["']([^"']+)["'][^>]*>/gi;
     const images: string[] = [];
@@ -92,8 +93,9 @@ export async function fetchBookImages(book: GutenbergBook): Promise<string[]> {
           continue;
         }
       }
-      // Skip tiny tracking pixels or icons
+      // Skip tiny tracking pixels, icons, and cover images
       if (src.includes("1x1") || src.includes("pixel")) continue;
+      if (src.endsWith("/cover.jpg") || src.endsWith("/cover.png")) continue;
       images.push(src);
     }
     return images;
