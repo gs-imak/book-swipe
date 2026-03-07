@@ -5,8 +5,9 @@ import { BookCard } from "./book-card"
 import { Button } from "@/components/ui/button"
 import { Book, UserPreferences } from "@/lib/book-data"
 import { saveLikedBooks, getLikedBooks } from "@/lib/storage"
-import { getMixedRecommendations } from "@/lib/books-api"
+import { getBooksByCategory, bookSearchQueries } from "@/lib/books-api"
 import { getCachedBooks, addBooksToCache } from "@/lib/book-cache"
+import { searchOpenLibrary } from "@/lib/openlibrary-api"
 import { Heart, X, Undo2, RotateCcw, Settings, Library, BookOpen, Loader2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useGamification } from "./gamification-provider"
@@ -69,10 +70,18 @@ function filterBooks(books: Book[], preferences: UserPreferences): Book[] {
   }
 
   const scored = books.map(book => {
-    let score = 0
-    if (matchesGenre(book.genre)) score += 2
-    if (matchesMood(book.mood)) score += 1
+    const genreMatch = matchesGenre(book.genre)
+    const moodMatch = matchesMood(book.mood)
 
+    // CRITICAL: A book MUST match at least one selected genre to be shown.
+    // If user selected no genres, all pass (matchesGenre returns true).
+    if (!genreMatch) return { book, score: 0 }
+
+    // Genre match is the primary signal
+    let score = 2
+    if (moodMatch) score += 1
+
+    // Length/rating are tiebreakers only (never standalone)
     let matchesLength = true
     if (preferences.preferredLength !== "No preference") {
       switch (preferences.preferredLength) {
@@ -93,9 +102,10 @@ function filterBooks(books: Book[], preferences: UserPreferences): Book[] {
     .sort((a, b) => b.score - a.score)
     .map(s => s.book)
 
+  // Fallback: if very few genre-matched results, try genre-only (still strict)
   if (filtered.length < 5 && books.length > 10) {
     return books
-      .filter(b => matchesGenre(b.genre) || matchesMood(b.mood))
+      .filter(b => matchesGenre(b.genre))
       .sort((a, b) => b.rating - a.rating)
       .slice(0, 50)
   }
@@ -121,20 +131,37 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   const loadBooks = async (excludeIds?: Set<string>) => {
     setIsLoading(true)
     try {
-      let books = getCachedBooks()
-      if (books.length < 30 || excludeIds) {
-        // Always fetch fresh books when loading more batches
-        const fresh = await getMixedRecommendations(50)
-        addBooksToCache(fresh)
-        books = getCachedBooks()
+      // Fetch books specifically from user's selected genres (not all genres)
+      const userGenres = preferences.favoriteGenres.length > 0
+        ? preferences.favoriteGenres
+        : Object.keys(bookSearchQueries) // fallback to all if none selected
+      const booksPerGenre = Math.ceil(50 / userGenres.length)
+
+      // Fetch from Google Books + Open Library in parallel, only for user's genres
+      const fetchPromises = userGenres.flatMap(genre => [
+        getBooksByCategory(genre, booksPerGenre),
+        searchOpenLibrary(genre, Math.min(booksPerGenre, 8)),
+      ])
+
+      const results = await Promise.allSettled(fetchPromises)
+      const freshBooks = results
+        .filter((r): r is PromiseFulfilledResult<Book[]> => r.status === 'fulfilled')
+        .flatMap(r => r.value)
+
+      if (freshBooks.length > 0) {
+        addBooksToCache(freshBooks)
       }
+
+      let books = getCachedBooks()
       // Exclude already-seen books from previous batches
       if (excludeIds && excludeIds.size > 0) {
         books = books.filter(b => !excludeIds.has(b.id))
       }
       const filtered = filterBooks(books, preferences)
       if (filtered.length === 0 && books.length > 0) {
-        setFilteredBooks(books.sort((a, b) => b.rating - a.rating).slice(0, MAX_DECK_SIZE))
+        // If no matches even after targeted fetch, show best-rated from fetched books
+        const fallback = freshBooks.length > 0 ? freshBooks : books
+        setFilteredBooks(fallback.sort((a, b) => b.rating - a.rating).slice(0, MAX_DECK_SIZE))
       } else {
         setFilteredBooks(filtered.slice(0, MAX_DECK_SIZE))
       }

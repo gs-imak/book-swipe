@@ -212,25 +212,23 @@ function transformGoogleBookToBook(googleBook: unknown): Book | null {
       .replace('http:', 'https:')
       .replace(/&edge=curl/g, '') // Remove curl edge effect
 
-    // If it's a Google Books image, request best available size
+    // For Google Books images, keep the API's own URL (most reliable for correct cover).
+    // Only bump very small thumbnails (zoom=0/1) to zoom=3 for better quality.
     if (optimizedUrl.includes('books.google.com') || optimizedUrl.includes('books.googleusercontent.com')) {
-      // zoom=0 returns full resolution, zoom=1 is ~128px (too small)
-      optimizedUrl = optimizedUrl.replace(/zoom=\d+/g, 'zoom=0')
-      if (!optimizedUrl.includes('zoom=')) {
-        optimizedUrl += optimizedUrl.includes('?') ? '&zoom=0' : '?zoom=0'
+      const zoomMatch = optimizedUrl.match(/zoom=(\d+)/)
+      if (zoomMatch && parseInt(zoomMatch[1]) <= 1) {
+        optimizedUrl = optimizedUrl.replace(/zoom=\d+/g, 'zoom=3')
       }
     }
 
     return optimizedUrl
   }
   
-  // Try to get a curated cover from Open Library via ISBN (better for classics)
   const isbn = volumeInfo.industryIdentifiers?.find(id => id.type === 'ISBN_13')?.identifier ||
                volumeInfo.industryIdentifiers?.find(id => id.type === 'ISBN_10')?.identifier
-  const olIsbnCover = isbn
-    ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg?default=false`
-    : ''
+  // Use ONLY Google Books covers for Google results — OL ISBN covers often return wrong editions
   const googleCover = getBestCoverImage(volumeInfo.imageLinks)
+  if (!googleCover) return null // No usable cover — skip this book
 
   // Detect formats
   const isEbook = googleBook.saleInfo?.isEbook ||
@@ -246,9 +244,7 @@ function transformGoogleBookToBook(googleBook: unknown): Book | null {
     id: googleBook.id,
     title: volumeInfo.title,
     author: volumeInfo.authors[0],
-    // Prefer Google Books cover (matches the actual entry), OL ISBN as fallback
-    cover: googleCover || olIsbnCover,
-    coverFallback: googleCover ? olIsbnCover || undefined : undefined,
+    cover: googleCover,
     rating: Math.round(rating * 10) / 10,
     pages,
     genre: volumeInfo.categories || ['General'],
