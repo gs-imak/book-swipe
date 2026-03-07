@@ -501,7 +501,7 @@ export function saveDailyPick(pick: DailyPick): void {
 }
 
 // Cover URL migration
-const COVER_MIGRATION_KEY = "bookswipe_cover_migration_v6"
+const COVER_MIGRATION_KEY = "bookswipe_cover_migration_v7"
 
 // Backup Tracking Functions
 export function markBackupExported(): void {

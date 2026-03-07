@@ -61,6 +61,49 @@ export interface GoogleBook {
   }
 }
 
+// Fetch a high-quality cover from the bookcover API (Goodreads source)
+async function fetchGoodreadsCover(title: string, author: string): Promise<string | null> {
+  try {
+    const url = `https://bookcover.longitood.com/bookcover?book_title=${encodeURIComponent(title)}&author_name=${encodeURIComponent(author)}`
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 3000) // 3s timeout
+    const res = await fetch(url, { signal: controller.signal })
+    clearTimeout(timeout)
+    if (!res.ok) return null
+    const data = await res.json()
+    return data.url || null
+  } catch {
+    return null
+  }
+}
+
+// Batch-upgrade book covers with Goodreads high-quality images
+async function upgradeCoversBatch(books: Book[]): Promise<Book[]> {
+  if (books.length === 0) return books
+
+  // Fetch Goodreads covers in parallel (limit concurrency to 6)
+  const batchSize = 6
+  const upgraded = [...books]
+
+  for (let i = 0; i < upgraded.length; i += batchSize) {
+    const batch = upgraded.slice(i, i + batchSize)
+    const results = await Promise.allSettled(
+      batch.map(book => fetchGoodreadsCover(book.title, book.author))
+    )
+    results.forEach((result, j) => {
+      if (result.status === "fulfilled" && result.value) {
+        upgraded[i + j] = {
+          ...upgraded[i + j],
+          coverFallback: upgraded[i + j].cover, // keep Google cover as fallback
+          cover: result.value,
+        }
+      }
+    })
+  }
+
+  return upgraded
+}
+
 export async function searchGoogleBooks(query: string, maxResults = 20, lang?: string): Promise<Book[]> {
   try {
     // Call our own API route (keeps API key server-side)
@@ -79,7 +122,10 @@ export async function searchGoogleBooks(query: string, maxResults = 20, lang?: s
       return []
     }
 
-    return data.items.map(transformGoogleBookToBook).filter((b: Book | null): b is Book => b !== null)
+    const books = data.items.map(transformGoogleBookToBook).filter((b: Book | null): b is Book => b !== null)
+
+    // Upgrade covers with high-quality Goodreads images
+    return upgradeCoversBatch(books)
   } catch {
     return []
   }
