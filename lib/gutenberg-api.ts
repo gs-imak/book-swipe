@@ -11,7 +11,7 @@ interface GutendexResponse {
 }
 
 function normalise(s: string): string {
-  return s.toLowerCase().replace(/[^a-z0-9 ]/g, "").trim();
+  return s.toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
 }
 
 function getSessionItem(key: string): string | null {
@@ -53,20 +53,22 @@ export async function searchGutenberg(
   author: string
 ): Promise<GutenbergBook | null> {
   const normTitle = normalise(title);
-  const cacheKey = `bookswipe_gutenberg_meta_${normTitle.replace(/ /g, "_")}`;
+  const normAuthor = normalise(author.split(",")[0]);
+  const lastWord = normAuthor.split(" ").pop() ?? normAuthor;
+  const cacheKey = `bookswipe_gutenberg_meta_${normTitle.replace(/ /g, "_")}_${lastWord}`;
 
   const cached = getSessionItem(cacheKey);
   if (cached !== null) {
     try {
-      return JSON.parse(cached) as GutenbergBook;
+      const parsed = JSON.parse(cached);
+      if (parsed && typeof parsed.id === "number" && parsed.formats) {
+        return parsed as GutenbergBook;
+      }
+      // fall through to fetch
     } catch {
       // Fall through to fetch
     }
   }
-
-  // Use the first part (handles "Last, First" format — last name only)
-  const normAuthor = normalise(author.split(",")[0]);
-  const lastWord = normAuthor.split(" ").filter((w) => w.length > 0).pop() ?? normAuthor;
 
   let data: GutendexResponse;
   try {
@@ -154,6 +156,5 @@ export async function fetchBookText(book: GutenbergBook): Promise<string | null>
   }
 
   const text = raw.trim();
-  setSessionItem(cacheKey, text);
   return text;
 }
