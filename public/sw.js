@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bookswipe-v1'
+const CACHE_NAME = 'bookswipe-v2'
 
 const PRECACHE_URLS = [
   '/',
@@ -39,23 +39,23 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return
   if (url.origin !== self.location.origin) return
 
-  // Static assets (JS, CSS, images, fonts): cache-first
+  // Static assets: stale-while-revalidate (serve cache, fetch update in background)
   if (
     url.pathname.startsWith('/_next/static/') ||
     url.pathname.startsWith('/logo/') ||
     url.pathname.startsWith('/doodles/') ||
-    url.pathname.match(/\.(js|css|png|jpg|jpeg|svg|ico|woff2?)$/)
+    url.pathname.match(/\.(png|jpg|jpeg|svg|ico|woff2?)$/)
   ) {
     event.respondWith(
       caches.match(request).then((cached) => {
-        if (cached) return cached
-        return fetch(request).then((response) => {
+        const networkFetch = fetch(request).then((response) => {
           if (response.ok) {
             const clone = response.clone()
             caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
           }
           return response
         })
+        return cached || networkFetch
       })
     )
     return
