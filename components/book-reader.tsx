@@ -70,8 +70,11 @@ function getStoredTheme(): ReaderTheme {
  */
 function typographicText(src: string): string {
   let t = src
-  // Em dashes: -- → —  (but not inside --- separators)
-  t = t.replace(/(?<!-)--(?!-)/g, "\u2014")
+  // Em dashes: -- → — (but not inside --- separators)
+  // Use capture groups instead of lookbehind for Safari compatibility
+  t = t.replace(/---/g, "\uFFFE")             // protect triple dashes
+  t = t.replace(/--/g, "\u2014")              // all double dashes → em dash
+  t = t.replace(/\uFFFE/g, "---")            // restore triple dashes
   // Ellipsis
   t = t.replace(/\.\.\./g, "\u2026")
   // Smart double quotes: "word" → \u201C word \u201D
@@ -86,6 +89,10 @@ function typographicText(src: string): string {
   t = t.replace(/(^|[\s\u2014(])'(?=\S)/g, "$1\u2018")
   // Apostrophes and closing
   t = t.replace(/'/g, "\u2019")
+  // Fix elision apostrophes that were wrongly made opening quotes
+  // Decade shortenings ('90s, '40s) and archaic elisions ('twas, 'tis, 'em, etc.)
+  t = t.replace(/\u2018(\d\ds\b)/g, "\u2019$1")
+  t = t.replace(/\u2018(twas|tis|em|til|bout|cause|round|scuse)/gi, "\u2019$1")
   return t
 }
 
@@ -93,12 +100,13 @@ function typographicText(src: string): string {
  * Renders inline text with Gutenberg formatting:
  * _text_ → italic, [1] → superscript footnote, ALL CAPS words → small-caps
  */
-function RenderInlineText({ text }: { text: string }) {
-  // Apply typography first
-  const typod = typographicText(text)
+function RenderInlineText({ text, skipTypography }: { text: string; skipTypography?: boolean }) {
+  // Apply typography (unless already applied by caller)
+  const typod = skipTypography ? text : typographicText(text)
   const parts: React.ReactNode[] = []
-  // Combined regex: _italic_, [footnote number], or ALL CAPS words (3+ letters)
-  const re = /_([^_\n]{2,}?)_|\[(\d{1,3})\]|\b([A-Z]{3,})\b/g
+  // Combined regex: _italic_, [footnote number], or ALL CAPS words (4+ letters)
+  const re = /_([^_\n]{2,}?)_|\[(\d{1,3})\]|\b([A-Z]{4,})\b/g
+  const romanRe = /^M{0,4}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/
   let lastIndex = 0
   let match: RegExpExecArray | null
   while ((match = re.exec(typod)) !== null) {
@@ -116,9 +124,9 @@ function RenderInlineText({ text }: { text: string }) {
         </sup>
       )
     } else if (match[3] !== undefined) {
-      // ALL CAPS → small-caps (skip common short words that are genuine acronyms)
+      // ALL CAPS → small-caps (skip Roman numerals like VIII, XIII)
       const word = match[3]
-      if (word.length >= 4) {
+      if (!romanRe.test(word)) {
         parts.push(
           <span key={match.index} style={{ fontVariant: "small-caps", letterSpacing: "0.05em" }}>
             {word.toLowerCase()}
@@ -297,8 +305,10 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
       // --- Signature / date lines ---
       // Short lines at end of letters: "Yours truly," or "December 3, 1818" etc.
-      const signatureRe = /^(?:yours?\s|sincerely|faithfully|truly|affectionately|respectfully|cordially|ever yours|[A-Z][a-z]+\s\d{1,2},?\s\d{4})/i
-      if (nonEmptyLines.length === 1 && trimmed.length < 60 && signatureRe.test(trimmed)) {
+      // Case-sensitive to avoid false positives like "Your mother..." or "Truly, it was..."
+      // Keep patterns tight: letter-closing words must be near end (< 35 chars total)
+      const signatureRe = /^(?:Yours\s|Sincerely|Faithfully|Affectionately|Respectfully|Cordially|Ever yours|[A-Z][a-z]+\s\d{1,2},?\s\d{4}\s*$)/
+      if (nonEmptyLines.length === 1 && trimmed.length < 35 && signatureRe.test(trimmed)) {
         result.push({ type: "signature", text: trimmed })
         continue
       }
@@ -306,10 +316,12 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       // --- Regular paragraph ---
       // Unwrap hard line-wrapping (Gutenberg wraps at ~70 chars) into flowing text
       const unwrapped = trimmed.replace(/\n/g, " ").replace(/\s{2,}/g, " ")
-      // Drop cap: first paragraph after a heading or separator
+      // Drop cap: first paragraph after a chapter heading only
       const prev = result.length > 0 ? result[result.length - 1] : null
-      const isAfterHeading = prev !== null && (prev.type === "heading" || prev.type === "separator")
-      result.push({ type: "paragraph", text: unwrapped, dropCap: isAfterHeading && unwrapped.length > 40 })
+      const isAfterHeading = prev !== null && prev.type === "heading"
+      // Only drop-cap if starts with a letter (or a quote followed by a letter)
+      const dropCapOk = isAfterHeading && unwrapped.length > 40 && /^[A-Za-z"'\u201C\u2018\u2019]/.test(unwrapped)
+      result.push({ type: "paragraph", text: unwrapped, dropCap: dropCapOk })
     }
 
     return result
@@ -800,8 +812,12 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                     }
 
                     if (block.dropCap && block.text.length > 1) {
-                      const firstChar = block.text[0]
-                      const rest = block.text.slice(1)
+                      // Apply typography to get smart quotes, then split
+                      const typod = typographicText(block.text)
+                      // If text starts with a quote mark, include it with the first letter
+                      const dropMatch = /^([\u201C\u201D\u2018\u2019"']?)([A-Za-z])/.exec(typod)
+                      const dropChars = dropMatch ? dropMatch[1] + dropMatch[2] : typod[0]
+                      const rest = typod.slice(dropChars.length)
                       return (
                         <p
                           key={i}
@@ -826,9 +842,9 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                               color: currentTheme.progressFill,
                             }}
                           >
-                            {firstChar}
+                            {dropChars}
                           </span>
-                          <RenderInlineText text={rest} />
+                          <RenderInlineText text={rest} skipTypography />
                         </p>
                       )
                     }
