@@ -78,9 +78,10 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const hasRestoredRef = useRef(false)
 
   type TextBlock =
-    | { type: "heading"; text: string }
+    | { type: "heading"; text: string; subtitle?: string }
     | { type: "paragraph"; text: string }
     | { type: "separator" }
+    | { type: "verse"; lines: string[] }
 
   const blocks = useMemo<TextBlock[]>(() => {
     if (!text) return []
@@ -99,25 +100,53 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
         continue
       }
 
-      // Chapter / section headings
-      if (chapterRe.test(trimmed) && trimmed.length < 120) {
-        result.push({ type: "heading", text: trimmed })
-        continue
+      // Chapter / section headings (may have subtitle on next line)
+      if (chapterRe.test(trimmed)) {
+        const headLines = trimmed.split("\n").map((l) => l.trim())
+        const mainLine = headLines[0]
+        if (mainLine.length < 120) {
+          const subtitle = headLines.length > 1 ? headLines.slice(1).join(" ") : undefined
+          result.push({ type: "heading", text: mainLine, subtitle })
+          continue
+        }
       }
 
-      // ALL CAPS short lines → likely headings (e.g. "THE ADVENTURE BEGINS")
+      // ALL CAPS short lines → likely headings
+      const firstLine = trimmed.split("\n")[0].trim()
       if (
-        trimmed.length > 2 &&
-        trimmed.length < 80 &&
-        trimmed === trimmed.toUpperCase() &&
-        /[A-Z]/.test(trimmed) &&
-        !/[a-z]/.test(trimmed)
+        firstLine.length > 2 &&
+        firstLine.length < 80 &&
+        firstLine === firstLine.toUpperCase() &&
+        /[A-Z]/.test(firstLine) &&
+        !/[a-z]/.test(firstLine)
       ) {
-        result.push({ type: "heading", text: trimmed })
-        continue
+        // If there are more lines, check if they're all short too (e.g. TOC)
+        const allLines = trimmed.split("\n").map((l) => l.trim())
+        if (allLines.length === 1) {
+          result.push({ type: "heading", text: firstLine })
+          continue
+        }
+        // Multi-line ALL-CAPS block with short lines → verse/TOC
+        const avgLen = allLines.reduce((s, l) => s + l.length, 0) / allLines.length
+        if (avgLen < 50) {
+          result.push({ type: "verse", lines: allLines })
+          continue
+        }
       }
 
-      result.push({ type: "paragraph", text: trimmed })
+      // Check if this block has intentional short lines (verse, TOC, addresses, poetry)
+      const lines = trimmed.split("\n")
+      if (lines.length > 1) {
+        const avgLen = lines.reduce((s, l) => s + l.trim().length, 0) / lines.length
+        if (avgLen < 50) {
+          result.push({ type: "verse", lines: lines.map((l) => l.trim()) })
+          continue
+        }
+      }
+
+      // Regular paragraph — unwrap hard line-wrapping into flowing text
+      const unwrapped = trimmed.replace(/\n/g, " ").replace(/\s{2,}/g, " ")
+      result.push({ type: "paragraph", text: unwrapped })
     }
 
     return result
@@ -398,19 +427,50 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
                     if (block.type === "heading") {
                       return (
-                        <h2
+                        <div key={i} className="mt-14 mb-8 text-center">
+                          <h2
+                            className="font-bold"
+                            style={{
+                              fontFamily: "Georgia, 'Source Serif 4', serif",
+                              fontSize: `${fontSize + 4}px`,
+                              lineHeight: "1.4",
+                              letterSpacing: "0.02em",
+                              color: currentTheme.text,
+                            }}
+                          >
+                            {block.text}
+                          </h2>
+                          {block.subtitle && (
+                            <p
+                              className="mt-2 italic opacity-60"
+                              style={{
+                                fontFamily: "Georgia, 'Source Serif 4', serif",
+                                fontSize: `${fontSize}px`,
+                                color: currentTheme.text,
+                              }}
+                            >
+                              {block.subtitle}
+                            </p>
+                          )}
+                        </div>
+                      )
+                    }
+
+                    if (block.type === "verse") {
+                      return (
+                        <div
                           key={i}
-                          className="text-center font-bold mt-14 mb-8"
+                          className="mb-5 whitespace-pre-line"
                           style={{
                             fontFamily: "Georgia, 'Source Serif 4', serif",
-                            fontSize: `${fontSize + 4}px`,
-                            lineHeight: "1.4",
-                            letterSpacing: "0.02em",
+                            fontSize: `${fontSize}px`,
+                            lineHeight: "1.85",
+                            letterSpacing: "0.01em",
                             color: currentTheme.text,
                           }}
                         >
-                          {block.text}
-                        </h2>
+                          {block.lines.join("\n")}
+                        </div>
                       )
                     }
 
