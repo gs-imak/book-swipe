@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { BookCard } from "./book-card"
 import { Button } from "@/components/ui/button"
 import { Book, UserPreferences } from "@/lib/book-data"
-import { saveLikedBooks, getLikedBooks } from "@/lib/storage"
+import { addLikedBook, removeLikedBook, getLikedBooks } from "@/lib/storage"
 import { getBooksByCategory, bookSearchQueries } from "@/lib/books-api"
 import { getCachedBooks, addBooksToCache } from "@/lib/book-cache"
 import { searchOpenLibrary } from "@/lib/openlibrary-api"
@@ -113,8 +113,7 @@ function filterBooks(books: Book[], preferences: UserPreferences): Book[] {
   return filtered
 }
 
-// Max books per swipe session — enough variety without overwhelming
-const MAX_DECK_SIZE = 15
+import { MAX_DECK_SIZE } from "@/lib/config"
 
 export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeInterfaceProps) {
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([])
@@ -193,15 +192,8 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
 
     if (direction === "right") {
       hapticSuccess()
-      // Read fresh from localStorage to avoid overwriting books saved by other components
-      const current = getLikedBooks()
-      if (!current.some(b => b.id === currentBook.id)) {
-        const newLikedBooks = [...current, currentBook]
-        setLikedBooks(newLikedBooks)
-        saveLikedBooks(newLikedBooks)
-      } else {
-        setLikedBooks(current)
-      }
+      addLikedBook(currentBook) // atomic: handles dedup + storage in one call
+      setLikedBooks(getLikedBooks())
       setSessionLikedBooks(prev => [...prev, currentBook])
       triggerActivity('like_book')
       showToast(`"${currentBook.title}" saved to library`)
@@ -222,11 +214,8 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
     hapticMedium()
 
     if (lastAction.direction === "right") {
-      // Read fresh from localStorage to avoid overwriting other saves
-      const current = getLikedBooks()
-      const newLikedBooks = current.filter(b => b.id !== lastAction.book.id)
-      setLikedBooks(newLikedBooks)
-      saveLikedBooks(newLikedBooks)
+      const updated = removeLikedBook(lastAction.book.id) // atomic remove
+      setLikedBooks(updated)
       setSessionLikedBooks(prev => prev.filter(b => b.id !== lastAction.book.id))
     } else {
       setPassedBooks(prev => prev.filter(b => b.id !== lastAction.book.id))

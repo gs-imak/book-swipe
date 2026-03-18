@@ -2,6 +2,7 @@ import { Book } from "./book-data"
 import { getCachedBooks, addBooksToCache, isQueryCached, markQueryCompleted, queryCache } from "./book-cache"
 import { searchOpenLibrary, searchOpenLibraryByQuery } from "./openlibrary-api"
 import { getLanguagePreference } from "./language-preference"
+import { COVER_FETCH_TIMEOUT_MS, COVER_BATCH_CONCURRENCY } from "./config"
 
 // Deterministic pseudo-rating from a string (always returns the same value for the same input)
 function stableRating(seed: string, min = 3.5, max = 4.5): number {
@@ -66,7 +67,7 @@ async function fetchGoodreadsCover(title: string, author: string): Promise<strin
   try {
     const url = `https://bookcover.longitood.com/bookcover?book_title=${encodeURIComponent(title)}&author_name=${encodeURIComponent(author)}`
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 3000) // 3s timeout
+    const timeout = setTimeout(() => controller.abort(), COVER_FETCH_TIMEOUT_MS)
     const res = await fetch(url, { signal: controller.signal })
     clearTimeout(timeout)
     if (!res.ok) return null
@@ -81,8 +82,8 @@ async function fetchGoodreadsCover(title: string, author: string): Promise<strin
 async function upgradeCoversBatch(books: Book[]): Promise<Book[]> {
   if (books.length === 0) return books
 
-  // Fetch Goodreads covers in parallel (limit concurrency to 6)
-  const batchSize = 6
+  // Fetch Goodreads covers in parallel
+  const batchSize = COVER_BATCH_CONCURRENCY
   const upgraded = [...books]
 
   for (let i = 0; i < upgraded.length; i += batchSize) {
@@ -111,6 +112,15 @@ export async function searchGoogleBooks(query: string, maxResults = 20, lang?: s
     const url = `/api/books?q=${encodeURIComponent(query)}&maxResults=${maxResults}&lang=${encodeURIComponent(resolvedLang)}`
 
     const response = await fetch(url)
+
+    if (response.status === 429) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('bookswipe:storage-error', {
+          detail: { key: 'api', error: 'Too many requests. Please wait a moment and try again.' }
+        }))
+      }
+      return []
+    }
 
     if (!response.ok) {
       return []

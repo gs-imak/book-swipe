@@ -42,13 +42,28 @@ export interface ImportResult {
   newShelves: string[]
 }
 
+// Validate that a CSV has the expected Goodreads export format
+function validateGoodreadsHeaders(headers: string[]): string[] {
+  const required = ["Title", "Author"]
+  const normalized = headers.map(h => h.trim())
+  const missing = required.filter(r => !normalized.includes(r))
+  return missing
+}
+
 // State-machine CSV parser handling quoted fields
 export function parseGoodreadsCSV(text: string): GoodreadsRow[] {
+  if (!text || typeof text !== 'string') return []
+  // Limit file size to 10MB to prevent DoS
+  if (text.length > 10 * 1024 * 1024) return []
+
   const lines = text.split("\n")
   if (lines.length < 2) return []
 
   // Parse header
   const headers = parseCSVLine(lines[0])
+  const missing = validateGoodreadsHeaders(headers)
+  if (missing.length > 0) return [] // Not a valid Goodreads CSV
+
   const headerMap: Record<string, number> = {}
   headers.forEach((h, i) => {
     headerMap[h.trim()] = i

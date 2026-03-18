@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Book } from "@/lib/book-data"
-import { addBookToReading, saveLikedBooks, getLikedBooks } from "@/lib/storage"
+import { addBookToReading, addLikedBook, getLikedBooks } from "@/lib/storage"
 import {
   moodFilters,
   timeBasedSuggestions,
@@ -56,6 +56,7 @@ export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }
           if (cancelled) return
           setRecommendations(smartRecs)
           const diverseRecs = getDiverseRecommendations(6)
+          if (cancelled) return
           setDiverseBooks(diverseRecs)
         } catch {
           if (cancelled) return
@@ -110,12 +111,8 @@ export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }
   }
 
   const handleLikeBook = (book: Book) => {
-    // Read fresh from localStorage to avoid overwriting books saved by other components
-    const current = getLikedBooks()
-    if (current.some(b => b.id === book.id)) return
-    const updatedLiked = [...current, book]
-    setLikedBooks(updatedLiked)
-    saveLikedBooks(updatedLiked)
+    if (!addLikedBook(book)) return // atomic add handles dedup + storage
+    setLikedBooks(getLikedBooks())
     triggerActivity('like_book')
     showToast(`"${book.title}" saved to library`)
     onBookLike?.(book)

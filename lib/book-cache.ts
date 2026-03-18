@@ -1,10 +1,11 @@
 "use client"
 
 import { Book, sampleBooks } from "./book-data"
+import { getLikedBooks } from "./storage"
 
 const BOOK_CACHE_KEY = "bookswipe_book_cache"
 const CACHE_METADATA_KEY = "bookswipe_cache_metadata"
-const MAX_CACHE_SIZE = 500
+import { MAX_CACHE_SIZE, CACHE_TTL_MS } from "./config"
 
 interface CacheMetadata {
   lastUpdated: string
@@ -77,7 +78,6 @@ export function addBooksToCache(books: Book[]): void {
 
   // Evict if over limit: keep liked books + most recent additions
   if (merged.length > MAX_CACHE_SIZE) {
-    const { getLikedBooks } = require("./storage")
     const likedIds = new Set(getLikedBooks().map((b: Book) => b.id))
     const liked = merged.filter((b) => likedIds.has(b.id))
     const rest = merged
@@ -104,7 +104,7 @@ export function isQueryCached(query: string): boolean {
   const timestamp = meta.queriesCompleted[query]
   if (!timestamp) return false
   const age = Date.now() - new Date(timestamp).getTime()
-  return age < 24 * 60 * 60 * 1000 // 24 hour TTL
+  return age < CACHE_TTL_MS
 }
 
 export function markQueryCompleted(query: string): void {

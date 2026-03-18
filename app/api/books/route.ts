@@ -3,21 +3,21 @@ import { NextRequest, NextResponse } from "next/server"
 const API_KEY = process.env.GOOGLE_BOOKS_API_KEY
 const GOOGLE_BOOKS_BASE = "https://www.googleapis.com/books/v1/volumes"
 
+import { API_RATE_LIMIT, API_RATE_WINDOW_MS } from "@/lib/config"
+
 // Rate limiting: simple in-memory counter per IP
 const rateLimiter = new Map<string, { count: number; resetAt: number }>()
-const RATE_LIMIT = 60 // requests per window
-const RATE_WINDOW = 60_000 // 1 minute
 
 function checkRateLimit(ip: string): boolean {
   const now = Date.now()
   const entry = rateLimiter.get(ip)
 
   if (!entry || now > entry.resetAt) {
-    rateLimiter.set(ip, { count: 1, resetAt: now + RATE_WINDOW })
+    rateLimiter.set(ip, { count: 1, resetAt: now + API_RATE_WINDOW_MS })
     return true
   }
 
-  if (entry.count >= RATE_LIMIT) return false
+  if (entry.count >= API_RATE_LIMIT) return false
   entry.count++
   return true
 }
@@ -28,7 +28,7 @@ setInterval(() => {
   rateLimiter.forEach((v, k) => {
     if (now > v.resetAt) rateLimiter.delete(k)
   })
-}, RATE_WINDOW * 2)
+}, API_RATE_WINDOW_MS * 2)
 
 export async function GET(request: NextRequest) {
   // Rate limit check

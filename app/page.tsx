@@ -7,8 +7,9 @@ import { SwipeInterface } from "@/components/swipe-interface"
 import { Dashboard } from "@/components/dashboard"
 import { GamificationProvider } from "@/components/gamification-provider"
 import { AchievementsPanel } from "@/components/achievements-panel"
-import { ToastProvider } from "@/components/toast-provider"
+import { ToastProvider, useToast } from "@/components/toast-provider"
 import { MobileNav } from "@/components/mobile-nav"
+import { ErrorBoundary } from "@/components/error-boundary"
 import { UserPreferences } from "@/lib/book-data"
 import { getLikedBooks, migrateCoverUrls, isOnboarded, setOnboarded, getSavedPreferences, savePreferences } from "@/lib/storage"
 import { TasteProfile } from "@/components/taste-profile"
@@ -34,6 +35,17 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   const [showTasteProfile, setShowTasteProfile] = useState(false)
   const [showGuide, setShowGuide] = useState(false)
   const [ready, setReady] = useState(false)
+  const { showToast } = useToast()
+
+  // Listen for storage errors (quota exceeded, rate limits) and show toast
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const msg = (e as CustomEvent).detail?.error || 'Storage error occurred'
+      showToast(msg, 'error')
+    }
+    window.addEventListener('bookswipe:storage-error', handler)
+    return () => window.removeEventListener('bookswipe:storage-error', handler)
+  }, [showToast])
 
   // Restore session for returning users (runs before first paint matters)
   useEffect(() => {
@@ -244,10 +256,17 @@ export default function App() {
   // Register service worker for offline support + force update stale caches
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return
+
+    let refreshing = false
+    const onControllerChange = () => {
+      if (!refreshing) {
+        refreshing = true
+        window.location.reload()
+      }
+    }
+
     navigator.serviceWorker.register('/sw.js').then((reg) => {
-      // Force check for SW updates on every page load
       reg.update().catch(() => {})
-      // When a new SW is waiting, tell it to activate immediately
       if (reg.waiting) {
         reg.waiting.postMessage({ type: 'SKIP_WAITING' })
       }
@@ -255,30 +274,28 @@ export default function App() {
         const newWorker = reg.installing
         if (!newWorker) return
         newWorker.addEventListener('statechange', () => {
-          // Only reload on SW update, not on first install
           if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
             window.location.reload()
           }
         })
       })
     }).catch(() => {})
-    // If controller changes (new SW took over), reload
-    let refreshing = false
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!refreshing) {
-        refreshing = true
-        window.location.reload()
-      }
-    })
+
+    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange)
+    return () => {
+      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange)
+    }
   }, [])
 
   return (
     <ToastProvider>
       <GamificationProvider onShowAchievements={() => setShowAchievements(true)}>
-        <Home
-          onShowAchievements={setShowAchievements}
-          isAchievementsOpen={showAchievements}
-        />
+        <ErrorBoundary>
+          <Home
+            onShowAchievements={setShowAchievements}
+            isAchievementsOpen={showAchievements}
+          />
+        </ErrorBoundary>
         <AchievementsPanel
           isOpen={showAchievements}
           onClose={() => setShowAchievements(false)}

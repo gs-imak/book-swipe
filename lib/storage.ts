@@ -20,7 +20,12 @@ function safeSetJSON(key: string, value: unknown): boolean {
     localStorage.setItem(key, JSON.stringify(value))
     return true
   } catch {
-    // QuotaExceededError or other storage failure
+    // QuotaExceededError or other storage failure — notify UI
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('bookswipe:storage-error', {
+        detail: { key, error: 'Storage is full. Some data may not be saved.' }
+      }))
+    }
     return false
   }
 }
@@ -152,6 +157,29 @@ export function saveLikedBooks(books: Book[]): void {
 
 export function getLikedBooks(): Book[] {
   return safeGetJSON<Book[]>(LIKED_BOOKS_KEY, [])
+}
+
+/** Atomic add: reads, deduplicates, writes in one call to prevent race conditions */
+export function addLikedBook(book: Book): boolean {
+  const current = getLikedBooks()
+  if (current.some(b => b.id === book.id)) return false
+  const updated = [...current, book]
+  const success = safeSetJSON(LIKED_BOOKS_KEY, updated)
+  if (success && typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('bookswipe:liked-changed', { detail: updated.length }))
+  }
+  return success
+}
+
+/** Atomic remove: reads, filters, writes in one call to prevent race conditions */
+export function removeLikedBook(bookId: string): Book[] {
+  const current = getLikedBooks()
+  const updated = current.filter(b => b.id !== bookId)
+  safeSetJSON(LIKED_BOOKS_KEY, updated)
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('bookswipe:liked-changed', { detail: updated.length }))
+  }
+  return updated
 }
 
 export function clearLikedBooks(): void {
@@ -561,13 +589,18 @@ export function migrateCoverUrls(): void {
     if (localStorage.getItem(COVER_MIGRATION_KEY)) return
 
     // Nuclear clear: wipe the book cache so all books are re-fetched with new cover logic
-    const { clearBookCache } = require("./book-cache")
-    clearBookCache()
+    clearBookCacheForMigration()
 
     localStorage.setItem(COVER_MIGRATION_KEY, new Date().toISOString())
   } catch {
     // Migration is best-effort
   }
+}
+
+// Inline cache clear to avoid circular dependency with book-cache.ts
+function clearBookCacheForMigration(): void {
+  localStorage.removeItem("bookswipe_book_cache")
+  localStorage.removeItem("bookswipe_cache_metadata")
 }
 
 // ── Gutenberg reading positions ──────────────────────────────────────────────
