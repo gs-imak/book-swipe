@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Book } from "@/lib/book-data"
 import { searchAllBooks } from "@/lib/books-api"
-import { Search, X, Heart, Star, Loader2 } from "lucide-react"
+import { Search, X, Heart, Star, Loader2, WifiOff } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
 
@@ -20,6 +20,7 @@ export function BookSearch({ isOpen, onClose, onSaveBook, onBookClick, savedBook
   const [results, setResults] = useState<Book[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
+  const [searchError, setSearchError] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const activeRef = useRef(false)
@@ -35,6 +36,7 @@ export function BookSearch({ isOpen, onClose, onSaveBook, onBookClick, savedBook
       setResults([])
       setHasSearched(false)
       setIsSearching(false)
+      setSearchError(false)
     }
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -60,6 +62,7 @@ export function BookSearch({ isOpen, onClose, onSaveBook, onBookClick, savedBook
 
     setIsSearching(true)
     setHasSearched(true)
+    setSearchError(false)
     try {
       const books = await searchAllBooks(searchQuery, 20)
       if (!activeRef.current) return // modal closed while searching
@@ -67,6 +70,7 @@ export function BookSearch({ isOpen, onClose, onSaveBook, onBookClick, savedBook
     } catch {
       if (!activeRef.current) return
       setResults([])
+      setSearchError(true)
     } finally {
       if (activeRef.current) setIsSearching(false)
     }
@@ -132,21 +136,38 @@ export function BookSearch({ isOpen, onClose, onSaveBook, onBookClick, savedBook
           {/* Results */}
           <div className="max-w-2xl mx-auto px-4 py-4 overflow-y-auto" style={{ maxHeight: "calc(100vh - 60px)" }}>
             {isSearching && (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-6 h-6 text-stone-400 animate-spin" />
+              <div className="flex items-center justify-center py-12" role="status">
+                <Loader2 className="w-6 h-6 text-stone-400 animate-spin" aria-hidden="true" />
+                <span className="sr-only">Searching for books...</span>
               </div>
             )}
 
             {!isSearching && hasSearched && results.length === 0 && (
               <div className="text-center py-12">
-                <Search className="w-10 h-10 text-stone-200 mx-auto mb-3" />
-                <p className="text-stone-500 text-sm">No books found for &ldquo;{query}&rdquo;</p>
-                <div className="mt-3 space-y-1.5 text-xs text-stone-400">
-                  <p>Try:</p>
-                  <p>• Searching by author name instead</p>
-                  <p>• Using fewer or broader keywords</p>
-                  <p>• Checking the spelling</p>
-                </div>
+                {searchError ? (
+                  <>
+                    <WifiOff className="w-10 h-10 text-stone-200 mx-auto mb-3" />
+                    <p className="text-stone-500 text-sm">Couldn&apos;t reach the search service</p>
+                    <p className="text-xs text-stone-400 mt-2">Check your internet connection and try again.</p>
+                    <button
+                      onClick={() => doSearch(query)}
+                      className="mt-4 px-4 py-2 bg-stone-900 text-white text-sm rounded-xl hover:bg-stone-800 transition-colors"
+                    >
+                      Retry
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-10 h-10 text-stone-200 mx-auto mb-3" />
+                    <p className="text-stone-500 text-sm">No books found for &ldquo;{query}&rdquo;</p>
+                    <div className="mt-3 space-y-1.5 text-xs text-stone-400">
+                      <p>Try:</p>
+                      <p>• Searching by author name instead</p>
+                      <p>• Using fewer or broader keywords</p>
+                      <p>• Checking the spelling</p>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 

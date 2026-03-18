@@ -70,7 +70,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNav
                   <div className="relative">
                     <Icon
                       className={`w-[22px] h-[22px] transition-colors duration-200 ${
-                        isActive ? "text-stone-900" : "text-stone-400"
+                        isActive ? "text-stone-900" : "text-stone-500"
                       }`}
                       strokeWidth={isActive ? 2.5 : 1.8}
                     />
@@ -89,7 +89,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNav
 
                   <span
                     className={`text-[10px] font-medium transition-colors duration-200 ${
-                      isActive ? "text-stone-900" : "text-stone-400"
+                      isActive ? "text-stone-900" : "text-stone-500"
                     }`}
                   >
                     {item.label}
