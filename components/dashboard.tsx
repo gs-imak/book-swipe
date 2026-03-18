@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react"
 import { Book } from "@/lib/book-data"
-import { getLikedBooks, clearLikedBooks, addBookToReading, getReadingProgress, saveLikedBooks, getBookReviews, getShelfAssignments } from "@/lib/storage"
+import { getLikedBooks, clearLikedBooks, addBookToReading, getReadingProgress, addLikedBook, removeLikedBook, getBookReviews, getShelfAssignments } from "@/lib/storage"
 import { Button } from "@/components/ui/button"
 import { AdminPanel } from "./admin-panel"
 import { ReadingProgressTracker } from "./reading-progress"
@@ -91,15 +91,11 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   }
 
   const handleSearchSave = (book: Book) => {
-    // Read fresh from localStorage to avoid overwriting books saved by other components
-    const current = getLikedBooks()
-    if (current.some(b => b.id === book.id)) {
+    if (!addLikedBook(book)) {
       showToast("Already in your library", "info")
       return
     }
-    const updated = [...current, book]
-    setLikedBooks(updated)
-    saveLikedBooks(updated)
+    setLikedBooks(getLikedBooks())
     triggerActivity('like_book')
     showToast(`"${book.title}" saved to library`)
   }
@@ -150,7 +146,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
     }
   })
 
-  const genres = Array.from(new Set(likedBooks.flatMap(book => book.genre)))
+  const genres = useMemo(() => Array.from(new Set(likedBooks.flatMap(book => book.genre))), [likedBooks])
 
   const stats = {
     totalBooks: likedBooks.length,
@@ -377,12 +373,8 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                 <DailyPickCard
                   onBookClick={handleBookClick}
                   onBookLiked={(book) => {
-                    const current = getLikedBooks()
-                    if (!current.some(b => b.id === book.id)) {
-                      const updated = [...current, book]
-                      setLikedBooks(updated)
-                      saveLikedBooks(updated)
-                    }
+                    addLikedBook(book)
+                    setLikedBooks(getLikedBooks())
                     showToast(`"${book.title}" saved to library`)
                   }}
                 />
@@ -440,19 +432,27 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                 >
                   All
                 </button>
-                {shelves.map(shelf => (
-                  <button
-                    key={shelf.id}
-                    onClick={() => setShelfFilter(shelfFilter === shelf.id ? null : shelf.id)}
-                    className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                      shelfFilter === shelf.id
-                        ? "bg-stone-900 text-white"
-                        : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-                    }`}
-                  >
-                    {shelf.emoji} {shelf.name}
-                  </button>
-                ))}
+                {shelves.map(shelf => {
+                  const count = getBooksForShelf(shelf.id).length
+                  return (
+                    <button
+                      key={shelf.id}
+                      onClick={() => setShelfFilter(shelfFilter === shelf.id ? null : shelf.id)}
+                      className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                        shelfFilter === shelf.id
+                          ? "bg-stone-900 text-white"
+                          : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                      }`}
+                    >
+                      {shelf.emoji} {shelf.name}
+                      {count > 0 && (
+                        <span className={`ml-1 ${shelfFilter === shelf.id ? "text-stone-400" : "text-stone-400"}`}>
+                          {count}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
                 {genres.slice(0, 6).map(genre => (
                   <button
                     key={genre}
@@ -683,12 +683,8 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               <motion.div {...fadeInUp(0.1)}>
                 <SmartRecommendations
                   onBookLike={(book) => {
-                    const current = getLikedBooks()
-                    if (!current.some(b => b.id === book.id)) {
-                      const updated = [...current, book]
-                      setLikedBooks(updated)
-                      saveLikedBooks(updated)
-                    }
+                    addLikedBook(book)
+                    setLikedBooks(getLikedBooks())
                   }}
                   onStartReading={handleStartReading}
                   onBookClick={handleBookClick}
@@ -700,11 +696,8 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                 <DiscoverHub
                   likedBooks={likedBooks}
                   onSaveBook={(book) => {
-                    const current = getLikedBooks()
-                    if (current.some(b => b.id === book.id)) return
-                    const updated = [...current, book]
-                    setLikedBooks(updated)
-                    saveLikedBooks(updated)
+                    addLikedBook(book)
+                    setLikedBooks(getLikedBooks())
                   }}
                   savedBookIds={savedBookIds}
                   onBookClick={handleBookClick}
@@ -727,10 +720,8 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
         onClose={handleCloseModal}
         onStartReading={handleStartReading}
         onRemoveBook={(book) => {
-          const current = getLikedBooks()
-          const updated = current.filter(b => b.id !== book.id)
+          const updated = removeLikedBook(book.id)
           setLikedBooks(updated)
-          saveLikedBooks(updated)
           showToast(`"${book.title}" removed from library`, "info")
         }}
       />
