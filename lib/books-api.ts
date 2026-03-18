@@ -64,17 +64,18 @@ export interface GoogleBook {
 
 // Fetch a high-quality cover from the bookcover API (Goodreads source)
 async function fetchGoodreadsCover(title: string, author: string): Promise<string | null> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), COVER_FETCH_TIMEOUT_MS)
   try {
     const url = `https://bookcover.longitood.com/bookcover?book_title=${encodeURIComponent(title)}&author_name=${encodeURIComponent(author)}`
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), COVER_FETCH_TIMEOUT_MS)
     const res = await fetch(url, { signal: controller.signal })
-    clearTimeout(timeout)
     if (!res.ok) return null
     const data = await res.json()
     return data.url || null
   } catch {
     return null
+  } finally {
+    clearTimeout(timeout)
   }
 }
 
