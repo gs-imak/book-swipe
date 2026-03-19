@@ -1019,7 +1019,11 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 ref={scrollRef}
                 onScroll={handleScroll}
                 className="flex-1 overflow-y-auto relative"
-                style={{ overscrollBehavior: "contain" }}
+                style={{
+                  overscrollBehavior: "contain",
+                  scrollSnapType: "y mandatory",
+                  WebkitOverflowScrolling: "touch",
+                }}
               >
                 <div
                   className="max-w-2xl mx-auto px-5 sm:px-8 py-8"
@@ -1121,7 +1125,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
                     if (block.type === "heading") {
                       return (
-                        <div key={i} className="mt-14 mb-8 text-center" data-block-index={i}>
+                        <div key={i} className="mt-14 mb-8 text-center" data-block-index={i} style={{ scrollSnapAlign: "start" }}>
                           <h2
                             className="font-bold"
                             style={{
@@ -1246,7 +1250,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                       return (
                         <p
                           key={i}
-                          className="mb-5 leading-relaxed text-justify"
+                          className="leading-relaxed text-justify"
                           data-block-index={i}
                           style={{
                             fontFamily,
@@ -1254,6 +1258,10 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                             lineHeight: "1.85",
                             letterSpacing: "0.01em",
                             color: currentTheme.text,
+                            margin: 0,
+                            marginBottom: "0.3em",
+                            hyphens: "auto",
+                            WebkitHyphens: "auto",
                           }}
                         >
                           <span
@@ -1275,10 +1283,14 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                       )
                     }
 
+                    // Check if previous block was a heading or separator (skip indent)
+                    const prevBlock = i > 0 ? blocks[i - 1] : null
+                    const skipIndent = prevBlock?.type === "heading" || prevBlock?.type === "separator"
+
                     return (
                       <p
                         key={i}
-                        className="mb-5 leading-relaxed text-justify"
+                        className="leading-relaxed text-justify"
                         data-block-index={i}
                         style={{
                           fontFamily,
@@ -1286,6 +1298,11 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           lineHeight: "1.85",
                           letterSpacing: "0.01em",
                           color: currentTheme.text,
+                          textIndent: skipIndent ? 0 : "1.5em",
+                          margin: 0,
+                          marginBottom: "0.3em",
+                          hyphens: "auto",
+                          WebkitHyphens: "auto",
                         }}
                       >
                         <HighlightedText text={block.text} highlights={inlineHighlights} blockIndex={i} highlightColor={currentTheme.highlight} />
