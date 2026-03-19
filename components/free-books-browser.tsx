@@ -210,7 +210,6 @@ export function FreeBooksBrowser() {
                     : "bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700"
                 }`}
               >
-                <span className="mr-1">{cat.emoji}</span>
                 {cat.label}
               </button>
             ))}
