@@ -96,28 +96,28 @@ export function FreeBooksBrowser() {
   }
 
   return (
-    <div className="flex flex-col bg-stone-50" style={{ minHeight: "100dvh" }}>
+    <div className="flex flex-col bg-stone-50 dark:bg-stone-800/50" style={{ minHeight: "100dvh" }}>
       {/* Header */}
       <div
-        className="bg-white border-b border-stone-100 px-4 pb-3 flex-shrink-0"
+        className="bg-white dark:bg-stone-900 border-b border-stone-100 dark:border-stone-800 px-4 pb-3 flex-shrink-0"
         style={{ paddingTop: "max(16px, env(safe-area-inset-top, 16px))" }}
       >
         <div className="max-w-md mx-auto">
           <div className="flex items-center gap-2 mb-3">
             <BookOpen className="w-5 h-5 text-amber-600" />
-            <h1 className="text-lg font-bold text-stone-900">Free Books</h1>
-            <span className="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full font-medium">
+            <h1 className="text-lg font-bold text-stone-900 dark:text-stone-100">Free Books</h1>
+            <span className="text-[10px] text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 border border-amber-100 px-2 py-0.5 rounded-full font-medium">
               70k+ classics
             </span>
           </div>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 dark:text-stone-500 pointer-events-none" />
             <input
               type="search"
               placeholder="Search by title or author..."
               value={searchInput}
               onChange={e => handleSearchChange(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 bg-stone-100 rounded-xl text-sm text-stone-900 placeholder-stone-400 outline-none focus:ring-2 focus:ring-amber-500/50"
+              className="w-full pl-9 pr-4 py-2.5 bg-stone-100 dark:bg-stone-800 rounded-xl text-sm text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 outline-none focus:ring-2 focus:ring-amber-500/50"
             />
           </div>
         </div>
@@ -125,7 +125,7 @@ export function FreeBooksBrowser() {
 
       {/* Categories */}
       {!searchQuery && (
-        <div className="flex-shrink-0 bg-white border-b border-stone-100 overflow-x-auto hide-scrollbar">
+        <div className="flex-shrink-0 bg-white dark:bg-stone-900 border-b border-stone-100 dark:border-stone-800 overflow-x-auto hide-scrollbar">
           <div className="max-w-2xl mx-auto px-4 py-2.5 flex flex-wrap justify-center gap-1.5">
             {BROWSE_CATEGORIES.map(cat => (
               <button
@@ -133,8 +133,8 @@ export function FreeBooksBrowser() {
                 onClick={() => handleCategorySelect(cat.id)}
                 className={`flex-shrink-0 px-2.5 py-1.5 rounded-full text-[11px] font-medium transition-all ${
                   selectedCategory === cat.id
-                    ? "bg-stone-900 text-white shadow-sm"
-                    : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                    ? "bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 shadow-sm"
+                    : "bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700"
                 }`}
               >
                 <span className="mr-1">{cat.emoji}</span>
@@ -261,10 +261,10 @@ function BookGridCard({
       </div>
 
       <div className="flex flex-col min-h-[5rem]">
-        <h4 className="font-semibold text-xs text-stone-900 line-clamp-2 leading-tight min-h-[1.875rem]">
+        <h4 className="font-semibold text-xs text-stone-900 dark:text-stone-100 line-clamp-2 leading-tight min-h-[1.875rem]">
           {book.title}
         </h4>
-        <p className="text-[11px] text-stone-400 truncate mb-1.5">{author}</p>
+        <p className="text-[11px] text-stone-400 dark:text-stone-500 truncate mb-1.5">{author}</p>
         <button
           onClick={() => onRead(book)}
           className="mt-auto w-full flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium bg-amber-600 text-white hover:bg-amber-700 active:scale-[0.98] transition-all"

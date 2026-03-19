@@ -77,43 +77,43 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 30, scale: 0.97 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="bg-background rounded-2xl shadow-2xl max-w-2xl w-full max-h-[calc(100vh-120px)] sm:max-h-[85vh] overflow-hidden flex flex-col border border-stone-200/60"
+          className="bg-background rounded-2xl shadow-2xl max-w-2xl w-full max-h-[calc(100vh-120px)] sm:max-h-[85vh] overflow-hidden flex flex-col border border-stone-200/60 dark:border-stone-700/60"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 flex-shrink-0">
             <div className="flex items-start justify-between mb-5">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 bg-amber-50 rounded-xl flex items-center justify-center">
+                <div className="w-11 h-11 bg-amber-50 dark:bg-amber-900/30 rounded-xl flex items-center justify-center">
                   <Trophy className="w-5 h-5 text-amber-600" />
                 </div>
                 <div>
                   <h2
                     id="achievements-title"
-                    className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight font-serif"
+                    className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100 tracking-tight font-serif"
                   >
                     Reading Journey
                   </h2>
-                  <p className="text-sm text-stone-500">
+                  <p className="text-sm text-stone-500 dark:text-stone-400">
                     Level {currentLevel} &middot; {unlockedCount}/{totalAchievements} unlocked
                   </p>
                 </div>
               </div>
               <button
                 onClick={onClose}
-                className="p-2 -mr-2 rounded-lg hover:bg-stone-100 transition-colors tap-target touch-manipulation"
+                className="p-2 -mr-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors tap-target touch-manipulation"
               >
-                <X className="w-5 h-5 text-stone-400" />
+                <X className="w-5 h-5 text-stone-400 dark:text-stone-500" />
               </button>
             </div>
 
             {/* Level Progress */}
-            <div className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm">
+            <div className="bg-white dark:bg-stone-900 rounded-xl p-4 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-stone-700">Level {currentLevel}</span>
-                <span className="text-xs text-stone-400">{currentPoints} / {pointsForNext} XP</span>
+                <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Level {currentLevel}</span>
+                <span className="text-xs text-stone-400 dark:text-stone-500">{currentPoints} / {pointsForNext} XP</span>
               </div>
-              <div className="w-full bg-stone-100 rounded-full h-2">
+              <div className="w-full bg-stone-100 dark:bg-stone-800 rounded-full h-2">
                 <motion.div
                   className="bg-amber-500 rounded-full h-2"
                   style={{ width: `${levelProgress}%` }}
@@ -122,7 +122,7 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
                   transition={{ duration: 0.8, ease: "easeOut" }}
                 />
               </div>
-              <p className="text-xs text-stone-400 mt-1.5">
+              <p className="text-xs text-stone-400 dark:text-stone-500 mt-1.5">
                 {pointsToNext > 0 ? `${pointsToNext} XP to level ${currentLevel + 1}` : "Max level reached!"}
               </p>
             </div>
@@ -130,7 +130,7 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
 
           {/* Tabs */}
           <div className="px-5 sm:px-6 flex-shrink-0">
-            <div className="flex gap-1 bg-stone-100 rounded-lg p-1" role="tablist">
+            <div className="flex gap-1 bg-stone-100 dark:bg-stone-800 rounded-lg p-1" role="tablist">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -139,8 +139,8 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all tap-target touch-manipulation ${
                     activeTab === tab.id
-                      ? 'bg-white text-stone-900 shadow-sm'
-                      : 'text-stone-500 hover:text-stone-700'
+                      ? 'bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 shadow-sm'
+                      : 'text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300'
                   }`}
                 >
                   {tab.label}
@@ -191,42 +191,42 @@ function OverviewTab({ stats, achievements, completionPercentage }: OverviewTabP
     <div className="space-y-5">
       {/* Quick Stats */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white rounded-xl p-3.5 border border-stone-200/60 shadow-sm">
+        <div className="bg-white dark:bg-stone-900 rounded-xl p-3.5 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
           <div className="flex items-center gap-2.5">
             <IconBadge icon={Star} color="teal" />
             <div className="min-w-0">
-              <p className="text-lg font-bold text-stone-900">{stats.totalPoints}</p>
-              <p className="text-xs text-stone-500">Points</p>
+              <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{stats.totalPoints}</p>
+              <p className="text-xs text-stone-500 dark:text-stone-400">Points</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-3.5 border border-stone-200/60 shadow-sm">
+        <div className="bg-white dark:bg-stone-900 rounded-xl p-3.5 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
           <div className="flex items-center gap-2.5">
             <IconBadge icon={TrendingUp} color="emerald" />
             <div className="min-w-0">
-              <p className="text-lg font-bold text-stone-900">{stats.currentStreak}</p>
-              <p className="text-xs text-stone-500">Day streak</p>
+              <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{stats.currentStreak}</p>
+              <p className="text-xs text-stone-500 dark:text-stone-400">Day streak</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-3.5 border border-stone-200/60 shadow-sm">
+        <div className="bg-white dark:bg-stone-900 rounded-xl p-3.5 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
           <div className="flex items-center gap-2.5">
             <IconBadge icon={Trophy} color="amber" />
             <div className="min-w-0">
-              <p className="text-lg font-bold text-stone-900">{achievements.filter((a: Achievement) => a.unlockedAt).length}</p>
-              <p className="text-xs text-stone-500">Unlocked</p>
+              <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{achievements.filter((a: Achievement) => a.unlockedAt).length}</p>
+              <p className="text-xs text-stone-500 dark:text-stone-400">Unlocked</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-3.5 border border-stone-200/60 shadow-sm">
+        <div className="bg-white dark:bg-stone-900 rounded-xl p-3.5 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
           <div className="flex items-center gap-2.5">
             <IconBadge icon={Target} color="rose" />
             <div className="min-w-0">
-              <p className="text-lg font-bold text-stone-900">{stats.totalBooksRead}</p>
-              <p className="text-xs text-stone-500">Books read</p>
+              <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{stats.totalBooksRead}</p>
+              <p className="text-xs text-stone-500 dark:text-stone-400">Books read</p>
             </div>
           </div>
         </div>

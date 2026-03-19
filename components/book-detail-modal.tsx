@@ -143,7 +143,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 30, scale: 0.97 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="bg-background rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden flex flex-col border border-stone-200/60"
+          className="bg-background rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden flex flex-col border border-stone-200/60 dark:border-stone-700/60"
           style={{ maxHeight: "calc(100dvh - 64px)" }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -151,7 +151,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
           <div className="flex-shrink-0 p-4 sm:p-6 pb-4">
             <div className="flex items-start gap-4 sm:gap-5">
               {/* Cover */}
-              <div className="relative w-20 h-28 sm:w-24 sm:h-36 flex-shrink-0 rounded-xl overflow-hidden shadow-md border border-stone-200/40">
+              <div className="relative w-20 h-28 sm:w-24 sm:h-36 flex-shrink-0 rounded-xl overflow-hidden shadow-md border border-stone-200/40 dark:border-stone-700/40">
                 <BookCover
                   src={book.cover}
                   fallbackSrc={book.coverFallback}
@@ -168,35 +168,35 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                   <div className="min-w-0">
                     <h2
                       id="book-detail-title"
-                      className="text-lg sm:text-xl font-bold text-stone-900 leading-tight line-clamp-2 font-serif"
+                      className="text-lg sm:text-xl font-bold text-stone-900 dark:text-stone-100 leading-tight line-clamp-2 font-serif"
                     >
                       {book.title}
                     </h2>
-                    <p className="text-sm sm:text-base text-stone-500 mt-0.5">{book.author}</p>
+                    <p className="text-sm sm:text-base text-stone-500 dark:text-stone-400 mt-0.5">{book.author}</p>
                   </div>
 
                   <button
                     onClick={onClose}
                     aria-label="Close book details"
-                    className="p-2 -mr-2 -mt-1 rounded-lg hover:bg-stone-100 transition-colors flex-shrink-0 tap-target touch-manipulation"
+                    className="p-2 -mr-2 -mt-1 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors flex-shrink-0 tap-target touch-manipulation"
                   >
-                    <X className="w-5 h-5 text-stone-400" />
+                    <X className="w-5 h-5 text-stone-400 dark:text-stone-500" />
                   </button>
                 </div>
 
                 {/* Meta */}
-                <div className="flex items-center gap-3 sm:gap-4 text-sm text-stone-500 flex-wrap">
+                <div className="flex items-center gap-3 sm:gap-4 text-sm text-stone-500 dark:text-stone-400 flex-wrap">
                   <div className="flex items-center gap-1">
-                    <BookOpen className="w-3.5 h-3.5 text-stone-400" />
+                    <BookOpen className="w-3.5 h-3.5 text-stone-400 dark:text-stone-500" />
                     <span>{book.pages}p</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 text-stone-400" />
+                    <Clock className="w-3.5 h-3.5 text-stone-400 dark:text-stone-500" />
                     <span>{estimateReadingTime(book.pages)}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                    <span className="font-medium text-stone-700">{book.rating}</span>
+                    <span className="font-medium text-stone-700 dark:text-stone-300">{book.rating}</span>
                   </div>
                   {/* Format badges */}
                   {book.formats && (
@@ -229,7 +229,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                         setIsEditingReview(true)
                         setActiveTab("review")
                       }}
-                      className="h-9 px-4 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium rounded-xl transition-all active:scale-[0.98] shadow-sm flex items-center gap-1.5"
+                      className="h-9 px-4 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-800/50 text-stone-700 dark:text-stone-300 text-sm font-medium rounded-xl transition-all active:scale-[0.98] shadow-sm flex items-center gap-1.5"
                     >
                       <MessageSquare className="w-3.5 h-3.5" />
                       Review
@@ -258,7 +258,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setShowShelfPicker(true)}
-                    className="h-8 px-3 bg-stone-50 border border-stone-200 hover:bg-stone-100 text-stone-600 text-xs font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1"
+                    className="h-8 px-3 bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-600 dark:text-stone-300 text-xs font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1"
                   >
                     <Library className="w-3 h-3" />
                     Shelves
@@ -266,7 +266,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
 
                   <button
                     onClick={() => setShowShareCard(true)}
-                    className="h-8 px-3 bg-stone-50 border border-stone-200 hover:bg-stone-100 text-stone-600 text-xs font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1"
+                    className="h-8 px-3 bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-600 dark:text-stone-300 text-xs font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1"
                   >
                     <Share2 className="w-3 h-3" />
                     Share
@@ -278,7 +278,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                         onHideBook(book)
                         onClose()
                       }}
-                      className="h-8 px-3 bg-stone-50 border border-stone-200 hover:bg-amber-50 hover:border-amber-200 text-stone-400 hover:text-amber-600 text-xs font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1"
+                      className="h-8 px-3 bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:border-amber-200 text-stone-400 dark:text-stone-500 hover:text-amber-600 text-xs font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1"
                     >
                       <EyeOff className="w-3 h-3" />
                       Hide
@@ -293,7 +293,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                           onClose()
                         }
                       }}
-                      className="h-8 px-3 bg-stone-50 border border-stone-200 hover:bg-red-50 hover:border-red-200 text-stone-400 hover:text-red-500 text-xs font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1"
+                      className="h-8 px-3 bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 hover:bg-red-50 hover:border-red-200 text-stone-400 dark:text-stone-500 hover:text-red-500 text-xs font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1"
                     >
                       <Trash2 className="w-3 h-3" />
                       Remove
@@ -305,7 +305,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                 {assignedShelves.length > 0 && (
                   <div className="flex flex-wrap gap-1 pt-1">
                     {assignedShelves.map(shelf => (
-                      <span key={shelf.id} className="text-[11px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">
+                      <span key={shelf.id} className="text-[11px] px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-100 dark:border-amber-900/40">
                         {shelf.emoji} {shelf.name}
                       </span>
                     ))}
@@ -317,15 +317,15 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
 
           {/* Tabs - iOS-style segmented control */}
           <div className="px-5 sm:px-6 flex-shrink-0">
-            <div className="flex gap-1 bg-stone-100 rounded-lg p-1">
+            <div className="flex gap-1 bg-stone-100 dark:bg-stone-800 rounded-lg p-1">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
                   className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all tap-target touch-manipulation relative ${
                     activeTab === tab.id
-                      ? "bg-white text-stone-900 shadow-sm"
-                      : "text-stone-500 hover:text-stone-700"
+                      ? "bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 shadow-sm"
+                      : "text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300"
                   }`}
                 >
                   {tab.label}
@@ -343,10 +343,10 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
               <div className="space-y-5">
                 {/* Description */}
                 <div>
-                  <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
+                  <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2">
                     About this book
                   </h3>
-                  <p className="text-sm text-stone-600 leading-relaxed">
+                  <p className="text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
                     {descExpanded || book.description.length <= 200
                       ? book.description
                       : book.description.slice(0, 200) + "..."}
@@ -354,7 +354,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                   {book.description.length > 200 && (
                     <button
                       onClick={() => setDescExpanded(!descExpanded)}
-                      className="text-xs text-amber-700 hover:text-amber-800 font-medium mt-1.5 transition-colors"
+                      className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium mt-1.5 transition-colors"
                     >
                       {descExpanded ? "Show less" : "Read more"}
                     </button>
@@ -363,14 +363,14 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
 
                 {/* Genres & Moods */}
                 <div>
-                  <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2.5">
+                  <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2.5">
                     Genres & Moods
                   </h3>
                   <div className="flex flex-wrap gap-1.5">
                     {book.genre.map((genre) => (
                       <span
                         key={genre}
-                        className="bg-stone-100 text-stone-700 text-xs px-3 py-1.5 rounded-full font-medium"
+                        className="bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 text-xs px-3 py-1.5 rounded-full font-medium"
                       >
                         {genre}
                       </span>
@@ -378,7 +378,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                     {book.mood.map((mood) => (
                       <span
                         key={mood}
-                        className="bg-amber-50 text-amber-700 text-xs px-3 py-1.5 rounded-full font-medium border border-amber-100"
+                        className="bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs px-3 py-1.5 rounded-full font-medium border border-amber-100 dark:border-amber-900/40"
                       >
                         {mood}
                       </span>
@@ -388,7 +388,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
 
                 {/* Where to Read */}
                 <div>
-                  <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2.5">
+                  <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2.5">
                     Where to Read
                   </h3>
                   <WhereToRead book={book} />
@@ -398,12 +398,12 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                 {existingReview && (
                   <div>
                     <div className="flex items-center justify-between mb-2.5">
-                      <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider">
+                      <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider">
                         Your Review
                       </h3>
                       <button
                         onClick={handleEditReview}
-                        className="text-xs text-amber-700 hover:text-amber-800 font-medium transition-colors"
+                        className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium transition-colors"
                       >
                         Edit
                       </button>
@@ -419,7 +419,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
 
                 {/* Notes Preview */}
                 <div>
-                  <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2.5">
+                  <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2.5">
                     Notes & Highlights
                   </h3>
                   <BookNotes bookId={book.id} compact />
@@ -428,7 +428,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                 {/* Similar Books */}
                 {similarBooks.length > 0 && (
                   <div>
-                    <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2.5">
+                    <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2.5">
                       More Like This
                     </h3>
                     <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1">
@@ -439,7 +439,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                           className="flex-shrink-0 group flex flex-col items-center gap-1.5"
                           title={`${similar.title} by ${similar.author}`}
                         >
-                          <div className="relative w-14 h-20 rounded-lg overflow-hidden shadow-sm border border-stone-200/60 group-hover:shadow-md transition-shadow">
+                          <div className="relative w-14 h-20 rounded-lg overflow-hidden shadow-sm border border-stone-200/60 dark:border-stone-700/60 group-hover:shadow-md transition-shadow">
                             <BookCover
                               src={similar.cover}
                               fallbackSrc={similar.coverFallback}
@@ -449,7 +449,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                               sizes="56px"
                             />
                           </div>
-                          <p className="text-[10px] text-stone-500 text-center leading-tight w-14 line-clamp-2">
+                          <p className="text-[10px] text-stone-500 dark:text-stone-400 text-center leading-tight w-14 line-clamp-2">
                             {similar.title}
                           </p>
                         </button>
