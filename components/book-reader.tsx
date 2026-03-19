@@ -1154,65 +1154,6 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                     textRendering: "optimizeLegibility",
                   }}
                 >
-                  {/* Floating selection bar — must be inside scroll container for correct positioning */}
-                  {selectionBar && (() => {
-                    const isDark = currentTheme.text === "#e7e5e4"
-                    const barBg = isDark ? "#292524" : "#fafaf9"
-                    const primaryColor = "#d97706"
-                    const textColor = isDark ? "#e7e5e4" : "#44403c"
-                    const mutedColor = isDark ? "#a8a29e" : "#78716c"
-                    const divider = <div className="w-px h-4" style={{ backgroundColor: currentTheme.border }} />
-                    const barWidth = 340
-                    const scrollEl = scrollRef.current
-                    // Compensate for translateX offset so toolbar stays visible on current page
-                    const pageOffset = paginatedPage * (scrollEl?.clientWidth || 0)
-                    return (
-                      <div
-                        data-selection-bar
-                        className="absolute z-40 flex flex-col rounded-xl shadow-lg overflow-hidden"
-                        style={{
-                          left: Math.max(8, Math.min(selectionBar.x - barWidth / 2, (scrollEl?.clientWidth || 300) - barWidth - 8)) + pageOffset,
-                          top: Math.max(8, selectionBar.y - 52),
-                          backgroundColor: barBg,
-                          border: `1px solid ${currentTheme.border}`,
-                        }}
-                      >
-                        {/* Primary actions row */}
-                        <div className="flex items-center gap-1 px-1.5 py-1">
-                          <button onClick={handleHighlight} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:opacity-80" style={{ color: primaryColor }}>
-                            <Highlighter className="w-4 h-4" /> Highlight
-                          </button>
-                          {divider}
-                          <button onClick={handleAddNoteToSelection} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:opacity-80" style={{ color: textColor }}>
-                            <StickyNote className="w-4 h-4" /> Note
-                          </button>
-                          {divider}
-                          <button onClick={handleSaveQuote} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:opacity-80" style={{ color: textColor }}>
-                            <Quote className="w-4 h-4" /> Quote
-                          </button>
-                          {divider}
-                          <button onClick={handleCopySelection} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:opacity-80" style={{ color: mutedColor }}>
-                            <Copy className="w-4 h-4" />
-                          </button>
-                        </div>
-                        {/* Secondary actions row */}
-                        <div className="flex items-center gap-1 px-1.5 py-1" style={{ borderTop: `1px solid ${currentTheme.border}` }}>
-                          <button onClick={handleDefine} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:opacity-80" style={{ color: mutedColor }}>
-                            <BookText className="w-4 h-4" /> Define
-                          </button>
-                          {divider}
-                          <button onClick={handleWebSearch} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:opacity-80" style={{ color: mutedColor }}>
-                            <Globe className="w-4 h-4" /> Search
-                          </button>
-                          {divider}
-                          <button onClick={handleShareQuote} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:opacity-80" style={{ color: mutedColor }}>
-                            <Share2 className="w-4 h-4" /> Share
-                          </button>
-                        </div>
-                      </div>
-                    )
-                  })()}
-
                   {blocks.map((block, i) => {
                     if (block.type === "separator") {
                       return (
@@ -1455,7 +1396,61 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 </div>
               </div>
 
-              {/* Floating selection bar moved inside scroll container above */}
+              {/* Floating selection bar — outside pagesRef so not affected by translateX */}
+              {selectionBar && (() => {
+                const isDark = currentTheme.text === "#e7e5e4"
+                const barBg = isDark ? "#292524" : "#fafaf9"
+                const primaryColor = "#d97706"
+                const textColor = isDark ? "#e7e5e4" : "#44403c"
+                const mutedColor = isDark ? "#a8a29e" : "#78716c"
+                const divider = <div className="w-px h-4" style={{ backgroundColor: currentTheme.border }} />
+                const barWidth = 340
+                const viewW = scrollRef.current?.clientWidth || 300
+                const clampedX = Math.max(8, Math.min(selectionBar.x - barWidth / 2, viewW - barWidth - 8))
+                return (
+                  <div
+                    data-selection-bar
+                    className="absolute z-40 flex flex-col rounded-xl shadow-lg overflow-hidden"
+                    style={{
+                      left: clampedX,
+                      top: Math.max(8, selectionBar.y - 56),
+                      backgroundColor: barBg,
+                      border: `1px solid ${currentTheme.border}`,
+                    }}
+                  >
+                    <div className="flex items-center gap-1 px-1.5 py-1">
+                      <button onClick={handleHighlight} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:opacity-80" style={{ color: primaryColor }}>
+                        <Highlighter className="w-4 h-4" /> Highlight
+                      </button>
+                      {divider}
+                      <button onClick={handleAddNoteToSelection} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:opacity-80" style={{ color: textColor }}>
+                        <StickyNote className="w-4 h-4" /> Note
+                      </button>
+                      {divider}
+                      <button onClick={handleSaveQuote} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:opacity-80" style={{ color: textColor }}>
+                        <Quote className="w-4 h-4" /> Quote
+                      </button>
+                      {divider}
+                      <button onClick={handleCopySelection} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:opacity-80" style={{ color: mutedColor }}>
+                        <Copy className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-1 px-1.5 py-1" style={{ borderTop: `1px solid ${currentTheme.border}` }}>
+                      <button onClick={handleDefine} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:opacity-80" style={{ color: mutedColor }}>
+                        <BookText className="w-4 h-4" /> Define
+                      </button>
+                      {divider}
+                      <button onClick={handleWebSearch} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:opacity-80" style={{ color: mutedColor }}>
+                        <Globe className="w-4 h-4" /> Search
+                      </button>
+                      {divider}
+                      <button onClick={handleShareQuote} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:opacity-80" style={{ color: mutedColor }}>
+                        <Share2 className="w-4 h-4" /> Share
+                      </button>
+                    </div>
+                  </div>
+                )
+              })()}
 
               {/* Note input overlay */}
               <AnimatePresence>
