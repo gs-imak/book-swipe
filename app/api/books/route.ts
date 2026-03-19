@@ -3,7 +3,9 @@ import { NextRequest, NextResponse } from "next/server"
 const API_KEY = process.env.GOOGLE_BOOKS_API_KEY
 const GOOGLE_BOOKS_BASE = "https://www.googleapis.com/books/v1/volumes"
 
-import { API_RATE_LIMIT, API_RATE_WINDOW_MS } from "@/lib/config"
+// Inline constants to avoid importing client-tainted config module into server route
+const API_RATE_LIMIT = 60
+const API_RATE_WINDOW_MS = 60_000
 
 // Rate limiting: simple in-memory counter per IP
 const rateLimiter = new Map<string, { count: number; resetAt: number }>()
