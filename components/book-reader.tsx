@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ArrowLeft, ChevronLeft, ChevronRight, Sun, Coffee, Moon, Loader2, AlertCircle, BookOpen, Minus, Plus, List, X, Search, Bookmark, BookmarkCheck, Highlighter, StickyNote, Copy, Trash2, MessageSquare, Quote, Globe, BookText, Share2, Type, Timer, Play, Pause, Brain } from "lucide-react"
+import { ArrowLeft, ChevronLeft, ChevronRight, ChevronDown, Sun, Coffee, Moon, Loader2, AlertCircle, BookOpen, Minus, Plus, List, X, Search, Bookmark, BookmarkCheck, Highlighter, StickyNote, Copy, Trash2, MessageSquare, Quote, Globe, BookText, Share2, Type, Timer, Play, Pause, Brain } from "lucide-react"
 import { GutenbergBook, fetchBookText, fetchBookImages } from "@/lib/gutenberg-api"
 import { saveReadingPosition, getReadingPosition, getBookNotesForBook, saveBookNote, deleteBookNote, type BookNote } from "@/lib/storage"
 import { addVocabWord } from "@/lib/vocabulary"
@@ -314,6 +314,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState(0)
   const [showNavPanel, setShowNavPanel] = useState(false)
+  const [showChapterDropdown, setShowChapterDropdown] = useState(false)
   const [images, setImages] = useState<string[]>([])
   const [readerNotes, setReaderNotes] = useState<BookNote[]>([])
   const [navTab, setNavTab] = useState<"contents" | "notes" | "recap">("contents")
@@ -2245,12 +2246,62 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                   )}
                 </AnimatePresence>
 
-                {/* Current chapter indicator */}
-                {currentChapter && (
-                  <div className="px-6 pt-2 pb-1">
-                    <p className="text-xs truncate opacity-50 text-center font-medium">
-                      {currentChapter.title}{currentChapter.subtitle ? ` — ${currentChapter.subtitle}` : ""}
-                    </p>
+                {/* Chapter quick-select — tap chapter name to see dropdown */}
+                {chapters.length > 0 && (
+                  <div className="relative px-4 pt-2 pb-1">
+                    <button
+                      onClick={() => setShowChapterDropdown(prev => !prev)}
+                      className="w-full flex items-center justify-center gap-1.5 py-1 rounded-lg transition-opacity hover:opacity-80"
+                    >
+                      <p className="text-xs truncate opacity-50 font-medium">
+                        {currentChapter ? currentChapter.title : "Select Chapter"}
+                        {currentChapter?.subtitle ? ` — ${currentChapter.subtitle}` : ""}
+                      </p>
+                      <ChevronDown className="w-3 h-3 opacity-40 flex-shrink-0" style={{ transform: showChapterDropdown ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+                    </button>
+
+                    <AnimatePresence>
+                      {showChapterDropdown && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 4, scaleY: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scaleY: 1 }}
+                          exit={{ opacity: 0, y: 4, scaleY: 0.95 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute bottom-full left-4 right-4 mb-1 z-[66] rounded-xl shadow-lg overflow-hidden"
+                          style={{
+                            backgroundColor: theme === "dark" ? "rgba(41,37,36,0.96)" : "rgba(253,251,247,0.96)",
+                            backdropFilter: "blur(16px)",
+                            border: `1px solid ${currentTheme.border}`,
+                            maxHeight: "50vh",
+                            overflowY: "auto",
+                          }}
+                        >
+                          <div className="px-3 py-2" style={{ borderBottom: `1px solid ${currentTheme.border}` }}>
+                            <p className="text-[10px] uppercase tracking-wider opacity-40 font-semibold">
+                              {chapters.length} Chapters
+                            </p>
+                          </div>
+                          {chapters.map((ch, idx) => {
+                            const isCurrent = idx === currentChapterIndex
+                            return (
+                              <button
+                                key={idx}
+                                onClick={() => { jumpToChapter(ch); setShowChapterDropdown(false) }}
+                                className="w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center gap-3"
+                                style={{
+                                  backgroundColor: isCurrent ? `${currentTheme.progressFill}15` : "transparent",
+                                  color: isCurrent ? currentTheme.progressFill : currentTheme.text,
+                                  fontWeight: isCurrent ? 600 : 400,
+                                }}
+                              >
+                                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: isCurrent ? currentTheme.progressFill : `${currentTheme.text}20` }} />
+                                <span className="truncate">{ch.title}</span>
+                              </button>
+                            )
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 )}
 
