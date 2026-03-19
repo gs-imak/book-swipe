@@ -14,8 +14,17 @@ import { ShareCardGenerator } from "./share-card-generator"
 import { WhereToRead } from "./where-to-read"
 import { estimateReadingTime } from "@/lib/reading-time"
 import { useFocusTrap } from "@/lib/use-focus-trap"
+import dynamic from "next/dynamic"
 import { searchGutenberg, type GutenbergBook } from "@/lib/gutenberg-api"
-import BookReader from "./book-reader"
+
+// Code-split the reader (1,666 lines) — only loaded when user opens a book to read
+const BookReader = dynamic(() => import("./book-reader"), {
+  loading: () => (
+    <div className="fixed inset-0 z-[60] bg-[#F5EFE0] flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  ),
+})
 
 interface BookDetailModalProps {
   book: Book | null
