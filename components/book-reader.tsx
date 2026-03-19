@@ -757,19 +757,20 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
         }
       }
 
-      // --- Chapter/section headings ---
-      // Must be short and match chapter keywords
+      // --- Detect and skip Table of Contents blocks ---
+      // TOC lines typically have chapter keywords followed by many short lines
+      // or lines with page numbers, dots, roman numerals
       const headLines = trimmed.split("\n").map((l) => l.trim())
+      const looksLikeTOC = headLines.length > 5 && headLines.filter(l => chapterRe.test(l) || /^\d+\.?\s|^[IVXLC]+\.?\s|\.{3,}|─|—/.test(l)).length > headLines.length * 0.3
+      if (looksLikeTOC && !firstHeadingSeen) continue // Skip TOC entirely
+      if (/^(?:contents|table of contents)\s*$/i.test(trimmed)) continue // Skip "CONTENTS" header
+
+      // --- Chapter/section headings ---
       const mainLine = headLines[0]
       if (chapterRe.test(trimmed) && mainLine.length < 100) {
-        // Multi-line block starting with chapter keyword
-        if (headLines.length > 15) {
-          // Very many lines = this is a table of contents — skip entirely
-          // (TOCs are navigation clutter in a paginated reader with chapter nav)
+        if (headLines.length > 5) {
+          // Multi-line chapter block = TOC — skip (we have chapter nav dropdown)
           continue
-        } else if (headLines.length > 5) {
-          // Medium multi-line = condensed TOC or detailed heading — render as verse
-          result.push({ type: "verse", lines: headLines.slice(0, 10) })
         } else {
           const subtitle = headLines.length > 1 ? headLines.slice(1).join(" ").trim() : undefined
           result.push({ type: "heading", text: mainLine, subtitle: subtitle || undefined })
@@ -1486,6 +1487,27 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                     textRendering: "optimizeLegibility",
                   }}
                 >
+                  {/* Fallback title page — if no centered title blocks were detected, show bookTitle */}
+                  {blocks.length > 0 && blocks[0].type !== "centered" && (
+                    <div
+                      className="text-center flex flex-col items-center justify-center"
+                      style={{
+                        fontFamily,
+                        color: currentTheme.text,
+                        breakInside: "avoid",
+                        maxWidth: "65ch",
+                        margin: "0 auto",
+                        minHeight: "70vh",
+                        paddingTop: "20vh",
+                        paddingBottom: "4em",
+                      }}
+                    >
+                      <div style={{ fontSize: `${fontSize * 2.5}px`, fontWeight: 700, lineHeight: "1.15", marginBottom: "0.5em" }}>
+                        {bookTitle}
+                      </div>
+                    </div>
+                  )}
+
                   {blocks.map((block, i) => {
                     if (block.type === "separator") {
                       return (
