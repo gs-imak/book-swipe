@@ -148,9 +148,15 @@ export function FreeBooksBrowser() {
       {/* Book grid */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-md mx-auto px-4 py-4">
-          {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <Loader2 className="w-6 h-6 text-stone-400 animate-spin" />
+          {loading && books.length === 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="aspect-[2/3] bg-stone-200 dark:bg-stone-700 rounded-xl mb-2" />
+                  <div className="h-3 bg-stone-200 dark:bg-stone-700 rounded w-3/4 mb-1" />
+                  <div className="h-3 bg-stone-200 dark:bg-stone-700 rounded w-1/2" />
+                </div>
+              ))}
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center h-64 text-stone-400 gap-2">
@@ -169,10 +175,17 @@ export function FreeBooksBrowser() {
               <p className="text-sm">No books found</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {books.map((book, i) => (
-                <BookGridCard key={book.id} book={book} onRead={handleRead} index={i} />
-              ))}
+            <div>
+              {loading && books.length > 0 && (
+                <div className="flex items-center justify-center gap-2 py-2 mb-3 text-xs text-stone-400">
+                  <Loader2 className="w-3 h-3 animate-spin" /> Refreshing...
+                </div>
+              )}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {books.map((book, i) => (
+                  <BookGridCard key={book.id} book={book} onRead={handleRead} index={i} />
+                ))}
+              </div>
             </div>
           )}
         </div>

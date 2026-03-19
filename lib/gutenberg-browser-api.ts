@@ -34,18 +34,47 @@ function getGutenbergLang(): string {
   return lang === "all" ? "" : lang
 }
 
-// In-memory cache to avoid re-fetching the same data (Gutendex is slow)
-const _cache = new Map<string, { data: GutenbergBrowseResult; ts: number }>()
-const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
+// Two-layer cache: localStorage (survives navigation) + in-memory (instant)
+const _memCache = new Map<string, { data: GutenbergBrowseResult; ts: number }>()
+const CACHE_TTL = 30 * 60 * 1000 // 30 minutes
+const LS_PREFIX = "gutenberg_cache_"
+
+function getCachedResult(key: string): GutenbergBrowseResult | null {
+  // Check memory first
+  const mem = _memCache.get(key)
+  if (mem && Date.now() - mem.ts < CACHE_TTL) return mem.data
+
+  // Check localStorage
+  if (typeof window === "undefined") return null
+  try {
+    const stored = localStorage.getItem(LS_PREFIX + key)
+    if (!stored) return null
+    const parsed = JSON.parse(stored) as { data: GutenbergBrowseResult; ts: number }
+    if (Date.now() - parsed.ts < CACHE_TTL) {
+      _memCache.set(key, parsed) // promote to memory
+      return parsed.data
+    }
+  } catch { /* ignore */ }
+  return null
+}
+
+function setCachedResult(key: string, data: GutenbergBrowseResult): void {
+  const entry = { data, ts: Date.now() }
+  _memCache.set(key, entry)
+  try {
+    localStorage.setItem(LS_PREFIX + key, JSON.stringify(entry))
+  } catch { /* quota exceeded — memory cache still works */ }
+}
 
 async function cachedFetch(url: string): Promise<GutenbergBrowseResult> {
-  const cached = _cache.get(url)
-  if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.data
+  const cacheKey = url.replace("https://gutendex.com/books?", "")
+  const cached = getCachedResult(cacheKey)
+  if (cached) return cached
 
   const res = await fetch(url)
   if (!res.ok) throw new Error("Failed to fetch")
   const data = await res.json() as GutenbergBrowseResult
-  _cache.set(url, { data, ts: Date.now() })
+  setCachedResult(cacheKey, data)
   return data
 }
 
