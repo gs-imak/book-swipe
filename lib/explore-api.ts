@@ -160,8 +160,9 @@ export async function getTrendingBooks(limit = 12): Promise<Book[]> {
     const olLangCodes = getOpenLibraryLanguageCodes()
     const fetchLimit = olLangCodes ? limit * 2 : limit
 
+    // Use our server-side proxy to avoid CORS issues with Open Library trending endpoint
     const res = await fetch(
-      `https://openlibrary.org/trending/daily.json?limit=${fetchLimit}`
+      `/api/openlibrary?path=/trending/daily.json&limit=${fetchLimit}`
     )
     if (!res.ok) throw new Error("trending fetch failed")
 

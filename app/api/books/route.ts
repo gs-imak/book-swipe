@@ -24,15 +24,17 @@ function checkRateLimit(ip: string): boolean {
   return true
 }
 
-// Periodic cleanup of stale entries
-setInterval(() => {
+// Lazy cleanup: clear stale entries on each request (no setInterval in serverless)
+function cleanupRateLimiter() {
   const now = Date.now()
   rateLimiter.forEach((v, k) => {
     if (now > v.resetAt) rateLimiter.delete(k)
   })
-}, API_RATE_WINDOW_MS * 2)
+}
 
 export async function GET(request: NextRequest) {
+  cleanupRateLimiter()
+
   // Rate limit check
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
   if (!checkRateLimit(ip)) {
@@ -49,6 +51,7 @@ export async function GET(request: NextRequest) {
   const lang = searchParams.get("lang") || "en"
 
   if (!API_KEY) {
+    console.error("[BookSwipe] GOOGLE_BOOKS_API_KEY is not set")
     return NextResponse.json({ error: "API key not configured" }, { status: 500 })
   }
 
@@ -89,7 +92,8 @@ export async function GET(request: NextRequest) {
         "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
       },
     })
-  } catch {
+  } catch (err) {
+    console.error("[BookSwipe] Books API error:", err)
     return NextResponse.json({ error: "Failed to fetch books" }, { status: 502 })
   }
 }
