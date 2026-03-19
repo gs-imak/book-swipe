@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, BookOpen, Star, Clock, Heart, TrendingUp } from "lucide-react"
+import { X, BookOpen, Star, Clock, Heart, TrendingUp, Moon, Sun } from "lucide-react"
 import { ReadingDoodle, SittingReadingDoodle } from "./illustrations"
 import { getLikedBooks, getBookReviews, getBookNotes, getReadingProgress, getUserStats, type BookReview } from "@/lib/storage"
 import { Book } from "@/lib/book-data"
 import { DedicationOverlay } from "./dedication-overlay"
+import { getTheme, toggleTheme } from "@/lib/theme"
 
 interface TasteProfileProps {
   isOpen: boolean
@@ -60,11 +61,13 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
   const [likedBooks, setLikedBooks] = useState<Book[]>([])
   const [reviews, setReviews] = useState<BookReview[]>([])
   const [showDedication, setShowDedication] = useState(false)
+  const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
       setLikedBooks(getLikedBooks())
       setReviews(getBookReviews())
+      setIsDark(getTheme() === "dark")
     }
   }, [isOpen])
 
@@ -449,6 +452,33 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
                 )}
               </>
             )}
+            {/* Settings */}
+            <motion.div {...fadeIn(0.5)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-800 shadow-sm">
+              <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-4">Settings</h3>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {isDark ? <Moon className="w-4 h-4 text-amber-500" /> : <Sun className="w-4 h-4 text-amber-500" />}
+                  <div>
+                    <p className="text-sm font-medium text-stone-900 dark:text-stone-100">Dark Mode</p>
+                    <p className="text-xs text-stone-400">Switch between light and dark themes</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    const next = toggleTheme()
+                    setIsDark(next === "dark")
+                  }}
+                  role="switch"
+                  aria-checked={isDark}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${isDark ? "bg-amber-600" : "bg-stone-300"}`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${isDark ? "translate-x-5" : "translate-x-0"}`}
+                  />
+                </button>
+              </div>
+            </motion.div>
+
             {/* Hidden dedication trigger */}
             <motion.div
               initial={{ opacity: 0 }}

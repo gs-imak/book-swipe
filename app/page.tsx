@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import dynamic from "next/dynamic"
 import { LoginScreen } from "@/components/login-screen"
 import { Questionnaire } from "@/components/questionnaire"
 import { SwipeInterface } from "@/components/swipe-interface"
@@ -14,9 +15,14 @@ import { UserPreferences } from "@/lib/book-data"
 import { getLikedBooks, migrateCoverUrls, isOnboarded, setOnboarded, getSavedPreferences, savePreferences } from "@/lib/storage"
 import { TasteProfile } from "@/components/taste-profile"
 import { InstallPrompt } from "@/components/install-prompt"
-import { FreeBooksBrowser } from "@/components/free-books-browser"
 import { OnboardingGuide } from "@/components/onboarding-guide"
 import { motion, AnimatePresence } from "framer-motion"
+import { getTheme, applyTheme } from "@/lib/theme"
+
+// Code-split heavy components that aren't needed on initial load
+const FreeBooksBrowser = dynamic(() => import("@/components/free-books-browser").then(m => ({ default: m.FreeBooksBrowser })), {
+  loading: () => <div className="min-h-screen bg-background flex items-center justify-center"><div className="w-8 h-8 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" /></div>,
+})
 
 const GUIDE_SEEN_KEY = "bookswipe_guide_seen"
 
@@ -248,8 +254,9 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
 export default function App() {
   const [showAchievements, setShowAchievements] = useState(false)
 
-  // One-time migration: fix cached cover URLs
+  // Apply theme + one-time migration on mount
   useEffect(() => {
+    applyTheme(getTheme())
     migrateCoverUrls()
   }, [])
 
