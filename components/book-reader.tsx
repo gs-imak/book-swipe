@@ -405,6 +405,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
   // Feature: Focus Mode + Pomodoro
   const [focusMode, setFocusMode] = useState(false)
+  const [focusMinimized, setFocusMinimized] = useState(false)
   const [pomodoroMinutes, setPomodoroMinutes] = useState(25)
   const [pomodoroSecondsLeft, setPomodoroSecondsLeft] = useState(25 * 60)
   const [pomodoroRunning, setPomodoroRunning] = useState(false)
@@ -509,32 +510,33 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
   // Focus Mode: manage ambient audio via Web Audio API
   const ambientRef = useRef<{ stop: () => void } | null>(null)
-  useEffect(() => {
+
+  // Start ambient sound — called directly from click handlers for AudioContext permission
+  const startAmbientSound = useCallback((soundId: AmbientSound) => {
+    // Stop previous
     if (ambientRef.current) {
       ambientRef.current.stop()
       ambientRef.current = null
     }
-    if (!focusMode || !ambientSound) return
-    const sound = createAmbientSound(ambientSound)
+    if (!soundId) return
+    const sound = createAmbientSound(soundId)
     if (sound) {
       sound.start()
       ambientRef.current = sound
     }
-    return () => {
-      if (ambientRef.current) {
-        ambientRef.current.stop()
-        ambientRef.current = null
-      }
+  }, [])
+
+  const stopAmbientSound = useCallback(() => {
+    if (ambientRef.current) {
+      ambientRef.current.stop()
+      ambientRef.current = null
     }
-  }, [focusMode, ambientSound])
+  }, [])
 
   // Cleanup audio on unmount or reader close
   useEffect(() => {
     if (!isOpen) {
-      if (ambientRef.current) {
-        ambientRef.current.stop()
-        ambientRef.current = null
-      }
+      stopAmbientSound()
       setFocusMode(false)
       setPomodoroRunning(false)
     }
@@ -2432,7 +2434,32 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
           {/* Focus Mode overlay */}
           <AnimatePresence>
-            {focusMode && (
+            {focusMode && focusMinimized && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="fixed bottom-20 right-4 z-[65]"
+              >
+                <button
+                  onClick={() => setFocusMinimized(false)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-full shadow-lg"
+                  style={{
+                    backgroundColor: theme === "dark" ? "rgba(41,37,36,0.95)" : "rgba(253,251,247,0.95)",
+                    backdropFilter: "blur(16px)",
+                    border: `1px solid ${currentTheme.border}`,
+                    color: currentTheme.text,
+                  }}
+                >
+                  <Timer className="w-4 h-4" style={{ color: currentTheme.progressFill }} />
+                  <span className="text-sm tabular-nums font-medium">
+                    {String(Math.floor(pomodoroSecondsLeft / 60)).padStart(2, "0")}:{String(pomodoroSecondsLeft % 60).padStart(2, "0")}
+                  </span>
+                  {ambientSound && <span className="text-xs">{AMBIENT_SOUNDS.find(s => s.id === ambientSound)?.emoji}</span>}
+                </button>
+              </motion.div>
+            )}
+
+            {focusMode && !focusMinimized && (
               <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -2450,13 +2477,22 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
               >
                 <div className="flex items-center justify-between px-4 pt-3 pb-1">
                   <span className="text-[10px] uppercase tracking-wider opacity-40 font-semibold">Focus Mode</span>
-                  <button
-                    onClick={toggleFocusMode}
-                    className="p-1 rounded-md opacity-50 hover:opacity-80 transition-opacity"
-                    aria-label="Close focus mode"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setFocusMinimized(true)}
+                      className="p-1 rounded-md opacity-40 hover:opacity-80 transition-opacity"
+                      aria-label="Minimize focus mode"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => { toggleFocusMode(); stopAmbientSound() }}
+                      className="p-1 rounded-md opacity-50 hover:opacity-80 transition-opacity"
+                      aria-label="Close focus mode"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="px-4 py-3">
@@ -2513,7 +2549,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                     {AMBIENT_SOUNDS.map(sound => (
                       <button
                         key={sound.id}
-                        onClick={() => setAmbientSound(sound.id)}
+                        onClick={() => { setAmbientSound(sound.id); startAmbientSound(sound.id) }}
                         className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors"
                         style={{
                           backgroundColor: ambientSound === sound.id ? `${currentTheme.progressFill}20` : `${currentTheme.text}06`,
@@ -2526,10 +2562,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                     ))}
                     <button
                       onClick={() => {
-                        if (ambientRef.current) {
-                          ambientRef.current.stop()
-                          ambientRef.current = null
-                        }
+                        stopAmbientSound()
                         setAmbientSound("" as AmbientSound)
                       }}
                       className="px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors"
