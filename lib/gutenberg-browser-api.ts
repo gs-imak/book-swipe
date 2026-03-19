@@ -78,6 +78,18 @@ async function cachedFetch(url: string): Promise<GutenbergBrowseResult> {
   return data
 }
 
+export function getCacheKey(topic: string): string {
+  const lang = getGutenbergLang()
+  const params = new URLSearchParams(lang ? { languages: lang } : {})
+  if (topic) params.set("topic", topic)
+  return params.toString()
+}
+
+/** Synchronous cache lookup — returns instantly or null */
+export function getCachedBrowse(topic: string): GutenbergBrowseResult | null {
+  return getCachedResult(getCacheKey(topic))
+}
+
 export async function browseGutenberg(topic: string): Promise<GutenbergBrowseResult> {
   const lang = getGutenbergLang()
   const params = new URLSearchParams(lang ? { languages: lang } : {})
