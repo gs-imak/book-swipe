@@ -992,7 +992,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
               <div className="flex-1 mx-4 min-w-0 text-center">
                 <p className="text-xs font-medium truncate opacity-70">{bookTitle}</p>
                 <div className="flex items-center justify-center gap-2 mt-0.5">
-                  <div className="max-w-[100px] w-full h-[3px] rounded-full overflow-hidden" style={{ backgroundColor: currentTheme.progressTrack }}>
+                  <div className="max-w-[160px] w-full h-[3px] rounded-full overflow-hidden" style={{ backgroundColor: currentTheme.progressTrack }}>
                     <motion.div
                       className="h-full rounded-full"
                       style={{ backgroundColor: currentTheme.progressFill }}
@@ -1112,10 +1112,11 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
             <>
               <div
                 ref={scrollRef}
-                className="flex-1 px-5 sm:px-8"
                 style={{
                   overflow: "hidden",
                   position: "relative",
+                  flex: 1,
+                  padding: "0 clamp(20px, 6vw, 80px)",
                 }}
                 onClick={handleReaderTap}
                 onTouchStart={handleTouchStart}
@@ -1125,12 +1126,16 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                   ref={pagesRef}
                   style={{
                     height: "100%",
-                    paddingTop: "2rem",
-                    paddingBottom: "2rem",
+                    paddingTop: "1.5rem",
+                    paddingBottom: "1.5rem",
                     ...(colWidth > 0 ? { columnWidth: `${colWidth}px` } : {}),
                     columnFill: "auto" as const,
                     columnGap: 0,
                     transition: "transform 300ms cubic-bezier(0.25, 0.1, 0.25, 1)",
+                    fontKerning: "normal",
+                    fontVariantLigatures: "common-ligatures",
+                    fontVariantNumeric: "oldstyle-nums proportional-nums",
+                    textRendering: "optimizeLegibility",
                   }}
                 >
                   {/* Floating selection bar — must be inside scroll container for correct positioning */}
@@ -1293,8 +1298,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           style={{
                             fontFamily,
                             fontSize: `${fontSize}px`,
-                            lineHeight: "1.85",
-                            letterSpacing: "0.01em",
+                            lineHeight: "1.6",
                             color: currentTheme.text,
                             borderLeft: `3px solid ${currentTheme.progressFill}`,
                             opacity: 0.85,
@@ -1320,7 +1324,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           style={{
                             fontFamily,
                             fontSize: `${fontSize}px`,
-                            lineHeight: "1.85",
+                            lineHeight: "1.6",
                             color: currentTheme.text,
                             opacity: 0.75,
                             margin: "0 auto",
@@ -1343,8 +1347,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           style={{
                             fontFamily,
                             fontSize: `${fontSize}px`,
-                            lineHeight: "1.85",
-                            letterSpacing: "0.01em",
+                            lineHeight: "1.6",
                             color: currentTheme.text,
                             margin: "0 auto",
                             marginBottom: "0.5em",
@@ -1377,8 +1380,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           style={{
                             fontFamily,
                             fontSize: `${fontSize}px`,
-                            lineHeight: "1.85",
-                            letterSpacing: "0.01em",
+                            lineHeight: "1.6",
                             color: currentTheme.text,
                             margin: "0 auto",
                             marginBottom: "0.3em",
@@ -1418,8 +1420,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                         style={{
                           fontFamily,
                           fontSize: `${fontSize}px`,
-                          lineHeight: "1.85",
-                          letterSpacing: "0.01em",
+                          lineHeight: "1.6",
                           color: currentTheme.text,
                           textIndent: skipIndent ? 0 : "1.5em",
                           margin: "0 auto",
