@@ -1,5 +1,6 @@
-const CACHE_NAME = 'bookswipe-v4'
+const CACHE_NAME = 'bookswipe-v5'
 const API_CACHE_NAME = 'bookswipe-api-v1'
+const IMG_CACHE_NAME = 'bookswipe-images-v1'
 
 const PRECACHE_URLS = [
   '/',
@@ -9,6 +10,8 @@ const PRECACHE_URLS = [
 
 // Max age for cached API responses (5 minutes)
 const API_CACHE_MAX_AGE = 5 * 60 * 1000
+// Max cached images (prevent unbounded growth)
+const MAX_CACHED_IMAGES = 500
 
 // Listen for skip-waiting message from the app
 self.addEventListener('message', (event) => {
@@ -27,13 +30,13 @@ self.addEventListener('install', (event) => {
   self.skipWaiting()
 })
 
-// Activate: clean up ALL old caches
+// Activate: clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys
-          .filter((key) => key !== CACHE_NAME && key !== API_CACHE_NAME)
+          .filter((key) => key !== CACHE_NAME && key !== API_CACHE_NAME && key !== IMG_CACHE_NAME)
           .map((key) => caches.delete(key))
       )
     })
@@ -41,24 +44,79 @@ self.addEventListener('activate', (event) => {
   self.clients.claim()
 })
 
-// Fetch: network-first for everything, cache fallback only for offline
+// Check if a URL is a book cover image
+function isBookCoverUrl(url) {
+  const coverHosts = [
+    'books.google.com',
+    'books.googleusercontent.com',
+    'covers.openlibrary.org',
+    'i.gr-assets.com',
+    'm.media-amazon.com',
+    'images-na.ssl-images-amazon.com',
+    'www.gutenberg.org',
+  ]
+  return coverHosts.some(host => url.hostname === host)
+}
+
+// Fetch handler
 self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
 
-  // Skip non-GET and cross-origin
   if (request.method !== 'GET') return
+
+  // === Cross-origin book cover images: cache-first with network fallback ===
+  if (url.origin !== self.location.origin && isBookCoverUrl(url)) {
+    event.respondWith(
+      caches.open(IMG_CACHE_NAME).then((cache) => {
+        return cache.match(request).then((cached) => {
+          if (cached) return cached
+          return fetch(request).then((response) => {
+            if (response.ok) {
+              cache.put(request, response.clone())
+            }
+            return response
+          }).catch(() => {
+            // Offline: return placeholder
+            return new Response('', { status: 404 })
+          })
+        })
+      })
+    )
+    return
+  }
+
+  // Skip other cross-origin requests
   if (url.origin !== self.location.origin) return
 
-  // API routes: network-first with cache fallback for offline browsing
-  if (url.pathname.startsWith('/api/books')) {
+  // === Next.js image optimization proxy: cache-first ===
+  if (url.pathname.startsWith('/_next/image')) {
+    event.respondWith(
+      caches.open(IMG_CACHE_NAME).then((cache) => {
+        return cache.match(request).then((cached) => {
+          if (cached) return cached
+          return fetch(request).then((response) => {
+            if (response.ok) {
+              cache.put(request, response.clone())
+            }
+            return response
+          }).catch(() => {
+            return new Response('', { status: 404 })
+          })
+        })
+      })
+    )
+    return
+  }
+
+  // === API routes: network-first with cache fallback ===
+  if (url.pathname.startsWith('/api/books') || url.pathname.startsWith('/api/openlibrary')) {
     event.respondWith(
       fetch(request)
         .then((response) => {
           if (response.ok) {
             const clone = response.clone()
             caches.open(API_CACHE_NAME).then((cache) => {
-              // Store with timestamp header for expiry
               const headers = new Headers(clone.headers)
               headers.set('sw-cached-at', Date.now().toString())
               const cachedResponse = new Response(clone.body, {
@@ -72,19 +130,12 @@ self.addEventListener('fetch', (event) => {
           return response
         })
         .catch(() => {
-          // Offline: return cached API response if fresh enough
           return caches.open(API_CACHE_NAME).then((cache) => {
             return cache.match(request).then((cached) => {
               if (!cached) return new Response(JSON.stringify({ items: [] }), {
                 status: 503,
                 headers: { 'Content-Type': 'application/json' },
               })
-              // Check staleness
-              const cachedAt = parseInt(cached.headers.get('sw-cached-at') || '0')
-              if (Date.now() - cachedAt > API_CACHE_MAX_AGE * 12) {
-                // Very stale (1 hour) — still return it but mark as stale
-                return cached
-              }
               return cached
             })
           })
@@ -96,7 +147,7 @@ self.addEventListener('fetch', (event) => {
   // Skip other API routes
   if (url.pathname.startsWith('/api/')) return
 
-  // Images, fonts, and external covers: stale-while-revalidate
+  // === Local images and fonts: stale-while-revalidate ===
   if (
     url.pathname.startsWith('/logo/') ||
     url.pathname.startsWith('/doodles/') ||
@@ -117,7 +168,7 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Everything else (pages, JS, CSS): network-first
+  // === Everything else (pages, JS, CSS): network-first ===
   event.respondWith(
     fetch(request)
       .then((response) => {

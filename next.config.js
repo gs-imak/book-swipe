@@ -2,6 +2,7 @@
 const nextConfig = {
   poweredByHeader: false,
   images: {
+    minimumCacheTTL: 2592000, // 30 days — book covers don't change
     remotePatterns: [
       {
         protocol: 'https',
