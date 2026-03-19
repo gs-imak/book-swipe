@@ -603,6 +603,30 @@ function clearBookCacheForMigration(): void {
   localStorage.removeItem("bookswipe_cache_metadata")
 }
 
+// ── Hidden / Archived books ──────────────────────────────────────────────────
+
+const HIDDEN_BOOKS_KEY = "bookswipe_hidden_books"
+
+/** Get list of hidden book IDs */
+export function getHiddenBookIds(): string[] {
+  return safeGetJSON<string[]>(HIDDEN_BOOKS_KEY, [])
+}
+
+/** Hide a book from library view (doesn't delete it) */
+export function hideBook(bookId: string): void {
+  const hidden = getHiddenBookIds()
+  if (!hidden.includes(bookId)) {
+    hidden.push(bookId)
+    safeSetJSON(HIDDEN_BOOKS_KEY, hidden)
+  }
+}
+
+/** Unhide a book */
+export function unhideBook(bookId: string): void {
+  const hidden = getHiddenBookIds().filter(id => id !== bookId)
+  safeSetJSON(HIDDEN_BOOKS_KEY, hidden)
+}
+
 // ── Gutenberg reading positions ──────────────────────────────────────────────
 
 const READING_POSITION_KEY = "bookswipe_reading_positions"

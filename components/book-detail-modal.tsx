@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Star, Heart, MessageSquare, FileText, Calendar, Clock, BookOpen, Library, Share2, Trash2, Loader2 } from "lucide-react"
+import { X, Star, Heart, MessageSquare, FileText, Calendar, Clock, BookOpen, Library, Share2, Trash2, Loader2, EyeOff } from "lucide-react"
 import { Book } from "@/lib/book-data"
 import { BookReview, getBookReview, getShelvesForBook, getShelves, type Shelf } from "@/lib/storage"
 import { QuickReview } from "./quick-review"
@@ -23,9 +23,10 @@ interface BookDetailModalProps {
   onClose: () => void
   onStartReading?: (book: Book) => void
   onRemoveBook?: (book: Book) => void
+  onHideBook?: (book: Book) => void
 }
 
-export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemoveBook }: BookDetailModalProps) {
+export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemoveBook, onHideBook }: BookDetailModalProps) {
   const [activeTab, setActiveTab] = useState<"overview" | "review" | "notes">("overview")
   const [existingReview, setExistingReview] = useState<BookReview | null>(null)
   const [isEditingReview, setIsEditingReview] = useState(false)
@@ -253,6 +254,19 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                     <Share2 className="w-3 h-3" />
                     Share
                   </button>
+
+                  {onHideBook && (
+                    <button
+                      onClick={() => {
+                        onHideBook(book)
+                        onClose()
+                      }}
+                      className="h-8 px-3 bg-stone-50 border border-stone-200 hover:bg-amber-50 hover:border-amber-200 text-stone-400 hover:text-amber-600 text-xs font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1"
+                    >
+                      <EyeOff className="w-3 h-3" />
+                      Hide
+                    </button>
+                  )}
 
                   {onRemoveBook && (
                     <button

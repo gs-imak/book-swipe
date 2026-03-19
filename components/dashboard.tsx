@@ -24,7 +24,7 @@ import { ReadingPath } from "./reading-path"
 import { ReadingGoalSetter } from "./reading-goal-setter"
 import { QuotesGallery } from "./quotes-gallery"
 import { ReadingWrapped } from "./reading-wrapped"
-import { getShelves, getBooksForShelf, shouldShowBackupReminder, dismissBackupReminder, type Shelf } from "@/lib/storage"
+import { getShelves, getBooksForShelf, shouldShowBackupReminder, dismissBackupReminder, getHiddenBookIds, hideBook, unhideBook, type Shelf } from "@/lib/storage"
 import { estimateReadingTime, getReadingSpeed, setReadingSpeed, getAllSpeeds, type ReadingSpeed } from "@/lib/reading-time"
 
 interface DashboardProps {
@@ -50,6 +50,9 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   const [showFilters, setShowFilters] = useState(false)
   const [showBackupBanner, setShowBackupBanner] = useState(false)
   const [showWrapped, setShowWrapped] = useState(false)
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set())
+  const [showHidden, setShowHidden] = useState(false)
+  const [authorFilter, setAuthorFilter] = useState<string | null>(null)
 
   const { triggerActivity, showAchievementsPanel } = useGamification()
   const { showToast } = useToast()
@@ -60,6 +63,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
     setShelves(getShelves())
     setReadingSpd(getReadingSpeed())
     setShowBackupBanner(shouldShowBackupReminder())
+    setHiddenIds(new Set(getHiddenBookIds()))
   }, [])
 
   useEffect(() => {
@@ -126,14 +130,17 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
 
   const shelfBookIds = useMemo(() => shelfFilter ? new Set(getBooksForShelf(shelfFilter)) : null, [shelfFilter])
   const filteredBooks = useMemo(() => likedBooks.filter(book => {
+    if (!showHidden && hiddenIds.has(book.id)) return false
+    if (showHidden && !hiddenIds.has(book.id)) return false
     if (shelfBookIds && !shelfBookIds.has(book.id)) return false
     if (formatFilter === "ebook" && !book.formats?.ebook) return false
     if (formatFilter === "audio" && !book.formats?.audiobook) return false
+    if (authorFilter && book.author !== authorFilter) return false
     if (filter === "all") return true
     return book.genre.some(genre =>
       genre.toLowerCase().includes(filter.toLowerCase())
     )
-  }), [likedBooks, shelfBookIds, formatFilter, filter])
+  }), [likedBooks, shelfBookIds, formatFilter, filter, hiddenIds, showHidden, authorFilter])
 
   const sortedBooks = [...filteredBooks].sort((a, b) => {
     switch (sortBy) {
@@ -168,7 +175,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
     { value: "pages", label: "Shortest" },
   ]
 
-  const hasActiveFilters = shelfFilter !== null || filter !== "all" || formatFilter !== "all"
+  const hasActiveFilters = shelfFilter !== null || filter !== "all" || formatFilter !== "all" || authorFilter !== null
 
   // Time-based greeting
   const getGreeting = () => {
@@ -403,6 +410,15 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                       ? `${sortedBooks.length} / ${likedBooks.length}`
                       : likedBooks.length}
                   </span>
+                  {authorFilter && (
+                    <button
+                      onClick={() => setAuthorFilter(null)}
+                      className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors"
+                    >
+                      by {authorFilter}
+                      <XIcon className="w-3 h-3" />
+                    </button>
+                  )}
                 </div>
                 <button
                   onClick={() => setShowFilters(!showFilters)}
@@ -528,6 +544,19 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                       <span className="w-px h-4 bg-stone-200" />
 
                       <button
+                        onClick={() => setShowHidden(!showHidden)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${
+                          showHidden
+                            ? "bg-stone-900 text-white"
+                            : "bg-stone-100 text-stone-500 hover:bg-stone-200"
+                        }`}
+                      >
+                        {showHidden ? `Hidden (${hiddenIds.size})` : `Hidden${hiddenIds.size > 0 ? ` (${hiddenIds.size})` : ''}`}
+                      </button>
+
+                      <span className="w-px h-4 bg-stone-200" />
+
+                      <button
                         onClick={handleClearAll}
                         className="px-3 py-1.5 rounded-full text-xs font-medium text-red-400 hover:bg-red-50 hover:text-red-600 transition-all flex items-center gap-1"
                       >
@@ -544,7 +573,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                           setReadingSpd(speed)
                           setReadingSpeed(speed)
                         }}
-                        className="text-[11px] text-stone-500 bg-transparent border-none cursor-pointer focus:outline-none hover:text-stone-700"
+                        className="text-[11px] text-stone-500 bg-transparent border-none cursor-pointer hover:text-stone-700"
                       >
                         {getAllSpeeds().map(s => (
                           <option key={s.value} value={s.value}>{s.label}</option>
@@ -571,7 +600,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                   </div>
                   <p className="text-sm text-stone-500">No books match these filters</p>
                   <button
-                    onClick={() => { setFilter("all"); setShelfFilter(null); setFormatFilter("all") }}
+                    onClick={() => { setFilter("all"); setShelfFilter(null); setFormatFilter("all"); setAuthorFilter(null); setShowHidden(false) }}
                     className="mt-2 text-xs text-amber-600 hover:text-amber-700 font-medium"
                   >
                     Clear filters
@@ -634,7 +663,15 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                         <h3 className="font-semibold text-sm text-stone-900 line-clamp-2 leading-tight group-hover:text-amber-800 transition-colors">
                           {book.title}
                         </h3>
-                        <p className="text-xs text-stone-500 truncate">{book.author}</p>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setAuthorFilter(authorFilter === book.author ? null : book.author)
+                          }}
+                          className="text-xs text-stone-500 truncate hover:text-amber-700 hover:underline transition-colors text-left w-full"
+                        >
+                          {book.author}
+                        </button>
 
                         {/* User rating */}
                         {review && (
@@ -720,9 +757,21 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
         onClose={handleCloseModal}
         onStartReading={handleStartReading}
         onRemoveBook={(book) => {
-          const updated = removeLikedBook(book.id)
-          setLikedBooks(updated)
-          showToast(`"${book.title}" removed from library`, "info")
+          if (showHidden) {
+            // In hidden view, "remove" means unhide
+            unhideBook(book.id)
+            setHiddenIds(new Set(getHiddenBookIds()))
+            showToast(`"${book.title}" restored to library`)
+          } else {
+            const updated = removeLikedBook(book.id)
+            setLikedBooks(updated)
+            showToast(`"${book.title}" removed from library`, "info")
+          }
+        }}
+        onHideBook={showHidden ? undefined : (book) => {
+          hideBook(book.id)
+          setHiddenIds(new Set(getHiddenBookIds()))
+          showToast(`"${book.title}" hidden from library`, "info")
         }}
       />
 
