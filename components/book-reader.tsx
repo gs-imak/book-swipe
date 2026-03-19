@@ -437,7 +437,21 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const blocks = useMemo<TextBlock[]>(() => {
     if (!text) return []
     // Normalize line endings (safety net for cached text with \r\n)
-    const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n")
+    let normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n")
+
+    // Strip Gutenberg boilerplate from the start and end
+    // Remove everything before "*** START OF" marker if present
+    const startMarker = normalized.indexOf("*** START OF")
+    if (startMarker !== -1) {
+      const afterMarker = normalized.indexOf("\n", startMarker)
+      if (afterMarker !== -1) normalized = normalized.slice(afterMarker + 1)
+    }
+    // Remove everything after "*** END OF" marker if present
+    const endMarker = normalized.indexOf("*** END OF")
+    if (endMarker !== -1) normalized = normalized.slice(0, endMarker)
+    // Remove "Produced by" credits (usually 1-3 lines at the very start)
+    normalized = normalized.replace(/^\s*(?:Produced by|Transcribed by|E-text prepared by)[\s\S]*?\n\n/i, "\n\n")
+
     const raw = normalized.split(/\n{2,}/).filter((p) => p.trim().length > 0)
     const result: TextBlock[] = []
 
@@ -454,6 +468,10 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
       // Skip empty/whitespace blocks
       if (trimmed.length === 0) continue
+
+      // Skip common Gutenberg boilerplate lines that survived the header strip
+      if (/^(?:This eBook is for the use|Most recently updated|Release Date|Posting Date|Last Updated|Character set|Language:|Original publication|Source:|Note:|Transcriber|Editor|Translator|Illustrated by|With Illustrations)/i.test(trimmed) && trimmed.length < 120) continue
+      if (/gutenberg|public domain|copyright|license|donation|www\.|http/i.test(trimmed) && !firstHeadingSeen) continue
 
       // Scene break separators (*** or --- or ___)
       if (separatorRe.test(trimmed)) {
@@ -539,10 +557,19 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       }
 
       // --- Pre-heading title page lines ---
-      // Short single lines before any chapter heading = title/author info → center them
-      if (!firstHeadingSeen && nonEmptyLines.length === 1 && trimmed.length < 60) {
-        result.push({ type: "centered", lines: [trimmed] })
-        continue
+      // Everything before the first chapter heading is front matter (title, author, etc.)
+      // Render as centered blocks for a clean, standardised title page
+      if (!firstHeadingSeen) {
+        const cleanLines = nonEmptyLines.map(l => l.trim()).filter(l => l.length > 0)
+        if (cleanLines.length > 0 && cleanLines.every(l => l.length < 80)) {
+          result.push({ type: "centered", lines: cleanLines })
+          continue
+        }
+        // Longer front matter paragraphs (preface text, etc.) — render as regular text
+        if (nonEmptyLines.length === 1 || trimmed.length < 200) {
+          result.push({ type: "centered", lines: [trimmed.replace(/\n/g, " ").replace(/\s{2,}/g, " ")] })
+          continue
+        }
       }
 
       // --- Indented blocks (block quotes, letters, dedications) ---
