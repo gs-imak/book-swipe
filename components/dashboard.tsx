@@ -71,11 +71,14 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   }, [likedBooks])
 
   // Pre-compute review and shelf lookups once instead of per-book in render
+  // Re-read reviews/shelves when books change or after modal/shelf edits
+  const [reviewVersion, setReviewVersion] = useState(0)
   const reviewMap = useMemo(() => {
     const map: Record<string, ReturnType<typeof getBookReviews>[number]> = {}
     getBookReviews().forEach(r => { map[r.bookId] = r })
     return map
-  }, [likedBooks, isBookModalOpen])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [likedBooks, reviewVersion])
 
   const shelfMap = useMemo(() => {
     const map: Record<string, string[]> = {}
@@ -84,7 +87,8 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
       map[a.bookId].push(a.shelfId)
     })
     return map
-  }, [likedBooks, isBookModalOpen, showShelfManager])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [likedBooks, reviewVersion])
 
   const handleClearAll = () => {
     if (confirm("Are you sure you want to clear all your liked books? This action cannot be undone.")) {
@@ -123,6 +127,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   const handleCloseModal = () => {
     setIsBookModalOpen(false)
     setSelectedBook(null)
+    setReviewVersion(v => v + 1) // refresh reviews/shelves after modal edits
   }
 
   // Memoize Set of saved book IDs to avoid creating new references every render
@@ -172,7 +177,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   const sortOptions: { value: "recent" | "rating" | "pages"; label: string }[] = [
     { value: "recent", label: "Recent" },
     { value: "rating", label: "Top Rated" },
-    { value: "pages", label: "Shortest" },
+    { value: "pages", label: "Pages ↑" },
   ]
 
   const hasActiveFilters = shelfFilter !== null || filter !== "all" || formatFilter !== "all" || authorFilter !== null
