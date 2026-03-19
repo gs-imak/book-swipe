@@ -1279,18 +1279,19 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
               paddingTop: "env(safe-area-inset-top)",
             }}
           >
-            <div className="grid grid-cols-[auto_1fr_auto] items-center px-4 h-14">
+            <div className="relative flex items-center justify-between px-4 h-14">
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={onClose}
-                className="tap-target flex items-center justify-center rounded-lg p-2.5 -ml-2 transition-colors justify-self-start"
+                className="tap-target flex items-center justify-center rounded-lg p-2.5 -ml-2 transition-colors"
                 style={{ color: currentTheme.text }}
                 aria-label="Close reader"
               >
                 <ArrowLeft className="w-5 h-5" />
               </motion.button>
 
-              <div className="min-w-0 text-center justify-self-center">
+              {/* Absolutely centered title — not affected by left/right button count */}
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
                 <p className="text-sm font-medium truncate opacity-70">{bookTitle}</p>
                 <div className="flex items-center justify-center gap-2 mt-0.5">
                   <div className="w-[140px] h-1 rounded-full overflow-hidden" style={{ backgroundColor: currentTheme.progressTrack }}>
@@ -1306,7 +1307,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 justify-self-end">
+              <div className="flex items-center gap-1">
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={() => { if (focusMode) stopAmbientSound(); toggleFocusMode(); setFocusMinimized(false) }}
