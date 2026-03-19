@@ -2223,15 +2223,24 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 <AnimatePresence>
                   {showKeyboardHint && isDesktop && (
                     <motion.div
-                      initial={{ opacity: 0, y: 4 }}
+                      initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      className="px-6 pt-2 pb-1"
+                      exit={{ opacity: 0, y: 8 }}
+                      className="px-6 py-3"
                       onClick={() => { setShowKeyboardHint(false); localStorage.setItem("bookswipe_keyboard_hint_seen", "1") }}
                     >
-                      <p className="text-xs text-center opacity-40">
-                        Use <kbd className="px-1.5 py-0.5 rounded bg-stone-200 dark:bg-stone-700 text-stone-600 dark:text-stone-300 font-mono text-[10px]">←</kbd> <kbd className="px-1.5 py-0.5 rounded bg-stone-200 dark:bg-stone-700 text-stone-600 dark:text-stone-300 font-mono text-[10px]">→</kbd> arrow keys to turn pages
-                      </p>
+                      <div className="flex items-center justify-center gap-3">
+                        <kbd className="px-3 py-1.5 rounded-lg text-sm font-mono font-medium shadow-sm"
+                          style={{ backgroundColor: `${currentTheme.text}10`, color: currentTheme.text, border: `1px solid ${currentTheme.border}` }}>
+                          ←
+                        </kbd>
+                        <span className="text-sm opacity-60">and</span>
+                        <kbd className="px-3 py-1.5 rounded-lg text-sm font-mono font-medium shadow-sm"
+                          style={{ backgroundColor: `${currentTheme.text}10`, color: currentTheme.text, border: `1px solid ${currentTheme.border}` }}>
+                          →
+                        </kbd>
+                        <span className="text-sm opacity-60">to turn pages</span>
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
