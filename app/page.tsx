@@ -25,8 +25,11 @@ const FreeBooksBrowser = dynamic(() => import("@/components/free-books-browser")
 })
 
 const GUIDE_SEEN_KEY = "bookswipe_guide_seen"
+const LAST_VIEW_KEY = "bookswipe_last_view"
 
 type AppState = "login" | "dashboard" | "questionnaire" | "swipe" | "read"
+
+const RESTORABLE_VIEWS: AppState[] = ["dashboard", "swipe", "read"]
 
 interface HomeProps {
   onShowAchievements: (show: boolean) => void
@@ -43,6 +46,13 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   const [ready, setReady] = useState(false)
   const { showToast } = useToast()
 
+  // Persist the current view so reload returns to the same tab
+  useEffect(() => {
+    if (isLoggedIn && RESTORABLE_VIEWS.includes(currentView)) {
+      try { localStorage.setItem(LAST_VIEW_KEY, currentView) } catch { /* ignore */ }
+    }
+  }, [currentView, isLoggedIn])
+
   // Listen for storage errors (quota exceeded, rate limits) and show toast
   useEffect(() => {
     const handler = (e: Event) => {
@@ -57,9 +67,24 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   useEffect(() => {
     if (isOnboarded()) {
       setIsLoggedIn(true)
-      setCurrentView("dashboard")
       const saved = getSavedPreferences()
       if (saved) setUserPreferences(saved)
+      // Restore last active view
+      try {
+        const lastView = localStorage.getItem(LAST_VIEW_KEY) as AppState | null
+        if (lastView && RESTORABLE_VIEWS.includes(lastView)) {
+          // Only restore swipe if user has preferences set
+          if (lastView === "swipe" && !saved) {
+            setCurrentView("dashboard")
+          } else {
+            setCurrentView(lastView)
+          }
+        } else {
+          setCurrentView("dashboard")
+        }
+      } catch {
+        setCurrentView("dashboard")
+      }
       // Show guide if not yet seen
       try {
         if (!localStorage.getItem(GUIDE_SEEN_KEY)) setShowGuide(true)
