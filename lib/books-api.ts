@@ -63,12 +63,23 @@ export interface GoogleBook {
 }
 
 // Fetch a high-quality cover from the bookcover API (Goodreads source)
+// Track rate limit state to avoid flooding the API
+let _coverRateLimitedUntil = 0
+
 async function fetchGoodreadsCover(title: string, author: string): Promise<string | null> {
+  // Skip if we've been rate limited recently
+  if (Date.now() < _coverRateLimitedUntil) return null
+
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), COVER_FETCH_TIMEOUT_MS)
   try {
     const url = `https://bookcover.longitood.com/bookcover?book_title=${encodeURIComponent(title)}&author_name=${encodeURIComponent(author)}`
     const res = await fetch(url, { signal: controller.signal })
+    if (res.status === 429) {
+      // Back off for 2 minutes on rate limit
+      _coverRateLimitedUntil = Date.now() + 120_000
+      return null
+    }
     if (!res.ok) return null
     const data = await res.json()
     return data.url || null
@@ -82,12 +93,16 @@ async function fetchGoodreadsCover(title: string, author: string): Promise<strin
 // Batch-upgrade book covers with Goodreads high-quality images
 async function upgradeCoversBatch(books: Book[]): Promise<Book[]> {
   if (books.length === 0) return books
+  // Skip entirely if rate limited
+  if (Date.now() < _coverRateLimitedUntil) return books
 
-  // Fetch Goodreads covers in parallel
-  const batchSize = COVER_BATCH_CONCURRENCY
   const upgraded = [...books]
+  // Process 2 at a time with 500ms delay between batches to avoid rate limits
+  const batchSize = 2
 
   for (let i = 0; i < upgraded.length; i += batchSize) {
+    if (Date.now() < _coverRateLimitedUntil) break // stop if rate limited mid-batch
+
     const batch = upgraded.slice(i, i + batchSize)
     const results = await Promise.allSettled(
       batch.map(book => fetchGoodreadsCover(book.title, book.author))
@@ -96,11 +111,16 @@ async function upgradeCoversBatch(books: Book[]): Promise<Book[]> {
       if (result.status === "fulfilled" && result.value) {
         upgraded[i + j] = {
           ...upgraded[i + j],
-          coverFallback: upgraded[i + j].cover, // keep Google cover as fallback
+          coverFallback: upgraded[i + j].cover,
           cover: result.value,
         }
       }
     })
+
+    // Delay between batches to respect rate limits
+    if (i + batchSize < upgraded.length) {
+      await new Promise(r => setTimeout(r, 500))
+    }
   }
 
   return upgraded
