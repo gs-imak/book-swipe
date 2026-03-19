@@ -9,8 +9,7 @@ export function getTheme(): Theme {
     const stored = localStorage.getItem(THEME_KEY)
     if (stored === "dark") return "dark"
     if (stored === "light") return "light"
-    // Respect system preference as default
-    if (window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark"
+    // Default to light — user must explicitly choose dark mode
   } catch {
     // ignore
   }

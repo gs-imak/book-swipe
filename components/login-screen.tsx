@@ -260,62 +260,31 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               icon: BookOpen,
               title: "Swipe to discover",
               description: "Browse books like you scroll social media. Swipe right to save, left to skip. It takes seconds.",
-              color: "amber" as const,
             },
             {
               icon: Sparkles,
               title: "Smart recommendations",
               description: "Our algorithm learns your taste with every swipe and surfaces books you will actually love.",
-              color: "rose" as const,
             },
             {
               icon: BookMarked,
               title: "Build your shelf",
               description: "Organize saved books into custom lists. Track what you have read and what is next.",
-              color: "teal" as const,
             },
             {
               icon: Library,
               title: "70,000+ free classics",
               description: "Access a vast library of public domain books from Open Library, all completely free to read.",
-              color: "indigo" as const,
             },
           ].map((feature, i) => {
-            const colorMap = {
-              amber: {
-                bg: "bg-amber-50 dark:bg-amber-950/40",
-                icon: "text-amber-700 dark:text-amber-400",
-                border: "border-amber-100 dark:border-amber-900/50",
-                ring: "bg-amber-100 dark:bg-amber-900/40",
-              },
-              rose: {
-                bg: "bg-rose-50 dark:bg-rose-950/40",
-                icon: "text-rose-600 dark:text-rose-400",
-                border: "border-rose-100 dark:border-rose-900/50",
-                ring: "bg-rose-100 dark:bg-rose-900/40",
-              },
-              teal: {
-                bg: "bg-teal-50 dark:bg-teal-950/40",
-                icon: "text-teal-700 dark:text-teal-400",
-                border: "border-teal-100 dark:border-teal-900/50",
-                ring: "bg-teal-100 dark:bg-teal-900/40",
-              },
-              indigo: {
-                bg: "bg-indigo-50 dark:bg-indigo-950/40",
-                icon: "text-indigo-700 dark:text-indigo-400",
-                border: "border-indigo-100 dark:border-indigo-900/50",
-                ring: "bg-indigo-100 dark:bg-indigo-900/40",
-              },
-            }
-            const c = colorMap[feature.color]
             return (
               <motion.div
                 key={feature.title}
                 variants={fadeUp}
-                className={`group flex items-start gap-4 sm:gap-5 p-5 sm:p-6 rounded-2xl border ${c.border} ${c.bg} transition-all duration-300 hover:scale-[1.02] hover:shadow-lg`}
+                className="group flex items-start gap-4 sm:gap-5 p-5 sm:p-6 rounded-2xl border border-stone-200/60 dark:border-stone-700/60 bg-white dark:bg-stone-900 transition-all duration-300 hover:shadow-md"
               >
-                <div className={`shrink-0 w-11 h-11 rounded-xl ${c.ring} flex items-center justify-center`}>
-                  <feature.icon className={`w-5 h-5 ${c.icon}`} />
+                <div className="shrink-0 w-11 h-11 rounded-xl bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
+                  <feature.icon className="w-5 h-5 text-amber-700 dark:text-amber-400" />
                 </div>
                 <div>
                   <h3 className="text-base font-semibold text-stone-800 dark:text-stone-200 mb-1">
@@ -399,11 +368,7 @@ function FloatingBooks() {
 /* ---------- Phone device mockup ---------- */
 function PhoneMockup() {
   return (
-    <motion.div
-      className="relative w-[260px] sm:w-[300px]"
-      animate={{ y: [0, -8, 0] }}
-      transition={{ duration: 4, ease: "easeInOut", repeat: Infinity }}
-    >
+    <div className="relative w-[260px] sm:w-[300px]">
       {/* Ambient glow behind phone */}
       <div
         className="absolute -inset-8 rounded-full blur-3xl opacity-20 dark:opacity-15"
@@ -536,6 +501,6 @@ function PhoneMockup() {
 
       {/* Subtle shadow beneath phone */}
       <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-[80%] h-8 bg-stone-900/15 dark:bg-black/30 rounded-full blur-xl" />
-    </motion.div>
+    </div>
   )
 }
