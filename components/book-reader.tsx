@@ -978,11 +978,11 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
               paddingTop: "env(safe-area-inset-top)",
             }}
           >
-            <div className="flex items-center justify-between px-4 h-12">
+            <div className="flex items-center justify-between px-4 h-14">
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={onClose}
-                className="tap-target flex items-center justify-center rounded-lg p-2 -ml-2 transition-colors"
+                className="tap-target flex items-center justify-center rounded-lg p-2.5 -ml-2 transition-colors"
                 style={{ color: currentTheme.text }}
                 aria-label="Close reader"
               >
@@ -990,9 +990,9 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
               </motion.button>
 
               <div className="flex-1 mx-4 min-w-0 text-center">
-                <p className="text-xs font-medium truncate opacity-70">{bookTitle}</p>
-                <div className="flex items-center justify-center gap-2 mt-0.5">
-                  <div className="max-w-[160px] w-full h-[3px] rounded-full overflow-hidden" style={{ backgroundColor: currentTheme.progressTrack }}>
+                <p className="text-sm font-medium truncate opacity-70">{bookTitle}</p>
+                <div className="flex items-center justify-center gap-2.5 mt-1">
+                  <div className="max-w-[180px] w-full h-1 rounded-full overflow-hidden" style={{ backgroundColor: currentTheme.progressTrack }}>
                     <motion.div
                       className="h-full rounded-full"
                       style={{ backgroundColor: currentTheme.progressFill }}
@@ -1001,11 +1001,11 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                       transition={{ duration: 0.3, ease: "easeOut" }}
                     />
                   </div>
-                  <span className="text-[10px] tabular-nums opacity-50">{progress}%</span>
+                  <span className="text-xs tabular-nums opacity-50">{progress}%</span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-0.5">
+              <div className="flex items-center gap-1">
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={handleToggleBookmark}
@@ -1044,7 +1044,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                               try { localStorage.setItem(FONT_KEY, opt.id) } catch { /* ignore */ }
                               setShowFontMenu(false)
                             }}
-                            className="w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between gap-4 min-w-[160px]"
+                            className="w-full text-left px-5 py-3 text-sm transition-colors flex items-center justify-between gap-4 min-w-[180px]"
                             style={{
                               fontFamily: opt.family,
                               color: readerFont === opt.id ? currentTheme.progressFill : currentTheme.text,
@@ -1160,35 +1160,35 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                         }}
                       >
                         {/* Primary actions row */}
-                        <div className="flex items-center gap-0.5 px-1 py-0.5">
-                          <button onClick={handleHighlight} className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium transition-colors hover:opacity-80" style={{ color: primaryColor }}>
-                            <Highlighter className="w-3.5 h-3.5" /> Highlight
+                        <div className="flex items-center gap-1 px-1.5 py-1">
+                          <button onClick={handleHighlight} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:opacity-80" style={{ color: primaryColor }}>
+                            <Highlighter className="w-4 h-4" /> Highlight
                           </button>
                           {divider}
-                          <button onClick={handleAddNoteToSelection} className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium transition-colors hover:opacity-80" style={{ color: textColor }}>
-                            <StickyNote className="w-3.5 h-3.5" /> Note
+                          <button onClick={handleAddNoteToSelection} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:opacity-80" style={{ color: textColor }}>
+                            <StickyNote className="w-4 h-4" /> Note
                           </button>
                           {divider}
-                          <button onClick={handleSaveQuote} className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium transition-colors hover:opacity-80" style={{ color: textColor }}>
-                            <Quote className="w-3.5 h-3.5" /> Quote
+                          <button onClick={handleSaveQuote} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:opacity-80" style={{ color: textColor }}>
+                            <Quote className="w-4 h-4" /> Quote
                           </button>
                           {divider}
-                          <button onClick={handleCopySelection} className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium transition-colors hover:opacity-80" style={{ color: mutedColor }}>
-                            <Copy className="w-3.5 h-3.5" />
+                          <button onClick={handleCopySelection} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:opacity-80" style={{ color: mutedColor }}>
+                            <Copy className="w-4 h-4" />
                           </button>
                         </div>
                         {/* Secondary actions row */}
-                        <div className="flex items-center gap-0.5 px-1 py-0.5" style={{ borderTop: `1px solid ${currentTheme.border}` }}>
-                          <button onClick={handleDefine} className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium transition-colors hover:opacity-80" style={{ color: mutedColor }}>
-                            <BookText className="w-3.5 h-3.5" /> Define
+                        <div className="flex items-center gap-1 px-1.5 py-1" style={{ borderTop: `1px solid ${currentTheme.border}` }}>
+                          <button onClick={handleDefine} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:opacity-80" style={{ color: mutedColor }}>
+                            <BookText className="w-4 h-4" /> Define
                           </button>
                           {divider}
-                          <button onClick={handleWebSearch} className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium transition-colors hover:opacity-80" style={{ color: mutedColor }}>
-                            <Globe className="w-3.5 h-3.5" /> Search
+                          <button onClick={handleWebSearch} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:opacity-80" style={{ color: mutedColor }}>
+                            <Globe className="w-4 h-4" /> Search
                           </button>
                           {divider}
-                          <button onClick={handleShareQuote} className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium transition-colors hover:opacity-80" style={{ color: mutedColor }}>
-                            <Share2 className="w-3.5 h-3.5" /> Share
+                          <button onClick={handleShareQuote} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors hover:opacity-80" style={{ color: mutedColor }}>
+                            <Share2 className="w-4 h-4" /> Share
                           </button>
                         </div>
                       </div>
@@ -1764,36 +1764,36 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
                 {/* Current chapter indicator */}
                 {currentChapter && (
-                  <div className="px-4 pt-1.5 pb-0.5">
-                    <p className="text-[10px] truncate opacity-40 text-center">
+                  <div className="px-4 pt-2 pb-1">
+                    <p className="text-xs truncate opacity-50 text-center font-medium">
                       {currentChapter.title}{currentChapter.subtitle ? ` — ${currentChapter.subtitle}` : ""}
                     </p>
                   </div>
                 )}
 
                 {/* Main controls bar */}
-                <div className="flex items-center justify-between px-3 h-11">
+                <div className="flex items-center justify-between px-4 h-14">
                   {/* Left: prev chapter + page info + TOC */}
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5">
                     {chapters.length > 0 && (
                       <motion.button
                         whileTap={{ scale: 0.9 }}
                         onClick={goToPrevChapter}
                         disabled={currentChapterIndex <= 0}
-                        className="w-8 h-8 rounded-full flex items-center justify-center disabled:opacity-20"
+                        className="w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-20"
                         aria-label="Previous chapter"
                       >
-                        <ChevronLeft className="w-4 h-4" />
+                        <ChevronLeft className="w-5 h-5" />
                       </motion.button>
                     )}
                     <button
                       onClick={() => setShowNavPanel(true)}
-                      className="flex items-center gap-1 px-2 py-1 rounded-lg transition-opacity hover:opacity-80"
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg transition-opacity hover:opacity-80"
                       aria-label="Open table of contents"
                     >
-                      <List className="w-3.5 h-3.5 opacity-50" />
-                      <span className="text-[11px] tabular-nums font-medium opacity-60">
-                        {paginatedPage + 1}/{columnTotal}
+                      <List className="w-4 h-4 opacity-60" />
+                      <span className="text-sm tabular-nums font-medium opacity-70">
+                        {paginatedPage + 1} / {columnTotal}
                       </span>
                     </button>
                     {chapters.length > 0 && (
@@ -1801,39 +1801,39 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                         whileTap={{ scale: 0.9 }}
                         onClick={goToNextChapter}
                         disabled={currentChapterIndex >= chapters.length - 1}
-                        className="w-8 h-8 rounded-full flex items-center justify-center disabled:opacity-20"
+                        className="w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-20"
                         aria-label="Next chapter"
                       >
-                        <ChevronRight className="w-4 h-4" />
+                        <ChevronRight className="w-5 h-5" />
                       </motion.button>
                     )}
                   </div>
 
                   {/* Center: font controls */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <motion.button
                       whileTap={{ scale: 0.9 }}
                       onClick={() => setFontSize((s) => Math.max(14, s - 1))}
                       disabled={fontSize <= 14}
-                      className="w-8 h-8 rounded-full flex items-center justify-center disabled:opacity-20"
+                      className="w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-20"
                       aria-label="Decrease font size"
                     >
-                      <Minus className="w-3.5 h-3.5" />
+                      <Minus className="w-4 h-4" />
                     </motion.button>
-                    <span className="text-[11px] tabular-nums opacity-40 w-5 text-center">{fontSize}</span>
+                    <span className="text-sm tabular-nums opacity-60 w-6 text-center">{fontSize}</span>
                     <motion.button
                       whileTap={{ scale: 0.9 }}
                       onClick={() => setFontSize((s) => Math.min(24, s + 1))}
                       disabled={fontSize >= 24}
-                      className="w-8 h-8 rounded-full flex items-center justify-center disabled:opacity-20"
+                      className="w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-20"
                       aria-label="Increase font size"
                     >
-                      <Plus className="w-3.5 h-3.5" />
+                      <Plus className="w-4 h-4" />
                     </motion.button>
                   </div>
 
                   {/* Right: time remaining */}
-                  <span className="text-[10px] tabular-nums opacity-40 min-w-[60px] text-right">
+                  <span className="text-xs tabular-nums opacity-50 min-w-[70px] text-right">
                     {progress >= 98 ? "Done!" : `~${minsRemaining < 60 ? `${minsRemaining}m` : `${Math.floor(minsRemaining / 60)}h ${minsRemaining % 60}m`}`}
                   </span>
                 </div>
