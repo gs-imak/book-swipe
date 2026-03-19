@@ -277,30 +277,33 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const [totalPagesCount, setTotalPagesCount] = useState(1)
   const [containerWidth, setContainerWidth] = useState(0)
 
-  // Track container width for column sizing
+  // Track the content div's content-box width (after padding) for accurate column sizing
   useEffect(() => {
-    const container = scrollRef.current
-    if (!container || !isOpen) return
-    const observer = new ResizeObserver(entries => {
-      for (const entry of entries) {
-        const w = entry.contentRect.width
-        if (w > 0) setContainerWidth(w)
-      }
-    })
-    observer.observe(container)
-    // Initial measurement
-    if (container.clientWidth > 0) setContainerWidth(container.clientWidth)
+    const el = contentRef.current
+    if (!el || !isOpen) return
+    const measure = () => {
+      // contentRect.width gives the content box (excluding padding)
+      const style = getComputedStyle(el)
+      const padL = parseFloat(style.paddingLeft) || 0
+      const padR = parseFloat(style.paddingRight) || 0
+      const w = el.clientWidth - padL - padR
+      if (w > 0) setContainerWidth(w)
+    }
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    measure()
     return () => observer.disconnect()
-  }, [isOpen])
+  }, [isOpen, text])
 
   // Measure total pages from CSS columns
+  // The step size per page = contentRef.clientWidth (includes padding)
+  // because translateX moves the whole padded element
   const measurePages = useCallback(() => {
     const el = contentRef.current
-    const container = scrollRef.current
-    if (!el || !container) return
-    const pageWidth = container.clientWidth
-    if (pageWidth <= 0) return
-    const total = Math.max(1, Math.round(el.scrollWidth / pageWidth))
+    if (!el) return
+    const stepWidth = el.clientWidth
+    if (stepWidth <= 0) return
+    const total = Math.max(1, Math.ceil(el.scrollWidth / stepWidth))
     setTotalPagesCount(total)
     return total
   }, [])
@@ -308,13 +311,12 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   // Navigate to a specific page
   const goToPage = useCallback((page: number) => {
     const el = contentRef.current
-    const container = scrollRef.current
-    if (!el || !container) return
+    if (!el) return
     const total = measurePages() || totalPagesCount
     const clamped = Math.max(0, Math.min(page, total - 1))
     setCurrentPage(clamped)
-    const pageWidth = container.clientWidth
-    el.style.transform = `translateX(-${clamped * pageWidth}px)`
+    const stepWidth = el.clientWidth
+    el.style.transform = `translateX(-${clamped * stepWidth}px)`
     // Update progress
     const pct = total > 1 ? Math.round((clamped / (total - 1)) * 100) : 0
     setProgress(pct)
@@ -1150,11 +1152,10 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
             <>
               <div
                 ref={scrollRef}
-                className="flex-1 mx-auto"
+                className="flex-1"
                 style={{
                   overflow: "hidden",
                   position: "relative",
-                  maxWidth: "min(65ch, 100%)",
                 }}
                 onClick={handleTapZone}
                 onTouchStart={handleTouchStart}
@@ -1162,13 +1163,12 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
               >
                 <div
                   ref={contentRef}
+                  className="px-5 sm:px-8"
                   style={{
                     height: "100%",
-                    paddingLeft: "clamp(20px, 5vw, 48px)",
-                    paddingRight: "clamp(20px, 5vw, 48px)",
                     paddingTop: "2rem",
-                    paddingBottom: "calc(2rem + env(safe-area-inset-bottom))",
-                    columnWidth: containerWidth > 0 ? `${containerWidth}px` : "100vw",
+                    paddingBottom: "2rem",
+                    columnWidth: containerWidth > 0 ? `${containerWidth}px` : undefined,
                     columnGap: 0,
                     columnFill: "auto" as const,
                     transition: "transform 300ms cubic-bezier(0.25, 0.1, 0.25, 1)",
