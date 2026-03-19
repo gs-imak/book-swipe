@@ -1030,50 +1030,15 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 >
                   {isBookmarked ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
                 </motion.button>
-                <div className="relative">
-                  <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => setShowFontMenu(!showFontMenu)}
-                    className="tap-target flex items-center justify-center rounded-lg p-2 transition-colors"
-                    style={{ color: currentTheme.text }}
-                    aria-label="Change font"
-                  >
-                    <Type className="w-5 h-5" />
-                  </motion.button>
-                  {/* Font picker dropdown */}
-                  <AnimatePresence>
-                    {showFontMenu && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -4 }}
-                        transition={{ duration: 0.12 }}
-                        className="absolute right-0 top-full mt-1 z-50 rounded-xl shadow-lg overflow-hidden"
-                        style={{ backgroundColor: currentTheme.barBg, border: `1px solid ${currentTheme.border}`, backdropFilter: "blur(12px)" }}
-                      >
-                        {FONT_OPTIONS.map(opt => (
-                          <button
-                            key={opt.id}
-                            onClick={() => {
-                              setReaderFont(opt.id)
-                              try { localStorage.setItem(FONT_KEY, opt.id) } catch { /* ignore */ }
-                              setShowFontMenu(false)
-                            }}
-                            className="w-full text-left px-5 py-3 text-sm transition-colors flex items-center justify-between gap-4 min-w-[180px]"
-                            style={{
-                              fontFamily: opt.family,
-                              color: readerFont === opt.id ? currentTheme.progressFill : currentTheme.text,
-                              backgroundColor: readerFont === opt.id ? `${currentTheme.progressFill}15` : "transparent",
-                            }}
-                          >
-                            <span>{opt.label}</span>
-                            {readerFont === opt.id && <span className="text-xs opacity-60">Active</span>}
-                          </button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setShowFontMenu(!showFontMenu)}
+                  className="tap-target flex items-center justify-center rounded-lg p-2 transition-colors"
+                  style={{ color: currentTheme.text }}
+                  aria-label="Change font"
+                >
+                  <Type className="w-5 h-5" />
+                </motion.button>
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={cycleTheme}
@@ -1853,6 +1818,79 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
               </div>
             </>
           )}
+          {/* Font picker overlay — fixed position so it can't be clipped */}
+          <AnimatePresence>
+            {showFontMenu && (
+              <>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-[70]"
+                  onClick={() => setShowFontMenu(false)}
+                />
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.15 }}
+                  className="fixed right-4 z-[71] rounded-2xl shadow-2xl overflow-hidden"
+                  style={{
+                    top: "env(safe-area-inset-top, 0px)",
+                    marginTop: 60,
+                    backgroundColor: currentTheme.bg,
+                    border: `1px solid ${currentTheme.border}`,
+                  }}
+                >
+                  <div className="px-4 py-3" style={{ borderBottom: `1px solid ${currentTheme.border}` }}>
+                    <p className="text-xs font-semibold opacity-50 uppercase tracking-wider">Font</p>
+                  </div>
+                  {FONT_OPTIONS.map(opt => (
+                    <button
+                      key={opt.id}
+                      onClick={() => {
+                        setReaderFont(opt.id)
+                        try { localStorage.setItem(FONT_KEY, opt.id) } catch { /* ignore */ }
+                        setShowFontMenu(false)
+                      }}
+                      className="w-full text-left px-5 py-3.5 text-base transition-colors flex items-center justify-between gap-4 min-w-[200px]"
+                      style={{
+                        fontFamily: opt.family,
+                        color: readerFont === opt.id ? currentTheme.progressFill : currentTheme.text,
+                        backgroundColor: readerFont === opt.id ? `${currentTheme.progressFill}15` : "transparent",
+                      }}
+                    >
+                      <span>{opt.label}</span>
+                      {readerFont === opt.id && <span className="text-xs opacity-50">Active</span>}
+                    </button>
+                  ))}
+                  <div className="px-4 py-3 flex items-center justify-between" style={{ borderTop: `1px solid ${currentTheme.border}` }}>
+                    <span className="text-xs opacity-50">Size</span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setFontSize(s => Math.max(14, s - 1))}
+                        disabled={fontSize <= 14}
+                        className="w-9 h-9 rounded-full flex items-center justify-center disabled:opacity-20"
+                        style={{ border: `1px solid ${currentTheme.border}` }}
+                      >
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <span className="text-sm tabular-nums font-medium w-6 text-center">{fontSize}</span>
+                      <button
+                        onClick={() => setFontSize(s => Math.min(24, s + 1))}
+                        disabled={fontSize >= 24}
+                        className="w-9 h-9 rounded-full flex items-center justify-center disabled:opacity-20"
+                        style={{ border: `1px solid ${currentTheme.border}` }}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+
         </motion.div>
       )}
     </AnimatePresence>
