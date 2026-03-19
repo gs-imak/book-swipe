@@ -67,6 +67,31 @@ export function FreeBooksBrowser() {
     return () => { cancelled = true }
   }, [selectedCategory, searchQuery])
 
+  // Prefetch all other categories in the background after first load completes
+  const hasPrefetchedRef = useRef(false)
+  useEffect(() => {
+    if (loading || books.length === 0 || hasPrefetchedRef.current) return
+    hasPrefetchedRef.current = true
+
+    // Wait 2 seconds then start prefetching other categories one by one
+    let cancelled = false
+    const timer = setTimeout(async () => {
+      for (const cat of BROWSE_CATEGORIES) {
+        if (cancelled) break
+        if (cat.id === selectedCategory) continue // already loaded
+        if (getCachedBrowse(cat.topic)) continue // already cached
+        try {
+          await browseGutenberg(cat.topic)
+        } catch { /* silent */ }
+        // Small delay between requests to be respectful to the API
+        await new Promise(r => setTimeout(r, 1000))
+      }
+    }, 2000)
+
+    return () => { cancelled = true; clearTimeout(timer) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, books.length])
+
   // Debounced search — cancelled flag hoisted outside setTimeout
   useEffect(() => {
     if (!searchQuery) return
