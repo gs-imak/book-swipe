@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Plus, Quote, Highlighter, FileText, Edit, Trash2, Save, X } from "lucide-react"
+import { Plus, Quote, Highlighter, FileText, Edit, Trash2, Save, X, Download } from "lucide-react"
 import { Button } from "./ui/button"
 import { BookNote, saveBookNote, getBookNotesForBook, updateBookNote, deleteBookNote } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
@@ -121,14 +121,42 @@ export function BookNotes({ bookId, compact = false }: BookNotesProps) {
           </span>
         </div>
         
-        <Button
-          onClick={() => setIsAdding(true)}
-          size="sm"
-          className="flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Add Note
-        </Button>
+        <div className="flex items-center gap-2">
+          {notes.length > 0 && (
+            <Button
+              onClick={() => {
+                const md = notes.map(n => {
+                  const typeLabel = n.type === 'highlight' ? 'Highlight' : n.type === 'quote' ? 'Quote' : 'Note'
+                  const page = n.page ? ` (p. ${n.page})` : ''
+                  const text = n.selectedText ? `> ${n.selectedText}\n\n` : ''
+                  const content = n.content ? `${n.content}\n` : ''
+                  return `### ${typeLabel}${page}\n\n${text}${content}`
+                }).join('\n---\n\n')
+                const blob = new Blob([`# Notes\n\n${md}`], { type: 'text/markdown' })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = `notes-${bookId}.md`
+                a.click()
+                URL.revokeObjectURL(url)
+              }}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1.5"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Export
+            </Button>
+          )}
+          <Button
+            onClick={() => setIsAdding(true)}
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add Note
+          </Button>
+        </div>
       </div>
 
       {/* Add Note Form */}
