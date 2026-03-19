@@ -35,11 +35,11 @@ const FONT_OPTIONS: { id: ReaderFont; label: string; family: string }[] = [
 ]
 
 type AmbientSound = "library" | "fireplace" | "coffeeshop" | "dark"
-const AMBIENT_SOUNDS: { id: AmbientSound; label: string; emoji: string; file: string }[] = [
-  { id: "library", label: "Library", emoji: "📚", file: "/sounds/library.mp3" },
-  { id: "fireplace", label: "Fireplace", emoji: "🔥", file: "/sounds/fireplace.mp3" },
-  { id: "coffeeshop", label: "Coffee Shop", emoji: "☕", file: "/sounds/coffeshop.mp3" },
-  { id: "dark", label: "Nightscape", emoji: "🌙", file: "/sounds/dark.mp3" },
+const AMBIENT_SOUNDS: { id: AmbientSound; label: string; file: string }[] = [
+  { id: "library", label: "Library", file: "/sounds/library.mp3" },
+  { id: "fireplace", label: "Fireplace", file: "/sounds/fireplace.mp3" },
+  { id: "coffeeshop", label: "Coffee Shop", file: "/sounds/coffeshop.mp3" },
+  { id: "dark", label: "Nightscape", file: "/sounds/dark.mp3" },
 ]
 
 // Create ambient sound player from local MP3 files
@@ -1385,7 +1385,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                       transition={{ duration: 0.3, ease: "easeOut" }}
                     />
                   </div>
-                  <span className="text-xs tabular-nums opacity-50">{progress}%</span>
+                  <span className="text-xs tabular-nums opacity-70">{progress}%</span>
                 </div>
               </div>
 
@@ -1481,14 +1481,14 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
           {/* Content area */}
           {loading && (
             <div className="flex-1 flex flex-col items-center justify-center gap-3">
-              <Loader2 className="w-8 h-8 animate-spin opacity-40" />
-              <p className="text-sm opacity-50">Loading book...</p>
+              <Loader2 className="w-8 h-8 animate-spin opacity-60" />
+              <p className="text-sm opacity-70">Loading book...</p>
             </div>
           )}
 
           {error && (
             <div className="flex-1 flex flex-col items-center justify-center gap-3 px-6">
-              <AlertCircle className="w-8 h-8 opacity-40" />
+              <AlertCircle className="w-8 h-8 opacity-60" />
               <p className="text-sm opacity-60 text-center">{error}</p>
               <motion.button
                 whileTap={{ scale: 0.9 }}
@@ -1580,7 +1580,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           />
                           {block.caption && (
                             <p
-                              className="text-center italic opacity-50"
+                              className="text-center italic opacity-70"
                               style={{
                                 fontFamily,
                                 fontSize: `${fontSize - 2}px`,
@@ -1961,7 +1961,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                         <button
                           onClick={handleSaveNote}
                           disabled={!noteInputValue.trim()}
-                          className="px-4 py-1.5 rounded-lg text-xs font-semibold text-white disabled:opacity-40"
+                          className="px-4 py-1.5 rounded-lg text-xs font-semibold text-white disabled:opacity-60"
                           style={{ backgroundColor: currentTheme.progressFill }}
                         >
                           Save Note
@@ -2071,7 +2071,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                       {/* Search bar */}
                       <div className="px-4 py-2 flex-shrink-0" style={{ borderBottom: `1px solid ${currentTheme.border}` }}>
                         <div className="relative">
-                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 opacity-40" />
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 opacity-60" />
                           <input
                             type="search"
                             placeholder="Search in book..."
@@ -2092,11 +2092,11 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           <>
                             {searchOpen && searchQuery.length > 1 ? (
                               <div className="px-4 py-2">
-                                <p className="text-[10px] uppercase tracking-wider opacity-40 font-semibold mb-2">
+                                <p className="text-[10px] uppercase tracking-wider opacity-60 font-semibold mb-2">
                                   {searchResults.length} result{searchResults.length !== 1 ? "s" : ""}
                                 </p>
                                 {searchResults.length === 0 && (
-                                  <p className="text-sm opacity-40 py-8 text-center">No matches found</p>
+                                  <p className="text-sm opacity-60 py-8 text-center">No matches found</p>
                                 )}
                                 {searchResults.map((r, i) => (
                                   <button
@@ -2115,7 +2115,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                                 {/* Page scrubber */}
                                 <div className="mb-4">
                                   <div className="flex items-center justify-between mb-1">
-                                    <span className="text-[10px] font-semibold uppercase tracking-wider opacity-40">
+                                    <span className="text-[10px] font-semibold uppercase tracking-wider opacity-60">
                                       Go to page
                                     </span>
                                     <span className="text-xs tabular-nums opacity-60">
@@ -2140,8 +2140,8 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                                 {chapters.length > 0 && (
                                   <div>
                                     <div className="flex items-center gap-1.5 mb-2">
-                                      <List className="w-3.5 h-3.5 opacity-40" />
-                                      <span className="text-[10px] font-semibold uppercase tracking-wider opacity-40">
+                                      <List className="w-3.5 h-3.5 opacity-60" />
+                                      <span className="text-[10px] font-semibold uppercase tracking-wider opacity-60">
                                         {chapters.length} Chapter{chapters.length !== 1 ? "s" : ""}
                                       </span>
                                     </div>
@@ -2169,7 +2169,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                                             <div className="min-w-0">
                                               <span className="block truncate">{ch.title}</span>
                                               {ch.subtitle && (
-                                                <span className="text-[11px] opacity-50 block truncate">{ch.subtitle}</span>
+                                                <span className="text-[11px] opacity-70 block truncate">{ch.subtitle}</span>
                                               )}
                                             </div>
                                           </button>
@@ -2180,7 +2180,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                                 )}
 
                                 {chapters.length === 0 && (
-                                  <p className="text-sm opacity-40 py-8 text-center">No chapters detected</p>
+                                  <p className="text-sm opacity-60 py-8 text-center">No chapters detected</p>
                                 )}
 
                                 {/* Reading stats */}
@@ -2190,17 +2190,17 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                                 >
                                   <div>
                                     <div className="text-lg font-bold tabular-nums" style={{ color: currentTheme.progressFill }}>{currentPage}</div>
-                                    <div className="text-[10px] opacity-40">of {totalPages} pages</div>
+                                    <div className="text-[10px] opacity-60">of {totalPages} pages</div>
                                   </div>
                                   <div>
                                     <div className="text-lg font-bold tabular-nums" style={{ color: currentTheme.progressFill }}>{progress}%</div>
-                                    <div className="text-[10px] opacity-40">complete</div>
+                                    <div className="text-[10px] opacity-60">complete</div>
                                   </div>
                                   <div>
                                     <div className="text-lg font-bold tabular-nums" style={{ color: currentTheme.progressFill }}>
                                       {minsRemaining < 60 ? `${minsRemaining}m` : `${Math.floor(minsRemaining / 60)}h${minsRemaining % 60}m`}
                                     </div>
-                                    <div className="text-[10px] opacity-40">remaining</div>
+                                    <div className="text-[10px] opacity-60">remaining</div>
                                   </div>
                                 </div>
                               </div>
@@ -2211,7 +2211,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                             {readerNotes.length === 0 ? (
                               <div className="text-center py-12">
                                 <StickyNote className="w-8 h-8 mx-auto mb-3 opacity-20" />
-                                <p className="text-sm opacity-40">No notes yet</p>
+                                <p className="text-sm opacity-60">No notes yet</p>
                                 <p className="text-xs opacity-30 mt-1">Select text while reading to highlight or add notes</p>
                               </div>
                             ) : (
@@ -2236,12 +2236,12 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                                             {isHighlight && <Highlighter className="w-3 h-3 flex-shrink-0" style={{ color: currentTheme.progressFill }} />}
                                             {isNote && <MessageSquare className="w-3 h-3 flex-shrink-0" style={{ color: currentTheme.progressFill }} />}
                                             {note.type === "quote" && <Quote className="w-3 h-3 flex-shrink-0" style={{ color: currentTheme.progressFill }} />}
-                                            <span className="text-[10px] uppercase tracking-wider opacity-40 font-semibold">
+                                            <span className="text-[10px] uppercase tracking-wider opacity-60 font-semibold">
                                               {note.type}{note.page ? ` · p.${note.page}` : ""}
                                             </span>
                                           </div>
                                           {note.selectedText && (
-                                            <p className="text-xs italic opacity-50 line-clamp-2 mb-1">
+                                            <p className="text-xs italic opacity-70 line-clamp-2 mb-1">
                                               &ldquo;{note.selectedText}&rdquo;
                                             </p>
                                           )}
@@ -2269,18 +2269,18 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                             {progress <= 0 ? (
                               <div className="text-center py-12">
                                 <BookOpen className="w-8 h-8 mx-auto mb-3 opacity-20" />
-                                <p className="text-sm opacity-40">Start reading first</p>
+                                <p className="text-sm opacity-60">Start reading first</p>
                                 <p className="text-xs opacity-30 mt-1">A recap will appear once you begin reading.</p>
                               </div>
                             ) : recapData.length === 0 ? (
                               <div className="text-center py-12">
                                 <BookOpen className="w-8 h-8 mx-auto mb-3 opacity-20" />
-                                <p className="text-sm opacity-40">No recap available</p>
+                                <p className="text-sm opacity-60">No recap available</p>
                                 <p className="text-xs opacity-30 mt-1">Not enough content to summarize yet.</p>
                               </div>
                             ) : (
                               <div className="space-y-3">
-                                <p className="text-[10px] uppercase tracking-wider opacity-40 font-semibold mb-3">
+                                <p className="text-[10px] uppercase tracking-wider opacity-60 font-semibold mb-3">
                                   Story so far ({progress}% read)
                                 </p>
                                 {recapData.map((section, i) => (
@@ -2340,11 +2340,11 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                       onClick={() => setShowChapterDropdown(prev => !prev)}
                       className="w-full flex items-center justify-center gap-1.5 py-1 rounded-lg transition-opacity hover:opacity-80"
                     >
-                      <p className="text-xs truncate opacity-50 font-medium">
+                      <p className="text-xs truncate opacity-70 font-medium">
                         {currentChapter ? currentChapter.title : "Select Chapter"}
                         {currentChapter?.subtitle ? ` — ${currentChapter.subtitle}` : ""}
                       </p>
-                      <ChevronDown className="w-3 h-3 opacity-40 flex-shrink-0" style={{ transform: showChapterDropdown ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+                      <ChevronDown className="w-3 h-3 opacity-60 flex-shrink-0" style={{ transform: showChapterDropdown ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
                     </button>
 
                     <AnimatePresence>
@@ -2364,7 +2364,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           }}
                         >
                           <div className="px-3 py-2" style={{ borderBottom: `1px solid ${currentTheme.border}` }}>
-                            <p className="text-[10px] uppercase tracking-wider opacity-40 font-semibold">
+                            <p className="text-[10px] uppercase tracking-wider opacity-60 font-semibold">
                               {chapters.length} Chapters
                             </p>
                           </div>
@@ -2468,9 +2468,9 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                       >
                         {autoScrollEnabled ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                       </motion.button>
-                      <span className="text-[9px] opacity-40 -mt-0.5">Auto</span>
+                      <span className="text-[9px] opacity-60 -mt-0.5">Auto</span>
                     </div>
-                    <span className="text-xs tabular-nums opacity-50">
+                    <span className="text-xs tabular-nums opacity-70">
                       {progress >= 98 ? "Done!" : `~${minsRemaining < 60 ? `${minsRemaining}m` : `${Math.floor(minsRemaining / 60)}h ${minsRemaining % 60}m`}`}
                     </span>
                   </div>
@@ -2503,7 +2503,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                   }}
                 >
                   <div className="px-4 py-3" style={{ borderBottom: `1px solid ${currentTheme.border}` }}>
-                    <p className="text-xs font-semibold opacity-50 uppercase tracking-wider">Font</p>
+                    <p className="text-xs font-semibold opacity-70 uppercase tracking-wider">Font</p>
                   </div>
                   {FONT_OPTIONS.map(opt => (
                     <button
@@ -2521,11 +2521,11 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                       }}
                     >
                       <span>{opt.label}</span>
-                      {readerFont === opt.id && <span className="text-xs opacity-50">Active</span>}
+                      {readerFont === opt.id && <span className="text-xs opacity-70">Active</span>}
                     </button>
                   ))}
                   <div className="px-4 py-3 flex items-center justify-between" style={{ borderTop: `1px solid ${currentTheme.border}` }}>
-                    <span className="text-xs opacity-50">Size</span>
+                    <span className="text-xs opacity-70">Size</span>
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => setFontSize(s => Math.max(14, s - 1))}
@@ -2573,7 +2573,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                   <span className="text-sm tabular-nums font-medium">
                     {String(Math.floor(pomodoroSecondsLeft / 60)).padStart(2, "0")}:{String(pomodoroSecondsLeft % 60).padStart(2, "0")}
                   </span>
-                  {ambientSound && <span className="text-xs">{AMBIENT_SOUNDS.find(s => s.id === ambientSound)?.emoji}</span>}
+                  {ambientSound && <span className="text-xs opacity-60">{AMBIENT_SOUNDS.find(s => s.id === ambientSound)?.label}</span>}
                 </button>
               </motion.div>
             )}
@@ -2595,18 +2595,18 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 }}
               >
                 <div className="flex items-center justify-between px-4 pt-3 pb-1">
-                  <span className="text-[10px] uppercase tracking-wider opacity-40 font-semibold">Focus Mode</span>
+                  <span className="text-[10px] uppercase tracking-wider opacity-60 font-semibold">Focus Mode</span>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => setFocusMinimized(true)}
-                      className="p-1 rounded-md opacity-40 hover:opacity-80 transition-opacity"
+                      className="p-1 rounded-md opacity-60 hover:opacity-80 transition-opacity"
                       aria-label="Minimize focus mode"
                     >
                       <Minus className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => { toggleFocusMode(); stopAmbientSound() }}
-                      className="p-1 rounded-md opacity-50 hover:opacity-80 transition-opacity"
+                      className="p-1 rounded-md opacity-70 hover:opacity-80 transition-opacity"
                       aria-label="Close focus mode"
                     >
                       <X className="w-3.5 h-3.5" />
@@ -2663,19 +2663,21 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 </div>
 
                 <div className="px-4 pb-3">
-                  <p className="text-[10px] uppercase tracking-wider opacity-40 font-semibold mb-1.5">Ambient Sound</p>
+                  <p className="text-[10px] uppercase tracking-wider opacity-60 font-semibold mb-1.5">Ambient Sound</p>
                   <div className="flex gap-1 flex-wrap">
                     {AMBIENT_SOUNDS.map(sound => (
                       <button
                         key={sound.id}
                         onClick={() => {
                           if (ambientSound === sound.id) {
-                            // Toggle off — clicking same sound stops it
+                            // Toggle off — clicking same sound deselects it
                             stopAmbientSound()
                             setAmbientSound("" as AmbientSound)
                           } else {
+                            // Just select — sound starts when timer starts
                             setAmbientSound(sound.id)
-                            startAmbientSound(sound.id)
+                            // If timer is already running, start sound immediately
+                            if (pomodoroRunning) startAmbientSound(sound.id)
                           }
                         }}
                         className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors"
@@ -2685,7 +2687,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           opacity: ambientSound === sound.id ? 1 : 0.6,
                         }}
                       >
-                        <span>{sound.emoji}</span> {sound.label}
+                        {sound.label}
                       </button>
                     ))}
                     <button
@@ -2705,7 +2707,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
                   {/* Volume slider */}
                   <div className="flex items-center gap-2 mt-2">
-                    <span className="text-[10px] opacity-40">🔈</span>
+                    <span className="text-[10px] opacity-60">🔈</span>
                     <input
                       type="range"
                       min={0}
@@ -2722,7 +2724,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                         background: `linear-gradient(to right, ${currentTheme.progressFill} ${ambientVolume * 100}%, ${currentTheme.progressTrack} ${ambientVolume * 100}%)`,
                       }}
                     />
-                    <span className="text-[10px] opacity-40">🔊</span>
+                    <span className="text-[10px] opacity-60">🔊</span>
                   </div>
                 </div>
               </motion.div>
