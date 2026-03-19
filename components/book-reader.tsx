@@ -402,14 +402,27 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     } catch { /* ignore */ }
   }, [isOpen, text])
 
-  // Focus Mode: start/stop pomodoro timer
+  // Focus Mode: start/stop pomodoro timer — sound follows timer state
   useEffect(() => {
     if (!focusMode || !pomodoroRunning) {
       if (pomodoroIntervalRef.current) {
         clearInterval(pomodoroIntervalRef.current)
         pomodoroIntervalRef.current = null
       }
+      // Pause sound when timer is paused (but not when focus mode is off — that's handled by cleanup)
+      if (focusMode && !pomodoroRunning && ambientRef.current) {
+        ambientRef.current.stop()
+        ambientRef.current = null
+      }
       return
+    }
+    // Timer is running — start sound if one is selected
+    if (ambientSound && !ambientRef.current) {
+      const player = createAmbientPlayer(ambientSound, ambientVolume)
+      if (player) {
+        player.start()
+        ambientRef.current = player
+      }
     }
     pomodoroIntervalRef.current = setInterval(() => {
       setPomodoroSecondsLeft(prev => {
@@ -418,6 +431,11 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
           pomodoroIntervalRef.current = null
           setPomodoroRunning(false)
           setPomodoroFinished(true)
+          // Stop sound when session completes
+          if (ambientRef.current) {
+            ambientRef.current.stop()
+            ambientRef.current = null
+          }
           return 0
         }
         return prev - 1
@@ -429,6 +447,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
         pomodoroIntervalRef.current = null
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusMode, pomodoroRunning])
 
   // Focus Mode: manage ambient audio via Web Audio API
