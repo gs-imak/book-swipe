@@ -59,15 +59,15 @@ export function ShelfPicker({ bookId, isOpen, onClose }: ShelfPickerProps) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 60 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="bg-background rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-sm w-full border border-stone-200/60 overflow-hidden"
+          className="bg-background rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-sm w-full border border-stone-200/60 dark:border-stone-700/60 overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between p-4 pb-2">
-            <h3 className="text-base font-bold text-stone-900 font-serif">Add to Shelf</h3>
+            <h3 className="text-base font-bold text-stone-900 dark:text-stone-100 font-serif">Add to Shelf</h3>
             <button
               onClick={onClose}
               aria-label="Close shelf picker"
-              className="p-2 -mr-1 rounded-lg hover:bg-stone-100 transition-colors tap-target touch-manipulation"
+              className="p-2 -mr-1 rounded-lg hover:bg-stone-100 dark:bg-stone-800 transition-colors tap-target touch-manipulation"
             >
               <X className="w-4 h-4 text-stone-400" />
             </button>
@@ -82,12 +82,12 @@ export function ShelfPicker({ bookId, isOpen, onClose }: ShelfPickerProps) {
                   onClick={() => toggle(shelf.id)}
                   className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left ${
                     isAssigned
-                      ? "bg-amber-50 border border-amber-200"
-                      : "hover:bg-stone-50 border border-transparent"
+                      ? "bg-amber-50 dark:bg-amber-900/30 border border-amber-200"
+                      : "hover:bg-stone-50 dark:bg-stone-800/50 border border-transparent"
                   }`}
                 >
                   <span className="text-lg">{shelf.emoji}</span>
-                  <span className="flex-1 text-sm font-medium text-stone-800">{shelf.name}</span>
+                  <span className="flex-1 text-sm font-medium text-stone-800 dark:text-stone-200">{shelf.name}</span>
                   {isAssigned && (
                     <motion.div
                       initial={{ scale: 0 }}

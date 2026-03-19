@@ -244,13 +244,13 @@ export function ProfileShareCard({ isOpen, onClose }: ProfileShareCardProps) {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-background rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-stone-200/60"
+          className="bg-background rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-stone-200/60 dark:border-stone-700/60"
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-stone-200/60">
-            <h2 className="text-lg font-bold text-stone-900 font-serif">Share Your Profile</h2>
-            <button onClick={onClose} className="p-2 -mr-2 rounded-lg hover:bg-stone-100 transition-colors">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-stone-200/60 dark:border-stone-700/60">
+            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">Share Your Profile</h2>
+            <button onClick={onClose} className="p-2 -mr-2 rounded-lg hover:bg-stone-100 dark:bg-stone-800 transition-colors">
               <X className="w-5 h-5 text-stone-400" />
             </button>
           </div>
@@ -258,7 +258,7 @@ export function ProfileShareCard({ isOpen, onClose }: ProfileShareCardProps) {
           {/* Preview */}
           <div className="p-5">
             {generating && (
-              <div className="aspect-[3/4] bg-stone-100 rounded-xl flex items-center justify-center">
+              <div className="aspect-[3/4] bg-stone-100 dark:bg-stone-800 rounded-xl flex items-center justify-center">
                 <div className="w-8 h-8 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
               </div>
             )}
@@ -282,14 +282,14 @@ export function ProfileShareCard({ isOpen, onClose }: ProfileShareCardProps) {
             </button>
             <button
               onClick={handleCopy}
-              className="h-11 px-4 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium rounded-xl transition-all flex items-center gap-2"
+              className="h-11 px-4 bg-white dark:bg-stone-900 border border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 text-sm font-medium rounded-xl transition-all flex items-center gap-2"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
               {copied ? "Copied" : "Copy"}
             </button>
             <button
               onClick={handleDownload}
-              className="h-11 px-4 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium rounded-xl transition-all flex items-center gap-2"
+              className="h-11 px-4 bg-white dark:bg-stone-900 border border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 text-sm font-medium rounded-xl transition-all flex items-center gap-2"
             >
               <Download className="w-4 h-4" />
             </button>

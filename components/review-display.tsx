@@ -46,7 +46,7 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-stone-50 rounded-xl p-4 space-y-3"
+        className="bg-stone-50 dark:bg-stone-800/50 rounded-xl p-4 space-y-3"
       >
         <div className="flex items-center justify-between">
           <StarRating rating={review.rating} readonly size="sm" />
@@ -76,7 +76,7 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl border border-stone-200/60 shadow-sm p-6 space-y-4"
+      className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200/60 shadow-sm p-6 space-y-4"
     >
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -110,10 +110,10 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-stone-400" />
-            <span className="text-sm font-medium text-stone-700">Your Review</span>
+            <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Your Review</span>
           </div>
-          <div className="bg-stone-50 rounded-lg p-4">
-            <p className={`text-stone-700 leading-relaxed ${!showFullReview && review.review.length > 200 ? 'line-clamp-3' : ''}`}>
+          <div className="bg-stone-50 dark:bg-stone-800/50 rounded-lg p-4">
+            <p className={`text-stone-700 dark:text-stone-300 leading-relaxed ${!showFullReview && review.review.length > 200 ? 'line-clamp-3' : ''}`}>
               "{review.review}"
             </p>
             {review.review.length > 200 && (
@@ -121,7 +121,7 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowFullReview(!showFullReview)}
-                className="mt-2 p-0 h-auto text-amber-700 hover:text-amber-800"
+                className="mt-2 p-0 h-auto text-amber-700 dark:text-amber-400 hover:text-amber-800"
               >
                 {showFullReview ? 'Show less' : 'Show more'}
               </Button>
@@ -145,13 +145,13 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Tag className="w-4 h-4 text-stone-400" />
-            <span className="text-sm font-medium text-stone-700">Tags</span>
+            <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Tags</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {review.tags.map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-stone-100 text-stone-700"
+                className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300"
               >
                 {tag}
               </span>

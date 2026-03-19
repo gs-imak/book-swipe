@@ -77,7 +77,7 @@ export function WhereToRead({ book }: WhereToReadProps) {
     <div className="space-y-4">
       {/* Price info */}
       {priceInfo && priceInfo.saleability !== "unknown" && (
-        <div className="bg-stone-50 rounded-xl p-3 border border-stone-200/60">
+        <div className="bg-stone-50 dark:bg-stone-800/50 rounded-xl p-3 border border-stone-200/60">
           <div className="flex items-center justify-between">
             <div>
               {priceInfo.saleability === "FREE" ? (
@@ -85,7 +85,7 @@ export function WhereToRead({ book }: WhereToReadProps) {
               ) : priceInfo.saleability === "FOR_SALE" ? (
                 <div className="flex items-center gap-2">
                   {priceInfo.retailPrice && (
-                    <span className="text-sm font-bold text-stone-900">
+                    <span className="text-sm font-bold text-stone-900 dark:text-stone-100">
                       {formatPrice(priceInfo.retailPrice)}
                     </span>
                   )}
@@ -109,8 +109,8 @@ export function WhereToRead({ book }: WhereToReadProps) {
               onClick={toggleWatch}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
                 watching
-                  ? "bg-amber-100 text-amber-700 border border-amber-200"
-                  : "bg-white text-stone-500 hover:text-stone-700 border border-stone-200"
+                  ? "bg-amber-100 text-amber-700 dark:text-amber-400 border border-amber-200"
+                  : "bg-white dark:bg-stone-900 text-stone-500 hover:text-stone-700 border border-stone-200"
               }`}
             >
               <Eye className="w-3 h-3" />
@@ -122,7 +122,7 @@ export function WhereToRead({ book }: WhereToReadProps) {
               href={priceInfo.buyLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 mt-2 text-xs text-amber-700 hover:text-amber-800 font-medium"
+              className="inline-flex items-center gap-1 mt-2 text-xs text-amber-700 dark:text-amber-400 hover:text-amber-800 font-medium"
             >
               Buy on Google Play <ExternalLink className="w-3 h-3" />
             </a>
@@ -149,10 +149,10 @@ export function WhereToRead({ book }: WhereToReadProps) {
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-stone-200/80 hover:border-stone-300 hover:bg-stone-50 transition-all group"
+                className="flex items-center gap-2 p-2.5 rounded-lg bg-white dark:bg-stone-900 border border-stone-200/80 hover:border-stone-300 hover:bg-stone-50 dark:bg-stone-800/50 transition-all group"
               >
-                {LinkIcon && <LinkIcon className="w-4 h-4 text-stone-500 group-hover:text-stone-700 flex-shrink-0" />}
-                <span className="text-xs font-medium text-stone-700 group-hover:text-stone-900 truncate">{link.name}</span>
+                {LinkIcon && <LinkIcon className="w-4 h-4 text-stone-500 group-hover:text-stone-700 dark:text-stone-300 flex-shrink-0" />}
+                <span className="text-xs font-medium text-stone-700 group-hover:text-stone-900 dark:text-stone-100 truncate">{link.name}</span>
                 <ExternalLink className="w-3 h-3 text-stone-300 group-hover:text-stone-400 ml-auto flex-shrink-0" />
               </a>
             )
@@ -172,10 +172,10 @@ export function WhereToRead({ book }: WhereToReadProps) {
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-stone-200/80 hover:border-stone-300 hover:bg-stone-50 transition-all group"
+                className="flex items-center gap-2 p-2.5 rounded-lg bg-white dark:bg-stone-900 border border-stone-200/80 hover:border-stone-300 hover:bg-stone-50 dark:bg-stone-800/50 transition-all group"
               >
-                {LinkIcon && <LinkIcon className="w-4 h-4 text-stone-500 group-hover:text-stone-700 flex-shrink-0" />}
-                <span className="text-xs font-medium text-stone-700 group-hover:text-stone-900 truncate">{link.name}</span>
+                {LinkIcon && <LinkIcon className="w-4 h-4 text-stone-500 group-hover:text-stone-700 dark:text-stone-300 flex-shrink-0" />}
+                <span className="text-xs font-medium text-stone-700 group-hover:text-stone-900 dark:text-stone-100 truncate">{link.name}</span>
                 <ExternalLink className="w-3 h-3 text-stone-300 group-hover:text-stone-400 ml-auto flex-shrink-0" />
               </a>
             )
