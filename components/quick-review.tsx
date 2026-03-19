@@ -129,19 +129,20 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
 
       {/* Rating */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold text-stone-700">How was it?</label>
+        <label id="review-rating-label" className="text-sm font-semibold text-stone-700">How was it?</label>
         <StarRating
           rating={rating}
           onRatingChange={setRating}
           size="lg"
           showLabel={true}
+          aria-labelledby="review-rating-label"
         />
       </div>
 
       {/* Mood */}
       <div className="space-y-3">
-        <label className="text-sm font-semibold text-stone-700">How did it make you feel?</label>
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        <label id="review-mood-label" className="text-sm font-semibold text-stone-700">How did it make you feel?</label>
+        <div role="group" aria-labelledby="review-mood-label" className="grid grid-cols-3 sm:grid-cols-6 gap-2">
           {moodOptions.map((mood) => (
             <Button
               key={mood.id}
@@ -159,8 +160,8 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
 
       {/* Quick Tags */}
       <div className="space-y-3">
-        <label className="text-sm font-semibold text-stone-700">Quick tags</label>
-        <div className="flex flex-wrap gap-2">
+        <label id="review-tags-label" className="text-sm font-semibold text-stone-700">Quick tags</label>
+        <div role="group" aria-labelledby="review-tags-label" className="flex flex-wrap gap-2">
           {quickTags.map((tag) => (
             <Button
               key={tag}
@@ -178,10 +179,11 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
 
       {/* Written Review */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold text-stone-700">
+        <label htmlFor="review-text" className="text-sm font-semibold text-stone-700">
           Your thoughts <span className="text-stone-400 font-normal">(optional)</span>
         </label>
         <textarea
+          id="review-text"
           value={review}
           onChange={(e) => setReview(e.target.value)}
           placeholder="What did you love about this book? Any memorable quotes or moments?"
@@ -192,11 +194,11 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
 
       {/* Content Warnings */}
       <div className="space-y-3">
-        <label className="text-sm font-semibold text-stone-700 flex items-center gap-2">
+        <label id="review-warnings-label" className="text-sm font-semibold text-stone-700 flex items-center gap-2">
           <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
           Content warnings <span className="text-stone-400 font-normal">(optional)</span>
         </label>
-        <div className="flex flex-wrap gap-2">
+        <div role="group" aria-labelledby="review-warnings-label" className="flex flex-wrap gap-2">
           {CONTENT_WARNINGS.map((w) => (
             <button
               key={w}

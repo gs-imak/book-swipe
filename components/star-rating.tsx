@@ -9,14 +9,16 @@ interface StarRatingProps {
   readonly?: boolean
   size?: "sm" | "md" | "lg"
   showLabel?: boolean
+  "aria-labelledby"?: string
 }
 
-export function StarRating({ 
-  rating, 
-  onRatingChange, 
-  readonly = false, 
-  size = "md", 
-  showLabel = false 
+export function StarRating({
+  rating,
+  onRatingChange,
+  readonly = false,
+  size = "md",
+  showLabel = false,
+  "aria-labelledby": ariaLabelledBy,
 }: StarRatingProps) {
   const sizeClasses = {
     sm: "w-4 h-4",
@@ -34,13 +36,15 @@ export function StarRating({
 
   return (
     <div className="flex items-center gap-2">
-      <div className="flex items-center gap-1">
+      <div role={readonly ? undefined : "group"} aria-labelledby={ariaLabelledBy} className="flex items-center gap-1">
         {[1, 2, 3, 4, 5].map((star) => (
           <motion.button
             key={star}
             type="button"
             onClick={() => !readonly && onRatingChange?.(star)}
             disabled={readonly}
+            aria-label={`${star} star${star !== 1 ? "s" : ""}${!readonly ? (star <= rating ? ", selected" : "") : ""}`}
+            aria-pressed={!readonly ? star <= rating : undefined}
             className={`${readonly ? "cursor-default" : "cursor-pointer hover:scale-110"} transition-transform`}
             whileHover={!readonly ? { scale: 1.1 } : {}}
             whileTap={!readonly ? { scale: 0.95 } : {}}
