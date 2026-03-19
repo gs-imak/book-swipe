@@ -1146,15 +1146,17 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                     const textColor = isDark ? "#e7e5e4" : "#44403c"
                     const mutedColor = isDark ? "#a8a29e" : "#78716c"
                     const divider = <div className="w-px h-4" style={{ backgroundColor: currentTheme.border }} />
-                    const barWidth = 300
+                    const barWidth = 340
                     const scrollEl = scrollRef.current
+                    // Compensate for translateX offset so toolbar stays visible on current page
+                    const pageOffset = paginatedPage * (scrollEl?.clientWidth || 0)
                     return (
                       <div
                         data-selection-bar
                         className="absolute z-40 flex flex-col rounded-xl shadow-lg overflow-hidden"
                         style={{
-                          left: Math.max(8, Math.min(selectionBar.x - barWidth / 2, (scrollEl?.clientWidth || 300) - barWidth - 8)),
-                          top: Math.max(8, selectionBar.y + (scrollEl?.scrollTop || 0) - 48),
+                          left: Math.max(8, Math.min(selectionBar.x - barWidth / 2, (scrollEl?.clientWidth || 300) - barWidth - 8)) + pageOffset,
+                          top: Math.max(8, selectionBar.y - 52),
                           backgroundColor: barBg,
                           border: `1px solid ${currentTheme.border}`,
                         }}
