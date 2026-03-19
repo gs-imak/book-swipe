@@ -509,7 +509,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
                 whileTap={{ scale: 0.9 }}
                 aria-label="Undo last swipe"
                 disabled={undoStack.length === 0}
-                className={`w-10 h-10 rounded-full border-2 bg-white shadow-sm flex items-center justify-center transition-all tap-target touch-manipulation ${
+                className={`w-12 h-12 rounded-full border-2 bg-white shadow-sm flex items-center justify-center transition-all tap-target touch-manipulation ${
                   undoStack.length > 0
                     ? "border-amber-200 hover:border-amber-300 text-amber-500"
                     : "border-stone-100 text-stone-200 cursor-not-allowed"

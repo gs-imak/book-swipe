@@ -134,30 +134,16 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
         {onBack ? (
           <button
             onClick={onBack}
-            className="p-2 -ml-2 rounded-lg hover:bg-stone-100 dark:bg-stone-800 transition-colors tap-target touch-manipulation"
+            className="p-2 -ml-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors tap-target touch-manipulation"
           >
             <ArrowLeft className="w-5 h-5 text-stone-600" />
           </button>
         ) : (
           <div />
         )}
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-stone-400 font-medium">
-            {currentQuestion + 1} / {questions.length}
-          </span>
-          <button
-            onClick={() => onComplete({
-              favoriteGenres: [],
-              currentMood: [],
-              readingTime: "30-60 minutes",
-              preferredLength: "No preference",
-              contentPreferences: []
-            })}
-            className="text-xs text-stone-400 hover:text-stone-600 font-medium transition-colors"
-          >
-            Skip
-          </button>
-        </div>
+        <span className="text-sm text-stone-400 font-medium">
+          {currentQuestion + 1} / {questions.length}
+        </span>
       </div>
 
       <div className="flex-1 overflow-y-auto">

@@ -232,6 +232,9 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
       </div>
 
       {/* Submit Button */}
+      {rating === 0 && (
+        <p className="text-xs text-stone-400 dark:text-stone-500">Tap the stars above to rate this book</p>
+      )}
       <div className="flex justify-end pt-4 border-t">
         <Button
           onClick={handleSubmit}

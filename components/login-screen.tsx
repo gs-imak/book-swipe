@@ -100,14 +100,14 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                   <p className="text-xs text-stone-400 mt-0.5">Like Tinder, for books</p>
                 </div>
                 <div className="text-center lg:text-left">
-                  <div className="w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center mx-auto lg:mx-0 mb-2">
+                  <div className="w-10 h-10 rounded-lg bg-rose-50 dark:bg-rose-900/30 flex items-center justify-center mx-auto lg:mx-0 mb-2">
                     <Bookmark className="w-5 h-5 text-rose-600" />
                   </div>
                   <p className="text-sm font-medium text-stone-700 dark:text-stone-300">Smart matching</p>
                   <p className="text-xs text-stone-400 mt-0.5">Learns your taste</p>
                 </div>
                 <div className="text-center lg:text-left">
-                  <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center mx-auto lg:mx-0 mb-2">
+                  <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center mx-auto lg:mx-0 mb-2">
                     <Library className="w-5 h-5 text-teal-700" />
                   </div>
                   <p className="text-sm font-medium text-stone-700 dark:text-stone-300">Build your shelf</p>

@@ -250,7 +250,7 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
             <h1 className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100 font-serif">Taste Profile</h1>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-stone-100 dark:bg-stone-800 transition-colors tap-target touch-manipulation"
+              className="p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors tap-target touch-manipulation"
             >
               <X className="w-5 h-5 text-stone-400" />
             </button>
@@ -487,7 +487,7 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
             <motion.div {...fadeIn(0.55)} className="flex gap-3">
               <button
                 onClick={() => setShowStats(true)}
-                className="flex-1 h-11 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 dark:text-stone-300 text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2"
+                className="flex-1 h-11 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-800/50 text-stone-700 dark:text-stone-300 text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2"
               >
                 <BarChart3 className="w-4 h-4" />
                 Reading Stats

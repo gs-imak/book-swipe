@@ -571,6 +571,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
 
                       <span className="w-px h-4 bg-stone-200 dark:bg-stone-700" />
 
+                      <span className="text-[11px] text-stone-400 dark:text-stone-500">Speed:</span>
                       <select
                         value={readingSpd}
                         onChange={(e) => {

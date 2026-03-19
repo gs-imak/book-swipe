@@ -126,7 +126,7 @@ export function FreeBooksBrowser() {
       {/* Categories */}
       {!searchQuery && (
         <div className="flex-shrink-0 bg-white dark:bg-stone-900 border-b border-stone-100 dark:border-stone-800 overflow-x-auto hide-scrollbar">
-          <div className="max-w-2xl mx-auto px-4 py-2.5 flex flex-wrap justify-center gap-1.5">
+          <div className="max-w-2xl mx-auto px-4 py-2.5 flex flex-nowrap overflow-x-auto hide-scrollbar gap-1.5">
             {BROWSE_CATEGORIES.map(cat => (
               <button
                 key={cat.id}

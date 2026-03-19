@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Star, Heart, MessageSquare, FileText, Calendar, Clock, BookOpen, Library, Share2, Trash2, Loader2, EyeOff } from "lucide-react"
+import { X, Star, Heart, MessageSquare, FileText, Calendar, Clock, BookOpen, Library, Share2, Trash2, Loader2, EyeOff, Plus } from "lucide-react"
 import { Book } from "@/lib/book-data"
 import { BookReview, getBookReview, getShelvesForBook, getShelves, type Shelf } from "@/lib/storage"
 import { scoreBooks } from "@/lib/scoring-engine"
@@ -218,8 +218,8 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                       onClick={() => onStartReading(book)}
                       className="h-9 px-4 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium rounded-xl transition-all active:scale-[0.98] flex items-center gap-1.5"
                     >
-                      <BookOpen className="w-3.5 h-3.5" />
-                      Start Reading
+                      <Plus className="w-3.5 h-3.5" />
+                      Add to List
                     </button>
                   )}
 
@@ -258,7 +258,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setShowShelfPicker(true)}
-                    className="h-8 px-3 bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-600 dark:text-stone-300 text-xs font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1"
+                    className="h-10 px-3 bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-600 dark:text-stone-300 text-sm font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1"
                   >
                     <Library className="w-3 h-3" />
                     Shelves
@@ -266,7 +266,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
 
                   <button
                     onClick={() => setShowShareCard(true)}
-                    className="h-8 px-3 bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-600 dark:text-stone-300 text-xs font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1"
+                    className="h-10 px-3 bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-600 dark:text-stone-300 text-sm font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1"
                   >
                     <Share2 className="w-3 h-3" />
                     Share
@@ -278,7 +278,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                         onHideBook(book)
                         onClose()
                       }}
-                      className="h-8 px-3 bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:border-amber-200 text-stone-400 dark:text-stone-500 hover:text-amber-600 text-xs font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1"
+                      className="h-10 px-3 bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:border-amber-200 text-stone-400 dark:text-stone-500 hover:text-amber-600 text-sm font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1 ml-2"
                     >
                       <EyeOff className="w-3 h-3" />
                       Hide
@@ -293,7 +293,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                           onClose()
                         }
                       }}
-                      className="h-8 px-3 bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 hover:bg-red-50 hover:border-red-200 text-stone-400 dark:text-stone-500 hover:text-red-500 text-xs font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1"
+                      className="h-10 px-3 bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 hover:bg-red-50 hover:border-red-200 text-stone-400 dark:text-stone-500 hover:text-red-500 text-sm font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1"
                     >
                       <Trash2 className="w-3 h-3" />
                       Remove
@@ -439,17 +439,17 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                           className="flex-shrink-0 group flex flex-col items-center gap-1.5"
                           title={`${similar.title} by ${similar.author}`}
                         >
-                          <div className="relative w-14 h-20 rounded-lg overflow-hidden shadow-sm border border-stone-200/60 dark:border-stone-700/60 group-hover:shadow-md transition-shadow">
+                          <div className="relative w-20 h-28 rounded-lg overflow-hidden shadow-sm border border-stone-200/60 dark:border-stone-700/60 group-hover:shadow-md transition-shadow">
                             <BookCover
                               src={similar.cover}
                               fallbackSrc={similar.coverFallback}
                               alt={similar.title}
                               fill
                               className="object-cover"
-                              sizes="56px"
+                              sizes="80px"
                             />
                           </div>
-                          <p className="text-[10px] text-stone-500 dark:text-stone-400 text-center leading-tight w-14 line-clamp-2">
+                          <p className="text-xs text-stone-500 dark:text-stone-400 text-center leading-tight w-20 line-clamp-2">
                             {similar.title}
                           </p>
                         </button>
