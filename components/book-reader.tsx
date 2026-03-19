@@ -46,90 +46,74 @@ function createAmbientSound(type: AmbientSound): { start: () => void; stop: () =
   try {
     const ctx = new AudioContext()
     const gainNode = ctx.createGain()
-    gainNode.gain.value = 0.15
     gainNode.connect(ctx.destination)
+    let started = false
 
-    if (type === "rain") {
-      // Brown noise filtered to sound like rain
+    function makeStop() {
+      return () => {
+        try { gainNode.disconnect() } catch {}
+        try { ctx.close() } catch {}
+        started = false
+      }
+    }
+
+    function makeBuffer(generator: (data: Float32Array, sampleRate: number) => void, filterType: BiquadFilterType, filterFreq: number, volume: number, filterQ?: number) {
+      gainNode.gain.value = volume
       const bufferSize = 2 * ctx.sampleRate
       const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
-      const data = buffer.getChannelData(0)
-      let lastOut = 0
-      for (let i = 0; i < bufferSize; i++) {
-        const white = Math.random() * 2 - 1
-        data[i] = (lastOut + (0.02 * white)) / 1.02
-        lastOut = data[i]
-        data[i] *= 3.5
-      }
+      generator(buffer.getChannelData(0), ctx.sampleRate)
       const source = ctx.createBufferSource()
       source.buffer = buffer
       source.loop = true
       const filter = ctx.createBiquadFilter()
-      filter.type = "lowpass"
-      filter.frequency.value = 800
+      filter.type = filterType
+      filter.frequency.value = filterFreq
+      if (filterQ !== undefined) filter.Q.value = filterQ
       source.connect(filter)
       filter.connect(gainNode)
       return {
-        start: () => { ctx.resume(); source.start(0) },
-        stop: () => { try { source.stop(); ctx.close() } catch {} },
+        start: () => { if (!started) { ctx.resume(); source.start(0); started = true } },
+        stop: makeStop(),
       }
+    }
+
+    if (type === "rain") {
+      return makeBuffer((data) => {
+        let lastOut = 0
+        for (let i = 0; i < data.length; i++) {
+          const white = Math.random() * 2 - 1
+          data[i] = (lastOut + (0.02 * white)) / 1.02
+          lastOut = data[i]
+          data[i] *= 3.5
+        }
+      }, "lowpass", 800, 0.15)
     }
 
     if (type === "fireplace") {
-      // Crackling: random short bursts of filtered noise
-      const bufferSize = 2 * ctx.sampleRate
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
-      const data = buffer.getChannelData(0)
-      for (let i = 0; i < bufferSize; i++) {
-        const crackle = Math.random() > 0.997 ? (Math.random() * 0.5) : 0
-        const hiss = (Math.random() * 2 - 1) * 0.03
-        data[i] = hiss + crackle
-      }
-      const source = ctx.createBufferSource()
-      source.buffer = buffer
-      source.loop = true
-      const filter = ctx.createBiquadFilter()
-      filter.type = "bandpass"
-      filter.frequency.value = 600
-      filter.Q.value = 0.5
-      source.connect(filter)
-      filter.connect(gainNode)
-      gainNode.gain.value = 0.3
-      return {
-        start: () => { ctx.resume(); source.start(0) },
-        stop: () => { try { source.stop(); ctx.close() } catch {} },
-      }
+      return makeBuffer((data) => {
+        for (let i = 0; i < data.length; i++) {
+          const crackle = Math.random() > 0.997 ? (Math.random() * 0.5) : 0
+          const hiss = (Math.random() * 2 - 1) * 0.03
+          data[i] = hiss + crackle
+        }
+      }, "bandpass", 600, 0.3, 0.5)
     }
 
     if (type === "cafe") {
-      // Warm pink noise with gentle modulation
-      const bufferSize = 2 * ctx.sampleRate
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
-      const data = buffer.getChannelData(0)
-      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0
-      for (let i = 0; i < bufferSize; i++) {
-        const white = Math.random() * 2 - 1
-        b0 = 0.99886 * b0 + white * 0.0555179
-        b1 = 0.99332 * b1 + white * 0.0750759
-        b2 = 0.96900 * b2 + white * 0.1538520
-        b3 = 0.86650 * b3 + white * 0.3104856
-        b4 = 0.55000 * b4 + white * 0.5329522
-        b5 = -0.7616 * b5 - white * 0.0168980
-        data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11
-        b6 = white * 0.115926
-      }
-      const source = ctx.createBufferSource()
-      source.buffer = buffer
-      source.loop = true
-      const filter = ctx.createBiquadFilter()
-      filter.type = "lowpass"
-      filter.frequency.value = 500
-      source.connect(filter)
-      filter.connect(gainNode)
-      return {
-        start: () => { ctx.resume(); source.start(0) },
-        stop: () => { try { source.stop(); ctx.close() } catch {} },
-      }
+      return makeBuffer((data) => {
+        let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0
+        for (let i = 0; i < data.length; i++) {
+          const white = Math.random() * 2 - 1
+          b0 = 0.99886 * b0 + white * 0.0555179
+          b1 = 0.99332 * b1 + white * 0.0750759
+          b2 = 0.96900 * b2 + white * 0.1538520
+          b3 = 0.86650 * b3 + white * 0.3104856
+          b4 = 0.55000 * b4 + white * 0.5329522
+          b5 = -0.7616 * b5 - white * 0.0168980
+          data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11
+          b6 = white * 0.115926
+        }
+      }, "lowpass", 500, 0.15)
     }
 
     return null
@@ -1387,7 +1371,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
               <div className="flex items-center gap-1 justify-self-end">
                 <motion.button
                   whileTap={{ scale: 0.9 }}
-                  onClick={toggleFocusMode}
+                  onClick={() => { if (focusMode) stopAmbientSound(); toggleFocusMode(); setFocusMinimized(false) }}
                   className="tap-target flex items-center justify-center rounded-lg p-2 transition-colors"
                   style={{ color: focusMode ? currentTheme.progressFill : currentTheme.text }}
                   aria-label={focusMode ? "Exit focus mode" : "Enter focus mode"}
