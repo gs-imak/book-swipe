@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ArrowLeft, ChevronLeft, ChevronRight, Sun, Coffee, Moon, Loader2, AlertCircle, BookOpen, Minus, Plus, List, X, Search, Bookmark, BookmarkCheck, Highlighter, StickyNote, Copy, Trash2, MessageSquare, Quote, Globe, BookText, Share2 } from "lucide-react"
+import { ArrowLeft, ChevronLeft, ChevronRight, Sun, Coffee, Moon, Loader2, AlertCircle, BookOpen, Minus, Plus, List, X, Search, Bookmark, BookmarkCheck, Highlighter, StickyNote, Copy, Trash2, MessageSquare, Quote, Globe, BookText, Share2, Type } from "lucide-react"
 import { GutenbergBook, fetchBookText, fetchBookImages } from "@/lib/gutenberg-api"
 import { saveReadingPosition, getReadingPosition, getBookNotesForBook, saveBookNote, deleteBookNote, type BookNote } from "@/lib/storage"
 
@@ -17,6 +17,30 @@ interface BookReaderProps {
 }
 
 const THEME_KEY = "bookswipe_reader_theme"
+const FONT_KEY = "bookswipe_reader_font"
+
+type ReaderFont = "georgia" | "merriweather" | "lora" | "system" | "literata"
+
+const FONT_OPTIONS: { id: ReaderFont; label: string; family: string }[] = [
+  { id: "georgia", label: "Georgia", family: "Georgia, 'Source Serif 4', serif" },
+  { id: "merriweather", label: "Merriweather", family: "'Merriweather', Georgia, serif" },
+  { id: "lora", label: "Lora", family: "'Lora', Georgia, serif" },
+  { id: "literata", label: "Literata", family: "'Literata', Georgia, serif" },
+  { id: "system", label: "Sans-serif", family: "system-ui, -apple-system, sans-serif" },
+]
+
+function getStoredFont(): ReaderFont {
+  if (typeof window === "undefined") return "georgia"
+  try {
+    const stored = localStorage.getItem(FONT_KEY)
+    if (stored && FONT_OPTIONS.some(f => f.id === stored)) return stored as ReaderFont
+  } catch { /* ignore */ }
+  return "georgia"
+}
+
+function getFontFamily(font: ReaderFont): string {
+  return FONT_OPTIONS.find(f => f.id === font)?.family || FONT_OPTIONS[0].family
+}
 
 const themes: Record<ReaderTheme, { bg: string; text: string; border: string; barBg: string; progressTrack: string; progressFill: string; highlight: string }> = {
   light: {
@@ -226,6 +250,9 @@ function RenderInlineText({ text, skipTypography }: { text: string; skipTypograp
 export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, onClose }: BookReaderProps) {
   const [theme, setTheme] = useState<ReaderTheme>(getStoredTheme)
   const [fontSize, setFontSize] = useState(17)
+  const [readerFont, setReaderFont] = useState<ReaderFont>(getStoredFont)
+  const [showFontMenu, setShowFontMenu] = useState(false)
+  const fontFamily = getFontFamily(readerFont)
   const [text, setText] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -893,6 +920,50 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 >
                   {isBookmarked ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
                 </motion.button>
+                <div className="relative">
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setShowFontMenu(!showFontMenu)}
+                    className="tap-target flex items-center justify-center rounded-lg p-2 transition-colors"
+                    style={{ color: currentTheme.text }}
+                    aria-label="Change font"
+                  >
+                    <Type className="w-5 h-5" />
+                  </motion.button>
+                  {/* Font picker dropdown */}
+                  <AnimatePresence>
+                    {showFontMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.12 }}
+                        className="absolute right-0 top-full mt-1 z-50 rounded-xl shadow-lg overflow-hidden"
+                        style={{ backgroundColor: currentTheme.barBg, border: `1px solid ${currentTheme.border}`, backdropFilter: "blur(12px)" }}
+                      >
+                        {FONT_OPTIONS.map(opt => (
+                          <button
+                            key={opt.id}
+                            onClick={() => {
+                              setReaderFont(opt.id)
+                              try { localStorage.setItem(FONT_KEY, opt.id) } catch { /* ignore */ }
+                              setShowFontMenu(false)
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between gap-4 min-w-[160px]"
+                            style={{
+                              fontFamily: opt.family,
+                              color: readerFont === opt.id ? currentTheme.progressFill : currentTheme.text,
+                              backgroundColor: readerFont === opt.id ? `${currentTheme.progressFill}15` : "transparent",
+                            }}
+                          >
+                            <span>{opt.label}</span>
+                            {readerFont === opt.id && <span className="text-xs opacity-60">Active</span>}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={cycleTheme}
@@ -1037,7 +1108,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                             <p
                               className="text-center italic opacity-50"
                               style={{
-                                fontFamily: "Georgia, 'Source Serif 4', serif",
+                                fontFamily,
                                 fontSize: `${fontSize - 2}px`,
                               }}
                             >
@@ -1054,7 +1125,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           <h2
                             className="font-bold"
                             style={{
-                              fontFamily: "Georgia, 'Source Serif 4', serif",
+                              fontFamily,
                               fontSize: `${fontSize + 4}px`,
                               lineHeight: "1.4",
                               letterSpacing: "0.02em",
@@ -1067,7 +1138,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                             <p
                               className="mt-2 italic opacity-60"
                               style={{
-                                fontFamily: "Georgia, 'Source Serif 4', serif",
+                                fontFamily,
                                 fontSize: `${fontSize}px`,
                                 color: currentTheme.text,
                               }}
@@ -1086,7 +1157,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           className="my-8 text-center"
                           data-block-index={i}
                           style={{
-                            fontFamily: "Georgia, 'Source Serif 4', serif",
+                            fontFamily,
                             fontSize: `${fontSize}px`,
                             lineHeight: "1.7",
                             color: currentTheme.text,
@@ -1108,7 +1179,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           className="mb-5 pl-4 italic"
                           data-block-index={i}
                           style={{
-                            fontFamily: "Georgia, 'Source Serif 4', serif",
+                            fontFamily,
                             fontSize: `${fontSize}px`,
                             lineHeight: "1.85",
                             letterSpacing: "0.01em",
@@ -1129,7 +1200,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           className="mb-5 text-right italic"
                           data-block-index={i}
                           style={{
-                            fontFamily: "Georgia, 'Source Serif 4', serif",
+                            fontFamily,
                             fontSize: `${fontSize}px`,
                             lineHeight: "1.85",
                             color: currentTheme.text,
@@ -1148,7 +1219,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           className="mb-5 whitespace-pre-line"
                           data-block-index={i}
                           style={{
-                            fontFamily: "Georgia, 'Source Serif 4', serif",
+                            fontFamily,
                             fontSize: `${fontSize}px`,
                             lineHeight: "1.85",
                             letterSpacing: "0.01em",
@@ -1178,7 +1249,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           className="mb-5 leading-relaxed text-justify"
                           data-block-index={i}
                           style={{
-                            fontFamily: "Georgia, 'Source Serif 4', serif",
+                            fontFamily,
                             fontSize: `${fontSize}px`,
                             lineHeight: "1.85",
                             letterSpacing: "0.01em",
@@ -1188,7 +1259,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           <span
                             style={{
                               float: "left",
-                              fontFamily: "Georgia, 'Source Serif 4', serif",
+                              fontFamily,
                               fontSize: `${fontSize * 3.2}px`,
                               lineHeight: "0.8",
                               paddingTop: "0.07em",
@@ -1210,7 +1281,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                         className="mb-5 leading-relaxed text-justify"
                         data-block-index={i}
                         style={{
-                          fontFamily: "Georgia, 'Source Serif 4', serif",
+                          fontFamily,
                           fontSize: `${fontSize}px`,
                           lineHeight: "1.85",
                           letterSpacing: "0.01em",
