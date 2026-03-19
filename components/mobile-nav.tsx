@@ -47,7 +47,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNav
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-t border-stone-200/80"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-t border-stone-200/80 dark:border-stone-700/80"
         style={{
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
@@ -70,7 +70,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNav
                   <div className="relative">
                     <Icon
                       className={`w-[22px] h-[22px] transition-colors duration-200 ${
-                        isActive ? "text-stone-900" : "text-stone-500"
+                        isActive ? "text-stone-900 dark:text-stone-100" : "text-stone-500 dark:text-stone-400"
                       }`}
                       strokeWidth={isActive ? 2.5 : 1.8}
                     />
@@ -89,7 +89,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNav
 
                   <span
                     className={`text-[10px] font-medium transition-colors duration-200 ${
-                      isActive ? "text-stone-900" : "text-stone-500"
+                      isActive ? "text-stone-900 dark:text-stone-100" : "text-stone-500 dark:text-stone-400"
                     }`}
                   >
                     {item.label}

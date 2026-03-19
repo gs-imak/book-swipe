@@ -290,7 +290,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
       <div className="bg-background flex items-center justify-center" style={{ minHeight: "100dvh" }}>
         <div className="text-center">
           <Loader2 className="w-8 h-8 text-amber-600 animate-spin mx-auto mb-4" />
-          <p className="text-base font-medium text-stone-600">Finding books for you...</p>
+          <p className="text-base font-medium text-stone-600 dark:text-stone-300">Finding books for you...</p>
         </div>
       </div>
     )
@@ -305,15 +305,15 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
+          <div className="w-16 h-16 bg-amber-50 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center mx-auto mb-5">
             <BookOpen className="w-8 h-8 text-amber-600" />
           </div>
           <h2
-            className="text-2xl font-bold text-stone-900 mb-2 font-serif"
+            className="text-2xl font-bold text-stone-900 dark:text-stone-100 mb-2 font-serif"
           >
             No matches yet
           </h2>
-          <p className="text-stone-500 mb-6 leading-relaxed">
+          <p className="text-stone-500 dark:text-stone-400 mb-6 leading-relaxed">
             We couldn&apos;t find books for your current preferences. Try adjusting your taste profile.
           </p>
           <Button
@@ -337,15 +337,15 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
+          <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center mx-auto mb-5">
             <Heart className="w-8 h-8 text-emerald-600" />
           </div>
           <h2
-            className="text-2xl font-bold text-stone-900 mb-2 font-serif"
+            className="text-2xl font-bold text-stone-900 dark:text-stone-100 mb-2 font-serif"
           >
             Nice batch!
           </h2>
-          <p className="text-stone-500 mb-6">
+          <p className="text-stone-500 dark:text-stone-400 mb-6">
             You&apos;ve gone through {filteredBooks.length} books. Ready for more or head to your library?
           </p>
 
@@ -353,18 +353,18 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
           <div className="flex justify-center gap-8 mb-6">
             <div className="text-center">
               <p className="text-2xl font-bold text-emerald-600">{sessionLikedBooks.length}</p>
-              <p className="text-xs text-stone-500">Liked</p>
+              <p className="text-xs text-stone-500 dark:text-stone-400">Liked</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-stone-400">{passedBooks.length}</p>
-              <p className="text-xs text-stone-500">Passed</p>
+              <p className="text-2xl font-bold text-stone-400 dark:text-stone-500">{passedBooks.length}</p>
+              <p className="text-xs text-stone-500 dark:text-stone-400">Passed</p>
             </div>
           </div>
 
           {/* Liked books list */}
           {sessionLikedBooks.length > 0 && (
-            <div className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm mb-6 text-left">
-              <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-3">
+            <div className="bg-white dark:bg-stone-900 rounded-xl p-4 border border-stone-200/60 dark:border-stone-700/60 shadow-sm mb-6 text-left">
+              <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-3">
                 Your picks
               </h3>
               <div className="max-h-32 overflow-y-auto space-y-1.5">
@@ -374,10 +374,10 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: Math.min(index * 0.03, 0.2) }}
-                    className="text-sm text-stone-700 bg-stone-50 rounded-lg px-3 py-2"
+                    className="text-sm text-stone-700 dark:text-stone-300 bg-stone-50 dark:bg-stone-800/50 rounded-lg px-3 py-2"
                   >
                     <span className="font-medium">{book.title}</span>
-                    <span className="text-stone-400"> by {book.author}</span>
+                    <span className="text-stone-400 dark:text-stone-500"> by {book.author}</span>
                   </motion.div>
                 ))}
               </div>
@@ -403,7 +403,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
                 loadBooks(seenIds)
               }}
               variant="outline"
-              className="flex-1 h-11 border-stone-200 hover:bg-stone-50 text-stone-700 rounded-xl"
+              className="flex-1 h-11 border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-800/50 text-stone-700 dark:text-stone-300 rounded-xl"
             >
               <RotateCcw className="w-4 h-4 mr-2" />
               More Books
@@ -425,24 +425,24 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
         </div>
 
         {/* Header */}
-        <div className="bg-background/90 backdrop-blur-md border-b border-stone-200/60 sticky top-0 z-20">
+        <div className="bg-background/90 backdrop-blur-md border-b border-stone-200/60 dark:border-stone-700/60 sticky top-0 z-20">
           <div className="px-4 sm:px-6 py-3 flex justify-between items-center max-w-md mx-auto">
             <button
               onClick={onViewLibrary}
               aria-label="View library"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-100 hover:bg-stone-200 transition-colors tap-target touch-manipulation"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors tap-target touch-manipulation"
             >
-              <Library className="w-4 h-4 text-stone-600" />
-              <span className="text-sm font-medium text-stone-700">{likedBooks.length}</span>
+              <Library className="w-4 h-4 text-stone-600 dark:text-stone-300" />
+              <span className="text-sm font-medium text-stone-700 dark:text-stone-300">{likedBooks.length}</span>
             </button>
 
             <div className="text-center">
               <h1
-                className="text-lg font-bold text-stone-900 tracking-tight font-serif"
+                className="text-lg font-bold text-stone-900 dark:text-stone-100 tracking-tight font-serif"
               >
                 BookSwipe
               </h1>
-              <p className="text-xs text-stone-400 font-medium">
+              <p className="text-xs text-stone-400 dark:text-stone-500 font-medium">
                 {currentIndex + 1} of {filteredBooks.length}
               </p>
             </div>
@@ -450,9 +450,9 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
             <button
               onClick={onRestart}
               aria-label="Update preferences"
-              className="flex items-center justify-center p-2 rounded-lg hover:bg-stone-100 transition-colors tap-target touch-manipulation"
+              className="flex items-center justify-center p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors tap-target touch-manipulation"
             >
-              <Settings className="w-5 h-5 text-stone-400" />
+              <Settings className="w-5 h-5 text-stone-400 dark:text-stone-500" />
             </button>
           </div>
         </div>
@@ -497,7 +497,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 aria-label="Pass on this book"
-                className="w-14 h-14 rounded-full border-2 border-red-200 hover:border-red-300 bg-white shadow-sm flex items-center justify-center transition-colors tap-target touch-manipulation"
+                className="w-14 h-14 rounded-full border-2 border-red-200 dark:border-red-800 hover:border-red-300 dark:hover:border-red-700 bg-white dark:bg-stone-900 shadow-sm flex items-center justify-center transition-colors tap-target touch-manipulation"
                 onClick={() => handleSwipe("left")}
               >
                 <X className="w-6 h-6 text-red-400" />
