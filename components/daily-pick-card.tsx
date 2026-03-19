@@ -52,7 +52,7 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
     >
       <div className="flex items-center gap-2 mb-3">
         <Sparkles className="w-4 h-4 text-amber-600" />
-        <h3 className="text-lg font-semibold text-stone-900 font-serif">Today&apos;s Pick</h3>
+        <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-100 font-serif">Today&apos;s Pick</h3>
       </div>
 
       <motion.div
@@ -73,14 +73,14 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
             />
             <div className="absolute top-1.5 right-1.5 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
               <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
-              <span className="text-[10px] font-bold text-stone-700">{pick.book.rating}</span>
+              <span className="text-[10px] font-bold text-stone-700 dark:text-stone-300">{pick.book.rating}</span>
             </div>
           </div>
 
           {/* Info */}
           <div className="flex-1 min-w-0 flex flex-col justify-between">
             <div>
-              <h3 className="font-bold text-stone-900 line-clamp-2 leading-tight font-serif text-base sm:text-lg group-hover:text-amber-800 transition-colors">
+              <h3 className="font-bold text-stone-900 dark:text-stone-100 line-clamp-2 leading-tight font-serif text-base sm:text-lg group-hover:text-amber-800 dark:text-amber-300 transition-colors">
                 {pick.book.title}
               </h3>
               <p className="text-sm text-stone-500 mt-0.5">{pick.book.author}</p>
@@ -91,7 +91,7 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
                   {pick.reasons.slice(0, 2).map((reason, i) => (
                     <span
                       key={i}
-                      className="text-xs px-2 py-0.5 rounded-full bg-white/70 text-amber-800 border border-amber-200/50"
+                      className="text-xs px-2 py-0.5 rounded-full bg-white/70 text-amber-800 dark:text-amber-300 border border-amber-200/50"
                     >
                       {reason.description}
                     </span>
@@ -104,13 +104,13 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
             <div className="flex items-center gap-2 mt-3">
               {pick.saved ? (
                 <div className="flex items-center gap-2">
-                  <span className="flex items-center gap-1.5 text-xs text-amber-700 font-medium">
+                  <span className="flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-400 font-medium">
                     <Bookmark className="w-3.5 h-3.5 fill-amber-600" />
                     In Library
                   </span>
                   <button
                     onClick={() => onBookClick?.(pick.book)}
-                    className="h-9 px-3.5 bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs font-medium rounded-xl transition-all active:scale-[0.98]"
+                    className="h-9 px-3.5 bg-amber-100 hover:bg-amber-200 text-amber-800 dark:text-amber-300 text-xs font-medium rounded-xl transition-all active:scale-[0.98]"
                   >
                     View Details
                   </button>

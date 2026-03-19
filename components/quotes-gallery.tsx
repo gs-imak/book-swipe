@@ -49,7 +49,7 @@ export function QuotesGallery() {
     >
       <div className="flex items-center gap-2">
         <Quote className="w-4 h-4 text-teal-600" />
-        <h3 className="text-sm font-semibold text-stone-900 font-serif">Saved Quotes</h3>
+        <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100 font-serif">Saved Quotes</h3>
         <span className="text-[11px] bg-teal-50 text-teal-700 px-1.5 py-0.5 rounded-full font-medium">
           {quotes.length}
         </span>
@@ -67,7 +67,7 @@ export function QuotesGallery() {
             <div className="flex gap-3">
               <Quote className="w-3.5 h-3.5 text-teal-400 flex-shrink-0 mt-1" />
               <div className="space-y-1.5 min-w-0 flex-1">
-                <p className="text-sm text-stone-700 leading-relaxed italic">{q.content}</p>
+                <p className="text-sm text-stone-700 dark:text-stone-300 leading-relaxed italic">{q.content}</p>
                 <div className="flex items-center justify-between gap-2">
                   {q.book && (
                     <p className="text-[11px] text-stone-400 truncate">

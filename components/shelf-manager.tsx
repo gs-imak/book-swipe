@@ -105,15 +105,15 @@ export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManager
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 30, scale: 0.97 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="bg-background rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden flex flex-col border border-stone-200/60"
+          className="bg-background rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden flex flex-col border border-stone-200/60 dark:border-stone-700/60"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="flex items-center justify-between p-5 pb-3">
-            <h2 className="text-lg font-bold text-stone-900 font-serif">Manage Shelves</h2>
+            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">Manage Shelves</h2>
             <button
               onClick={onClose}
-              className="p-2 -mr-2 rounded-lg hover:bg-stone-100 transition-colors tap-target touch-manipulation"
+              className="p-2 -mr-2 rounded-lg hover:bg-stone-100 dark:bg-stone-800 transition-colors tap-target touch-manipulation"
             >
               <X className="w-5 h-5 text-stone-400" />
             </button>
@@ -124,13 +124,13 @@ export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManager
             {shelves.map((shelf) => (
               <div key={shelf.id}>
                 {editingId === shelf.id ? (
-                  <div className="bg-stone-50 rounded-xl p-3 space-y-2">
+                  <div className="bg-stone-50 dark:bg-stone-800/50 rounded-xl p-3 space-y-2">
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="flex-1 h-9 px-3 rounded-lg border border-stone-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
+                        className="flex-1 h-9 px-3 rounded-lg border border-stone-200 dark:border-stone-700 text-sm bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
                         placeholder="Shelf name"
                         autoFocus
                         onKeyDown={(e) => e.key === "Enter" && handleRename(shelf.id)}
@@ -152,7 +152,7 @@ export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManager
                     <div className="flex gap-2 justify-end">
                       <button
                         onClick={() => setEditingId(null)}
-                        className="px-3 py-1.5 text-xs text-stone-500 hover:text-stone-700 rounded-lg transition-colors"
+                        className="px-3 py-1.5 text-xs text-stone-500 hover:text-stone-700 dark:text-stone-300 rounded-lg transition-colors"
                       >
                         Cancel
                       </button>
@@ -165,14 +165,14 @@ export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManager
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-stone-50 transition-colors">
+                  <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-stone-50 dark:bg-stone-800/50 transition-colors">
                     <span className="text-lg">{shelf.emoji}</span>
-                    <span className="flex-1 text-sm font-medium text-stone-800">{shelf.name}</span>
+                    <span className="flex-1 text-sm font-medium text-stone-800 dark:text-stone-200">{shelf.name}</span>
                     <span className="text-xs text-stone-400">{getBooksForShelf(shelf.id).length}</span>
                     <button
                       onClick={() => startEdit(shelf)}
                       aria-label={`Edit ${shelf.name}`}
-                      className="p-1.5 rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-all tap-target touch-manipulation"
+                      className="p-1.5 rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 dark:bg-stone-800 transition-all tap-target touch-manipulation"
                     >
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
@@ -197,7 +197,7 @@ export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManager
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg border border-stone-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
+                  className="w-full h-9 px-3 rounded-lg border border-stone-200 dark:border-stone-700 text-sm bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
                   placeholder="New shelf name"
                   autoFocus
                   onKeyDown={(e) => e.key === "Enter" && handleCreate()}
@@ -218,7 +218,7 @@ export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManager
                 <div className="flex gap-2 justify-end">
                   <button
                     onClick={() => setIsAdding(false)}
-                    className="px-3 py-1.5 text-xs text-stone-500 hover:text-stone-700 rounded-lg transition-colors"
+                    className="px-3 py-1.5 text-xs text-stone-500 hover:text-stone-700 dark:text-stone-300 rounded-lg transition-colors"
                   >
                     Cancel
                   </button>
@@ -234,7 +234,7 @@ export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManager
             ) : (
               <button
                 onClick={startAdd}
-                className="w-full flex items-center gap-2 p-3 rounded-xl text-sm text-amber-700 hover:bg-amber-50 transition-colors font-medium"
+                className="w-full flex items-center gap-2 p-3 rounded-xl text-sm text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:bg-amber-900/30 transition-colors font-medium"
               >
                 <Plus className="w-4 h-4" />
                 New Shelf

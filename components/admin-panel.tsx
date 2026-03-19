@@ -228,10 +228,10 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
   const progressCount = getReadingProgress().length
 
   return (
-    <div className="bg-white rounded-xl p-5 border border-stone-200/60 shadow-sm space-y-5">
+    <div className="bg-white dark:bg-stone-900 rounded-xl p-5 border border-stone-200/60 dark:border-stone-700/60 shadow-sm space-y-5">
       {/* Book Language */}
       <div>
-        <h3 className="text-base font-semibold text-stone-900 flex items-center gap-2 mb-1">
+        <h3 className="text-base font-semibold text-stone-900 dark:text-stone-100 flex items-center gap-2 mb-1">
           <Globe className="w-4 h-4 text-stone-500" />
           Book Language
         </h3>
@@ -241,7 +241,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
         <select
           value={language}
           onChange={(e) => handleLanguageChange(e.target.value as BookLanguage)}
-          className="w-full h-10 px-3 rounded-xl border border-stone-200 bg-stone-50 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-300"
+          className="w-full h-10 px-3 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50 text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-stone-300"
         >
           {Object.entries(LANGUAGE_LABELS).map(([value, label]) => (
             <option key={value} value={value}>
@@ -251,10 +251,10 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
         </select>
       </div>
 
-      <div className="border-t border-stone-200/60" />
+      <div className="border-t border-stone-200/60 dark:border-stone-700/60" />
 
       <div>
-        <h3 className="text-base font-semibold text-stone-900 flex items-center gap-2 mb-1">
+        <h3 className="text-base font-semibold text-stone-900 dark:text-stone-100 flex items-center gap-2 mb-1">
           <Shield className="w-4 h-4 text-stone-500" />
           Data & Backup
         </h3>
@@ -265,20 +265,20 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
 
       {/* Current data summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <div className="bg-stone-50 rounded-xl px-3 py-2">
-          <p className="text-lg font-bold text-stone-900">{likedCount}</p>
+        <div className="bg-stone-50 dark:bg-stone-800/50 rounded-xl px-3 py-2">
+          <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{likedCount}</p>
           <p className="text-[11px] text-stone-500">Books</p>
         </div>
-        <div className="bg-stone-50 rounded-xl px-3 py-2">
-          <p className="text-lg font-bold text-stone-900">{progressCount}</p>
+        <div className="bg-stone-50 dark:bg-stone-800/50 rounded-xl px-3 py-2">
+          <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{progressCount}</p>
           <p className="text-[11px] text-stone-500">Reading</p>
         </div>
-        <div className="bg-stone-50 rounded-xl px-3 py-2">
-          <p className="text-lg font-bold text-stone-900">{reviewCount}</p>
+        <div className="bg-stone-50 dark:bg-stone-800/50 rounded-xl px-3 py-2">
+          <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{reviewCount}</p>
           <p className="text-[11px] text-stone-500">Reviews</p>
         </div>
-        <div className="bg-stone-50 rounded-xl px-3 py-2">
-          <p className="text-lg font-bold text-stone-900">{noteCount}</p>
+        <div className="bg-stone-50 dark:bg-stone-800/50 rounded-xl px-3 py-2">
+          <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{noteCount}</p>
           <p className="text-[11px] text-stone-500">Notes</p>
         </div>
       </div>
@@ -296,7 +296,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
           onClick={() => fileInputRef.current?.click()}
           disabled={importing}
           variant="outline"
-          className="flex-1 h-10 border-stone-200 hover:bg-stone-50 text-stone-700 rounded-xl text-sm"
+          className="flex-1 h-10 border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 dark:text-stone-300 rounded-xl text-sm"
         >
           <Upload className="w-4 h-4 mr-2" />
           {importing ? "Importing..." : "Import Backup"}
@@ -311,13 +311,13 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
       </div>
 
       {/* Goodreads / Notion */}
-      <div className="pt-2 border-t border-stone-200/60 space-y-2">
+      <div className="pt-2 border-t border-stone-200/60 dark:border-stone-700/60 space-y-2">
         <p className="text-xs text-stone-500 font-medium">Goodreads & Notion</p>
         <div className="grid grid-cols-2 gap-2">
           <Button
             onClick={() => setShowGoodreadsImport(true)}
             variant="outline"
-            className="h-10 border-stone-200 hover:bg-stone-50 text-stone-700 rounded-xl text-sm"
+            className="h-10 border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 dark:text-stone-300 rounded-xl text-sm"
           >
             <Upload className="w-4 h-4 mr-1.5" />
             Import GR
@@ -330,7 +330,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
               showToast("Goodreads CSV exported")
             }}
             variant="outline"
-            className="h-10 border-stone-200 hover:bg-stone-50 text-stone-700 rounded-xl text-sm"
+            className="h-10 border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 dark:text-stone-300 rounded-xl text-sm"
           >
             <BookOpen className="w-4 h-4 mr-1.5" />
             Export GR
@@ -344,7 +344,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
             showToast("Notion CSV exported")
           }}
           variant="outline"
-          className="w-full h-10 border-stone-200 hover:bg-stone-50 text-stone-700 rounded-xl text-sm"
+          className="w-full h-10 border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 dark:text-stone-300 rounded-xl text-sm"
         >
           <FileSpreadsheet className="w-4 h-4 mr-2" />
           Export for Notion
@@ -352,9 +352,9 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
       </div>
 
       {/* Warning */}
-      <div className="flex gap-2 p-3 rounded-lg bg-amber-50 border border-amber-100">
+      <div className="flex gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/30 border border-amber-100">
         <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-        <p className="text-xs text-amber-700 leading-relaxed">
+        <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
           Your data is stored in this browser only. Clearing browser data will erase it.
           Export backups regularly to avoid data loss.
         </p>

@@ -105,7 +105,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl border border-stone-200/60 shadow-sm p-6 space-y-6"
+      className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200/60 dark:border-stone-700/60 shadow-sm p-6 space-y-6"
     >
       {/* Header */}
       <div className="flex items-start gap-4">
@@ -120,7 +120,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
           />
         </div>
         <div className="flex-1">
-          <h3 className="font-bold text-lg text-stone-900 line-clamp-2">
+          <h3 className="font-bold text-lg text-stone-900 dark:text-stone-100 line-clamp-2">
             {book.title}
           </h3>
           <p className="text-stone-500 text-sm">{book.author}</p>
@@ -129,7 +129,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
 
       {/* Rating */}
       <div className="space-y-2">
-        <label id="review-rating-label" className="text-sm font-semibold text-stone-700">How was it?</label>
+        <label id="review-rating-label" className="text-sm font-semibold text-stone-700 dark:text-stone-300">How was it?</label>
         <StarRating
           rating={rating}
           onRatingChange={setRating}
@@ -141,7 +141,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
 
       {/* Mood */}
       <div className="space-y-3">
-        <label id="review-mood-label" className="text-sm font-semibold text-stone-700">How did it make you feel?</label>
+        <label id="review-mood-label" className="text-sm font-semibold text-stone-700 dark:text-stone-300">How did it make you feel?</label>
         <div role="group" aria-labelledby="review-mood-label" className="grid grid-cols-3 sm:grid-cols-6 gap-2">
           {moodOptions.map((mood) => (
             <Button
@@ -160,7 +160,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
 
       {/* Quick Tags */}
       <div className="space-y-3">
-        <label id="review-tags-label" className="text-sm font-semibold text-stone-700">Quick tags</label>
+        <label id="review-tags-label" className="text-sm font-semibold text-stone-700 dark:text-stone-300">Quick tags</label>
         <div role="group" aria-labelledby="review-tags-label" className="flex flex-wrap gap-2">
           {quickTags.map((tag) => (
             <Button
@@ -179,7 +179,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
 
       {/* Written Review */}
       <div className="space-y-2">
-        <label htmlFor="review-text" className="text-sm font-semibold text-stone-700">
+        <label htmlFor="review-text" className="text-sm font-semibold text-stone-700 dark:text-stone-300">
           Your thoughts <span className="text-stone-400 font-normal">(optional)</span>
         </label>
         <textarea
@@ -187,14 +187,14 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
           value={review}
           onChange={(e) => setReview(e.target.value)}
           placeholder="What did you love about this book? Any memorable quotes or moments?"
-          className="w-full p-3 border border-stone-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+          className="w-full p-3 border border-stone-200 dark:border-stone-700 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
           rows={3}
         />
       </div>
 
       {/* Content Warnings */}
       <div className="space-y-3">
-        <label id="review-warnings-label" className="text-sm font-semibold text-stone-700 flex items-center gap-2">
+        <label id="review-warnings-label" className="text-sm font-semibold text-stone-700 dark:text-stone-300 flex items-center gap-2">
           <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
           Content warnings <span className="text-stone-400 font-normal">(optional)</span>
         </label>
@@ -208,8 +208,8 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
               )}
               className={`h-7 px-3 rounded-full text-xs font-medium border transition-all ${
                 selectedWarnings.includes(w)
-                  ? "bg-amber-50 border-amber-400 text-amber-800"
-                  : "bg-stone-50 border-stone-200 text-stone-500 hover:border-stone-300"
+                  ? "bg-amber-50 dark:bg-amber-900/30 border-amber-400 text-amber-800 dark:text-amber-300"
+                  : "bg-stone-50 dark:bg-stone-800/50 border-stone-200 text-stone-500 hover:border-stone-300"
               }`}
             >
               {w}

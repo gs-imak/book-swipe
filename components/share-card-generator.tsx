@@ -110,16 +110,16 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 30, scale: 0.97 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="bg-background rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col border border-stone-200/60"
+          className="bg-background rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col border border-stone-200/60 dark:border-stone-700/60"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="flex items-center justify-between p-5 pb-3">
-            <h2 className="text-lg font-bold text-stone-900 font-serif">Share Card</h2>
+            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">Share Card</h2>
             <button
               onClick={onClose}
               aria-label="Close share card"
-              className="p-2 -mr-2 rounded-lg hover:bg-stone-100 transition-colors tap-target touch-manipulation"
+              className="p-2 -mr-2 rounded-lg hover:bg-stone-100 dark:bg-stone-800 transition-colors tap-target touch-manipulation"
             >
               <X className="w-5 h-5 text-stone-400" />
             </button>
@@ -127,7 +127,7 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
 
           <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-4">
             {/* Preview */}
-            <div className="relative aspect-[4/5] rounded-xl overflow-hidden bg-stone-100 border border-stone-200/60">
+            <div className="relative aspect-[4/5] rounded-xl overflow-hidden bg-stone-100 dark:bg-stone-800 border border-stone-200/60 dark:border-stone-700/60">
               {preview ? (
                 <img src={preview} alt="Share card preview" className="w-full h-full object-contain" />
               ) : (
@@ -157,7 +157,7 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
                     }`}
                   >
                     <div className={`w-full aspect-[4/5] rounded-lg ${t.preview} border border-stone-200/30`} />
-                    <span className="text-xs font-medium text-stone-700">{t.label}</span>
+                    <span className="text-xs font-medium text-stone-700 dark:text-stone-300">{t.label}</span>
                   </button>
                 ))}
               </div>
@@ -174,7 +174,7 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
                 placeholder="Add a favorite quote or your thoughts..."
                 maxLength={200}
                 rows={2}
-                className="w-full px-3 py-2.5 rounded-xl border border-stone-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 resize-none"
+                className="w-full px-3 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-sm bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 resize-none"
               />
             </div>
 
@@ -200,7 +200,7 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
               <button
                 onClick={handleDownload}
                 disabled={!blobRef.current || generating}
-                className="flex-1 h-10 bg-white border border-stone-200 hover:bg-stone-50 disabled:opacity-40 text-stone-700 text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+                className="flex-1 h-10 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:bg-stone-800/50 disabled:opacity-40 text-stone-700 dark:text-stone-300 text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 <Download className="w-4 h-4" />
                 Download

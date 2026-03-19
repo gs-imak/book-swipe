@@ -35,7 +35,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             priority
           />
           <span
-            className="text-xl sm:text-2xl font-semibold tracking-tight text-stone-900 font-serif"
+            className="text-xl sm:text-2xl font-semibold tracking-tight text-stone-900 dark:text-stone-100 font-serif"
           >
             BookSwipe
           </span>
@@ -50,10 +50,10 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             <div className="space-y-6 sm:space-y-8 text-center lg:text-left order-2 lg:order-1">
               <div className="space-y-4">
                 <h1
-                  className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.1] text-stone-900 tracking-tight font-serif"
+                  className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.1] text-stone-900 dark:text-stone-100 tracking-tight font-serif"
                 >
                   Find your next
-                  <span className="block text-amber-700">favorite book.</span>
+                  <span className="block text-amber-700 dark:text-amber-400">favorite book.</span>
                 </h1>
                 <p className="text-lg sm:text-xl text-stone-500 leading-relaxed max-w-lg mx-auto lg:mx-0">
                   Swipe through personalized recommendations matched to your
@@ -93,24 +93,24 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               {/* Features */}
               <div className="grid grid-cols-3 gap-4 sm:gap-6 pt-4">
                 <div className="text-center lg:text-left">
-                  <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center mx-auto lg:mx-0 mb-2">
-                    <BookOpen className="w-5 h-5 text-amber-700" />
+                  <div className="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center mx-auto lg:mx-0 mb-2">
+                    <BookOpen className="w-5 h-5 text-amber-700 dark:text-amber-400" />
                   </div>
-                  <p className="text-sm font-medium text-stone-700">Swipe to discover</p>
+                  <p className="text-sm font-medium text-stone-700 dark:text-stone-300">Swipe to discover</p>
                   <p className="text-xs text-stone-400 mt-0.5">Like Tinder, for books</p>
                 </div>
                 <div className="text-center lg:text-left">
                   <div className="w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center mx-auto lg:mx-0 mb-2">
                     <Bookmark className="w-5 h-5 text-rose-600" />
                   </div>
-                  <p className="text-sm font-medium text-stone-700">Smart matching</p>
+                  <p className="text-sm font-medium text-stone-700 dark:text-stone-300">Smart matching</p>
                   <p className="text-xs text-stone-400 mt-0.5">Learns your taste</p>
                 </div>
                 <div className="text-center lg:text-left">
                   <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center mx-auto lg:mx-0 mb-2">
                     <Library className="w-5 h-5 text-teal-700" />
                   </div>
-                  <p className="text-sm font-medium text-stone-700">Build your shelf</p>
+                  <p className="text-sm font-medium text-stone-700 dark:text-stone-300">Build your shelf</p>
                   <p className="text-xs text-stone-400 mt-0.5">Track your reads</p>
                 </div>
               </div>
@@ -155,7 +155,7 @@ function PhoneMockup() {
               <span className="text-[10px] font-semibold text-stone-600">3</span>
             </div>
             <div className="text-center">
-              <p className="text-xs font-bold text-stone-800 font-serif">
+              <p className="text-xs font-bold text-stone-800 dark:text-stone-200 font-serif">
                 BookSwipe
               </p>
               <p className="text-[9px] text-stone-400">4 of 15</p>
@@ -196,7 +196,7 @@ function PhoneMockup() {
               {/* Rating badge */}
               <div className="absolute top-3 right-3 bg-white/90 px-2 py-0.5 rounded-full flex items-center gap-1">
                 <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
-                <span className="text-[10px] font-bold text-stone-700">4.5</span>
+                <span className="text-[10px] font-bold text-stone-700 dark:text-stone-300">4.5</span>
               </div>
 
               {/* Bottom info overlay */}
@@ -243,8 +243,8 @@ function PhoneMockup() {
               <span className="text-[8px] text-stone-300">Library</span>
             </div>
             <div className="flex flex-col items-center gap-0.5">
-              <BookOpen className="w-3.5 h-3.5 text-stone-800" />
-              <span className="text-[8px] text-stone-800 font-medium">Discover</span>
+              <BookOpen className="w-3.5 h-3.5 text-stone-800 dark:text-stone-200" />
+              <span className="text-[8px] text-stone-800 dark:text-stone-200 font-medium">Discover</span>
               <div className="w-1 h-1 rounded-full bg-amber-500 -mt-0.5" />
             </div>
             <div className="flex flex-col items-center gap-0.5">

@@ -39,10 +39,10 @@ export function ReadingPath({ onBookClick }: ReadingPathProps) {
       transition={{ duration: 0.4, delay: 0.15 }}
     >
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-semibold text-stone-900 font-serif">Reading Paths</h2>
+        <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100 font-serif">Reading Paths</h2>
         <button
           onClick={loadChains}
-          className="p-1.5 rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-all"
+          className="p-1.5 rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 dark:bg-stone-800 transition-all"
           title="Refresh paths"
         >
           <RefreshCw className="w-4 h-4" />
@@ -51,8 +51,8 @@ export function ReadingPath({ onBookClick }: ReadingPathProps) {
 
       <div className="space-y-4">
         {chains.map((chain, ci) => (
-          <div key={`${chain.startBook.id}-${ci}`} className="bg-white rounded-2xl p-4 border border-stone-200/60 shadow-sm">
-            <p className="text-xs font-medium text-amber-700 mb-3">
+          <div key={`${chain.startBook.id}-${ci}`} className="bg-white dark:bg-stone-900 rounded-2xl p-4 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
+            <p className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-3">
               {chain.theme} journey
             </p>
 
@@ -72,7 +72,7 @@ export function ReadingPath({ onBookClick }: ReadingPathProps) {
                     sizes="128px"
                   />
                 </div>
-                <p className="text-[10px] text-stone-600 mt-1 w-14 sm:w-16 truncate text-center font-medium group-hover:text-amber-700 transition-colors">
+                <p className="text-[10px] text-stone-600 mt-1 w-14 sm:w-16 truncate text-center font-medium group-hover:text-amber-700 dark:text-amber-400 transition-colors">
                   {chain.startBook.title}
                 </p>
               </button>
@@ -95,7 +95,7 @@ export function ReadingPath({ onBookClick }: ReadingPathProps) {
                         sizes="128px"
                       />
                     </div>
-                    <p className="text-[10px] text-stone-600 mt-1 w-14 sm:w-16 truncate text-center font-medium group-hover:text-amber-700 transition-colors">
+                    <p className="text-[10px] text-stone-600 mt-1 w-14 sm:w-16 truncate text-center font-medium group-hover:text-amber-700 dark:text-amber-400 transition-colors">
                       {book.title}
                     </p>
                   </button>

@@ -134,7 +134,7 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
         {onBack ? (
           <button
             onClick={onBack}
-            className="p-2 -ml-2 rounded-lg hover:bg-stone-100 transition-colors tap-target touch-manipulation"
+            className="p-2 -ml-2 rounded-lg hover:bg-stone-100 dark:bg-stone-800 transition-colors tap-target touch-manipulation"
           >
             <ArrowLeft className="w-5 h-5 text-stone-600" />
           </button>
@@ -164,7 +164,7 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
         <div className="w-full max-w-2xl mx-auto pb-6">
           {/* Progress bar */}
           <div className="mb-8">
-            <div className="h-1.5 w-full rounded-full bg-stone-100 overflow-hidden">
+            <div className="h-1.5 w-full rounded-full bg-stone-100 dark:bg-stone-800 overflow-hidden">
               <motion.div
                 className="h-full rounded-full bg-amber-500"
                 initial={false}
@@ -181,9 +181,9 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10, transition: { duration: 0.1 } }}
               transition={{ type: "spring", stiffness: 300, damping: 28 }}
-              className="bg-white rounded-2xl shadow-sm border border-stone-200/60 p-5 sm:p-8"
+              className="bg-white dark:bg-stone-900 rounded-2xl shadow-sm border border-stone-200/60 dark:border-stone-700/60 p-5 sm:p-8"
             >
-              <h2 className="text-xl sm:text-2xl font-bold text-stone-900 mb-1.5 leading-tight font-serif">
+              <h2 className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100 mb-1.5 leading-tight font-serif">
                 {question.title}
               </h2>
               <p className="text-sm sm:text-base text-stone-500 mb-6 sm:mb-8">
@@ -204,7 +204,7 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
                       className={`w-full px-4 py-3.5 text-left text-sm sm:text-base font-medium rounded-xl transition-all duration-150 tap-target touch-manipulation ${
                         isSelected
                           ? "bg-stone-900 text-white shadow-sm"
-                          : "bg-white border border-stone-200 text-stone-700 hover:bg-stone-50 hover:border-stone-300"
+                          : "bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:bg-stone-800/50 hover:border-stone-300"
                       }`}
                     >
                       {option}
@@ -218,7 +218,7 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}
                   disabled={currentQuestion === 0}
-                  className="flex-1 sm:flex-none h-11 px-5 text-sm font-medium rounded-xl border border-stone-200 text-stone-700 hover:bg-stone-50 transition-colors tap-target touch-manipulation disabled:opacity-40 disabled:pointer-events-none"
+                  className="flex-1 sm:flex-none h-11 px-5 text-sm font-medium rounded-xl border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:bg-stone-800/50 transition-colors tap-target touch-manipulation disabled:opacity-40 disabled:pointer-events-none"
                 >
                   Back
                 </motion.button>
@@ -251,7 +251,7 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
                     preferredLength: "No preference",
                     contentPreferences: []
                   })}
-                  className="text-sm text-stone-500 hover:text-stone-700 font-medium underline underline-offset-2 transition-colors"
+                  className="text-sm text-stone-500 hover:text-stone-700 dark:text-stone-300 font-medium underline underline-offset-2 transition-colors"
                 >
                   Skip setup, show me everything
                 </button>

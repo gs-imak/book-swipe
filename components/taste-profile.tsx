@@ -245,12 +245,12 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
         className="fixed inset-0 bg-background z-[60]"
       >
         {/* Header */}
-        <div className="bg-background/90 backdrop-blur-md border-b border-stone-200/60 sticky top-0 z-10">
+        <div className="bg-background/90 backdrop-blur-md border-b border-stone-200/60 dark:border-stone-700/60 sticky top-0 z-10">
           <div className="max-w-2xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
-            <h1 className="text-xl sm:text-2xl font-bold text-stone-900 font-serif">Taste Profile</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100 font-serif">Taste Profile</h1>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-stone-100 transition-colors tap-target touch-manipulation"
+              className="p-2 rounded-lg hover:bg-stone-100 dark:bg-stone-800 transition-colors tap-target touch-manipulation"
             >
               <X className="w-5 h-5 text-stone-400" />
             </button>
@@ -284,7 +284,7 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
                   </div>
                   <div className="relative z-10">
                     <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-2">Your Reader Type</p>
-                    <h2 className="text-3xl sm:text-4xl font-bold text-stone-900 font-serif leading-tight">{archetype}</h2>
+                    <h2 className="text-3xl sm:text-4xl font-bold text-stone-900 dark:text-stone-100 font-serif leading-tight">{archetype}</h2>
                     <p className="text-sm text-stone-500 mt-2">
                       Based on {likedBooks.length} books in your library
                     </p>
@@ -299,9 +299,9 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
                     { icon: Star, value: avgRating, label: "Avg Rating" },
                     { icon: Heart, value: reviews.filter(r => r.favorite).length, label: "Favorites" },
                   ].map((stat) => (
-                    <div key={stat.label} className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm text-center">
+                    <div key={stat.label} className="bg-white dark:bg-stone-900 rounded-xl p-4 border border-stone-200/60 dark:border-stone-700/60 shadow-sm text-center">
                       <stat.icon className="w-4 h-4 text-amber-600 mx-auto mb-1" />
-                      <p className="text-2xl font-bold text-stone-900">{stat.value}</p>
+                      <p className="text-2xl font-bold text-stone-900 dark:text-stone-100">{stat.value}</p>
                       <p className="text-xs text-stone-500">{stat.label}</p>
                     </div>
                   ))}
@@ -309,7 +309,7 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
 
                 {/* Activity Heatmap */}
                 {heatmapDays.length > 0 && (
-                  <motion.div {...fadeIn(0.14)} className="bg-white rounded-2xl p-5 border border-stone-200/60 shadow-sm">
+                  <motion.div {...fadeIn(0.14)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider">Activity</h3>
                       <span className="text-xs text-stone-400">
@@ -343,7 +343,7 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
 
                 {/* Genre Donut Chart */}
                 {genreData.length > 0 && (
-                  <motion.div {...fadeIn(0.18)} className="bg-white rounded-2xl p-5 border border-stone-200/60 shadow-sm">
+                  <motion.div {...fadeIn(0.18)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
                     <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">Genres</h3>
                     <div className="flex flex-col sm:flex-row items-center gap-6">
                       {/* SVG Donut */}
@@ -376,7 +376,7 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
                         {genreData.map((genre) => (
                           <div key={genre.name} className="flex items-center gap-2">
                             <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: genre.color }} />
-                            <span className="text-xs text-stone-700 truncate">{genre.name}</span>
+                            <span className="text-xs text-stone-700 dark:text-stone-300 truncate">{genre.name}</span>
                             <span className="text-xs text-stone-400 ml-auto">{genre.percentage}%</span>
                           </div>
                         ))}
@@ -387,13 +387,13 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
 
                 {/* Mood Bar Chart */}
                 {moodData.length > 0 && (
-                  <motion.div {...fadeIn(0.26)} className="bg-white rounded-2xl p-5 border border-stone-200/60 shadow-sm">
+                  <motion.div {...fadeIn(0.26)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
                     <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">Moods</h3>
                     <div className="space-y-2.5">
                       {moodData.map((mood) => (
                         <div key={mood.name} className="flex items-center gap-3">
                           <span className="text-xs text-stone-600 w-24 truncate text-right">{mood.name}</span>
-                          <div className="flex-1 h-5 bg-stone-100 rounded-full overflow-hidden">
+                          <div className="flex-1 h-5 bg-stone-100 dark:bg-stone-800 rounded-full overflow-hidden">
                             <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${mood.percentage}%` }}
@@ -410,15 +410,15 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
 
                 {/* Top Authors */}
                 {topAuthors.length > 0 && (
-                  <motion.div {...fadeIn(0.34)} className="bg-white rounded-2xl p-5 border border-stone-200/60 shadow-sm">
+                  <motion.div {...fadeIn(0.34)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
                     <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">Top Authors</h3>
                     <div className="space-y-2">
                       {topAuthors.map(([author, count], i) => (
                         <div key={author} className="flex items-center gap-3 py-1.5">
-                          <span className="w-6 h-6 rounded-full bg-stone-100 flex items-center justify-center text-xs font-bold text-stone-500">
+                          <span className="w-6 h-6 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-xs font-bold text-stone-500">
                             {i + 1}
                           </span>
-                          <span className="flex-1 text-sm text-stone-800 font-medium">{author}</span>
+                          <span className="flex-1 text-sm text-stone-800 dark:text-stone-200 font-medium">{author}</span>
                           <span className="text-xs text-stone-400">
                             {count} {count === 1 ? "book" : "books"}
                           </span>
@@ -430,7 +430,7 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
 
                 {/* Rating Distribution */}
                 {reviews.length > 0 && (
-                  <motion.div {...fadeIn(0.42)} className="bg-white rounded-2xl p-5 border border-stone-200/60 shadow-sm">
+                  <motion.div {...fadeIn(0.42)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
                     <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">Your Ratings</h3>
                     <div className="space-y-2">
                       {[5, 4, 3, 2, 1].map((stars) => (
@@ -440,7 +440,7 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
                               <Star key={i} className="w-3 h-3 text-amber-500 fill-amber-500" />
                             ))}
                           </div>
-                          <div className="flex-1 h-4 bg-stone-100 rounded-full overflow-hidden">
+                          <div className="flex-1 h-4 bg-stone-100 dark:bg-stone-800 rounded-full overflow-hidden">
                             <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${(ratingDist[stars - 1] / maxRating) * 100}%` }}
@@ -457,7 +457,7 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
               </>
             )}
             {/* Settings */}
-            <motion.div {...fadeIn(0.5)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-800 shadow-sm">
+            <motion.div {...fadeIn(0.5)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-700/60 dark:border-stone-800 shadow-sm">
               <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-4">Settings</h3>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -487,7 +487,7 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
             <motion.div {...fadeIn(0.55)} className="flex gap-3">
               <button
                 onClick={() => setShowStats(true)}
-                className="flex-1 h-11 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2"
+                className="flex-1 h-11 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 dark:text-stone-300 text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2"
               >
                 <BarChart3 className="w-4 h-4" />
                 Reading Stats

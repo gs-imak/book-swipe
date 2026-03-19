@@ -74,13 +74,13 @@ export function OnboardingGuide({ onComplete }: OnboardingGuideProps) {
         initial={{ opacity: 0, y: 30, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 28 }}
-        className="relative bg-white rounded-2xl shadow-2xl mx-5 max-w-sm w-full overflow-hidden"
+        className="relative bg-white dark:bg-stone-900 rounded-2xl shadow-2xl mx-5 max-w-sm w-full overflow-hidden"
       >
         {/* Skip button */}
         {!isLast && (
           <button
             onClick={handleSkip}
-            className="absolute top-3 right-3 z-10 p-1.5 rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
+            className="absolute top-3 right-3 z-10 p-1.5 rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-100 dark:bg-stone-800 transition-colors"
             aria-label="Skip guide"
           >
             <X className="w-4 h-4" />
@@ -109,7 +109,7 @@ export function OnboardingGuide({ onComplete }: OnboardingGuideProps) {
               </motion.div>
 
               {/* Text */}
-              <h2 className="text-lg font-bold text-stone-900 mb-2">{step.title}</h2>
+              <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-2">{step.title}</h2>
               <p className="text-sm text-stone-500 leading-relaxed max-w-[280px]">{step.description}</p>
             </motion.div>
           </AnimatePresence>

@@ -93,14 +93,14 @@ function ExploreBookCard({
         />
         <div className="absolute top-1.5 right-1.5 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
           <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
-          <span className="text-[10px] font-bold text-stone-700">
+          <span className="text-[10px] font-bold text-stone-700 dark:text-stone-300">
             {book.rating}
           </span>
         </div>
       </div>
 
       <div className="px-0.5">
-        <h4 className="font-semibold text-xs text-stone-900 line-clamp-2 leading-tight min-h-[1.875rem]">
+        <h4 className="font-semibold text-xs text-stone-900 dark:text-stone-100 line-clamp-2 leading-tight min-h-[1.875rem]">
           {book.title}
         </h4>
         <p className="text-[11px] text-stone-400 mb-1.5 truncate">
@@ -111,7 +111,7 @@ function ExploreBookCard({
           disabled={isSaved}
           className={`w-full flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium transition-all ${
             isSaved
-              ? "bg-stone-100 text-stone-400"
+              ? "bg-stone-100 dark:bg-stone-800 text-stone-400"
               : "bg-stone-900 text-white hover:bg-stone-800 active:scale-[0.98]"
           }`}
         >
@@ -155,7 +155,7 @@ function SectionHeader({
     <div className="flex items-center justify-between mb-3 px-0.5">
       <div className="flex items-center gap-2">
         {icon}
-        <h3 className="text-sm font-semibold text-stone-900">{title}</h3>
+        <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100">{title}</h3>
       </div>
       {subtitle && (
         <span className="text-[11px] text-stone-400">{subtitle}</span>
@@ -348,8 +348,8 @@ export function DiscoverHub({
   // Color map for sub-genre badges
   const colorMap: Record<string, string> = {
     emerald: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    stone: "bg-stone-100 text-stone-700 border-stone-300",
-    amber: "bg-amber-50 text-amber-700 border-amber-200",
+    stone: "bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border-stone-300",
+    amber: "bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-200",
     slate: "bg-slate-100 text-slate-700 border-slate-300",
     violet: "bg-violet-50 text-violet-700 border-violet-200",
     orange: "bg-orange-50 text-orange-700 border-orange-200",
@@ -360,11 +360,11 @@ export function DiscoverHub({
       {/* ----------------------------------------------------------------- */}
       {/* Surprise Me */}
       {/* ----------------------------------------------------------------- */}
-      <div className="bg-white rounded-xl border border-stone-200/60 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200/60 dark:border-stone-700/60 shadow-sm overflow-hidden">
         <div className="p-4 sm:p-5">
           <div className="flex items-center gap-2 mb-1">
             <Shuffle className="w-4 h-4 text-teal-600" />
-            <h3 className="text-sm font-semibold text-stone-900">
+            <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100">
               Surprise Me
             </h3>
           </div>
@@ -410,7 +410,7 @@ export function DiscoverHub({
                   <span className="inline-block text-[10px] font-semibold uppercase tracking-wide text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full mb-1.5">
                     From: {surprise.genre}
                   </span>
-                  <h4 className="font-semibold text-sm text-stone-900 line-clamp-2 leading-tight">
+                  <h4 className="font-semibold text-sm text-stone-900 dark:text-stone-100 line-clamp-2 leading-tight">
                     {surprise.book.title}
                   </h4>
                   <p className="text-xs text-stone-400 mt-0.5 truncate">
@@ -434,7 +434,7 @@ export function DiscoverHub({
                       disabled={savedBookIds.has(surprise.book.id)}
                       className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                         savedBookIds.has(surprise.book.id)
-                          ? "bg-stone-100 text-stone-400"
+                          ? "bg-stone-100 dark:bg-stone-800 text-stone-400"
                           : "bg-stone-900 text-white hover:bg-stone-800 active:scale-[0.98]"
                       }`}
                     >
@@ -445,7 +445,7 @@ export function DiscoverHub({
                     </button>
                     <button
                       onClick={handleSurprise}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-stone-500 hover:bg-stone-100 transition-all active:scale-[0.98]"
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-stone-500 hover:bg-stone-100 dark:bg-stone-800 transition-all active:scale-[0.98]"
                     >
                       <RefreshCw className="w-3 h-3" />
                       Try another
@@ -543,17 +543,17 @@ export function DiscoverHub({
             return (
               <div
                 key={list.id}
-                className="bg-white rounded-xl border border-stone-200/60 shadow-sm overflow-hidden"
+                className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200/60 dark:border-stone-700/60 shadow-sm overflow-hidden"
               >
                 <button
                   onClick={() => handleToggleList(list.id)}
                   className="w-full flex items-center gap-3 p-3.5 text-left hover:bg-stone-50/50 transition-colors"
                 >
-                  <span className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                  <span className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
                     {(() => { const CIcon = curatedIconMap[list.emoji]; return CIcon ? <CIcon className="w-4 h-4 text-amber-600" /> : null })()}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-stone-900">
+                    <p className="text-sm font-semibold text-stone-900 dark:text-stone-100">
                       {list.name}
                     </p>
                     <p className="text-[11px] text-stone-400">
@@ -628,8 +628,8 @@ export function DiscoverHub({
                 key={genre.id}
                 className={`rounded-xl border overflow-hidden transition-all ${
                   isExpanded
-                    ? "col-span-2 sm:col-span-3 bg-white border-stone-200/60 shadow-sm"
-                    : `border-transparent cursor-pointer ${colorMap[genre.color] || "bg-stone-50 text-stone-700"}`
+                    ? "col-span-2 sm:col-span-3 bg-white dark:bg-stone-900 border-stone-200/60 dark:border-stone-700/60 shadow-sm"
+                    : `border-transparent cursor-pointer ${colorMap[genre.color] || "bg-stone-50 dark:bg-stone-800/50 text-stone-700 dark:text-stone-300"}`
                 }`}
               >
                 <button

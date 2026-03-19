@@ -65,10 +65,10 @@ export function ReadingGoalSetter({ onGoalSet }: ReadingGoalSetterProps) {
               </p>
             </motion.div>
           ) : (
-            <div className="bg-white border border-stone-200/60 rounded-2xl p-5 shadow-sm">
+            <div className="bg-white dark:bg-stone-900 border border-stone-200/60 dark:border-stone-700/60 rounded-2xl p-5 shadow-sm">
               <div className="flex items-center gap-2 mb-1">
                 <Target className="w-4 h-4 text-amber-600" />
-                <h3 className="text-sm font-semibold text-stone-900">
+                <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100">
                   Set your {new Date().getFullYear()} reading goal
                 </h3>
               </div>
@@ -84,11 +84,11 @@ export function ReadingGoalSetter({ onGoalSet }: ReadingGoalSetterProps) {
                     className={`p-3 rounded-xl border text-left transition-all active:scale-[0.97] ${
                       selected === opt.value
                         ? "border-amber-500 bg-amber-50"
-                        : "border-stone-200 bg-stone-50 hover:border-stone-300"
+                        : "border-stone-200 bg-stone-50 dark:bg-stone-800/50 hover:border-stone-300"
                     }`}
                   >
                     <p className={`text-sm font-semibold ${
-                      selected === opt.value ? "text-amber-800" : "text-stone-800"
+                      selected === opt.value ? "text-amber-800 dark:text-amber-300" : "text-stone-800 dark:text-stone-200"
                     }`}>
                       {opt.label}
                     </p>

@@ -112,7 +112,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
         {/* Rating badge */}
         <div className="absolute top-5 left-5 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm z-10">
           <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-          <span className="text-sm font-bold text-stone-800">{book.rating}</span>
+          <span className="text-sm font-bold text-stone-800 dark:text-stone-200">{book.rating}</span>
         </div>
 
         {/* Recommendation reason pill */}
@@ -219,7 +219,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
               {/* Header */}
               <div>
                 <h2
-                  className="text-xl font-bold text-stone-900 mb-1 font-serif"
+                  className="text-xl font-bold text-stone-900 dark:text-stone-100 mb-1 font-serif"
                 >
                   {book.title}
                 </h2>
@@ -228,19 +228,19 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
 
               {/* Stats */}
               <div className="grid grid-cols-3 gap-2">
-                <div className="bg-white rounded-xl p-3 border border-stone-200/60 shadow-sm text-center">
+                <div className="bg-white dark:bg-stone-900 rounded-xl p-3 border border-stone-200/60 dark:border-stone-700/60 shadow-sm text-center">
                   <BookOpen className="w-4 h-4 text-stone-400 mx-auto mb-1" />
-                  <p className="text-lg font-bold text-stone-900">{book.pages}</p>
+                  <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{book.pages}</p>
                   <p className="text-[11px] text-stone-400">pages</p>
                 </div>
-                <div className="bg-white rounded-xl p-3 border border-stone-200/60 shadow-sm text-center">
+                <div className="bg-white dark:bg-stone-900 rounded-xl p-3 border border-stone-200/60 dark:border-stone-700/60 shadow-sm text-center">
                   <Clock className="w-4 h-4 text-stone-400 mx-auto mb-1" />
-                  <p className="text-lg font-bold text-stone-900">{book.readingTime.replace(' hours', 'h').replace(' hour', 'h')}</p>
+                  <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{book.readingTime.replace(' hours', 'h').replace(' hour', 'h')}</p>
                   <p className="text-[11px] text-stone-400">read time</p>
                 </div>
-                <div className="bg-white rounded-xl p-3 border border-stone-200/60 shadow-sm text-center">
+                <div className="bg-white dark:bg-stone-900 rounded-xl p-3 border border-stone-200/60 dark:border-stone-700/60 shadow-sm text-center">
                   <Star className="w-4 h-4 text-amber-500 mx-auto mb-1" />
-                  <p className="text-lg font-bold text-stone-900">{book.rating}</p>
+                  <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{book.rating}</p>
                   <p className="text-[11px] text-stone-400">rating</p>
                 </div>
               </div>
@@ -264,7 +264,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
                   {book.genre.map((genre) => (
                     <span
                       key={genre}
-                      className="bg-stone-100 text-stone-700 text-xs px-3 py-1.5 rounded-full font-medium"
+                      className="bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 text-xs px-3 py-1.5 rounded-full font-medium"
                     >
                       {genre}
                     </span>
@@ -281,7 +281,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
                   {book.mood.map((mood) => (
                     <span
                       key={mood}
-                      className="bg-amber-50 text-amber-700 text-xs px-3 py-1.5 rounded-full font-medium border border-amber-100"
+                      className="bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs px-3 py-1.5 rounded-full font-medium border border-amber-100"
                     >
                       {mood}
                     </span>

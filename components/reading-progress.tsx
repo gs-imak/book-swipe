@@ -100,17 +100,17 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
     <div className="space-y-4">
       {/* Reading Goals */}
       {goals && hasReadingActivity && (
-        <div className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm">
+        <div className="bg-white dark:bg-stone-900 rounded-xl p-4 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <Target className="w-4 h-4 text-amber-600" />
-            <h3 className="text-sm font-semibold text-stone-900">Reading Goals {goals.currentYear}</h3>
+            <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100">Reading Goals {goals.currentYear}</h3>
           </div>
 
           <div className="grid grid-cols-4 gap-3">
             <div className="text-center">
-              <p className="text-lg font-bold text-stone-900">{goals.booksCompleted}</p>
+              <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{goals.booksCompleted}</p>
               <p className="text-[11px] text-stone-400">of {goals.yearlyTarget}</p>
-              <div className="w-full bg-stone-100 rounded-full h-1 mt-1.5">
+              <div className="w-full bg-stone-100 dark:bg-stone-800 rounded-full h-1 mt-1.5">
                 <div
                   className="bg-amber-500 h-1 rounded-full transition-all"
                   style={{ width: `${Math.min((goals.booksCompleted / goals.yearlyTarget) * 100, 100)}%` }}
@@ -118,17 +118,17 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
               </div>
             </div>
             <div className="text-center">
-              <p className="text-lg font-bold text-stone-900">{goals.pagesRead}</p>
+              <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{goals.pagesRead}</p>
               <p className="text-[11px] text-stone-400">pages</p>
             </div>
             <div className="text-center">
-              <p className="text-lg font-bold text-stone-900">{formatTimeSpent(goals.timeSpentMinutes)}</p>
+              <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{formatTimeSpent(goals.timeSpentMinutes)}</p>
               <p className="text-[11px] text-stone-400">read time</p>
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center gap-1">
                 <Flame className="w-4 h-4 text-amber-500" />
-                <p className="text-lg font-bold text-stone-900">{goals.streak}</p>
+                <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{goals.streak}</p>
               </div>
               <p className="text-[11px] text-stone-400">streak</p>
             </div>
@@ -138,10 +138,10 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
 
       {/* Currently Reading */}
       {currentlyReading.length > 0 && (
-        <div className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm">
+        <div className="bg-white dark:bg-stone-900 rounded-xl p-4 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <BookOpen className="w-4 h-4 text-emerald-600" />
-            <h3 className="text-sm font-semibold text-stone-900">Currently Reading</h3>
+            <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100">Currently Reading</h3>
             <span className="text-[11px] bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded-full font-medium">
               {currentlyReading.length}
             </span>
@@ -151,7 +151,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
             {currentlyReading.map((book) => {
               const progressPercent = book.totalPages > 0 ? (book.currentPage / book.totalPages) * 100 : 0
               return (
-                <div key={book.bookId} className="flex gap-3 p-3 bg-stone-50 rounded-lg">
+                <div key={book.bookId} className="flex gap-3 p-3 bg-stone-50 dark:bg-stone-800/50 rounded-lg">
                   <div className="relative w-12 h-16 flex-shrink-0">
                     <BookCover
                       src={book.book.cover}
@@ -164,7 +164,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-sm text-stone-900 line-clamp-1">{book.book.title}</h4>
+                    <h4 className="font-medium text-sm text-stone-900 dark:text-stone-100 line-clamp-1">{book.book.title}</h4>
                     <p className="text-xs text-stone-500 mb-2">{book.book.author}</p>
 
                     <div className="flex items-center justify-between text-xs text-stone-400 mb-1">
@@ -194,7 +194,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                               setEditingPage(null)
                             }}
                             autoFocus
-                            className="w-14 h-6 text-xs text-stone-700 bg-white border border-stone-300 rounded px-1.5 text-center focus:outline-none focus:border-emerald-400"
+                            className="w-14 h-6 text-xs text-stone-700 dark:text-stone-300 bg-white dark:bg-stone-900 border border-stone-300 rounded px-1.5 text-center focus:outline-none focus:border-emerald-400"
                           />
                           <span>/ {book.totalPages}p</span>
                         </form>
@@ -230,27 +230,27 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                       <button
                         onClick={() => handleProgressUpdate(book.bookId, Math.max(0, book.currentPage - 10))}
                         aria-label="Go back 10 pages"
-                        className="w-7 h-7 rounded-md bg-white border border-stone-200 flex items-center justify-center hover:bg-stone-50 transition-colors"
+                        className="w-7 h-7 rounded-md bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 flex items-center justify-center hover:bg-stone-50 dark:bg-stone-800/50 transition-colors"
                       >
                         <Minus className="w-3 h-3 text-stone-500" />
                       </button>
                       <button
                         onClick={() => handleProgressUpdate(book.bookId, Math.min(book.totalPages, book.currentPage + 10))}
                         aria-label="Advance 10 pages"
-                        className="w-7 h-7 rounded-md bg-white border border-stone-200 flex items-center justify-center hover:bg-stone-50 transition-colors"
+                        className="w-7 h-7 rounded-md bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 flex items-center justify-center hover:bg-stone-50 dark:bg-stone-800/50 transition-colors"
                       >
                         <Plus className="w-3 h-3 text-stone-500" />
                       </button>
                       <button
                         onClick={() => handleStatusToggle(book.bookId)}
                         aria-label="Pause reading"
-                        className="w-7 h-7 rounded-md bg-white border border-stone-200 flex items-center justify-center hover:bg-stone-50 transition-colors"
+                        className="w-7 h-7 rounded-md bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 flex items-center justify-center hover:bg-stone-50 dark:bg-stone-800/50 transition-colors"
                       >
                         <Pause className="w-3 h-3 text-stone-500" />
                       </button>
                       <button
                         onClick={() => handleProgressUpdate(book.bookId, book.totalPages)}
-                        className="h-7 px-2 rounded-md bg-white border border-stone-200 flex items-center gap-1 hover:bg-stone-50 transition-colors text-xs text-stone-600"
+                        className="h-7 px-2 rounded-md bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 flex items-center gap-1 hover:bg-stone-50 dark:bg-stone-800/50 transition-colors text-xs text-stone-600"
                       >
                         <CheckCircle className="w-3 h-3" />
                         Done
@@ -259,7 +259,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                         onClick={() => handleMarkDNF(book.bookId)}
                         aria-label="Did not finish"
                         title="Did Not Finish"
-                        className="h-7 px-2 rounded-md bg-white border border-stone-200 flex items-center gap-1 hover:bg-red-50 hover:border-red-200 transition-colors text-xs text-stone-500 hover:text-red-500 ml-auto"
+                        className="h-7 px-2 rounded-md bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 flex items-center gap-1 hover:bg-red-50 hover:border-red-200 transition-colors text-xs text-stone-500 hover:text-red-500 ml-auto"
                       >
                         <Ban className="w-3 h-3" />
                         DNF
@@ -275,17 +275,17 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
 
       {/* Paused */}
       {pausedBooks.length > 0 && (
-        <div className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm">
+        <div className="bg-white dark:bg-stone-900 rounded-xl p-4 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <Pause className="w-4 h-4 text-amber-600" />
-            <h3 className="text-sm font-semibold text-stone-900">Paused</h3>
+            <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100">Paused</h3>
           </div>
 
           <div className="space-y-2">
             {pausedBooks.map((book) => {
               const progressPercent = book.totalPages > 0 ? (book.currentPage / book.totalPages) * 100 : 0
               return (
-                <div key={book.bookId} className="flex items-center gap-3 p-2.5 bg-stone-50 rounded-lg">
+                <div key={book.bookId} className="flex items-center gap-3 p-2.5 bg-stone-50 dark:bg-stone-800/50 rounded-lg">
                   <div className="relative w-8 h-11 flex-shrink-0">
                     <BookCover
                       src={book.book.cover}
@@ -297,13 +297,13 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-xs text-stone-900 line-clamp-1">{book.book.title}</h4>
+                    <h4 className="font-medium text-xs text-stone-900 dark:text-stone-100 line-clamp-1">{book.book.title}</h4>
                     <p className="text-[11px] text-stone-400">{Math.round(progressPercent)}% done</p>
                   </div>
                   <div className="flex gap-1">
                     <button
                       onClick={() => handleStatusToggle(book.bookId)}
-                      className="h-7 px-2 rounded-md bg-white border border-stone-200 flex items-center gap-1 hover:bg-stone-50 transition-colors text-xs text-stone-600"
+                      className="h-7 px-2 rounded-md bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 flex items-center gap-1 hover:bg-stone-50 dark:bg-stone-800/50 transition-colors text-xs text-stone-600"
                     >
                       <Play className="w-2.5 h-2.5" />
                       Resume
@@ -311,7 +311,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                     <button
                       onClick={() => handleRemoveBook(book.bookId)}
                       aria-label="Remove from reading"
-                      className="w-7 h-7 rounded-md bg-white border border-stone-200 flex items-center justify-center hover:bg-red-50 transition-colors"
+                      className="w-7 h-7 rounded-md bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 flex items-center justify-center hover:bg-red-50 transition-colors"
                     >
                       <X className="w-3 h-3 text-stone-400" />
                     </button>
@@ -325,17 +325,17 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
 
       {/* Did Not Finish */}
       {dnfBooks.length > 0 && (
-        <div className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm">
+        <div className="bg-white dark:bg-stone-900 rounded-xl p-4 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <Ban className="w-4 h-4 text-stone-400" />
             <h3 className="text-sm font-semibold text-stone-500">Did Not Finish</h3>
-            <span className="text-[11px] bg-stone-100 text-stone-500 px-1.5 py-0.5 rounded-full font-medium">
+            <span className="text-[11px] bg-stone-100 dark:bg-stone-800 text-stone-500 px-1.5 py-0.5 rounded-full font-medium">
               {dnfBooks.length}
             </span>
           </div>
           <div className="space-y-2">
             {dnfBooks.map((book) => (
-              <div key={book.bookId} className="flex items-center gap-3 p-2.5 bg-stone-50 rounded-lg opacity-60">
+              <div key={book.bookId} className="flex items-center gap-3 p-2.5 bg-stone-50 dark:bg-stone-800/50 rounded-lg opacity-60">
                 <div className="relative w-8 h-11 flex-shrink-0">
                   <BookCover
                     src={book.book.cover}
@@ -353,7 +353,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                 <div className="flex gap-1">
                   <button
                     onClick={() => handleRestoreFromDNF(book.bookId)}
-                    className="h-7 px-2 rounded-md bg-white border border-stone-200 flex items-center gap-1 hover:bg-stone-50 transition-colors text-xs text-stone-500"
+                    className="h-7 px-2 rounded-md bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 flex items-center gap-1 hover:bg-stone-50 dark:bg-stone-800/50 transition-colors text-xs text-stone-500"
                   >
                     <RotateCcw className="w-2.5 h-2.5" />
                     Restart
@@ -361,7 +361,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                   <button
                     onClick={() => handleRemoveBook(book.bookId)}
                     aria-label="Remove"
-                    className="w-7 h-7 rounded-md bg-white border border-stone-200 flex items-center justify-center hover:bg-red-50 transition-colors"
+                    className="w-7 h-7 rounded-md bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 flex items-center justify-center hover:bg-red-50 transition-colors"
                   >
                     <X className="w-3 h-3 text-stone-400" />
                   </button>
@@ -374,11 +374,11 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
 
       {/* Empty State */}
       {activeBooks.length === 0 && dnfBooks.length === 0 && (
-        <div className="text-center py-8 bg-white rounded-xl border border-stone-200/60 shadow-sm">
+        <div className="text-center py-8 bg-white dark:bg-stone-900 rounded-xl border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
           <div className="w-32 h-24 mx-auto mb-2 opacity-60">
             <MeditatingDoodle />
           </div>
-          <h3 className="text-sm font-semibold text-stone-700 mb-1">No books in progress</h3>
+          <h3 className="text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1">No books in progress</h3>
           <p className="text-xs text-stone-400 mb-4">Start tracking your reading journey</p>
           <button
             onClick={() => onStartReading?.("")}
