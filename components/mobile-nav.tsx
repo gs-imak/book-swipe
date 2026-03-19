@@ -95,14 +95,6 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNav
                     {item.label}
                   </span>
 
-                  {/* Active dot indicator */}
-                  {isActive && (
-                    <motion.div
-                      layoutId="nav-indicator"
-                      className="absolute -bottom-0.5 w-1 h-1 rounded-full bg-amber-600"
-                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                    />
-                  )}
                 </motion.button>
               )
             })}
