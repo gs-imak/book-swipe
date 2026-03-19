@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, BookOpen, Star, Clock, Heart, TrendingUp, Moon, Sun } from "lucide-react"
+import { X, BookOpen, Star, Clock, Heart, TrendingUp, Moon, Sun, Share2, BarChart3 } from "lucide-react"
 import { ReadingDoodle, SittingReadingDoodle } from "./illustrations"
 import { getLikedBooks, getBookReviews, getBookNotes, getReadingProgress, getUserStats, type BookReview } from "@/lib/storage"
 import { Book } from "@/lib/book-data"
 import { DedicationOverlay } from "./dedication-overlay"
+import { ProfileShareCard } from "./profile-share-card"
+import { ReadingStats } from "./reading-stats"
 import { getTheme, toggleTheme } from "@/lib/theme"
 
 interface TasteProfileProps {
@@ -62,6 +64,8 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
   const [reviews, setReviews] = useState<BookReview[]>([])
   const [showDedication, setShowDedication] = useState(false)
   const [isDark, setIsDark] = useState(false)
+  const [showProfileCard, setShowProfileCard] = useState(false)
+  const [showStats, setShowStats] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
@@ -479,6 +483,24 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
               </div>
             </motion.div>
 
+            {/* Actions */}
+            <motion.div {...fadeIn(0.55)} className="flex gap-3">
+              <button
+                onClick={() => setShowStats(true)}
+                className="flex-1 h-11 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2"
+              >
+                <BarChart3 className="w-4 h-4" />
+                Reading Stats
+              </button>
+              <button
+                onClick={() => setShowProfileCard(true)}
+                className="flex-1 h-11 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2"
+              >
+                <Share2 className="w-4 h-4" />
+                Share Profile
+              </button>
+            </motion.div>
+
             {/* Hidden dedication trigger */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -499,6 +521,8 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
         </div>
 
         <DedicationOverlay isOpen={showDedication} onClose={() => setShowDedication(false)} />
+        <ProfileShareCard isOpen={showProfileCard} onClose={() => setShowProfileCard(false)} />
+        <ReadingStats isOpen={showStats} onClose={() => setShowStats(false)} />
       </motion.div>
     </AnimatePresence>
   )
