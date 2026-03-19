@@ -7,6 +7,7 @@
   "background_color": "#FDFBF7",
   "theme_color": "#FDFBF7",
   "orientation": "portrait",
+  "categories": ["books", "entertainment", "education"],
   "icons": [
     {
       "src": "/logo/bookswipe_logo.png",
@@ -17,6 +18,22 @@
       "src": "/logo/bookswipe_logo.png",
       "sizes": "512x512",
       "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Discover Books",
+      "short_name": "Discover",
+      "description": "Start swiping through book recommendations",
+      "url": "/?view=swipe",
+      "icons": [{ "src": "/logo/bookswipe_logo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "My Library",
+      "short_name": "Library",
+      "description": "View your saved books",
+      "url": "/?view=library",
+      "icons": [{ "src": "/logo/bookswipe_logo.png", "sizes": "192x192" }]
     }
   ]
 }
