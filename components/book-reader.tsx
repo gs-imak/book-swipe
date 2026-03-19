@@ -1261,21 +1261,21 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
               paddingTop: "env(safe-area-inset-top)",
             }}
           >
-            <div className="flex items-center justify-between px-4 h-14">
+            <div className="grid grid-cols-[auto_1fr_auto] items-center px-4 h-14">
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={onClose}
-                className="tap-target flex items-center justify-center rounded-lg p-2.5 -ml-2 transition-colors"
+                className="tap-target flex items-center justify-center rounded-lg p-2.5 -ml-2 transition-colors justify-self-start"
                 style={{ color: currentTheme.text }}
                 aria-label="Close reader"
               >
                 <ArrowLeft className="w-5 h-5" />
               </motion.button>
 
-              <div className="flex-1 mx-4 min-w-0 text-center">
+              <div className="min-w-0 text-center justify-self-center">
                 <p className="text-sm font-medium truncate opacity-70">{bookTitle}</p>
-                <div className="flex items-center justify-center gap-2.5 mt-1">
-                  <div className="max-w-[180px] w-full h-1 rounded-full overflow-hidden" style={{ backgroundColor: currentTheme.progressTrack }}>
+                <div className="flex items-center justify-center gap-2 mt-0.5">
+                  <div className="w-[140px] h-1 rounded-full overflow-hidden" style={{ backgroundColor: currentTheme.progressTrack }}>
                     <motion.div
                       className="h-full rounded-full"
                       style={{ backgroundColor: currentTheme.progressFill }}
@@ -1288,7 +1288,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 </div>
               </div>
 
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 justify-self-end">
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={toggleFocusMode}
