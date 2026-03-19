@@ -266,10 +266,18 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const [noteInputValue, setNoteInputValue] = useState("")
   const [isBookmarked, setIsBookmarked] = useState(false)
 
+  // CSS column pagination state
+  const [paginatedPage, setPaginatedPage] = useState(0)
+  const [columnTotal, setColumnTotal] = useState(1)
+  const [colWidth, setColWidth] = useState(0)
+
   const scrollRef = useRef<HTMLDivElement>(null)
+  const pagesRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const measureTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hasRestoredRef = useRef(false)
   const noteInputRef = useRef<HTMLTextAreaElement>(null)
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null)
 
   // Load notes for this book
   const loadNotes = useCallback(() => {
@@ -281,6 +289,125 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   useEffect(() => {
     if (isOpen) loadNotes()
   }, [isOpen, loadNotes])
+
+  // Turn page by delta (-1 or +1), updating transform and progress
+  const turnPage = useCallback((delta: number) => {
+    if (!text) return
+    setPaginatedPage(prev => {
+      const next = Math.max(0, Math.min(prev + delta, columnTotal - 1))
+      const el = pagesRef.current
+      if (el) {
+        el.style.transform = `translateX(-${next * el.clientWidth}px)`
+      }
+      // Update progress based on page position
+      const pct = columnTotal > 1 ? Math.round((next / (columnTotal - 1)) * 100) : (next === 0 ? 0 : 100)
+      setProgress(pct)
+      // Save reading position
+      const charOffset = Math.round((next / Math.max(1, columnTotal - 1)) * text.length)
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+      debounceRef.current = setTimeout(() => {
+        saveReadingPosition(bookId, charOffset)
+      }, 300)
+      return next
+    })
+  }, [columnTotal, text, bookId])
+
+  // Navigate directly to a specific page index (used by chapter/search navigation)
+  const goToPageIndex = useCallback((pageIdx: number) => {
+    const clamped = Math.max(0, Math.min(pageIdx, columnTotal - 1))
+    const el = pagesRef.current
+    if (el) {
+      el.style.transform = `translateX(-${clamped * el.clientWidth}px)`
+    }
+    const pct = columnTotal > 1 ? Math.round((clamped / (columnTotal - 1)) * 100) : 0
+    setProgress(pct)
+    setPaginatedPage(clamped)
+  }, [columnTotal])
+
+  // Measure columns after content renders or font/size changes
+  useEffect(() => {
+    if (!text) return
+    if (measureTimerRef.current) clearTimeout(measureTimerRef.current)
+    measureTimerRef.current = setTimeout(() => {
+      const el = pagesRef.current
+      if (!el) return
+      const w = el.clientWidth
+      if (w <= 0) return
+      setColWidth(prev => prev === w ? prev : w)
+      const pages = Math.max(1, Math.ceil(el.scrollWidth / w))
+      setColumnTotal(pages)
+
+      if (!hasRestoredRef.current) {
+        // First load: restore saved reading position
+        hasRestoredRef.current = true
+        const charOffset = getReadingPosition(bookId)
+        if (charOffset > 0) {
+          const ratio = charOffset / text.length
+          const targetPage = Math.round(ratio * (pages - 1))
+          const clamped = Math.max(0, Math.min(targetPage, pages - 1))
+          el.style.transform = `translateX(-${clamped * w}px)`
+          const pct = pages > 1 ? Math.round((clamped / (pages - 1)) * 100) : 0
+          setProgress(pct)
+          setPaginatedPage(clamped)
+        } else {
+          // Start at page 0
+          el.style.transform = "translateX(0)"
+          setPaginatedPage(0)
+        }
+      } else {
+        // Font/size changed: clamp current page and re-apply transform
+        setPaginatedPage(prev => {
+          const clamped = Math.min(prev, pages - 1)
+          el.style.transform = `translateX(-${clamped * w}px)`
+          return clamped
+        })
+      }
+    }, 100)
+    return () => {
+      if (measureTimerRef.current) clearTimeout(measureTimerRef.current)
+    }
+  }, [text, fontSize, readerFont, bookId, colWidth])
+
+  // Tap zone handler: left third = prev page, right third = next page, center = ignore
+  const handleReaderTap = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    // Don't turn page if tapping on interactive elements
+    const target = e.target as HTMLElement
+    if (target.closest("[data-selection-bar]") || target.closest("button") || target.closest("a")) return
+    // Don't turn page if there's an active text selection
+    const sel = window.getSelection()
+    if (sel && !sel.isCollapsed) return
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const third = rect.width / 3
+    if (x < third) {
+      turnPage(-1)
+    } else if (x > third * 2) {
+      turnPage(1)
+    }
+  }, [turnPage])
+
+  // Touch/swipe handlers
+  const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    const t = e.touches[0]
+    touchStartRef.current = { x: t.clientX, y: t.clientY }
+  }, [])
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    if (!touchStartRef.current) return
+    const t = e.changedTouches[0]
+    const dx = t.clientX - touchStartRef.current.x
+    const dy = t.clientY - touchStartRef.current.y
+    touchStartRef.current = null
+    // Only horizontal swipes with enough distance and not too vertical
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (dx < 0) {
+        turnPage(1)
+      } else {
+        turnPage(-1)
+      }
+    }
+  }, [turnPage])
+
 
   type TextBlock =
     | { type: "heading"; text: string; subtitle?: string }
@@ -490,28 +617,25 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const currentChapter = currentChapterIndex >= 0 ? chapters[currentChapterIndex] : null
 
   const jumpToRatio = useCallback((ratio: number) => {
-    const el = scrollRef.current
-    if (!el) return
-    const scrollable = el.scrollHeight - el.clientHeight
-    el.scrollTop = Math.max(0, Math.min(1, ratio)) * scrollable
-  }, [])
+    // In paginated mode, convert ratio to page index
+    const clampedRatio = Math.max(0, Math.min(1, ratio))
+    const targetPage = Math.round(clampedRatio * (columnTotal - 1))
+    goToPageIndex(targetPage)
+  }, [columnTotal, goToPageIndex])
 
   const jumpToPage = useCallback((page: number) => {
-    if (totalPages <= 1) return
+    // page is 1-based from the nav panel scrubber (CHARS_PER_PAGE units)
+    // Convert to a ratio and then to a column page
+    if (totalPages <= 1) {
+      goToPageIndex(0)
+      return
+    }
     jumpToRatio((page - 1) / (totalPages - 1))
-  }, [totalPages, jumpToRatio])
+  }, [totalPages, jumpToRatio, goToPageIndex])
 
   const jumpToBlock = useCallback((blockIndex: number) => {
-    const el = scrollRef.current
-    if (!el) return
-    // Find the heading element by data attribute
-    const target = el.querySelector(`[data-block-index="${blockIndex}"]`)
-    if (target) {
-      target.scrollIntoView({ behavior: "smooth", block: "start" })
-    } else {
-      // Fallback: estimate position by block ratio
-      jumpToRatio(blockIndex / blocks.length)
-    }
+    // Convert block index to a reading ratio, then to a column page
+    jumpToRatio(blockIndex / Math.max(1, blocks.length))
   }, [blocks.length, jumpToRatio])
 
   const jumpToChapter = useCallback((ch: Chapter) => {
@@ -618,39 +742,10 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, gutenbergBook.id])
 
-  useEffect(() => {
-    if (!text || !scrollRef.current || hasRestoredRef.current) return
-    hasRestoredRef.current = true
+  // Position restore happens inside the measure effect after columnTotal is known
 
-    const charOffset = getReadingPosition(bookId)
-    if (charOffset <= 0) return
-
-    const ratio = charOffset / text.length
-    const el = scrollRef.current
-    // Double RAF ensures the DOM has fully rendered before scrolling (critical for long books)
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        el.scrollTop = ratio * el.scrollHeight
-      })
-    })
-  }, [text, bookId])
-
-  const handleScroll = useCallback(() => {
-    const el = scrollRef.current
-    if (!el || !text) return
-
-    const scrollable = el.scrollHeight - el.clientHeight
-    if (scrollable <= 0) return
-
-    const ratio = el.scrollTop / scrollable
-    const pct = Math.min(100, Math.max(0, Math.round(ratio * 100)))
-    setProgress(pct)
-
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      saveReadingPosition(bookId, Math.round(ratio * text.length))
-    }, 500)
-  }, [text, bookId])
+  // handleScroll kept as stub — paged mode uses overflow:hidden so this won't fire
+  const handleScroll = useCallback(() => {}, [])
 
   useEffect(() => {
     if (isOpen) {
@@ -1017,17 +1112,26 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
             <>
               <div
                 ref={scrollRef}
-                onScroll={handleScroll}
-                className="flex-1 overflow-y-auto relative"
+                className="flex-1 px-5 sm:px-8"
                 style={{
-                  overscrollBehavior: "contain",
-                  scrollSnapType: "y mandatory",
-                  WebkitOverflowScrolling: "touch",
+                  overflow: "hidden",
+                  position: "relative",
                 }}
+                onClick={handleReaderTap}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
               >
                 <div
-                  className="max-w-2xl mx-auto px-5 sm:px-8 py-8"
-                  style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom))" }}
+                  ref={pagesRef}
+                  style={{
+                    height: "100%",
+                    paddingTop: "2rem",
+                    paddingBottom: "2rem",
+                    ...(colWidth > 0 ? { columnWidth: `${colWidth}px` } : {}),
+                    columnFill: "auto" as const,
+                    columnGap: 0,
+                    transition: "transform 300ms cubic-bezier(0.25, 0.1, 0.25, 1)",
+                  }}
                 >
                   {/* Floating selection bar — must be inside scroll container for correct positioning */}
                   {selectionBar && (() => {
@@ -1668,7 +1772,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                     >
                       <List className="w-3.5 h-3.5 opacity-50" />
                       <span className="text-[11px] tabular-nums font-medium opacity-60">
-                        {currentPage}/{totalPages}
+                        {paginatedPage + 1}/{columnTotal}
                       </span>
                     </button>
                     {chapters.length > 0 && (
