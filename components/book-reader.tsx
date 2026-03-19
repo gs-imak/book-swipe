@@ -1050,15 +1050,47 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     }
   }, [isOpen])
 
+  // Keyboard navigation — arrow keys for page turns, escape to close
+  const [isDesktop, setIsDesktop] = useState(false)
+  const [showKeyboardHint, setShowKeyboardHint] = useState(false)
+
+  useEffect(() => {
+    if (!isOpen) return
+    // Detect desktop (no touch support)
+    const desktop = !("ontouchstart" in window) && window.matchMedia("(pointer: fine)").matches
+    setIsDesktop(desktop)
+
+    // Show keyboard hint once for desktop users
+    if (desktop) {
+      const seen = localStorage.getItem("bookswipe_keyboard_hint_seen")
+      if (!seen) {
+        setShowKeyboardHint(true)
+        const timer = setTimeout(() => {
+          setShowKeyboardHint(false)
+          localStorage.setItem("bookswipe_keyboard_hint_seen", "1")
+        }, 5000)
+        return () => clearTimeout(timer)
+      }
+    }
+  }, [isOpen])
+
   useEffect(() => {
     if (!isOpen) return
 
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose()
+      if (e.key === "ArrowRight" || e.key === " ") {
+        e.preventDefault()
+        turnPage(1)
+      }
+      if (e.key === "ArrowLeft") {
+        e.preventDefault()
+        turnPage(-1)
+      }
     }
     window.addEventListener("keydown", handleKey)
     return () => window.removeEventListener("keydown", handleKey)
-  }, [isOpen, onClose])
+  }, [isOpen, onClose, turnPage])
 
   useEffect(() => {
     return () => {
@@ -2187,6 +2219,23 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                   )}
                 </AnimatePresence>
 
+                {/* Keyboard hint for desktop users */}
+                <AnimatePresence>
+                  {showKeyboardHint && isDesktop && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="px-6 pt-2 pb-1"
+                      onClick={() => { setShowKeyboardHint(false); localStorage.setItem("bookswipe_keyboard_hint_seen", "1") }}
+                    >
+                      <p className="text-xs text-center opacity-40">
+                        Use <kbd className="px-1.5 py-0.5 rounded bg-stone-200 dark:bg-stone-700 text-stone-600 dark:text-stone-300 font-mono text-[10px]">←</kbd> <kbd className="px-1.5 py-0.5 rounded bg-stone-200 dark:bg-stone-700 text-stone-600 dark:text-stone-300 font-mono text-[10px]">→</kbd> arrow keys to turn pages
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 {/* Current chapter indicator */}
                 {currentChapter && (
                   <div className="px-6 pt-2 pb-1">
@@ -2472,7 +2521,16 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                     {AMBIENT_SOUNDS.map(sound => (
                       <button
                         key={sound.id}
-                        onClick={() => { setAmbientSound(sound.id); startAmbientSound(sound.id) }}
+                        onClick={() => {
+                          if (ambientSound === sound.id) {
+                            // Toggle off — clicking same sound stops it
+                            stopAmbientSound()
+                            setAmbientSound("" as AmbientSound)
+                          } else {
+                            setAmbientSound(sound.id)
+                            startAmbientSound(sound.id)
+                          }
+                        }}
                         className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors"
                         style={{
                           backgroundColor: ambientSound === sound.id ? `${currentTheme.progressFill}20` : `${currentTheme.text}06`,
