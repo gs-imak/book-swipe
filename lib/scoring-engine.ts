@@ -233,6 +233,17 @@ function generateReasons(
     : [{ type: "similar", description: "Similar to books you liked" }]
 }
 
+// --- Vocabulary Cache ---
+// Memoize vocabulary + user vector per liked-books set to avoid recalculation
+let _cachedLikedKey = ""
+let _cachedUserProfile = ""
+let _cachedUserVector: SparseVector = {}
+
+function getLikedBooksKey(likedBooks: Book[]): string {
+  // Fast fingerprint: ids + count
+  return likedBooks.map(b => b.id).join(",")
+}
+
 // --- Main Scoring Pipeline ---
 export function scoreBooks(
   candidates: Book[],
@@ -254,16 +265,32 @@ export function scoreBooks(
 
   if (filtered.length === 0) return []
 
-  // Build corpus: user profile + all candidates
-  const userProfile = buildUserProfile(likedBooks)
+  // Build or reuse cached user profile
+  const likedKey = getLikedBooksKey(likedBooks)
+  let userProfile: string
+  if (likedKey === _cachedLikedKey && _cachedUserProfile) {
+    userProfile = _cachedUserProfile
+  } else {
+    userProfile = buildUserProfile(likedBooks)
+    _cachedUserProfile = userProfile
+    _cachedLikedKey = likedKey
+    _cachedUserVector = {} // invalidate vector cache
+  }
+
   const candidateTexts = filtered.map(buildFeatureString)
   const allTexts = [userProfile, ...candidateTexts]
 
   // Build vocabulary from full corpus
   const vocab = buildVocabulary(allTexts)
 
-  // Compute user profile vector
-  const userVector = computeTFIDF(userProfile, vocab)
+  // Compute or reuse user profile vector
+  let userVector: SparseVector
+  if (Object.keys(_cachedUserVector).length > 0 && likedKey === _cachedLikedKey) {
+    userVector = _cachedUserVector
+  } else {
+    userVector = computeTFIDF(userProfile, vocab)
+    _cachedUserVector = userVector
+  }
 
   // Score each candidate
   const scored: ScoredBook[] = filtered.map((book, i) => {
