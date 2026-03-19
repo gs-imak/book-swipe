@@ -727,11 +727,11 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, gutenbergBook.id])
 
-  // Restore reading position and measure pages after content renders
+  // Measure pages and restore position whenever text loads or column width changes
   useEffect(() => {
-    if (!text || !contentRef.current || !scrollRef.current) return
+    if (!text || !contentRef.current || containerWidth <= 0) return
 
-    // Double RAF ensures the DOM has fully rendered columns
+    // Double RAF ensures the DOM has fully rendered columns after columnWidth update
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         const total = measurePages()
@@ -748,7 +748,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
         }
       })
     })
-  }, [text, bookId, measurePages, goToPage])
+  }, [text, bookId, containerWidth, measurePages, goToPage])
 
   // Re-measure pages when font size changes
   useEffect(() => {
@@ -1149,7 +1149,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 ref={scrollRef}
                 className="flex-1 px-5 sm:px-8"
                 style={{
-                  overflow: "hidden",
+                  overflow: containerWidth > 0 ? "hidden" : "auto",
                   position: "relative",
                 }}
                 onClick={handleTapZone}
@@ -1162,7 +1162,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                     height: "100%",
                     paddingTop: "2rem",
                     paddingBottom: "2rem",
-                    columnWidth: containerWidth > 0 ? `${containerWidth}px` : "100vw",
+                    columnWidth: containerWidth > 0 ? `${containerWidth}px` : undefined,
                     columnGap: 0,
                     columnFill: "auto" as const,
                     transition: "transform 300ms cubic-bezier(0.25, 0.1, 0.25, 1)",
