@@ -2498,11 +2498,11 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                       <div className="flex items-center justify-center gap-2 mb-3">
                         <button
                           onClick={() => setPomodoroRunning(prev => !prev)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                          style={{ backgroundColor: `${currentTheme.progressFill}20`, color: currentTheme.progressFill }}
+                          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+                          style={{ backgroundColor: pomodoroRunning ? `${currentTheme.text}15` : currentTheme.progressFill, color: pomodoroRunning ? currentTheme.text : "#fff" }}
                         >
-                          {pomodoroRunning ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
-                          {pomodoroRunning ? "Pause" : "Resume"}
+                          {pomodoroRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                          {pomodoroRunning ? "Pause" : "Start"}
                         </button>
                         <div className="flex gap-1">
                           {POMODORO_DURATIONS.map(mins => (
