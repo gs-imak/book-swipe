@@ -332,7 +332,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const [pomodoroSecondsLeft, setPomodoroSecondsLeft] = useState(25 * 60)
   const [pomodoroRunning, setPomodoroRunning] = useState(false)
   const [pomodoroFinished, setPomodoroFinished] = useState(false)
-  const [ambientSound, setAmbientSound] = useState<AmbientSound>("library")
+  const [ambientSound, setAmbientSound] = useState<AmbientSound>("" as AmbientSound)
   // audioRef removed — ambient sounds use Web Audio API via ambientRef
   const pomodoroIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
