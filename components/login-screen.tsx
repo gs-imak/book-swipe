@@ -46,36 +46,41 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
     <div className="bg-background relative overflow-hidden flex flex-col" style={{ minHeight: "100dvh" }}>
       {/* Background layers */}
       <div className="absolute inset-0 pointer-events-none">
-        {/* Radial gradient - warm center glow */}
+        {/* Light mode: warm amber glow from center */}
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 dark:hidden"
           style={{
-            background: "radial-gradient(ellipse 80% 60% at 50% 40%, rgba(245, 158, 11, 0.06) 0%, transparent 70%)",
+            background: "radial-gradient(ellipse 90% 70% at 50% 30%, rgba(217, 119, 6, 0.08) 0%, rgba(245, 158, 11, 0.04) 40%, transparent 70%)",
           }}
         />
-        {/* Secondary glow for depth */}
+        {/* Light mode: secondary warm glow from bottom-right */}
         <div
-          className="absolute inset-0 dark:block hidden"
+          className="absolute inset-0 dark:hidden"
           style={{
-            background: "radial-gradient(ellipse 60% 50% at 30% 50%, rgba(245, 158, 11, 0.04) 0%, transparent 60%)",
+            background: "radial-gradient(ellipse 50% 50% at 80% 80%, rgba(180, 83, 9, 0.05) 0%, transparent 60%)",
           }}
         />
-        {/* Subtle grain texture via SVG noise */}
-        <svg className="absolute inset-0 w-full h-full opacity-[0.03] dark:opacity-[0.05]" xmlns="http://www.w3.org/2000/svg">
+        {/* Dark mode: deeper amber glow */}
+        <div
+          className="absolute inset-0 hidden dark:block"
+          style={{
+            background: "radial-gradient(ellipse 80% 60% at 50% 40%, rgba(245, 158, 11, 0.08) 0%, transparent 70%)",
+          }}
+        />
+        <div
+          className="absolute inset-0 hidden dark:block"
+          style={{
+            background: "radial-gradient(ellipse 60% 50% at 30% 50%, rgba(245, 158, 11, 0.05) 0%, transparent 60%)",
+          }}
+        />
+        {/* Subtle grain texture */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.04] dark:opacity-[0.05]" xmlns="http://www.w3.org/2000/svg">
           <filter id="grain">
             <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
             <feColorMatrix type="saturate" values="0" />
           </filter>
           <rect width="100%" height="100%" filter="url(#grain)" />
         </svg>
-        {/* Subtle grid pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.02] dark:opacity-[0.03]"
-          style={{
-            backgroundImage: "linear-gradient(rgba(120,113,108,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(120,113,108,0.5) 1px, transparent 1px)",
-            backgroundSize: "80px 80px",
-          }}
-        />
       </div>
 
       {/* Floating decorative elements */}

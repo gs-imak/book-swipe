@@ -8,7 +8,7 @@ import { hapticLight } from "@/lib/haptics"
 import { Button } from "@/components/ui/button"
 import { BookCover } from "@/components/book-cover"
 import { useToast } from "./toast-provider"
-import { useState } from "react"
+import { useState, useCallback } from "react"
 
 interface BookCardProps {
   book: Book
@@ -20,6 +20,7 @@ interface BookCardProps {
 
 export function BookCard({ book, onSwipe, isTop = false, showActions = true, reason }: BookCardProps) {
   const [infoExpanded, setInfoExpanded] = useState(false)
+  const [descExpanded, setDescExpanded] = useState(false)
   const sheetY = useMotionValue(0)
   const { showToast } = useToast()
   const x = useMotionValue(0)
@@ -245,14 +246,22 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
                 </div>
               </div>
 
-              {/* Description */}
+              {/* Description — collapsible */}
               <div>
                 <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
                   About
                 </h3>
-                <p className="text-sm text-stone-600 leading-relaxed">
+                <p className={`text-sm text-stone-600 dark:text-stone-300 leading-relaxed ${descExpanded ? "" : "line-clamp-3"}`}>
                   {book.description}
                 </p>
+                {book.description.length > 150 && (
+                  <button
+                    onClick={() => setDescExpanded(!descExpanded)}
+                    className="text-xs text-amber-700 dark:text-amber-400 font-medium mt-1.5 hover:underline"
+                  >
+                    {descExpanded ? "Show less" : "Read more"}
+                  </button>
+                )}
               </div>
 
               {/* Genres */}
