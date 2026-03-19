@@ -1193,7 +1193,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                   {blocks.map((block, i) => {
                     if (block.type === "separator") {
                       return (
-                        <div key={i} className="flex items-center justify-center gap-3 py-8 opacity-25">
+                        <div key={i} className="flex items-center justify-center gap-3 opacity-25" style={{ padding: "2.5em 0", breakInside: "avoid", maxWidth: "65ch", margin: "0 auto" }}>
                           <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: currentTheme.text }} />
                           <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: currentTheme.text }} />
                           <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: currentTheme.text }} />
@@ -1203,13 +1203,13 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
                     if (block.type === "image") {
                       return (
-                        <div key={i} className="my-6 flex flex-col items-center gap-2">
+                        <div key={i} className="flex flex-col items-center gap-2" style={{ margin: "1.5em auto", breakInside: "avoid", maxWidth: "65ch" }}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={block.src}
                             alt={block.caption || "Illustration"}
                             className="max-w-full rounded-lg shadow-sm"
-                            style={{ maxHeight: "60vh" }}
+                            style={{ maxHeight: "50vh" }}
                             loading="lazy"
                           />
                           {block.caption && (
@@ -1229,7 +1229,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
                     if (block.type === "heading") {
                       return (
-                        <div key={i} className="mt-14 mb-8 text-center" data-block-index={i} style={{ scrollSnapAlign: "start" }}>
+                        <div key={i} className="text-center" data-block-index={i} style={{ breakBefore: "column", breakInside: "avoid", paddingTop: "3em", paddingBottom: "2em", maxWidth: "65ch", margin: "0 auto" }}>
                           <h2
                             className="font-bold"
                             style={{
@@ -1262,13 +1262,17 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                       return (
                         <div
                           key={i}
-                          className="my-8 text-center"
+                          className="text-center"
                           data-block-index={i}
                           style={{
                             fontFamily,
                             fontSize: `${fontSize}px`,
                             lineHeight: "1.7",
                             color: currentTheme.text,
+                            padding: "2em 0",
+                            breakInside: "avoid",
+                            maxWidth: "65ch",
+                            margin: "0 auto",
                           }}
                         >
                           {block.lines.map((line, j) => (
@@ -1284,7 +1288,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                       return (
                         <blockquote
                           key={i}
-                          className="mb-5 pl-4 italic"
+                          className="pl-4 italic"
                           data-block-index={i}
                           style={{
                             fontFamily,
@@ -1294,6 +1298,12 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                             color: currentTheme.text,
                             borderLeft: `3px solid ${currentTheme.progressFill}`,
                             opacity: 0.85,
+                            margin: "0 auto",
+                            marginBottom: "0.5em",
+                            breakInside: "avoid",
+                            maxWidth: "65ch",
+                            hyphens: "auto",
+                            WebkitHyphens: "auto",
                           }}
                         >
                           <HighlightedText text={block.text} highlights={inlineHighlights} blockIndex={i} highlightColor={currentTheme.highlight} />
@@ -1305,7 +1315,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                       return (
                         <p
                           key={i}
-                          className="mb-5 text-right italic"
+                          className="text-right italic"
                           data-block-index={i}
                           style={{
                             fontFamily,
@@ -1313,6 +1323,10 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                             lineHeight: "1.85",
                             color: currentTheme.text,
                             opacity: 0.75,
+                            margin: "0 auto",
+                            marginBottom: "0.5em",
+                            breakInside: "avoid",
+                            maxWidth: "65ch",
                           }}
                         >
                           <RenderInlineText text={block.text} />
@@ -1324,7 +1338,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                       return (
                         <div
                           key={i}
-                          className="mb-5 whitespace-pre-line"
+                          className="whitespace-pre-line"
                           data-block-index={i}
                           style={{
                             fontFamily,
@@ -1332,6 +1346,10 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                             lineHeight: "1.85",
                             letterSpacing: "0.01em",
                             color: currentTheme.text,
+                            margin: "0 auto",
+                            marginBottom: "0.5em",
+                            breakInside: "avoid",
+                            maxWidth: "65ch",
                           }}
                         >
                           {block.lines.map((line, j) => (
@@ -1362,8 +1380,9 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                             lineHeight: "1.85",
                             letterSpacing: "0.01em",
                             color: currentTheme.text,
-                            margin: 0,
+                            margin: "0 auto",
                             marginBottom: "0.3em",
+                            maxWidth: "65ch",
                             hyphens: "auto",
                             WebkitHyphens: "auto",
                           }}
@@ -1403,8 +1422,9 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           letterSpacing: "0.01em",
                           color: currentTheme.text,
                           textIndent: skipIndent ? 0 : "1.5em",
-                          margin: 0,
+                          margin: "0 auto",
                           marginBottom: "0.3em",
+                          maxWidth: "65ch",
                           hyphens: "auto",
                           WebkitHyphens: "auto",
                         }}
