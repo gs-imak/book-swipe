@@ -120,8 +120,8 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                   variants={fadeUp}
                   className="text-[2.75rem] sm:text-6xl md:text-7xl font-bold leading-[1.05] text-stone-900 dark:text-stone-100 tracking-tight font-serif"
                 >
-                  Find your next{" "}
-                  <span className="relative inline-block">
+                  Find your next
+                  <span className="block relative">
                     <span
                       className="bg-clip-text text-transparent"
                       style={{
@@ -132,6 +132,14 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                     >
                       favorite book.
                     </span>
+                    {/* Subtle underline accent */}
+                    <span
+                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 lg:left-0 lg:translate-x-0 h-[3px] rounded-full opacity-30"
+                      style={{
+                        width: "60%",
+                        background: "linear-gradient(90deg, #d97706, transparent)",
+                      }}
+                    />
                   </span>
                 </motion.h1>
                 <motion.p
