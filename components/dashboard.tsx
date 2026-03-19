@@ -11,7 +11,7 @@ import { BookDetailModal } from "./book-detail-modal"
 import { StarRating } from "./star-rating"
 import { getUserStats } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
-import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy, Search, Library, SlidersHorizontal, Download, X as XIcon } from "lucide-react"
+import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy, Search, Library, SlidersHorizontal, Download, X as XIcon, Target } from "lucide-react"
 import { SittingReadingDoodle, ReadingSideDoodle, ReadingDoodle, FloatDoodle, GroovyDoodle, LovingDoodle } from "./illustrations"
 import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
@@ -24,6 +24,7 @@ import { ReadingPath } from "./reading-path"
 import { ReadingGoalSetter } from "./reading-goal-setter"
 import { QuotesGallery } from "./quotes-gallery"
 import { ReadingWrapped } from "./reading-wrapped"
+import { ReadingChallenges } from "./reading-challenges"
 import { getShelves, getBooksForShelf, shouldShowBackupReminder, dismissBackupReminder, getHiddenBookIds, hideBook, unhideBook, type Shelf } from "@/lib/storage"
 import { estimateReadingTime, getReadingSpeed, setReadingSpeed, getAllSpeeds, type ReadingSpeed } from "@/lib/reading-time"
 
@@ -50,6 +51,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   const [showFilters, setShowFilters] = useState(false)
   const [showBackupBanner, setShowBackupBanner] = useState(false)
   const [showWrapped, setShowWrapped] = useState(false)
+  const [showChallenges, setShowChallenges] = useState(false)
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set())
   const [showHidden, setShowHidden] = useState(false)
   const [authorFilter, setAuthorFilter] = useState<string | null>(null)
@@ -225,6 +227,14 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                 className="flex items-center justify-center p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors tap-target touch-manipulation"
               >
                 <Search className="w-5 h-5 text-stone-500 dark:text-stone-400" />
+              </button>
+              <button
+                onClick={() => setShowChallenges(true)}
+                aria-label="Reading challenges"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-600 dark:text-stone-300 text-sm font-medium transition-colors tap-target touch-manipulation"
+              >
+                <Target className="w-4 h-4" />
+                <span className="hidden sm:inline">Challenges</span>
               </button>
               <button
                 onClick={showAchievementsPanel}
@@ -799,6 +809,9 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
 
       {/* Reading Wrapped */}
       <ReadingWrapped isOpen={showWrapped} onClose={() => setShowWrapped(false)} />
+
+      {/* Reading Challenges */}
+      <ReadingChallenges isOpen={showChallenges} onClose={() => setShowChallenges(false)} />
     </div>
   )
 }

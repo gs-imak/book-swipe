@@ -1290,20 +1290,31 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     window.getSelection()?.removeAllRanges()
   }, [selectionBar, bookTitle])
 
+  const getPagePreview = useCallback(() => {
+    if (!text || !blocks.length) return ""
+    const ratio = columnTotal > 1 ? paginatedPage / (columnTotal - 1) : 0
+    const charPos = Math.round(ratio * text.length)
+    const snippet = text.slice(Math.max(0, charPos), charPos + 150).trim()
+    return snippet.replace(/\n+/g, " ").replace(/\s{2,}/g, " ").slice(0, 100)
+  }, [text, blocks.length, paginatedPage, columnTotal])
+
   const handleToggleBookmark = useCallback(() => {
     const existing = readerNotes.find(n => n.type === "bookmark")
     if (existing) {
       deleteBookNote(existing.id)
     } else {
+      const preview = getPagePreview()
+      const chapterLabel = currentChapter?.title || `Page ${currentPage}`
+      const content = preview ? `${chapterLabel} — "${preview}..."` : chapterLabel
       saveBookNote({
         bookId,
-        content: currentChapter?.title || `Page ${currentPage}`,
+        content,
         type: "bookmark",
         page: currentPage,
       })
     }
     loadNotes()
-  }, [readerNotes, bookId, currentPage, currentChapter, loadNotes])
+  }, [readerNotes, bookId, currentPage, currentChapter, loadNotes, getPagePreview])
 
   const handleDeleteReaderNote = useCallback((noteId: string) => {
     deleteBookNote(noteId)
