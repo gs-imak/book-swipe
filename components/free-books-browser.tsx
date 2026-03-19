@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
+import { useState, useEffect, useRef } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Search, BookOpen, Loader2, AlertCircle } from "lucide-react"
 import { GutenbergBook } from "@/lib/gutenberg-api"
 import {
@@ -23,6 +23,8 @@ export function FreeBooksBrowser() {
   const [searchQuery, setSearchQuery] = useState("")
   const [readerBook, setReaderBook] = useState<GutenbergBook | null>(null)
   const [readerOpen, setReaderOpen] = useState(false)
+  const [loadProgress, setLoadProgress] = useState(0)
+  const progressRef = useRef<ReturnType<typeof setInterval> | null>(null)
   // Load by category
   useEffect(() => {
     if (searchQuery) return
@@ -71,6 +73,33 @@ export function FreeBooksBrowser() {
       clearTimeout(timer)
     }
   }, [searchQuery])
+
+  // Simulated progress bar — gives perception of work happening
+  useEffect(() => {
+    if (loading && books.length === 0) {
+      setLoadProgress(0)
+      let progress = 0
+      progressRef.current = setInterval(() => {
+        // Fast at first, slows down as it approaches 90% (never reaches 100 until done)
+        const remaining = 90 - progress
+        const increment = Math.max(0.5, remaining * 0.08)
+        progress = Math.min(90, progress + increment)
+        setLoadProgress(progress)
+      }, 200)
+    } else {
+      if (progressRef.current) {
+        clearInterval(progressRef.current)
+        progressRef.current = null
+      }
+      if (!loading) setLoadProgress(100)
+    }
+    return () => {
+      if (progressRef.current) {
+        clearInterval(progressRef.current)
+        progressRef.current = null
+      }
+    }
+  }, [loading, books.length])
 
   const handleSearchChange = (val: string) => {
     setSearchInput(val)
@@ -149,14 +178,62 @@ export function FreeBooksBrowser() {
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-md mx-auto px-4 py-4">
           {loading && books.length === 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="aspect-[2/3] bg-stone-200 dark:bg-stone-700 rounded-xl mb-2" />
-                  <div className="h-3 bg-stone-200 dark:bg-stone-700 rounded w-3/4 mb-1" />
-                  <div className="h-3 bg-stone-200 dark:bg-stone-700 rounded w-1/2" />
+            <div className="space-y-6">
+              {/* Progress section */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center space-y-4 pt-4"
+              >
+                <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  >
+                    <BookOpen className="w-6 h-6 text-amber-600" />
+                  </motion.div>
                 </div>
-              ))}
+
+                <div>
+                  <p className="text-sm font-medium text-stone-700 dark:text-stone-300">
+                    {loadProgress < 30 ? "Connecting to library..." : loadProgress < 60 ? "Browsing the shelves..." : loadProgress < 85 ? "Picking the best titles..." : "Almost ready..."}
+                  </p>
+                  <p className="text-xs text-stone-400 dark:text-stone-500 mt-1">
+                    Searching 70,000+ free classics
+                  </p>
+                </div>
+
+                {/* Progress bar */}
+                <div className="max-w-[200px] mx-auto">
+                  <div className="h-1.5 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full bg-amber-500 rounded-full"
+                      initial={{ width: "0%" }}
+                      animate={{ width: `${loadProgress}%` }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-stone-400 dark:text-stone-500 mt-1.5 tabular-nums">
+                    {Math.round(loadProgress)}%
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Skeleton cards underneath */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 opacity-40">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: i * 0.1 }}
+                  >
+                    <div className="aspect-[2/3] bg-stone-200 dark:bg-stone-700 rounded-xl mb-2 animate-pulse" />
+                    <div className="h-3 bg-stone-200 dark:bg-stone-700 rounded w-3/4 mb-1 animate-pulse" />
+                    <div className="h-3 bg-stone-200 dark:bg-stone-700 rounded w-1/2 animate-pulse" />
+                  </motion.div>
+                ))}
+              </div>
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center h-64 text-stone-400 gap-2">
