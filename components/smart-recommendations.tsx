@@ -100,7 +100,14 @@ export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }
         return
       }
       const filtered = recommendations.filter(book => {
-        const hours = parseInt(book.readingTime.split('-')[0]) || 0
+        // Parse reading time properly: handles "< 1 hour", "2-4 hours", "12+ hours"
+        const rt = book.readingTime
+        const ltMatch = rt.match(/<\s*(\d+)/)
+        const rangeMatch = rt.match(/(\d+)\s*-\s*(\d+)/)
+        const singleMatch = rt.match(/(\d+)/)
+        const hours = ltMatch ? Math.max(0.5, Number(ltMatch[1]) - 0.5)
+          : rangeMatch ? (Number(rangeMatch[1]) + Number(rangeMatch[2])) / 2
+          : singleMatch ? Number(singleMatch[1]) : 4
         if (timeConstraint.maxHours && !timeConstraint.minHours) return hours <= timeConstraint.maxHours
         if (timeConstraint.minHours && !timeConstraint.maxHours) return hours >= timeConstraint.minHours
         if (timeConstraint.minHours && timeConstraint.maxHours) return hours >= timeConstraint.minHours && hours <= timeConstraint.maxHours

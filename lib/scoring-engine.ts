@@ -1,3 +1,5 @@
+"use client"
+
 import { Book } from "./book-data"
 import { getBookReviews, getPassedBookIds } from "./storage"
 
@@ -309,14 +311,8 @@ export function scoreBooks(
   // Build vocabulary from full corpus
   const vocab = buildVocabulary(allTexts)
 
-  // Compute or reuse user profile vector
-  let userVector: SparseVector
-  if (Object.keys(_cachedUserVector).length > 0 && likedKey === _cachedLikedKey) {
-    userVector = _cachedUserVector
-  } else {
-    userVector = computeTFIDF(userProfile, vocab)
-    _cachedUserVector = userVector
-  }
+  // Always recompute user vector with current vocab (vocab changes per candidate set)
+  const userVector = computeTFIDF(userProfile, vocab)
 
   // Build negative profile from passed/disliked books for penalty
   const passedIds = new Set(getPassedBookIds())

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Sparkles, Heart, X, Bookmark, Star } from "lucide-react"
 import { Book } from "@/lib/book-data"
-import { type DailyPick, saveLikedBooks, getLikedBooks } from "@/lib/storage"
+import { type DailyPick, addLikedBook } from "@/lib/storage"
 import { generateDailyPick, dismissDailyPick, saveDailyPickToLibrary } from "@/lib/daily-pick"
 import { BookCover } from "@/components/book-cover"
 
@@ -32,11 +32,8 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation()
-    const liked = getLikedBooks()
-    if (!liked.some(b => b.id === pick.book.id)) {
-      saveLikedBooks([...liked, pick.book])
-      onBookLiked?.(pick.book)
-    }
+    addLikedBook(pick.book) // atomic add — no race condition
+    onBookLiked?.(pick.book)
     saveDailyPickToLibrary()
     setPick({ ...pick, saved: true })
   }

@@ -123,7 +123,6 @@ function HighlightedText({ text, highlights, blockIndex, skipTypography, highlig
   // Build segments: find all highlight ranges in the text
   type Seg = { text: string; highlighted: boolean; noteId?: string; hasNote?: boolean }
   const segments: Seg[] = []
-  let remaining = text
   let offset = 0
 
   // Sort highlights by their position in the text
@@ -601,8 +600,11 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
     const ratio = charOffset / text.length
     const el = scrollRef.current
+    // Double RAF ensures the DOM has fully rendered before scrolling (critical for long books)
     requestAnimationFrame(() => {
-      el.scrollTop = ratio * el.scrollHeight
+      requestAnimationFrame(() => {
+        el.scrollTop = ratio * el.scrollHeight
+      })
     })
   }, [text, bookId])
 
