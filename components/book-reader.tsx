@@ -650,7 +650,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     const raw = normalized.split(/\n{2,}/).filter((p) => p.trim().length > 0)
     const result: TextBlock[] = []
 
-    const chapterRe = /^(?:chapter|book|part|act|section|prologue|epilogue|introduction|preface|foreword|contents|letter)\b/i
+    const chapterRe = /^(?:chapter|book|part|act|section|prologue|epilogue|introduction|preface|foreword|contents|letter|volume|canto)\b/i
     const separatorRe = /^\s*(?:[*\-_]{3,}|\*\s+\*\s+\*)\s*$/
     const illustrationRe = /\[Illustration(?::?\s*([\s\S]+?))?\]/i
 
@@ -665,8 +665,10 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       if (trimmed.length === 0) continue
 
       // Skip common Gutenberg boilerplate lines that survived the header strip
-      if (/^(?:This eBook is for the use|Most recently updated|Release Date|Posting Date|Last Updated|Character set|Language:|Original publication|Source:|Note:|Transcriber|Editor|Translator|Illustrated by|With Illustrations)/i.test(trimmed) && trimmed.length < 120) continue
-      if (/gutenberg|public domain|copyright|license|donation|www\.|http/i.test(trimmed) && !firstHeadingSeen) continue
+      if (/^(?:This eBook is for the use|Most recently updated|Release Date|Posting Date|Last Updated|Character set|Language:|Original publication|Source:|Note:|Transcriber|Editor|Translator|Illustrated by|With Illustrations|Title:|Author:|Translator:|Edition:|Online Distributed|Proofreading|Internet Archive|Digital Library)/i.test(trimmed) && trimmed.length < 150) continue
+      if (/gutenberg|public domain|copyright|license|donation|www\.|http|\.org|\.com|\.net/i.test(trimmed) && !firstHeadingSeen) continue
+      // Skip lines that are just numbers or Roman numerals (page numbers, section markers in TOC)
+      if (/^[IVXLCDM\d\s.,-]+$/.test(trimmed) && trimmed.length < 20 && !firstHeadingSeen) continue
 
       // Scene break separators (*** or --- or ___)
       if (separatorRe.test(trimmed)) {
@@ -716,10 +718,14 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       const headLines = trimmed.split("\n").map((l) => l.trim())
       const mainLine = headLines[0]
       if (chapterRe.test(trimmed) && mainLine.length < 100) {
-        // Multi-line block starting with chapter keyword: check if it's a TOC
-        if (headLines.length > 5) {
-          // Many lines = this is a table of contents, not a heading
-          result.push({ type: "verse", lines: headLines })
+        // Multi-line block starting with chapter keyword
+        if (headLines.length > 15) {
+          // Very many lines = this is a table of contents — skip entirely
+          // (TOCs are navigation clutter in a paginated reader with chapter nav)
+          continue
+        } else if (headLines.length > 5) {
+          // Medium multi-line = condensed TOC or detailed heading — render as verse
+          result.push({ type: "verse", lines: headLines.slice(0, 10) })
         } else {
           const subtitle = headLines.length > 1 ? headLines.slice(1).join(" ").trim() : undefined
           result.push({ type: "heading", text: mainLine, subtitle: subtitle || undefined })
@@ -752,19 +758,21 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       }
 
       // --- Pre-heading title page lines ---
-      // Everything before the first chapter heading is front matter (title, author, etc.)
-      // Render as centered blocks for a clean, standardised title page
+      // Only the first few short blocks before any heading get centered (title, author, date)
+      // Longer blocks or anything after 5 centered blocks = regular paragraphs (preface text, intro)
       if (!firstHeadingSeen) {
+        const centeredSoFar = result.filter(b => b.type === "centered").length
         const cleanLines = nonEmptyLines.map(l => l.trim()).filter(l => l.length > 0)
-        if (cleanLines.length > 0 && cleanLines.every(l => l.length < 80)) {
+
+        // Short lines early on = title page material (max 5 centered blocks)
+        if (centeredSoFar < 5 && cleanLines.length > 0 && cleanLines.every(l => l.length < 80) && cleanLines.length <= 5) {
           result.push({ type: "centered", lines: cleanLines })
           continue
         }
-        // Longer front matter paragraphs (preface text, etc.) — render as regular text
-        if (nonEmptyLines.length === 1 || trimmed.length < 200) {
-          result.push({ type: "centered", lines: [trimmed.replace(/\n/g, " ").replace(/\s{2,}/g, " ")] })
-          continue
-        }
+
+        // Everything else before the first heading = treat as normal paragraph
+        // (preface text, translator notes, long introductions)
+        // Fall through to the regular paragraph handler below
       }
 
       // --- Indented blocks (block quotes, letters, dedications) ---
