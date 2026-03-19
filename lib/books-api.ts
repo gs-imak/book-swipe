@@ -155,11 +155,30 @@ export async function searchGoogleBooks(query: string, maxResults = 20, lang?: s
 
     const books = data.items.map(transformGoogleBookToBook).filter((b: Book | null): b is Book => b !== null)
 
-    // Upgrade covers with high-quality Goodreads images
-    return upgradeCoversBatch(books)
+    // Return books immediately with Google covers — don't block on Goodreads upgrades
+    // Cover upgrades happen in the background via upgradeCoversBatchAsync
+    return books
   } catch {
     return []
   }
+}
+
+// Fire-and-forget background cover upgrade — updates cache after fetching
+let _bgUpgradeQueued = false
+export function upgradeCoversBatchAsync(books: Book[]): void {
+  if (_bgUpgradeQueued || books.length === 0) return
+  _bgUpgradeQueued = true
+  // Small delay so it doesn't compete with initial render
+  setTimeout(async () => {
+    try {
+      const upgraded = await upgradeCoversBatch(books)
+      const changed = upgraded.filter((b, i) => b.cover !== books[i]?.cover)
+      if (changed.length > 0) {
+        addBooksToCache(changed)
+      }
+    } catch { /* ignore */ }
+    _bgUpgradeQueued = false
+  }, 2000)
 }
 
 // Combined search across Google Books + Open Library for better results.
