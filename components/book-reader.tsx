@@ -277,46 +277,41 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const [totalPagesCount, setTotalPagesCount] = useState(1)
   const [containerWidth, setContainerWidth] = useState(0)
 
-  // Track the content div's content-box width (after padding) for accurate column sizing
+  // Track contentRef's width — it has no horizontal padding so clientWidth = content-box
   useEffect(() => {
     const el = contentRef.current
     if (!el || !isOpen) return
     const measure = () => {
-      // contentRect.width gives the content box (excluding padding)
-      const style = getComputedStyle(el)
-      const padL = parseFloat(style.paddingLeft) || 0
-      const padR = parseFloat(style.paddingRight) || 0
-      const w = el.clientWidth - padL - padR
+      const w = el.clientWidth
       if (w > 0) setContainerWidth(w)
     }
+    // Use RAF to ensure layout is complete before measuring
+    const id = requestAnimationFrame(measure)
     const observer = new ResizeObserver(measure)
     observer.observe(el)
-    measure()
-    return () => observer.disconnect()
+    return () => { cancelAnimationFrame(id); observer.disconnect() }
   }, [isOpen, text])
 
-  // Measure total pages from CSS columns
-  // The step size per page = contentRef.clientWidth (includes padding)
-  // because translateX moves the whole padded element
+  // Measure total pages — contentRef.clientWidth = one page width (no horizontal padding)
   const measurePages = useCallback(() => {
     const el = contentRef.current
     if (!el) return
-    const stepWidth = el.clientWidth
-    if (stepWidth <= 0) return
-    const total = Math.max(1, Math.ceil(el.scrollWidth / stepWidth))
+    const pageW = el.clientWidth
+    if (pageW <= 0) return
+    const total = Math.max(1, Math.ceil(el.scrollWidth / pageW))
     setTotalPagesCount(total)
     return total
   }, [])
 
-  // Navigate to a specific page
+  // Navigate to a specific page — step = contentRef.clientWidth
   const goToPage = useCallback((page: number) => {
     const el = contentRef.current
     if (!el) return
     const total = measurePages() || totalPagesCount
     const clamped = Math.max(0, Math.min(page, total - 1))
     setCurrentPage(clamped)
-    const stepWidth = el.clientWidth
-    el.style.transform = `translateX(-${clamped * stepWidth}px)`
+    const pageW = el.clientWidth
+    el.style.transform = `translateX(-${clamped * pageW}px)`
     // Update progress
     const pct = total > 1 ? Math.round((clamped / (total - 1)) * 100) : 0
     setProgress(pct)
@@ -1152,7 +1147,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
             <>
               <div
                 ref={scrollRef}
-                className="flex-1"
+                className="flex-1 px-5 sm:px-8"
                 style={{
                   overflow: "hidden",
                   position: "relative",
@@ -1163,12 +1158,11 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
               >
                 <div
                   ref={contentRef}
-                  className="px-5 sm:px-8"
                   style={{
                     height: "100%",
                     paddingTop: "2rem",
                     paddingBottom: "2rem",
-                    columnWidth: containerWidth > 0 ? `${containerWidth}px` : undefined,
+                    columnWidth: containerWidth > 0 ? `${containerWidth}px` : "100vw",
                     columnGap: 0,
                     columnFill: "auto" as const,
                     transition: "transform 300ms cubic-bezier(0.25, 0.1, 0.25, 1)",
