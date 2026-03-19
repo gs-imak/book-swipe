@@ -646,6 +646,57 @@ export function unhideBook(bookId: string): void {
   safeSetJSON(HIDDEN_BOOKS_KEY, hidden)
 }
 
+// ── Book Collections ────────────────────────────────────────────────────────
+
+const COLLECTIONS_KEY = "bookswipe_collections"
+
+export interface BookCollection {
+  id: string
+  name: string
+  description: string
+  emoji: string
+  bookIds: string[]
+  createdAt: string
+}
+
+export function getCollections(): BookCollection[] {
+  return safeGetJSON<BookCollection[]>(COLLECTIONS_KEY, [])
+}
+
+export function saveCollection(collection: BookCollection): void {
+  const collections = getCollections()
+  const existingIndex = collections.findIndex(c => c.id === collection.id)
+  if (existingIndex !== -1) {
+    collections[existingIndex] = collection
+  } else {
+    collections.push(collection)
+  }
+  safeSetJSON(COLLECTIONS_KEY, collections)
+}
+
+export function deleteCollection(id: string): void {
+  const collections = getCollections().filter(c => c.id !== id)
+  safeSetJSON(COLLECTIONS_KEY, collections)
+}
+
+export function addBookToCollection(collectionId: string, bookId: string): void {
+  const collections = getCollections()
+  const idx = collections.findIndex(c => c.id === collectionId)
+  if (idx !== -1 && !collections[idx].bookIds.includes(bookId)) {
+    collections[idx].bookIds = [...collections[idx].bookIds, bookId]
+    safeSetJSON(COLLECTIONS_KEY, collections)
+  }
+}
+
+export function removeBookFromCollection(collectionId: string, bookId: string): void {
+  const collections = getCollections()
+  const idx = collections.findIndex(c => c.id === collectionId)
+  if (idx !== -1) {
+    collections[idx].bookIds = collections[idx].bookIds.filter(id => id !== bookId)
+    safeSetJSON(COLLECTIONS_KEY, collections)
+  }
+}
+
 // ── Gutenberg reading positions ──────────────────────────────────────────────
 
 const READING_POSITION_KEY = "bookswipe_reading_positions"

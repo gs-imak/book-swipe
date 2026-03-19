@@ -11,7 +11,7 @@ import { BookDetailModal } from "./book-detail-modal"
 import { StarRating } from "./star-rating"
 import { getUserStats } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
-import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy, Search, Library, SlidersHorizontal, Download, X as XIcon, Target } from "lucide-react"
+import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy, Search, Library, SlidersHorizontal, Download, X as XIcon, Target, FolderOpen } from "lucide-react"
 import { SittingReadingDoodle, ReadingSideDoodle, ReadingDoodle, FloatDoodle, GroovyDoodle, LovingDoodle } from "./illustrations"
 import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
@@ -25,6 +25,7 @@ import { ReadingGoalSetter } from "./reading-goal-setter"
 import { QuotesGallery } from "./quotes-gallery"
 import { ReadingWrapped } from "./reading-wrapped"
 import { ReadingChallenges } from "./reading-challenges"
+import { BookCollections } from "./book-collections"
 import { getShelves, getBooksForShelf, shouldShowBackupReminder, dismissBackupReminder, getHiddenBookIds, hideBook, unhideBook, type Shelf } from "@/lib/storage"
 import { estimateReadingTime, getReadingSpeed, setReadingSpeed, getAllSpeeds, type ReadingSpeed } from "@/lib/reading-time"
 
@@ -51,6 +52,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   const [showFilters, setShowFilters] = useState(false)
   const [showBackupBanner, setShowBackupBanner] = useState(false)
   const [showWrapped, setShowWrapped] = useState(false)
+  const [showCollections, setShowCollections] = useState(false)
   const [showChallenges, setShowChallenges] = useState(false)
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set())
   const [showHidden, setShowHidden] = useState(false)
@@ -505,6 +507,14 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                   <Library className="w-3 h-3" />
                   Manage
                 </button>
+                <button
+                  onClick={() => setShowCollections(true)}
+                  aria-label="Open collections"
+                  className="flex-shrink-0 px-2.5 py-1.5 rounded-full text-xs font-medium text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all flex items-center gap-1"
+                >
+                  <FolderOpen className="w-3 h-3" />
+                  Collections
+                </button>
               </div>
 
               {/* Collapsible advanced filters */}
@@ -812,6 +822,13 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
 
       {/* Reading Challenges */}
       <ReadingChallenges isOpen={showChallenges} onClose={() => setShowChallenges(false)} />
+
+      {/* Book Collections */}
+      <BookCollections
+        isOpen={showCollections}
+        onClose={() => setShowCollections(false)}
+        onBookClick={handleBookClick}
+      />
     </div>
   )
 }
