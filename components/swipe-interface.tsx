@@ -120,7 +120,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   const [currentIndex, setCurrentIndex] = useState(0)
   const [likedBooks, setLikedBooks] = useState<Book[]>([])
   const [passedBooks, setPassedBooks] = useState<Book[]>([])
-  const [lastAction, setLastAction] = useState<{ book: Book; direction: "left" | "right" } | null>(null)
+  const [undoStack, setUndoStack] = useState<{ book: Book; direction: "left" | "right" }[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [batchCount, setBatchCount] = useState(1)
   const [sessionLikedBooks, setSessionLikedBooks] = useState<Book[]>([])
@@ -166,7 +166,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
       }
       setCurrentIndex(0)
       setPassedBooks([])
-      setLastAction(null)
+      setUndoStack([])
       setLikedBooks(getLikedBooks())
     } catch {
       const cached = getCachedBooks()
@@ -202,27 +202,28 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
       setPassedBooks(prev => [...prev, currentBook])
     }
 
-    setLastAction({ book: currentBook, direction })
+    setUndoStack(prev => [...prev, { book: currentBook, direction }])
     setCurrentIndex(prev => prev + 1)
   }
 
   const handleUndo = () => {
-    if (!lastAction || currentIndex === 0) {
+    if (undoStack.length === 0 || currentIndex === 0) {
       showToast("Nothing to undo", "info")
       return
     }
     hapticMedium()
 
+    const lastAction = undoStack[undoStack.length - 1]
     if (lastAction.direction === "right") {
-      const updated = removeLikedBook(lastAction.book.id) // atomic remove
+      const updated = removeLikedBook(lastAction.book.id)
       setLikedBooks(updated)
       setSessionLikedBooks(prev => prev.filter(b => b.id !== lastAction.book.id))
     } else {
       setPassedBooks(prev => prev.filter(b => b.id !== lastAction.book.id))
     }
 
+    setUndoStack(prev => prev.slice(0, -1))
     setCurrentIndex(prev => prev - 1)
-    setLastAction(null)
     showToast("Undo — back to previous book", "info")
   }
 
@@ -482,9 +483,9 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 aria-label="Undo last swipe"
-                disabled={!lastAction}
+                disabled={undoStack.length === 0}
                 className={`w-10 h-10 rounded-full border-2 bg-white shadow-sm flex items-center justify-center transition-all tap-target touch-manipulation ${
-                  lastAction
+                  undoStack.length > 0
                     ? "border-amber-200 hover:border-amber-300 text-amber-500"
                     : "border-stone-100 text-stone-200 cursor-not-allowed"
                 }`}
