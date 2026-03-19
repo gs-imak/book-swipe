@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { BookCard } from "./book-card"
 import { Button } from "@/components/ui/button"
 import { Book, UserPreferences } from "@/lib/book-data"
-import { addLikedBook, removeLikedBook, getLikedBooks } from "@/lib/storage"
+import { addLikedBook, removeLikedBook, getLikedBooks, addPassedBookId, getPassedBookIds } from "@/lib/storage"
 import { scoreBooks } from "@/lib/scoring-engine"
 import { getBooksByCategory, bookSearchQueries } from "@/lib/books-api"
 import { getCachedBooks, addBooksToCache } from "@/lib/book-cache"
@@ -154,10 +154,12 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
       }
 
       let books = getCachedBooks()
-      // Exclude already-seen books from previous batches
+      // Exclude already-seen books from previous batches + previously passed
+      const passedSet = new Set(getPassedBookIds())
       if (excludeIds && excludeIds.size > 0) {
         books = books.filter(b => !excludeIds.has(b.id))
       }
+      books = books.filter(b => !passedSet.has(b.id))
       const filtered = filterBooks(books, preferences)
       if (filtered.length === 0 && books.length > 0) {
         // If no matches even after targeted fetch, show best-rated from fetched books
@@ -219,6 +221,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
     } else {
       hapticLight()
       setPassedBooks(prev => [...prev, currentBook])
+      addPassedBookId(currentBook.id) // persist for negative signal
     }
 
     setUndoStack(prev => [...prev, { book: currentBook, direction }])

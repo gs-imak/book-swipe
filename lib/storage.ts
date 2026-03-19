@@ -603,6 +603,25 @@ function clearBookCacheForMigration(): void {
   localStorage.removeItem("bookswipe_cache_metadata")
 }
 
+// ── Passed / swiped-left books (negative signal) ────────────────────────────
+
+const PASSED_BOOKS_KEY = "bookswipe_passed_books"
+
+/** Record a book the user swiped left on (negative signal for recommendations) */
+export function addPassedBookId(bookId: string): void {
+  const passed = safeGetJSON<string[]>(PASSED_BOOKS_KEY, [])
+  if (!passed.includes(bookId)) {
+    // Keep last 200 to avoid unbounded growth
+    const updated = [...passed, bookId].slice(-200)
+    safeSetJSON(PASSED_BOOKS_KEY, updated)
+  }
+}
+
+/** Get all passed book IDs */
+export function getPassedBookIds(): string[] {
+  return safeGetJSON<string[]>(PASSED_BOOKS_KEY, [])
+}
+
 // ── Hidden / Archived books ──────────────────────────────────────────────────
 
 const HIDDEN_BOOKS_KEY = "bookswipe_hidden_books"

@@ -1,4 +1,5 @@
 import { Book } from "./book-data"
+import { getBookReviews, getPassedBookIds } from "./storage"
 
 export interface RecommendationReason {
   type: "genre" | "mood" | "author" | "rating" | "community" | "similar"
@@ -35,11 +36,22 @@ const STOPWORDS: Record<string, boolean> = {}
 STOPWORDS_LIST.forEach((w) => { STOPWORDS[w] = true })
 
 function tokenize(text: string): string[] {
-  return text
+  const words = text
     .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/[^a-z0-9\s-]/g, " ")
     .split(/\s+/)
     .filter((t) => t.length > 2 && !STOPWORDS[t])
+
+  // Generate bigrams for compound terms (e.g., "science fiction" → "science_fiction")
+  const tokens = [...words]
+  for (let i = 0; i < words.length - 1; i++) {
+    const bigram = `${words[i]}_${words[i + 1]}`
+    // Only keep meaningful bigrams (both words > 3 chars)
+    if (words[i].length > 3 && words[i + 1].length > 3) {
+      tokens.push(bigram)
+    }
+  }
+  return tokens
 }
 
 // --- TF-IDF ---
@@ -125,10 +137,10 @@ export function buildFeatureString(book: Book): string {
     .slice(0, 40)
     .join(" ")
 
-  // Weight genres 3x and moods 2x by repetition
+  // Weight: author 4x, genres 3x, moods 2x, subjects+desc 1x
   return [
     book.title,
-    book.author,
+    book.author, book.author, book.author, book.author,
     genreText, genreText, genreText,
     moodText, moodText,
     subjectText,
@@ -142,23 +154,37 @@ export function buildFeatureString(book: Book): string {
 export function buildUserProfile(likedBooks: Book[]): string {
   if (likedBooks.length === 0) return ""
 
+  // Get review ratings to weight books by user satisfaction
+  const reviews = getBookReviews()
+  const ratingMap: Record<string, number> = {}
+  reviews.forEach(r => { ratingMap[r.bookId] = r.rating })
+
   const features: string[] = []
+
   // Recency weighting: last 5 liked = 3x, next 5 = 2x, rest = 1x
   const recent3x = likedBooks.slice(-5)
   const recent2x = likedBooks.slice(-10, -5)
   const rest = likedBooks.slice(0, Math.max(0, likedBooks.length - 10))
 
-  recent3x.forEach((b) => {
-    const f = buildFeatureString(b)
-    features.push(f, f, f)
-  })
-  recent2x.forEach((b) => {
-    const f = buildFeatureString(b)
-    features.push(f, f)
-  })
-  rest.forEach((b) => {
-    features.push(buildFeatureString(b))
-  })
+  const addWithWeight = (book: Book, recencyMultiplier: number) => {
+    const f = buildFeatureString(book)
+    // Review rating multiplier: 5★=2x, 4★=1.5x, 3★=1x, 1-2★=0.5x, unrated=1x
+    const rating = ratingMap[book.id]
+    let ratingMultiplier = 1
+    if (rating !== undefined) {
+      if (rating >= 5) ratingMultiplier = 2
+      else if (rating >= 4) ratingMultiplier = 1.5
+      else if (rating <= 2) ratingMultiplier = 0.5
+    }
+    const totalWeight = Math.round(recencyMultiplier * ratingMultiplier)
+    for (let i = 0; i < Math.max(1, totalWeight); i++) {
+      features.push(f)
+    }
+  }
+
+  recent3x.forEach(b => addWithWeight(b, 3))
+  recent2x.forEach(b => addWithWeight(b, 2))
+  rest.forEach(b => addWithWeight(b, 1))
 
   return features.join(" ")
 }
@@ -292,10 +318,36 @@ export function scoreBooks(
     _cachedUserVector = userVector
   }
 
+  // Build negative profile from passed/disliked books for penalty
+  const passedIds = new Set(getPassedBookIds())
+  const passedBooks = filtered.filter(b => passedIds.has(b.id))
+  let negativeVector: SparseVector = {}
+  if (passedBooks.length >= 3) {
+    // Build a "dislike profile" from genres/moods of passed books
+    const negFeatures = passedBooks.slice(-20).map(buildFeatureString).join(" ")
+    negativeVector = computeTFIDF(negFeatures, vocab)
+  }
+  const hasNegative = Object.keys(negativeVector).length > 0
+
+  // Detect user's explored genres for novelty injection
+  const likedGenres = new Set<string>()
+  likedBooks.forEach(b => b.genre.forEach(g => likedGenres.add(g.toLowerCase())))
+
   // Score each candidate
   const scored: ScoredBook[] = filtered.map((book, i) => {
     const bookVector = computeTFIDF(candidateTexts[i], vocab)
     let score = cosineSimilarity(userVector, bookVector)
+
+    // Negative signal: penalize books similar to passed/disliked books
+    if (hasNegative) {
+      const negSim = cosineSimilarity(negativeVector, bookVector)
+      score -= negSim * 0.3 // 30% penalty for similarity to disliked books
+    }
+
+    // Penalize books the user already swiped left on
+    if (passedIds.has(book.id)) {
+      score *= 0.1 // Heavy penalty — mostly filter them out
+    }
 
     // Community boost: small nudge for popular books
     if (communityBoost && book.metadata?.readinglogCount) {
@@ -305,6 +357,13 @@ export function scoreBooks(
     // Quality boost for high-rated books
     if (book.rating >= 4.0) {
       score *= 1 + (book.rating - 3.5) * 0.05
+    }
+
+    // Novelty bonus: small boost for books in genres the user hasn't explored
+    const bookGenres = book.genre.map(g => g.toLowerCase())
+    const isNovel = bookGenres.some(g => !likedGenres.has(g))
+    if (isNovel && book.rating >= 3.8) {
+      score += 0.05 // Small bump to surface unexplored high-quality books
     }
 
     const reasons = generateReasons(book, likedBooks)
