@@ -151,3 +151,22 @@
 [class*="bg-emerald"]:focus-visible {
   outline-color: #fbbf24;
 }
+
+/* Landing page animations */
+@keyframes shimmer {
+  0%, 100% {
+    background-position: 0% center;
+  }
+  50% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(var(--rotate, 0deg));
+  }
+  50% {
+    transform: translateY(-12px) rotate(calc(var(--rotate, 0deg) + 3deg));
+  }
+}
