@@ -1782,17 +1782,17 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
                 {/* Current chapter indicator */}
                 {currentChapter && (
-                  <div className="px-4 pt-2 pb-1">
+                  <div className="px-6 pt-2 pb-1">
                     <p className="text-xs truncate opacity-50 text-center font-medium">
                       {currentChapter.title}{currentChapter.subtitle ? ` — ${currentChapter.subtitle}` : ""}
                     </p>
                   </div>
                 )}
 
-                {/* Main controls bar */}
-                <div className="flex items-center justify-between px-4 h-14">
+                {/* Main controls bar — 3-column grid for proper centering */}
+                <div className="grid grid-cols-3 items-center px-4 h-14">
                   {/* Left: prev chapter + page info + TOC */}
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1 justify-self-start">
                     {chapters.length > 0 && (
                       <motion.button
                         whileTap={{ scale: 0.9 }}
@@ -1806,7 +1806,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                     )}
                     <button
                       onClick={() => setShowNavPanel(true)}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg transition-opacity hover:opacity-80"
+                      className="flex items-center gap-1.5 px-2 py-2 rounded-lg transition-opacity hover:opacity-80"
                       aria-label="Open table of contents"
                     >
                       <List className="w-4 h-4 opacity-60" />
@@ -1827,8 +1827,8 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                     )}
                   </div>
 
-                  {/* Center: font controls */}
-                  <div className="flex items-center gap-3">
+                  {/* Center: font controls — always centered */}
+                  <div className="flex items-center gap-3 justify-self-center">
                     <motion.button
                       whileTap={{ scale: 0.9 }}
                       onClick={() => setFontSize((s) => Math.max(14, s - 1))}
@@ -1851,7 +1851,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                   </div>
 
                   {/* Right: time remaining */}
-                  <span className="text-xs tabular-nums opacity-50 min-w-[70px] text-right">
+                  <span className="text-xs tabular-nums opacity-50 justify-self-end">
                     {progress >= 98 ? "Done!" : `~${minsRemaining < 60 ? `${minsRemaining}m` : `${Math.floor(minsRemaining / 60)}h ${minsRemaining % 60}m`}`}
                   </span>
                 </div>
