@@ -275,6 +275,23 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   // Pagination state
   const [currentPage, setCurrentPage] = useState(0)
   const [totalPagesCount, setTotalPagesCount] = useState(1)
+  const [containerWidth, setContainerWidth] = useState(0)
+
+  // Track container width for column sizing
+  useEffect(() => {
+    const container = scrollRef.current
+    if (!container || !isOpen) return
+    const observer = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const w = entry.contentRect.width
+        if (w > 0) setContainerWidth(w)
+      }
+    })
+    observer.observe(container)
+    // Initial measurement
+    if (container.clientWidth > 0) setContainerWidth(container.clientWidth)
+    return () => observer.disconnect()
+  }, [isOpen])
 
   // Measure total pages from CSS columns
   const measurePages = useCallback(() => {
@@ -1133,10 +1150,11 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
             <>
               <div
                 ref={scrollRef}
-                className="flex-1 relative"
+                className="flex-1 mx-auto"
                 style={{
                   overflow: "hidden",
                   position: "relative",
+                  maxWidth: "min(65ch, 100%)",
                 }}
                 onClick={handleTapZone}
                 onTouchStart={handleTouchStart}
@@ -1144,15 +1162,16 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
               >
                 <div
                   ref={contentRef}
-                  className="mx-auto px-5 sm:px-8 py-8"
                   style={{
-                    maxWidth: "65ch",
                     height: "100%",
-                    columnWidth: "calc(100vw - 40px)",
-                    columnGap: "40px",
-                    columnFill: "auto",
-                    transition: "transform 300ms cubic-bezier(0.25, 0.1, 0.25, 1)",
+                    paddingLeft: "clamp(20px, 5vw, 48px)",
+                    paddingRight: "clamp(20px, 5vw, 48px)",
+                    paddingTop: "2rem",
                     paddingBottom: "calc(2rem + env(safe-area-inset-bottom))",
+                    columnWidth: containerWidth > 0 ? `${containerWidth}px` : "100vw",
+                    columnGap: 0,
+                    columnFill: "auto" as const,
+                    transition: "transform 300ms cubic-bezier(0.25, 0.1, 0.25, 1)",
                   }}
                 >
                   {/* Floating selection bar — must be inside scroll container for correct positioning */}
