@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Quote } from "lucide-react"
+import { Quote, Share2, Copy } from "lucide-react"
 import { getBookNotes, getLikedBooks } from "@/lib/storage"
 import { Book } from "@/lib/book-data"
 
@@ -66,14 +66,32 @@ export function QuotesGallery() {
           >
             <div className="flex gap-3">
               <Quote className="w-3.5 h-3.5 text-teal-400 flex-shrink-0 mt-1" />
-              <div className="space-y-1.5 min-w-0">
+              <div className="space-y-1.5 min-w-0 flex-1">
                 <p className="text-sm text-stone-700 leading-relaxed italic">{q.content}</p>
-                {q.book && (
-                  <p className="text-[11px] text-stone-400">
-                    — {q.book.title}
-                    {q.page ? `, p.\u202f${q.page}` : ""}
-                  </p>
-                )}
+                <div className="flex items-center justify-between gap-2">
+                  {q.book && (
+                    <p className="text-[11px] text-stone-400 truncate">
+                      — {q.book.title}
+                      {q.page ? `, p.\u202f${q.page}` : ""}
+                    </p>
+                  )}
+                  <button
+                    onClick={() => {
+                      const formatted = `"${q.content}"${q.book ? ` — ${q.book.title} by ${q.book.author}` : ""}`
+                      if (navigator.share) {
+                        navigator.share({ text: formatted }).catch(() => {
+                          navigator.clipboard?.writeText(formatted)
+                        })
+                      } else {
+                        navigator.clipboard?.writeText(formatted)
+                      }
+                    }}
+                    aria-label="Share quote"
+                    className="flex-shrink-0 p-1.5 rounded-md text-teal-400 hover:text-teal-600 hover:bg-teal-100 transition-colors"
+                  >
+                    <Share2 className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
             </div>
           </motion.div>
