@@ -700,6 +700,8 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
     let imgIndex = 0
     let firstHeadingSeen = false
+    let titleAlreadyShown = false
+    const normalizedBookTitle = bookTitle.toLowerCase().replace(/[^a-z0-9]/g, "")
 
     for (let idx = 0; idx < raw.length; idx++) {
       const block = raw[idx]
@@ -707,6 +709,15 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
       // Skip empty/whitespace blocks
       if (trimmed.length === 0) continue
+
+      // Skip duplicate title blocks — if text closely matches bookTitle and we already showed it
+      const normalizedBlock = trimmed.toLowerCase().replace(/[^a-z0-9]/g, "")
+      if (!firstHeadingSeen && normalizedBlock.length < 100 && normalizedBookTitle.length > 3) {
+        if (normalizedBlock.includes(normalizedBookTitle) || normalizedBookTitle.includes(normalizedBlock)) {
+          if (titleAlreadyShown) continue // skip duplicate
+          titleAlreadyShown = true
+        }
+      }
 
       // Skip common Gutenberg boilerplate lines that survived the header strip
       if (/^(?:This eBook is for the use|Most recently updated|Release Date|Posting Date|Last Updated|Character set|Language:|Original publication|Source:|Note:|Transcriber|Editor|Translator|Illustrated by|With Illustrations|Title:|Author:|Translator:|Edition:|Online Distributed|Proofreading|Internet Archive|Digital Library)/i.test(trimmed) && trimmed.length < 150) continue
@@ -834,12 +845,19 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
         continue
       }
 
-      // --- Verse / poetry / TOC / short-line blocks ---
+      // --- Verse / poetry / short-line blocks ---
       if (nonEmptyLines.length > 1) {
         const trimmedLines = nonEmptyLines.map((l) => l.trim())
         const avgLen = trimmedLines.reduce((s, l) => s + l.length, 0) / trimmedLines.length
         const longLineCount = trimmedLines.filter((l) => l.length > 55).length
         if (avgLen < 45 && longLineCount < trimmedLines.length * 0.3) {
+          // Check if this looks like a TOC — many lines with chapter/roman numeral patterns
+          const tocLineCount = trimmedLines.filter(l =>
+            chapterRe.test(l) || /^\d+\.?\s|^[IVXLC]+\.?\s|\.{3,}|^\s*\d+\s*$/.test(l)
+          ).length
+          if (tocLineCount > trimmedLines.length * 0.3 && trimmedLines.length > 4) {
+            continue // Skip TOC-like verse blocks
+          }
           result.push({ type: "verse", lines: trimmedLines })
           continue
         }
@@ -1933,24 +1951,40 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                   paddingBottom: "max(8px, env(safe-area-inset-bottom, 8px))",
                 }}
               >
-                {/* Full-screen navigation overlay */}
+                {/* Navigation half-sheet — slides up from bottom */}
                 <AnimatePresence>
                   {showNavPanel && (
+                    <>
+                    {/* Backdrop */}
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      transition={{ duration: 0.15 }}
-                      className="fixed inset-0 z-30 flex flex-col"
-                      style={{ backgroundColor: currentTheme.bg, color: currentTheme.text }}
+                      className="fixed inset-0 z-[28] bg-black/30"
+                      onClick={() => { setShowNavPanel(false); setSearchOpen(false) }}
+                    />
+                    <motion.div
+                      initial={{ y: "100%" }}
+                      animate={{ y: 0 }}
+                      exit={{ y: "100%" }}
+                      transition={{ type: "spring", damping: 30, stiffness: 300 }}
+                      className="fixed bottom-0 left-0 right-0 z-[29] flex flex-col rounded-t-2xl shadow-2xl"
+                      style={{
+                        backgroundColor: currentTheme.bg,
+                        color: currentTheme.text,
+                        maxHeight: "70vh",
+                        borderTop: `1px solid ${currentTheme.border}`,
+                      }}
                     >
+                      {/* Drag handle */}
+                      <div className="flex justify-center pt-3 pb-1">
+                        <div className="w-10 h-1 rounded-full" style={{ backgroundColor: `${currentTheme.text}20` }} />
+                      </div>
+
                       {/* Nav header with tabs */}
                       <div
                         className="flex-shrink-0"
-                        style={{
-                          borderBottom: `1px solid ${currentTheme.border}`,
-                          paddingTop: "env(safe-area-inset-top)",
-                        }}
+                        style={{ borderBottom: `1px solid ${currentTheme.border}` }}
                       >
                         <div className="flex items-center justify-between px-4 h-12">
                           <div className="flex items-center gap-1">
@@ -2239,6 +2273,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                         )}
                       </div>
                     </motion.div>
+                    </>
                   )}
                 </AnimatePresence>
 
