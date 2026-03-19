@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ArrowLeft, ChevronLeft, ChevronRight, Sun, Coffee, Moon, Loader2, AlertCircle, BookOpen, Minus, Plus, List, X, Search, Bookmark, BookmarkCheck, Highlighter, StickyNote, Copy, Trash2, MessageSquare, Quote, Globe, BookText, Share2, Type } from "lucide-react"
+import { ArrowLeft, ChevronLeft, ChevronRight, Sun, Coffee, Moon, Loader2, AlertCircle, BookOpen, Minus, Plus, List, X, Search, Bookmark, BookmarkCheck, Highlighter, StickyNote, Copy, Trash2, MessageSquare, Quote, Globe, BookText, Share2, Type, Timer, Play, Pause } from "lucide-react"
 import { GutenbergBook, fetchBookText, fetchBookImages } from "@/lib/gutenberg-api"
 import { saveReadingPosition, getReadingPosition, getBookNotesForBook, saveBookNote, deleteBookNote, type BookNote } from "@/lib/storage"
 
@@ -18,8 +18,9 @@ interface BookReaderProps {
 
 const THEME_KEY = "bookswipe_reader_theme"
 const FONT_KEY = "bookswipe_reader_font"
+const BIONIC_KEY = "bookswipe_bionic_mode"
 
-type ReaderFont = "georgia" | "merriweather" | "lora" | "system" | "literata"
+type ReaderFont = "georgia" | "merriweather" | "lora" | "system" | "literata" | "opendyslexic"
 
 const FONT_OPTIONS: { id: ReaderFont; label: string; family: string }[] = [
   { id: "georgia", label: "Georgia", family: "Georgia, 'Source Serif 4', serif" },
@@ -27,7 +28,26 @@ const FONT_OPTIONS: { id: ReaderFont; label: string; family: string }[] = [
   { id: "lora", label: "Lora", family: "var(--font-lora), Georgia, serif" },
   { id: "literata", label: "Literata", family: "var(--font-literata), Georgia, serif" },
   { id: "system", label: "Sans-serif", family: "system-ui, -apple-system, sans-serif" },
+  { id: "opendyslexic", label: "OpenDyslexic", family: "'OpenDyslexic', sans-serif" },
 ]
+
+type AmbientSound = "rain" | "fireplace" | "cafe" | "library" | "forest"
+const AMBIENT_SOUNDS: { id: AmbientSound; label: string; url: string; emoji: string }[] = [
+  { id: "rain", label: "Rain", url: "https://cdn.pixabay.com/audio/2022/10/30/audio_711e25fb3f.mp3", emoji: "🌧" },
+  { id: "fireplace", label: "Fireplace", url: "https://cdn.pixabay.com/audio/2024/11/04/audio_4956b2c2d1.mp3", emoji: "🔥" },
+  { id: "cafe", label: "Cafe", url: "https://cdn.pixabay.com/audio/2022/03/09/audio_c89cbe9854.mp3", emoji: "☕" },
+  { id: "library", label: "Library", url: "https://cdn.pixabay.com/audio/2022/10/30/audio_711e25fb3f.mp3", emoji: "📚" },
+  { id: "forest", label: "Forest", url: "https://cdn.pixabay.com/audio/2022/03/09/audio_c89cbe9854.mp3", emoji: "🌲" },
+]
+
+type AutoScrollSpeed = "slow" | "medium" | "fast"
+const AUTO_SCROLL_SPEEDS: { id: AutoScrollSpeed; label: string; seconds: number }[] = [
+  { id: "slow", label: "Slow", seconds: 30 },
+  { id: "medium", label: "Medium", seconds: 20 },
+  { id: "fast", label: "Fast", seconds: 12 },
+]
+
+const POMODORO_DURATIONS = [15, 25, 45, 60]
 
 function getStoredFont(): ReaderFont {
   if (typeof window === "undefined") return "georgia"
@@ -36,6 +56,14 @@ function getStoredFont(): ReaderFont {
     if (stored && FONT_OPTIONS.some(f => f.id === stored)) return stored as ReaderFont
   } catch { /* ignore */ }
   return "georgia"
+}
+
+function getStoredBionic(): boolean {
+  if (typeof window === "undefined") return false
+  try {
+    return localStorage.getItem(BIONIC_KEY) === "true"
+  } catch { /* ignore */ }
+  return false
 }
 
 function getFontFamily(font: ReaderFont): string {
@@ -247,6 +275,14 @@ function RenderInlineText({ text, skipTypography }: { text: string; skipTypograp
   return <>{parts}</>
 }
 
+function makeBionicNode(text: string): React.ReactNode {
+  return text.split(/(\s+)/).map((word, i) => {
+    if (/^\s+$/.test(word) || word.length === 0) return word
+    const boldLen = Math.ceil(word.length * 0.45)
+    return <span key={i}><strong>{word.slice(0, boldLen)}</strong>{word.slice(boldLen)}</span>
+  })
+}
+
 export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, onClose }: BookReaderProps) {
   const [theme, setTheme] = useState<ReaderTheme>(getStoredTheme)
   const [fontSize, setFontSize] = useState(17)
@@ -266,6 +302,24 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const [noteInputValue, setNoteInputValue] = useState("")
   const [isBookmarked, setIsBookmarked] = useState(false)
 
+  // Feature: Bionic Reading
+  const [bionicMode, setBionicMode] = useState<boolean>(getStoredBionic)
+
+  // Feature: Focus Mode + Pomodoro
+  const [focusMode, setFocusMode] = useState(false)
+  const [pomodoroMinutes, setPomodoroMinutes] = useState(25)
+  const [pomodoroSecondsLeft, setPomodoroSecondsLeft] = useState(25 * 60)
+  const [pomodoroRunning, setPomodoroRunning] = useState(false)
+  const [pomodoroFinished, setPomodoroFinished] = useState(false)
+  const [ambientSound, setAmbientSound] = useState<AmbientSound>("rain")
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const pomodoroIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Feature: Auto-scroll
+  const [autoScrollEnabled, setAutoScrollEnabled] = useState(false)
+  const [autoScrollSpeed, setAutoScrollSpeed] = useState<AutoScrollSpeed>("medium")
+  const autoScrollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
   // CSS column pagination state
   const [paginatedPage, setPaginatedPage] = useState(0)
   const [columnTotal, setColumnTotal] = useState(1)
@@ -279,6 +333,13 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const noteInputRef = useRef<HTMLTextAreaElement>(null)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
 
+  // Bionic-aware text renderer: wraps RenderInlineText output with bold-prefix styling
+  const BionicInline = useCallback(({ text, skipTypography }: { text: string; skipTypography?: boolean }) => {
+    if (!bionicMode) return <RenderInlineText text={text} skipTypography={skipTypography} />
+    // Split text into words and apply bionic bolding
+    return <>{makeBionicNode(text)}</>
+  }, [bionicMode])
+
   // Load notes for this book
   const loadNotes = useCallback(() => {
     const notes = getBookNotesForBook(bookId)
@@ -289,6 +350,104 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   useEffect(() => {
     if (isOpen) loadNotes()
   }, [isOpen, loadNotes])
+
+  // Bionic mode persistence
+  useEffect(() => {
+    try { localStorage.setItem(BIONIC_KEY, bionicMode ? "true" : "false") } catch { /* ignore */ }
+  }, [bionicMode])
+
+  // Focus Mode: start/stop pomodoro timer
+  useEffect(() => {
+    if (!focusMode || !pomodoroRunning) {
+      if (pomodoroIntervalRef.current) {
+        clearInterval(pomodoroIntervalRef.current)
+        pomodoroIntervalRef.current = null
+      }
+      return
+    }
+    pomodoroIntervalRef.current = setInterval(() => {
+      setPomodoroSecondsLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(pomodoroIntervalRef.current!)
+          pomodoroIntervalRef.current = null
+          setPomodoroRunning(false)
+          setPomodoroFinished(true)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => {
+      if (pomodoroIntervalRef.current) {
+        clearInterval(pomodoroIntervalRef.current)
+        pomodoroIntervalRef.current = null
+      }
+    }
+  }, [focusMode, pomodoroRunning])
+
+  // Focus Mode: manage ambient audio
+  useEffect(() => {
+    if (!focusMode) {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+      return
+    }
+    const soundDef = AMBIENT_SOUNDS.find(s => s.id === ambientSound)
+    if (!soundDef) return
+    if (audioRef.current) {
+      audioRef.current.pause()
+    }
+    const audio = new Audio(soundDef.url)
+    audio.loop = true
+    audio.volume = 0.35
+    audio.play().catch(() => { /* autoplay blocked */ })
+    audioRef.current = audio
+    return () => {
+      audio.pause()
+    }
+  }, [focusMode, ambientSound])
+
+  // Cleanup audio on unmount or reader close
+  useEffect(() => {
+    if (!isOpen) {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+      setFocusMode(false)
+      setPomodoroRunning(false)
+    }
+  }, [isOpen])
+
+  // Helper: reset pomodoro to a new duration
+  const resetPomodoro = useCallback((minutes: number) => {
+    setPomodoroMinutes(minutes)
+    setPomodoroSecondsLeft(minutes * 60)
+    setPomodoroRunning(false)
+    setPomodoroFinished(false)
+  }, [])
+
+  // Helper: toggle focus mode
+  const toggleFocusMode = useCallback(() => {
+    setFocusMode(prev => {
+      if (!prev) {
+        // Activating — reset and auto-start timer
+        setPomodoroSecondsLeft(pomodoroMinutes * 60)
+        setPomodoroRunning(true)
+        setPomodoroFinished(false)
+      } else {
+        setPomodoroRunning(false)
+      }
+      return !prev
+    })
+  }, [pomodoroMinutes])
+
+  // Helper: pause auto-scroll on user interaction
+  const pauseAutoScroll = useCallback(() => {
+    if (autoScrollEnabled) setAutoScrollEnabled(false)
+  }, [autoScrollEnabled])
 
   // Turn page by delta (-1 or +1), updating transform and progress
   const turnPage = useCallback((delta: number) => {
@@ -311,6 +470,28 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       return next
     })
   }, [columnTotal, text, bookId])
+
+  // Auto-scroll: turn pages at configured interval (placed after turnPage definition)
+  useEffect(() => {
+    if (!autoScrollEnabled) {
+      if (autoScrollIntervalRef.current) {
+        clearInterval(autoScrollIntervalRef.current)
+        autoScrollIntervalRef.current = null
+      }
+      return
+    }
+    const speedDef = AUTO_SCROLL_SPEEDS.find(s => s.id === autoScrollSpeed)
+    const ms = (speedDef?.seconds ?? 20) * 1000
+    autoScrollIntervalRef.current = setInterval(() => {
+      turnPage(1)
+    }, ms)
+    return () => {
+      if (autoScrollIntervalRef.current) {
+        clearInterval(autoScrollIntervalRef.current)
+        autoScrollIntervalRef.current = null
+      }
+    }
+  }, [autoScrollEnabled, autoScrollSpeed, turnPage])
 
   // Navigate directly to a specific page index (used by chapter/search navigation)
   const goToPageIndex = useCallback((pageIdx: number) => {
@@ -382,7 +563,10 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     if (target.closest("[data-selection-bar]") || target.closest("button") || target.closest("a") || target.closest("mark")) return
     // Don't turn page if there's an active text selection
     const sel = window.getSelection()
-    if (sel && !sel.isCollapsed) return
+    if (sel && !sel.isCollapsed) {
+      setAutoScrollEnabled(false) // pause auto-scroll on text selection
+      return
+    }
     // Don't turn page if user dragged (was selecting text)
     if (mouseDownRef.current) {
       const dx = Math.abs(e.clientX - mouseDownRef.current.x)
@@ -395,8 +579,10 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     const x = e.clientX - rect.left
     const third = rect.width / 3
     if (x < third) {
+      setAutoScrollEnabled(false)
       turnPage(-1)
     } else if (x > third * 2) {
+      setAutoScrollEnabled(false)
       turnPage(1)
     }
   }, [turnPage])
@@ -415,6 +601,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     touchStartRef.current = null
     // Only horizontal swipes with enough distance and not too vertical
     if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      setAutoScrollEnabled(false) // pause auto-scroll on manual swipe
       if (dx < 0) {
         turnPage(1)
       } else {
@@ -1062,6 +1249,15 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
               </div>
 
               <div className="flex items-center gap-1">
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={toggleFocusMode}
+                  className="tap-target flex items-center justify-center rounded-lg p-2 transition-colors"
+                  style={{ color: focusMode ? currentTheme.progressFill : currentTheme.text }}
+                  aria-label={focusMode ? "Exit focus mode" : "Enter focus mode"}
+                >
+                  <Timer className="w-5 h-5" />
+                </motion.button>
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={handleToggleBookmark}
@@ -1914,10 +2110,24 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                     </motion.button>
                   </div>
 
-                  {/* Right: time remaining */}
-                  <span className="text-xs tabular-nums opacity-50 justify-self-end">
-                    {progress >= 98 ? "Done!" : `~${minsRemaining < 60 ? `${minsRemaining}m` : `${Math.floor(minsRemaining / 60)}h ${minsRemaining % 60}m`}`}
-                  </span>
+                  {/* Right: auto-scroll toggle + time remaining */}
+                  <div className="flex items-center gap-2 justify-self-end">
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => setAutoScrollEnabled(prev => !prev)}
+                      className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                      style={{
+                        backgroundColor: autoScrollEnabled ? `${currentTheme.progressFill}20` : "transparent",
+                        color: autoScrollEnabled ? currentTheme.progressFill : `${currentTheme.text}60`,
+                      }}
+                      aria-label={autoScrollEnabled ? "Pause auto-scroll" : "Start auto-scroll"}
+                    >
+                      {autoScrollEnabled ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                    </motion.button>
+                    <span className="text-xs tabular-nums opacity-50">
+                      {progress >= 98 ? "Done!" : `~${minsRemaining < 60 ? `${minsRemaining}m` : `${Math.floor(minsRemaining / 60)}h ${minsRemaining % 60}m`}`}
+                    </span>
+                  </div>
                 </div>
               </div>
             </>
