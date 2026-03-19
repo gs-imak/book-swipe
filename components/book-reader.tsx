@@ -1234,8 +1234,22 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                       const isTitleBlock = isBeforeFirstHeading && i < 5
 
                       if (isTitleBlock) {
-                        // Title page — large, vertically centered, dramatic
+                        // Collect ALL title page lines into one unit on the first block
                         const isFirstBlock = i === 0
+                        if (!isFirstBlock) {
+                          // Skip non-first title blocks — they're merged into block 0 below
+                          return null
+                        }
+
+                        // Gather lines from all title page centered blocks
+                        const allTitleLines: string[] = []
+                        for (let ti = i; ti < Math.min(i + 5, blocks.length); ti++) {
+                          const tb = blocks[ti]
+                          if (tb.type !== "centered") break
+                          if (blocks.slice(0, ti).some(b => b.type === "heading")) break
+                          allTitleLines.push(...tb.lines)
+                        }
+
                         return (
                           <div
                             key={i}
@@ -1247,26 +1261,25 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                               breakInside: "avoid",
                               maxWidth: "65ch",
                               margin: "0 auto",
-                              minHeight: isFirstBlock ? "60vh" : undefined,
-                              paddingTop: isFirstBlock ? "15vh" : "2em",
-                              paddingBottom: "2em",
+                              minHeight: "70vh",
+                              paddingTop: "20vh",
+                              paddingBottom: "4em",
                             }}
                           >
-                            {block.lines.map((line, j) => {
-                              // First line of first block = book title (large)
-                              // Lines starting with "by" = author (medium, muted)
+                            {allTitleLines.map((line, j) => {
                               const isByLine = /^by\s/i.test(line)
-                              const isTitle = isFirstBlock && j === 0 && !isByLine
+                              const isTitle = j === 0 && !isByLine
                               return (
                                 <div
                                   key={j}
                                   style={{
-                                    fontSize: isTitle ? `${fontSize * 2.2}px` : isByLine ? `${fontSize * 1.2}px` : `${fontSize * 1.1}px`,
+                                    fontSize: isTitle ? `${fontSize * 2.5}px` : isByLine ? `${fontSize * 1.3}px` : `${fontSize * 1.1}px`,
                                     fontWeight: isTitle ? 700 : 400,
-                                    lineHeight: isTitle ? "1.2" : "1.6",
-                                    letterSpacing: isTitle ? "0.02em" : "0.01em",
-                                    opacity: isByLine ? 0.6 : isTitle ? 1 : 0.7,
-                                    marginBottom: isTitle ? "0.6em" : isByLine ? "0.3em" : "0.2em",
+                                    lineHeight: isTitle ? "1.15" : "1.5",
+                                    letterSpacing: isTitle ? "0.01em" : undefined,
+                                    opacity: isByLine ? 0.55 : isTitle ? 1 : 0.6,
+                                    marginTop: isByLine ? "0.8em" : isTitle ? 0 : "0.3em",
+                                    marginBottom: isTitle ? "0.2em" : "0.15em",
                                     fontStyle: isByLine ? "italic" : "normal",
                                   }}
                                 >
