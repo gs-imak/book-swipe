@@ -460,9 +460,9 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const toggleFocusMode = useCallback(() => {
     setFocusMode(prev => {
       if (!prev) {
-        // Activating — reset and auto-start timer
+        // Activating — reset timer but don't auto-start (user presses play)
         setPomodoroSecondsLeft(pomodoroMinutes * 60)
-        setPomodoroRunning(true)
+        setPomodoroRunning(false)
         setPomodoroFinished(false)
       } else {
         setPomodoroRunning(false)
