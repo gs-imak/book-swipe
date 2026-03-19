@@ -23,9 +23,9 @@ type ReaderFont = "georgia" | "merriweather" | "lora" | "system" | "literata"
 
 const FONT_OPTIONS: { id: ReaderFont; label: string; family: string }[] = [
   { id: "georgia", label: "Georgia", family: "Georgia, 'Source Serif 4', serif" },
-  { id: "merriweather", label: "Merriweather", family: "'Merriweather', Georgia, serif" },
-  { id: "lora", label: "Lora", family: "'Lora', Georgia, serif" },
-  { id: "literata", label: "Literata", family: "'Literata', Georgia, serif" },
+  { id: "merriweather", label: "Merriweather", family: "var(--font-merriweather), Georgia, serif" },
+  { id: "lora", label: "Lora", family: "var(--font-lora), Georgia, serif" },
+  { id: "literata", label: "Literata", family: "var(--font-literata), Georgia, serif" },
   { id: "system", label: "Sans-serif", family: "system-ui, -apple-system, sans-serif" },
 ]
 

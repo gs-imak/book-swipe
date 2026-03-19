@@ -197,84 +197,15 @@ export function FreeBooksBrowser() {
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-md mx-auto px-4 py-4">
           {loading && books.length === 0 ? (
-            <div className="space-y-6 pt-6">
-              {/* Animated book illustration */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center space-y-5"
-              >
-                {/* Bouncing books animation */}
-                <div className="flex items-end justify-center gap-2 h-16">
-                  {[0, 1, 2].map(i => (
-                    <motion.div
-                      key={i}
-                      className="rounded-md bg-amber-500"
-                      style={{ width: 14 + i * 4, originY: 1 }}
-                      animate={{
-                        height: [28 + i * 8, 40 + i * 8, 28 + i * 8],
-                        opacity: [0.4, 1, 0.4],
-                      }}
-                      transition={{
-                        duration: 1,
-                        repeat: Infinity,
-                        delay: i * 0.2,
-                        ease: "easeInOut",
-                      }}
-                    />
-                  ))}
-                </div>
-
-                <div>
-                  <p className="text-base font-semibold text-stone-800 dark:text-stone-200">
-                    {loadProgress < 25 ? "Opening the library..." : loadProgress < 50 ? "Browsing the shelves..." : loadProgress < 75 ? "Picking the best titles..." : "Almost there..."}
-                  </p>
-                  <p className="text-sm text-stone-400 dark:text-stone-500 mt-1">
-                    70,000+ free classics to explore
-                  </p>
-                </div>
-
-                {/* Progress bar */}
-                <div className="max-w-[240px] mx-auto">
-                  <div className="h-2 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
-                    <motion.div
-                      className="h-full rounded-full"
-                      style={{ background: "linear-gradient(90deg, #d97706, #f59e0b, #d97706)", backgroundSize: "200% 100%" }}
-                      initial={{ width: "0%" }}
-                      animate={{ width: `${loadProgress}%`, backgroundPosition: ["0% 0%", "100% 0%"] }}
-                      transition={{ width: { duration: 0.4, ease: "easeOut" }, backgroundPosition: { duration: 1.5, repeat: Infinity, ease: "linear" } }}
-                    />
-                  </div>
-                </div>
-
-                {/* Fun facts that rotate */}
-                <AnimatePresence mode="wait">
-                  <motion.p
-                    key={Math.floor(loadProgress / 25)}
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -5 }}
-                    className="text-xs text-stone-400 dark:text-stone-500 italic"
-                  >
-                    {loadProgress < 25
-                      ? "Did you know? Project Gutenberg was founded in 1971"
-                      : loadProgress < 50
-                      ? "The most downloaded book is Pride and Prejudice"
-                      : loadProgress < 75
-                      ? "Over 70,000 books available in 60+ languages"
-                      : "Free to read, forever. No sign-up required."}
-                  </motion.p>
-                </AnimatePresence>
-              </motion.div>
-
-              {/* Skeleton cards — staggered fade in */}
+            <div className="relative">
+              {/* Skeleton cards as the base layer */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {Array.from({ length: 6 }).map((_, i) => (
+                {Array.from({ length: 9 }).map((_, i) => (
                   <motion.div
                     key={i}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 0.3 }}
-                    transition={{ delay: 0.3 + i * 0.15 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 0.4 }}
+                    transition={{ delay: i * 0.05 }}
                   >
                     <div className="aspect-[2/3] bg-stone-200 dark:bg-stone-700 rounded-xl mb-2 animate-pulse" />
                     <div className="h-3 bg-stone-200 dark:bg-stone-700 rounded w-3/4 mb-1 animate-pulse" />
@@ -282,6 +213,72 @@ export function FreeBooksBrowser() {
                   </motion.div>
                 ))}
               </div>
+
+              {/* Loading overlay centered on top of skeletons */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="absolute inset-0 flex items-center justify-center"
+              >
+                <div
+                  className="text-center space-y-4 px-6 py-8 rounded-2xl bg-[rgba(253,251,247,0.92)] dark:bg-[rgba(28,25,23,0.92)]"
+                  style={{ backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}
+                >
+                  {/* Bouncing books */}
+                  <div className="flex items-end justify-center gap-2 h-12">
+                    {[0, 1, 2].map(i => (
+                      <motion.div
+                        key={i}
+                        className="rounded-md bg-amber-500"
+                        style={{ width: 12 + i * 3, originY: 1 }}
+                        animate={{
+                          height: [24 + i * 6, 36 + i * 6, 24 + i * 6],
+                          opacity: [0.4, 1, 0.4],
+                        }}
+                        transition={{ duration: 1, repeat: Infinity, delay: i * 0.2, ease: "easeInOut" }}
+                      />
+                    ))}
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold text-stone-800 dark:text-stone-200">
+                      {loadProgress < 25 ? "Opening the library..." : loadProgress < 50 ? "Browsing the shelves..." : loadProgress < 75 ? "Picking the best titles..." : "Almost there..."}
+                    </p>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="max-w-[200px] mx-auto">
+                    <div className="h-1.5 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full"
+                        style={{ background: "linear-gradient(90deg, #d97706, #f59e0b, #d97706)", backgroundSize: "200% 100%" }}
+                        initial={{ width: "0%" }}
+                        animate={{ width: `${loadProgress}%`, backgroundPosition: ["0% 0%", "100% 0%"] }}
+                        transition={{ width: { duration: 0.4, ease: "easeOut" }, backgroundPosition: { duration: 1.5, repeat: Infinity, ease: "linear" } }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Rotating fun fact */}
+                  <AnimatePresence mode="wait">
+                    <motion.p
+                      key={Math.floor(loadProgress / 25)}
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      className="text-[11px] text-stone-400 dark:text-stone-500 italic max-w-[220px] mx-auto"
+                    >
+                      {loadProgress < 25
+                        ? "Project Gutenberg was founded in 1971"
+                        : loadProgress < 50
+                        ? "Most downloaded: Pride and Prejudice"
+                        : loadProgress < 75
+                        ? "70,000+ books in 60+ languages"
+                        : "Free to read, forever."}
+                    </motion.p>
+                  </AnimatePresence>
+                </div>
+              </motion.div>
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center h-64 text-stone-400 gap-2">
