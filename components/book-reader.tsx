@@ -34,89 +34,26 @@ const FONT_OPTIONS: { id: ReaderFont; label: string; family: string }[] = [
   { id: "opendyslexic", label: "OpenDyslexic", family: "'OpenDyslexic', sans-serif" },
 ]
 
-type AmbientSound = "rain" | "fireplace" | "cafe"
-const AMBIENT_SOUNDS: { id: AmbientSound; label: string; emoji: string }[] = [
-  { id: "rain", label: "Rain", emoji: "🌧" },
-  { id: "fireplace", label: "Fireplace", emoji: "🔥" },
-  { id: "cafe", label: "Cafe", emoji: "☕" },
+type AmbientSound = "library" | "fireplace" | "coffeeshop" | "dark"
+const AMBIENT_SOUNDS: { id: AmbientSound; label: string; emoji: string; file: string }[] = [
+  { id: "library", label: "Library", emoji: "📚", file: "/sounds/library.mp3" },
+  { id: "fireplace", label: "Fireplace", emoji: "🔥", file: "/sounds/fireplace.mp3" },
+  { id: "coffeeshop", label: "Coffee Shop", emoji: "☕", file: "/sounds/coffeshop.mp3" },
+  { id: "dark", label: "Nightscape", emoji: "🌙", file: "/sounds/dark.mp3" },
 ]
 
-// Web Audio API ambient sound generators — no files needed
-function createAmbientSound(type: AmbientSound): { start: () => void; stop: () => void } | null {
+// Create ambient sound player from local MP3 files
+function createAmbientPlayer(soundId: AmbientSound): { start: () => void; stop: () => void } | null {
+  const soundDef = AMBIENT_SOUNDS.find(s => s.id === soundId)
+  if (!soundDef) return null
   try {
-    const ctx = new AudioContext()
-    const gainNode = ctx.createGain()
-    gainNode.connect(ctx.destination)
-    let started = false
-
-    const makeStop = () => {
-      return () => {
-        try { gainNode.disconnect() } catch {}
-        try { ctx.close() } catch {}
-        started = false
-      }
+    const audio = new Audio(soundDef.file)
+    audio.loop = true
+    audio.volume = 0.4
+    return {
+      start: () => { audio.play().catch(() => {}) },
+      stop: () => { audio.pause(); audio.currentTime = 0 },
     }
-
-    const makeBuffer = (generator: (data: Float32Array, sampleRate: number) => void, filterType: BiquadFilterType, filterFreq: number, volume: number, filterQ?: number) => {
-      gainNode.gain.value = volume
-      const bufferSize = 2 * ctx.sampleRate
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
-      generator(buffer.getChannelData(0), ctx.sampleRate)
-      const source = ctx.createBufferSource()
-      source.buffer = buffer
-      source.loop = true
-      const filter = ctx.createBiquadFilter()
-      filter.type = filterType
-      filter.frequency.value = filterFreq
-      if (filterQ !== undefined) filter.Q.value = filterQ
-      source.connect(filter)
-      filter.connect(gainNode)
-      return {
-        start: () => { if (!started) { ctx.resume(); source.start(0); started = true } },
-        stop: makeStop(),
-      }
-    }
-
-    if (type === "rain") {
-      return makeBuffer((data) => {
-        let lastOut = 0
-        for (let i = 0; i < data.length; i++) {
-          const white = Math.random() * 2 - 1
-          data[i] = (lastOut + (0.02 * white)) / 1.02
-          lastOut = data[i]
-          data[i] *= 3.5
-        }
-      }, "lowpass", 800, 0.15)
-    }
-
-    if (type === "fireplace") {
-      return makeBuffer((data) => {
-        for (let i = 0; i < data.length; i++) {
-          const crackle = Math.random() > 0.997 ? (Math.random() * 0.5) : 0
-          const hiss = (Math.random() * 2 - 1) * 0.03
-          data[i] = hiss + crackle
-        }
-      }, "bandpass", 600, 0.3, 0.5)
-    }
-
-    if (type === "cafe") {
-      return makeBuffer((data) => {
-        let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0
-        for (let i = 0; i < data.length; i++) {
-          const white = Math.random() * 2 - 1
-          b0 = 0.99886 * b0 + white * 0.0555179
-          b1 = 0.99332 * b1 + white * 0.0750759
-          b2 = 0.96900 * b2 + white * 0.1538520
-          b3 = 0.86650 * b3 + white * 0.3104856
-          b4 = 0.55000 * b4 + white * 0.5329522
-          b5 = -0.7616 * b5 - white * 0.0168980
-          data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11
-          b6 = white * 0.115926
-        }
-      }, "lowpass", 500, 0.15)
-    }
-
-    return null
   } catch {
     return null
   }
@@ -394,7 +331,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const [pomodoroSecondsLeft, setPomodoroSecondsLeft] = useState(25 * 60)
   const [pomodoroRunning, setPomodoroRunning] = useState(false)
   const [pomodoroFinished, setPomodoroFinished] = useState(false)
-  const [ambientSound, setAmbientSound] = useState<AmbientSound>("rain")
+  const [ambientSound, setAmbientSound] = useState<AmbientSound>("library")
   // audioRef removed — ambient sounds use Web Audio API via ambientRef
   const pomodoroIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -495,18 +432,17 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   // Focus Mode: manage ambient audio via Web Audio API
   const ambientRef = useRef<{ stop: () => void } | null>(null)
 
-  // Start ambient sound — called directly from click handlers for AudioContext permission
+  // Start ambient sound — called directly from click handlers
   const startAmbientSound = useCallback((soundId: AmbientSound) => {
-    // Stop previous
     if (ambientRef.current) {
       ambientRef.current.stop()
       ambientRef.current = null
     }
     if (!soundId) return
-    const sound = createAmbientSound(soundId)
-    if (sound) {
-      sound.start()
-      ambientRef.current = sound
+    const player = createAmbientPlayer(soundId)
+    if (player) {
+      player.start()
+      ambientRef.current = player
     }
   }, [])
 
