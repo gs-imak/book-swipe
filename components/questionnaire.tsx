@@ -141,9 +141,23 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
         ) : (
           <div />
         )}
-        <span className="text-sm text-stone-400 font-medium">
-          {currentQuestion + 1} / {questions.length}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-stone-400 font-medium">
+            {currentQuestion + 1} / {questions.length}
+          </span>
+          <button
+            onClick={() => onComplete({
+              favoriteGenres: [],
+              currentMood: [],
+              readingTime: "30-60 minutes",
+              preferredLength: "No preference",
+              contentPreferences: []
+            })}
+            className="text-xs text-stone-400 hover:text-stone-600 font-medium transition-colors"
+          >
+            Skip
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">
