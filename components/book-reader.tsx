@@ -2,9 +2,12 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ArrowLeft, ChevronLeft, ChevronRight, Sun, Coffee, Moon, Loader2, AlertCircle, BookOpen, Minus, Plus, List, X, Search, Bookmark, BookmarkCheck, Highlighter, StickyNote, Copy, Trash2, MessageSquare, Quote, Globe, BookText, Share2, Type, Timer, Play, Pause } from "lucide-react"
+import { ArrowLeft, ChevronLeft, ChevronRight, Sun, Coffee, Moon, Loader2, AlertCircle, BookOpen, Minus, Plus, List, X, Search, Bookmark, BookmarkCheck, Highlighter, StickyNote, Copy, Trash2, MessageSquare, Quote, Globe, BookText, Share2, Type, Timer, Play, Pause, Brain } from "lucide-react"
 import { GutenbergBook, fetchBookText, fetchBookImages } from "@/lib/gutenberg-api"
 import { saveReadingPosition, getReadingPosition, getBookNotesForBook, saveBookNote, deleteBookNote, type BookNote } from "@/lib/storage"
+import { addVocabWord } from "@/lib/vocabulary"
+import { VocabFlashcards } from "./vocab-flashcards"
+import { generateRecap, type RecapSection } from "@/lib/story-recap"
 
 type ReaderTheme = "light" | "sepia" | "dark"
 
@@ -296,7 +299,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const [showNavPanel, setShowNavPanel] = useState(false)
   const [images, setImages] = useState<string[]>([])
   const [readerNotes, setReaderNotes] = useState<BookNote[]>([])
-  const [navTab, setNavTab] = useState<"contents" | "notes">("contents")
+  const [navTab, setNavTab] = useState<"contents" | "notes" | "recap">("contents")
   const [selectionBar, setSelectionBar] = useState<{ x: number; y: number; text: string; blockIndex: number } | null>(null)
   const [noteInputFor, setNoteInputFor] = useState<{ text: string; blockIndex: number } | null>(null)
   const [noteInputValue, setNoteInputValue] = useState("")
@@ -319,6 +322,16 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const [autoScrollEnabled, setAutoScrollEnabled] = useState(false)
   const [autoScrollSpeed, setAutoScrollSpeed] = useState<AutoScrollSpeed>("medium")
   const autoScrollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Feature: Vocabulary Builder
+  const [showVocab, setShowVocab] = useState(false)
+
+  // Feature: Story Recap
+  const [showRecap, setShowRecap] = useState(false)
+  const [recapData, setRecapData] = useState<RecapSection[]>([])
+
+  // Feature: One-time reader hints
+  const [showHints, setShowHints] = useState(false)
 
   // CSS column pagination state
   const [paginatedPage, setPaginatedPage] = useState(0)
@@ -355,6 +368,20 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   useEffect(() => {
     try { localStorage.setItem(BIONIC_KEY, bionicMode ? "true" : "false") } catch { /* ignore */ }
   }, [bionicMode])
+
+  // One-time hints on first open
+  useEffect(() => {
+    if (!isOpen || !text) return
+    try {
+      const seen = localStorage.getItem("bookswipe_reader_hints_seen")
+      if (!seen) {
+        setShowHints(true)
+        localStorage.setItem("bookswipe_reader_hints_seen", "1")
+        const timer = setTimeout(() => setShowHints(false), 4000)
+        return () => clearTimeout(timer)
+      }
+    } catch { /* ignore */ }
+  }, [isOpen, text])
 
   // Focus Mode: start/stop pomodoro timer
   useEffect(() => {
@@ -1143,10 +1170,17 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const handleDefine = useCallback(() => {
     if (!selectionBar) return
     const word = selectionBar.text.split(/\s+/)[0] // first word if multi-word
+    const context = selectionBar.text
+    addVocabWord({
+      word: word,
+      context: context,
+      bookId,
+      bookTitle,
+    })
     window.open(`https://en.wiktionary.org/wiki/${encodeURIComponent(word.toLowerCase())}`, "_blank")
     setSelectionBar(null)
     window.getSelection()?.removeAllRanges()
-  }, [selectionBar])
+  }, [selectionBar, bookId, bookTitle])
 
   const handleWebSearch = useCallback(() => {
     if (!selectionBar) return
@@ -1268,6 +1302,15 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 </motion.button>
                 <motion.button
                   whileTap={{ scale: 0.9 }}
+                  onClick={() => setShowVocab(true)}
+                  className="tap-target flex items-center justify-center rounded-lg p-2 transition-colors"
+                  style={{ color: currentTheme.text }}
+                  aria-label="Open vocabulary builder"
+                >
+                  <Brain className="w-5 h-5" />
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
                   onClick={handleToggleBookmark}
                   className="tap-target flex items-center justify-center rounded-lg p-2 transition-colors"
                   style={{ color: isBookmarked ? currentTheme.progressFill : currentTheme.text }}
@@ -1306,6 +1349,35 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
               </div>
             </div>
           </div>
+
+          {/* One-time tooltip hints */}
+          <AnimatePresence>
+            {showHints && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
+                className="absolute right-4 z-[72] rounded-xl shadow-lg px-4 py-2.5 max-w-[260px]"
+                style={{
+                  top: "env(safe-area-inset-top, 0px)",
+                  marginTop: 62,
+                  backgroundColor: theme === "dark" ? "#292524" : "#1c1917",
+                  color: "#fafaf9",
+                }}
+                onClick={() => setShowHints(false)}
+                role="tooltip"
+              >
+                <p className="text-xs leading-relaxed">
+                  Tap icons to access vocabulary, bookmark, focus timer, font settings, and theme.
+                </p>
+                <div
+                  className="absolute -top-1.5 right-6 w-3 h-3 rotate-45"
+                  style={{ backgroundColor: theme === "dark" ? "#292524" : "#1c1917" }}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Content area */}
           {loading && (
@@ -1838,6 +1910,21 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                                 </span>
                               )}
                             </button>
+                            <button
+                              onClick={() => {
+                                setNavTab("recap")
+                                if (text && recapData.length === 0) {
+                                  setRecapData(generateRecap(text, progress / 100))
+                                }
+                              }}
+                              className="px-3 py-1 rounded-lg text-xs font-semibold transition-all"
+                              style={{
+                                backgroundColor: navTab === "recap" ? `${currentTheme.progressFill}20` : "transparent",
+                                color: navTab === "recap" ? currentTheme.progressFill : `${currentTheme.text}80`,
+                              }}
+                            >
+                              Recap
+                            </button>
                           </div>
                           <button onClick={() => { setShowNavPanel(false); setSearchOpen(false) }} className="p-2 -mr-2 rounded-lg">
                             <X className="w-5 h-5 opacity-60" />
@@ -1983,8 +2070,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                               </div>
                             )}
                           </>
-                        ) : (
-                          /* Notes tab */
+                        ) : navTab === "notes" ? (
                           <div className="px-4 py-2">
                             {readerNotes.length === 0 ? (
                               <div className="text-center py-12">
@@ -2039,6 +2125,42 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                                     </div>
                                   )
                                 })}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="px-4 py-2">
+                            {progress <= 0 ? (
+                              <div className="text-center py-12">
+                                <BookOpen className="w-8 h-8 mx-auto mb-3 opacity-20" />
+                                <p className="text-sm opacity-40">Start reading first</p>
+                                <p className="text-xs opacity-30 mt-1">A recap will appear once you begin reading.</p>
+                              </div>
+                            ) : recapData.length === 0 ? (
+                              <div className="text-center py-12">
+                                <BookOpen className="w-8 h-8 mx-auto mb-3 opacity-20" />
+                                <p className="text-sm opacity-40">No recap available</p>
+                                <p className="text-xs opacity-30 mt-1">Not enough content to summarize yet.</p>
+                              </div>
+                            ) : (
+                              <div className="space-y-3">
+                                <p className="text-[10px] uppercase tracking-wider opacity-40 font-semibold mb-3">
+                                  Story so far ({progress}% read)
+                                </p>
+                                {recapData.map((section, i) => (
+                                  <div
+                                    key={i}
+                                    className="rounded-lg p-3"
+                                    style={{ backgroundColor: `${currentTheme.text}06` }}
+                                  >
+                                    <p className="text-xs font-semibold mb-1.5" style={{ color: currentTheme.progressFill }}>
+                                      {section.chapter}
+                                    </p>
+                                    <p className="text-xs opacity-70 leading-relaxed">
+                                      {section.summary}
+                                    </p>
+                                  </div>
+                                ))}
                               </div>
                             )}
                           </div>
@@ -2120,18 +2242,21 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
                   {/* Right: auto-scroll toggle + time remaining */}
                   <div className="flex items-center gap-2 justify-self-end">
-                    <motion.button
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => setAutoScrollEnabled(prev => !prev)}
-                      className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-                      style={{
-                        backgroundColor: autoScrollEnabled ? `${currentTheme.progressFill}20` : "transparent",
-                        color: autoScrollEnabled ? currentTheme.progressFill : `${currentTheme.text}60`,
-                      }}
-                      aria-label={autoScrollEnabled ? "Pause auto-scroll" : "Start auto-scroll"}
-                    >
-                      {autoScrollEnabled ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-                    </motion.button>
+                    <div className="flex flex-col items-center">
+                      <motion.button
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setAutoScrollEnabled(prev => !prev)}
+                        className="w-10 h-10 rounded-full flex items-center justify-center transition-colors"
+                        style={{
+                          backgroundColor: autoScrollEnabled ? `${currentTheme.progressFill}20` : "transparent",
+                          color: autoScrollEnabled ? currentTheme.progressFill : `${currentTheme.text}60`,
+                        }}
+                        aria-label={autoScrollEnabled ? "Pause auto-scroll" : "Start auto-scroll"}
+                      >
+                        {autoScrollEnabled ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                      </motion.button>
+                      <span className="text-[9px] opacity-40 -mt-0.5">Auto</span>
+                    </div>
                     <span className="text-xs tabular-nums opacity-50">
                       {progress >= 98 ? "Done!" : `~${minsRemaining < 60 ? `${minsRemaining}m` : `${Math.floor(minsRemaining / 60)}h ${minsRemaining % 60}m`}`}
                     </span>
@@ -2212,6 +2337,124 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
               </>
             )}
           </AnimatePresence>
+
+          {/* Focus Mode overlay */}
+          <AnimatePresence>
+            {focusMode && (
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="fixed bottom-20 right-4 z-[65] rounded-xl shadow-lg overflow-hidden"
+                style={{
+                  backgroundColor: theme === "dark" ? "rgba(41,37,36,0.92)" : "rgba(253,251,247,0.92)",
+                  backdropFilter: "blur(16px)",
+                  WebkitBackdropFilter: "blur(16px)",
+                  border: `1px solid ${currentTheme.border}`,
+                  color: currentTheme.text,
+                  minWidth: 220,
+                }}
+              >
+                <div className="flex items-center justify-between px-4 pt-3 pb-1">
+                  <span className="text-[10px] uppercase tracking-wider opacity-40 font-semibold">Focus Mode</span>
+                  <button
+                    onClick={toggleFocusMode}
+                    className="p-1 rounded-md opacity-50 hover:opacity-80 transition-opacity"
+                    aria-label="Close focus mode"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="px-4 py-3">
+                  {pomodoroFinished ? (
+                    <div className="text-center py-2">
+                      <p className="text-lg font-bold mb-1">Session complete! 🎉</p>
+                      <button
+                        onClick={() => resetPomodoro(pomodoroMinutes)}
+                        className="text-xs font-medium px-3 py-1.5 rounded-lg mt-1 transition-colors"
+                        style={{ backgroundColor: `${currentTheme.progressFill}20`, color: currentTheme.progressFill }}
+                      >
+                        Start another
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="text-center mb-3">
+                        <p className="text-3xl font-bold tabular-nums" style={{ color: currentTheme.progressFill }}>
+                          {String(Math.floor(pomodoroSecondsLeft / 60)).padStart(2, "0")}:{String(pomodoroSecondsLeft % 60).padStart(2, "0")}
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-center gap-2 mb-3">
+                        <button
+                          onClick={() => setPomodoroRunning(prev => !prev)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                          style={{ backgroundColor: `${currentTheme.progressFill}20`, color: currentTheme.progressFill }}
+                        >
+                          {pomodoroRunning ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                          {pomodoroRunning ? "Pause" : "Resume"}
+                        </button>
+                        <div className="flex gap-1">
+                          {POMODORO_DURATIONS.map(mins => (
+                            <button
+                              key={mins}
+                              onClick={() => resetPomodoro(mins)}
+                              className="px-2 py-1.5 rounded-md text-[10px] font-medium transition-colors"
+                              style={{
+                                backgroundColor: pomodoroMinutes === mins ? `${currentTheme.text}15` : "transparent",
+                                opacity: pomodoroMinutes === mins ? 1 : 0.5,
+                              }}
+                            >
+                              {mins}m
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div className="px-4 pb-3">
+                  <p className="text-[10px] uppercase tracking-wider opacity-40 font-semibold mb-1.5">Ambient Sound</p>
+                  <div className="flex gap-1 flex-wrap">
+                    {AMBIENT_SOUNDS.map(sound => (
+                      <button
+                        key={sound.id}
+                        onClick={() => setAmbientSound(sound.id)}
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors"
+                        style={{
+                          backgroundColor: ambientSound === sound.id ? `${currentTheme.progressFill}20` : `${currentTheme.text}06`,
+                          color: ambientSound === sound.id ? currentTheme.progressFill : currentTheme.text,
+                          opacity: ambientSound === sound.id ? 1 : 0.6,
+                        }}
+                      >
+                        <span>{sound.emoji}</span> {sound.label}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => {
+                        if (audioRef.current) {
+                          audioRef.current.pause()
+                          audioRef.current = null
+                        }
+                      }}
+                      className="px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors"
+                      style={{
+                        backgroundColor: `${currentTheme.text}06`,
+                        opacity: 0.5,
+                      }}
+                    >
+                      None
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Vocabulary Flashcards */}
+          <VocabFlashcards isOpen={showVocab} onClose={() => setShowVocab(false)} />
 
         </motion.div>
       )}
