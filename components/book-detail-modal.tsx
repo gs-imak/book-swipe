@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion"
 import { X, Star, Heart, MessageSquare, FileText, Calendar, Clock, BookOpen, Library, Share2, Trash2, Loader2, EyeOff } from "lucide-react"
 import { Book } from "@/lib/book-data"
 import { BookReview, getBookReview, getShelvesForBook, getShelves, type Shelf } from "@/lib/storage"
+import { scoreBooks } from "@/lib/scoring-engine"
+import { getCachedBooks } from "@/lib/book-cache"
 import { QuickReview } from "./quick-review"
 import { ReviewDisplay } from "./review-display"
 import { BookNotes } from "./book-notes"
@@ -33,9 +35,10 @@ interface BookDetailModalProps {
   onStartReading?: (book: Book) => void
   onRemoveBook?: (book: Book) => void
   onHideBook?: (book: Book) => void
+  onBookClick?: (book: Book) => void
 }
 
-export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemoveBook, onHideBook }: BookDetailModalProps) {
+export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemoveBook, onHideBook, onBookClick }: BookDetailModalProps) {
   const [activeTab, setActiveTab] = useState<"overview" | "review" | "notes">("overview")
   const [existingReview, setExistingReview] = useState<BookReview | null>(null)
   const [isEditingReview, setIsEditingReview] = useState(false)
@@ -46,6 +49,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
   const [gutenbergBook, setGutenbergBook] = useState<GutenbergBook | null | undefined>(undefined)
   // undefined = still searching, null = no match found, GutenbergBook = match found
   const [showReader, setShowReader] = useState(false)
+  const [similarBooks, setSimilarBooks] = useState<Book[]>([])
   const dialogRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
 
@@ -65,6 +69,10 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
       const shelfIds = getShelvesForBook(book.id)
       const allShelves = getShelves()
       setAssignedShelves(allShelves.filter(s => shelfIds.includes(s.id)))
+      // Compute similar books using the current book as the "liked" input
+      const cached = getCachedBooks().filter(b => b.id !== book.id)
+      const scored = scoreBooks(cached, [book])
+      setSimilarBooks(scored.slice(0, 6).map(s => s.book))
       return () => { cancelled = true }
     }
   }, [book])
@@ -416,6 +424,39 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                   </h3>
                   <BookNotes bookId={book.id} compact />
                 </div>
+
+                {/* Similar Books */}
+                {similarBooks.length > 0 && (
+                  <div>
+                    <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2.5">
+                      More Like This
+                    </h3>
+                    <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1">
+                      {similarBooks.map((similar) => (
+                        <button
+                          key={similar.id}
+                          onClick={() => onBookClick?.(similar)}
+                          className="flex-shrink-0 group flex flex-col items-center gap-1.5"
+                          title={`${similar.title} by ${similar.author}`}
+                        >
+                          <div className="relative w-14 h-20 rounded-lg overflow-hidden shadow-sm border border-stone-200/60 group-hover:shadow-md transition-shadow">
+                            <BookCover
+                              src={similar.cover}
+                              fallbackSrc={similar.coverFallback}
+                              alt={similar.title}
+                              fill
+                              className="object-cover"
+                              sizes="56px"
+                            />
+                          </div>
+                          <p className="text-[10px] text-stone-500 text-center leading-tight w-14 line-clamp-2">
+                            {similar.title}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

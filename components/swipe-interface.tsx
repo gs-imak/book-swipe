@@ -5,6 +5,7 @@ import { BookCard } from "./book-card"
 import { Button } from "@/components/ui/button"
 import { Book, UserPreferences } from "@/lib/book-data"
 import { addLikedBook, removeLikedBook, getLikedBooks } from "@/lib/storage"
+import { scoreBooks } from "@/lib/scoring-engine"
 import { getBooksByCategory, bookSearchQueries } from "@/lib/books-api"
 import { getCachedBooks, addBooksToCache } from "@/lib/book-cache"
 import { searchOpenLibrary } from "@/lib/openlibrary-api"
@@ -124,6 +125,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   const [isLoading, setIsLoading] = useState(true)
   const [batchCount, setBatchCount] = useState(1)
   const [sessionLikedBooks, setSessionLikedBooks] = useState<Book[]>([])
+  const [bookReasons, setBookReasons] = useState<Record<string, string>>({})
   const { triggerActivity } = useGamification()
   const { showToast } = useToast()
 
@@ -185,6 +187,23 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   useEffect(() => {
     loadBooks()
   }, [preferences])
+
+  // Build reason map whenever the deck or liked books change
+  useEffect(() => {
+    const liked = getLikedBooks()
+    if (liked.length === 0 || filteredBooks.length === 0) {
+      setBookReasons({})
+      return
+    }
+    const scored = scoreBooks(filteredBooks, liked)
+    const reasons: Record<string, string> = {}
+    scored.forEach(s => {
+      if (s.reasons.length > 0) {
+        reasons[s.book.id] = s.reasons[0].description
+      }
+    })
+    setBookReasons(reasons)
+  }, [filteredBooks])
 
   const handleSwipe = (direction: "left" | "right") => {
     const currentBook = filteredBooks[currentIndex]
@@ -460,6 +479,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
                     book={currentBook}
                     onSwipe={handleSwipe}
                     isTop={true}
+                    reason={bookReasons[currentBook.id]}
                   />
                 )}
               </AnimatePresence>

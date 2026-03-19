@@ -15,9 +15,10 @@ interface BookCardProps {
   onSwipe: (direction: "left" | "right") => void
   isTop?: boolean
   showActions?: boolean
+  reason?: string
 }
 
-export function BookCard({ book, onSwipe, isTop = false, showActions = true }: BookCardProps) {
+export function BookCard({ book, onSwipe, isTop = false, showActions = true, reason }: BookCardProps) {
   const [infoExpanded, setInfoExpanded] = useState(false)
   const sheetY = useMotionValue(0)
   const { showToast } = useToast()
@@ -113,6 +114,15 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true }: B
           <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
           <span className="text-sm font-bold text-stone-800">{book.rating}</span>
         </div>
+
+        {/* Recommendation reason pill */}
+        {reason && (
+          <div className="absolute top-14 left-5 z-10 max-w-[60%]">
+            <span className="inline-block bg-white/20 backdrop-blur-sm border border-white/25 text-white text-[11px] font-medium px-2.5 py-1 rounded-full truncate max-w-full">
+              {reason}
+            </span>
+          </div>
+        )}
 
         {/* Bottom info overlay */}
         <motion.div
