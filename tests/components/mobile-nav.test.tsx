@@ -20,7 +20,7 @@ describe("MobileNav", () => {
 
     expect(screen.getByText("Library")).toBeInTheDocument()
     expect(screen.getByText("Discover")).toBeInTheDocument()
-    expect(screen.getByText("Achievements")).toBeInTheDocument()
+    expect(screen.getByText("Awards")).toBeInTheDocument()
   })
 
   it("calls onNavigate with correct view when clicked", () => {
