@@ -34,21 +34,32 @@ function getGutenbergLang(): string {
   return lang === "all" ? "" : lang
 }
 
+// In-memory cache to avoid re-fetching the same data (Gutendex is slow)
+const _cache = new Map<string, { data: GutenbergBrowseResult; ts: number }>()
+const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
+
+async function cachedFetch(url: string): Promise<GutenbergBrowseResult> {
+  const cached = _cache.get(url)
+  if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.data
+
+  const res = await fetch(url)
+  if (!res.ok) throw new Error("Failed to fetch")
+  const data = await res.json() as GutenbergBrowseResult
+  _cache.set(url, { data, ts: Date.now() })
+  return data
+}
+
 export async function browseGutenberg(topic: string): Promise<GutenbergBrowseResult> {
   const lang = getGutenbergLang()
   const params = new URLSearchParams(lang ? { languages: lang } : {})
   if (topic) params.set("topic", topic)
-  const res = await fetch(`https://gutendex.com/books?${params.toString()}`)
-  if (!res.ok) throw new Error("Failed to fetch")
-  return res.json() as Promise<GutenbergBrowseResult>
+  return cachedFetch(`https://gutendex.com/books?${params.toString()}`)
 }
 
 export async function searchFreeBooks(query: string): Promise<GutenbergBrowseResult> {
   const lang = getGutenbergLang()
   const params = new URLSearchParams(lang ? { search: query, languages: lang } : { search: query })
-  const res = await fetch(`https://gutendex.com/books?${params.toString()}`)
-  if (!res.ok) throw new Error("Failed to search")
-  return res.json() as Promise<GutenbergBrowseResult>
+  return cachedFetch(`https://gutendex.com/books?${params.toString()}`)
 }
 
 export function hasReadableText(book: GutenbergBook): boolean {
