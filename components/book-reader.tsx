@@ -23,9 +23,9 @@ type ReaderFont = "georgia" | "merriweather" | "lora" | "system" | "literata"
 
 const FONT_OPTIONS: { id: ReaderFont; label: string; family: string }[] = [
   { id: "georgia", label: "Georgia", family: "Georgia, 'Source Serif 4', serif" },
-  { id: "merriweather", label: "Merriweather", family: "var(--font-merriweather), Georgia, serif" },
-  { id: "lora", label: "Lora", family: "var(--font-lora), Georgia, serif" },
-  { id: "literata", label: "Literata", family: "var(--font-literata), Georgia, serif" },
+  { id: "merriweather", label: "Merriweather", family: "'Merriweather', Georgia, serif" },
+  { id: "lora", label: "Lora", family: "'Lora', Georgia, serif" },
+  { id: "literata", label: "Literata", family: "'Literata', Georgia, serif" },
   { id: "system", label: "Sans-serif", family: "system-ui, -apple-system, sans-serif" },
 ]
 
@@ -267,117 +267,9 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const [isBookmarked, setIsBookmarked] = useState(false)
 
   const scrollRef = useRef<HTMLDivElement>(null)
-  const contentRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hasRestoredRef = useRef(false)
   const noteInputRef = useRef<HTMLTextAreaElement>(null)
-
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(0)
-  const [totalPagesCount, setTotalPagesCount] = useState(1)
-  const [containerWidth, setContainerWidth] = useState(0)
-
-  // Track contentRef's width — it has no horizontal padding so clientWidth = content-box
-  useEffect(() => {
-    const el = contentRef.current
-    if (!el || !isOpen) return
-    const measure = () => {
-      const w = el.clientWidth
-      if (w > 0) setContainerWidth(w)
-    }
-    // Use RAF to ensure layout is complete before measuring
-    const id = requestAnimationFrame(measure)
-    const observer = new ResizeObserver(measure)
-    observer.observe(el)
-    return () => { cancelAnimationFrame(id); observer.disconnect() }
-  }, [isOpen, text])
-
-  // Measure total pages — contentRef.clientWidth = one page width (no horizontal padding)
-  const measurePages = useCallback(() => {
-    const el = contentRef.current
-    if (!el) return
-    const pageW = el.clientWidth
-    if (pageW <= 0) return
-    const total = Math.max(1, Math.ceil(el.scrollWidth / pageW))
-    setTotalPagesCount(total)
-    return total
-  }, [])
-
-  // Navigate to a specific page — step = contentRef.clientWidth
-  const goToPage = useCallback((page: number) => {
-    const el = contentRef.current
-    if (!el) return
-    const total = measurePages() || totalPagesCount
-    const clamped = Math.max(0, Math.min(page, total - 1))
-    setCurrentPage(clamped)
-    const pageW = el.clientWidth
-    el.style.transform = `translateX(-${clamped * pageW}px)`
-    // Update progress
-    const pct = total > 1 ? Math.round((clamped / (total - 1)) * 100) : 0
-    setProgress(pct)
-    // Save reading position
-    if (text) {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-      debounceRef.current = setTimeout(() => {
-        const charOffset = Math.round((clamped / Math.max(1, total - 1)) * text.length)
-        saveReadingPosition(bookId, charOffset)
-      }, 500)
-    }
-  }, [measurePages, totalPagesCount, text, bookId])
-
-  // Touch/swipe handling for page turns
-  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null)
-
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    touchStartRef.current = {
-      x: e.touches[0].clientX,
-      y: e.touches[0].clientY,
-      time: Date.now(),
-    }
-  }, [])
-
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    const start = touchStartRef.current
-    if (!start) return
-    const endX = e.changedTouches[0].clientX
-    const endY = e.changedTouches[0].clientY
-    const dx = endX - start.x
-    const dy = endY - start.y
-    const dt = Date.now() - start.time
-    touchStartRef.current = null
-    // Only count horizontal swipes (not vertical scrolls or taps)
-    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5 && dt < 500) {
-      if (dx < 0) {
-        // Swipe left = next page
-        goToPage(currentPage + 1)
-      } else {
-        // Swipe right = prev page
-        goToPage(currentPage - 1)
-      }
-    }
-  }, [goToPage, currentPage])
-
-  // Tap zones for page turning
-  const handleTapZone = useCallback((e: React.MouseEvent) => {
-    // Ignore if user is selecting text
-    const sel = window.getSelection()
-    if (sel && !sel.isCollapsed) return
-    // Ignore if clicking on interactive elements
-    const target = e.target as HTMLElement
-    if (target.closest("button, a, input, textarea, [data-selection-bar]")) return
-
-    const container = scrollRef.current
-    if (!container) return
-    const rect = container.getBoundingClientRect()
-    const relX = (e.clientX - rect.left) / rect.width
-
-    if (relX < 0.3) {
-      goToPage(currentPage - 1)
-    } else if (relX > 0.7) {
-      goToPage(currentPage + 1)
-    }
-    // Center 40% does nothing (allows text selection)
-  }, [goToPage, currentPage])
 
   // Load notes for this book
   const loadNotes = useCallback(() => {
@@ -560,9 +452,10 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     return result
   }, [text, images])
 
-  // Page & time calculations (derived from pagination state)
-  const displayPage = currentPage + 1
-  const totalPages = totalPagesCount
+  // Page & time calculations
+  const CHARS_PER_PAGE = 1500
+  const totalPages = text ? Math.ceil(text.length / CHARS_PER_PAGE) : 0
+  const currentPage = totalPages > 0 ? Math.max(1, Math.ceil((progress / 100) * totalPages)) : 0
   const totalWords = text ? Math.round(text.length / 5) : 0
   const wordsRead = Math.round(totalWords * (progress / 100))
   const minsRemaining = totalWords > 0 ? Math.max(1, Math.round((totalWords * (1 - progress / 100)) / 250)) : 0
@@ -597,31 +490,29 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const currentChapter = currentChapterIndex >= 0 ? chapters[currentChapterIndex] : null
 
   const jumpToRatio = useCallback((ratio: number) => {
-    const clamped = Math.max(0, Math.min(1, ratio))
-    const targetPage = Math.round(clamped * Math.max(0, totalPagesCount - 1))
-    goToPage(targetPage)
-  }, [totalPagesCount, goToPage])
+    const el = scrollRef.current
+    if (!el) return
+    const scrollable = el.scrollHeight - el.clientHeight
+    el.scrollTop = Math.max(0, Math.min(1, ratio)) * scrollable
+  }, [])
 
   const jumpToPage = useCallback((page: number) => {
-    // page is 1-indexed from the UI
-    goToPage(page - 1)
-  }, [goToPage])
+    if (totalPages <= 1) return
+    jumpToRatio((page - 1) / (totalPages - 1))
+  }, [totalPages, jumpToRatio])
 
   const jumpToBlock = useCallback((blockIndex: number) => {
-    const container = scrollRef.current
-    const content = contentRef.current
-    if (!container || !content) return
-    const target = content.querySelector(`[data-block-index="${blockIndex}"]`) as HTMLElement | null
+    const el = scrollRef.current
+    if (!el) return
+    // Find the heading element by data attribute
+    const target = el.querySelector(`[data-block-index="${blockIndex}"]`)
     if (target) {
-      // In column layout, the element's offsetLeft tells us which page it's on
-      const pageWidth = container.clientWidth
-      const targetPage = Math.floor(target.offsetLeft / pageWidth)
-      goToPage(targetPage)
+      target.scrollIntoView({ behavior: "smooth", block: "start" })
     } else {
       // Fallback: estimate position by block ratio
       jumpToRatio(blockIndex / blocks.length)
     }
-  }, [blocks.length, jumpToRatio, goToPage])
+  }, [blocks.length, jumpToRatio])
 
   const jumpToChapter = useCallback((ch: Chapter) => {
     jumpToBlock(ch.blockIndex)
@@ -657,15 +548,15 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       results.push({
         text: (contextStart > 0 ? "..." : "") + text.slice(contextStart, contextEnd) + (contextEnd < text.length ? "..." : ""),
         charOffset: idx,
-        page: Math.max(1, Math.round((idx / text.length) * totalPagesCount) + 1),
+        page: Math.max(1, Math.ceil(idx / CHARS_PER_PAGE)),
       })
       startIdx = idx + query.length
     }
     return results
-  }, [searchQuery, text, totalPagesCount])
+  }, [searchQuery, text])
 
   const jumpToSearchResult = useCallback((charOffset: number) => {
-    if (!text || text.length === 0) return
+    if (!text) return
     jumpToRatio(charOffset / text.length)
     setSearchOpen(false)
     setShowNavPanel(false)
@@ -727,60 +618,39 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, gutenbergBook.id])
 
-  // Measure pages and restore position whenever text loads or column width changes
   useEffect(() => {
-    if (!text || !contentRef.current || containerWidth <= 0) return
+    if (!text || !scrollRef.current || hasRestoredRef.current) return
+    hasRestoredRef.current = true
 
-    // Double RAF ensures the DOM has fully rendered columns after columnWidth update
+    const charOffset = getReadingPosition(bookId)
+    if (charOffset <= 0) return
+
+    const ratio = charOffset / text.length
+    const el = scrollRef.current
+    // Double RAF ensures the DOM has fully rendered before scrolling (critical for long books)
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        const total = measurePages()
-        if (!total) return
-
-        if (!hasRestoredRef.current) {
-          hasRestoredRef.current = true
-          const charOffset = getReadingPosition(bookId)
-          if (charOffset > 0) {
-            const ratio = charOffset / text.length
-            const targetPage = Math.round(ratio * Math.max(0, total - 1))
-            goToPage(targetPage)
-          }
-        }
+        el.scrollTop = ratio * el.scrollHeight
       })
     })
-  }, [text, bookId, containerWidth, measurePages, goToPage])
+  }, [text, bookId])
 
-  // Re-measure pages when font size changes
-  useEffect(() => {
-    if (!text) return
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const total = measurePages()
-        if (total && currentPage >= total) {
-          goToPage(total - 1)
-        } else {
-          goToPage(currentPage)
-        }
-      })
-    })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fontSize, readerFont])
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current
+    if (!el || !text) return
 
-  // Keyboard navigation for pages
-  useEffect(() => {
-    if (!isOpen || !text) return
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight" || e.key === "PageDown") {
-        e.preventDefault()
-        goToPage(currentPage + 1)
-      } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
-        e.preventDefault()
-        goToPage(currentPage - 1)
-      }
-    }
-    window.addEventListener("keydown", handleKey)
-    return () => window.removeEventListener("keydown", handleKey)
-  }, [isOpen, text, currentPage, goToPage])
+    const scrollable = el.scrollHeight - el.clientHeight
+    if (scrollable <= 0) return
+
+    const ratio = el.scrollTop / scrollable
+    const pct = Math.min(100, Math.max(0, Math.round(ratio * 100)))
+    setProgress(pct)
+
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      saveReadingPosition(bookId, Math.round(ratio * text.length))
+    }, 500)
+  }, [text, bookId])
 
   useEffect(() => {
     if (isOpen) {
@@ -869,7 +739,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       bookId,
       content: "",
       type: "highlight",
-      page: displayPage,
+      page: currentPage,
       blockIndex: selectionBar.blockIndex,
       selectedText: selectionBar.text,
     })
@@ -893,14 +763,14 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       bookId,
       content: noteInputValue.trim(),
       type: "note",
-      page: displayPage,
+      page: currentPage,
       blockIndex: noteInputFor.blockIndex,
       selectedText: noteInputFor.text,
     })
     loadNotes()
     setNoteInputFor(null)
     setNoteInputValue("")
-  }, [noteInputFor, noteInputValue, bookId, displayPage, loadNotes])
+  }, [noteInputFor, noteInputValue, bookId, currentPage, loadNotes])
 
   const handleCopySelection = useCallback(() => {
     if (!selectionBar) return
@@ -915,7 +785,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       bookId,
       content: "",
       type: "quote",
-      page: displayPage,
+      page: currentPage,
       blockIndex: selectionBar.blockIndex,
       selectedText: selectionBar.text,
     })
@@ -960,13 +830,13 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     } else {
       saveBookNote({
         bookId,
-        content: currentChapter?.title || `Page ${displayPage}`,
+        content: currentChapter?.title || `Page ${currentPage}`,
         type: "bookmark",
-        page: displayPage,
+        page: currentPage,
       })
     }
     loadNotes()
-  }, [readerNotes, bookId, displayPage, currentChapter, loadNotes])
+  }, [readerNotes, bookId, currentPage, currentChapter, loadNotes])
 
   const handleDeleteReaderNote = useCallback((noteId: string) => {
     deleteBookNote(noteId)
@@ -1147,26 +1017,13 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
             <>
               <div
                 ref={scrollRef}
-                className="flex-1 px-5 sm:px-8"
-                style={{
-                  overflow: containerWidth > 0 ? "hidden" : "auto",
-                  position: "relative",
-                }}
-                onClick={handleTapZone}
-                onTouchStart={handleTouchStart}
-                onTouchEnd={handleTouchEnd}
+                onScroll={handleScroll}
+                className="flex-1 overflow-y-auto relative"
+                style={{ overscrollBehavior: "contain" }}
               >
                 <div
-                  ref={contentRef}
-                  style={{
-                    height: "100%",
-                    paddingTop: "2rem",
-                    paddingBottom: "2rem",
-                    columnWidth: containerWidth > 0 ? `${containerWidth}px` : undefined,
-                    columnGap: 0,
-                    columnFill: "auto" as const,
-                    transition: "transform 300ms cubic-bezier(0.25, 0.1, 0.25, 1)",
-                  }}
+                  className="max-w-2xl mx-auto px-5 sm:px-8 py-8"
+                  style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom))" }}
                 >
                   {/* Floating selection bar — must be inside scroll container for correct positioning */}
                   {selectionBar && (() => {
@@ -1228,7 +1085,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                   {blocks.map((block, i) => {
                     if (block.type === "separator") {
                       return (
-                        <div key={i} className="flex items-center justify-center gap-3 py-8 opacity-25" style={{ breakInside: "avoid" }}>
+                        <div key={i} className="flex items-center justify-center gap-3 py-8 opacity-25">
                           <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: currentTheme.text }} />
                           <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: currentTheme.text }} />
                           <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: currentTheme.text }} />
@@ -1238,7 +1095,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
                     if (block.type === "image") {
                       return (
-                        <div key={i} className="my-6 flex flex-col items-center gap-2" style={{ breakInside: "avoid" }}>
+                        <div key={i} className="my-6 flex flex-col items-center gap-2">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={block.src}
@@ -1264,7 +1121,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
                     if (block.type === "heading") {
                       return (
-                        <div key={i} className="mt-14 mb-8 text-center" data-block-index={i} style={{ breakBefore: "column", breakInside: "avoid" }}>
+                        <div key={i} className="mt-14 mb-8 text-center" data-block-index={i}>
                           <h2
                             className="font-bold"
                             style={{
@@ -1329,11 +1186,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                             color: currentTheme.text,
                             borderLeft: `3px solid ${currentTheme.progressFill}`,
                             opacity: 0.85,
-                            breakInside: "avoid",
-                            textAlign: "justify",
-                            hyphens: "auto",
-                            WebkitHyphens: "auto",
-                          } as React.CSSProperties}
+                          }}
                         >
                           <HighlightedText text={block.text} highlights={inlineHighlights} blockIndex={i} highlightColor={currentTheme.highlight} />
                         </blockquote>
@@ -1371,10 +1224,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                             lineHeight: "1.85",
                             letterSpacing: "0.01em",
                             color: currentTheme.text,
-                            breakInside: "avoid",
-                            hyphens: "auto",
-                            WebkitHyphens: "auto",
-                          } as React.CSSProperties}
+                          }}
                         >
                           {block.lines.map((line, j) => (
                             <span key={j}>
@@ -1396,7 +1246,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                       return (
                         <p
                           key={i}
-                          className="leading-relaxed"
+                          className="mb-5 leading-relaxed text-justify"
                           data-block-index={i}
                           style={{
                             fontFamily,
@@ -1404,11 +1254,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                             lineHeight: "1.85",
                             letterSpacing: "0.01em",
                             color: currentTheme.text,
-                            textIndent: 0,
-                            textAlign: "justify",
-                            hyphens: "auto",
-                            WebkitHyphens: "auto",
-                          } as React.CSSProperties}
+                          }}
                         >
                           <span
                             style={{
@@ -1429,14 +1275,10 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                       )
                     }
 
-                    // Determine if this paragraph should skip indentation
-                    const prevBlock = i > 0 ? blocks[i - 1] : null
-                    const skipIndent = prevBlock !== null && (prevBlock.type === "heading" || prevBlock.type === "separator")
-
                     return (
                       <p
                         key={i}
-                        className="leading-relaxed"
+                        className="mb-5 leading-relaxed text-justify"
                         data-block-index={i}
                         style={{
                           fontFamily,
@@ -1444,11 +1286,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           lineHeight: "1.85",
                           letterSpacing: "0.01em",
                           color: currentTheme.text,
-                          textIndent: skipIndent ? 0 : "1.5em",
-                          textAlign: "justify",
-                          hyphens: "auto",
-                          WebkitHyphens: "auto",
-                        } as React.CSSProperties}
+                        }}
                       >
                         <HighlightedText text={block.text} highlights={inlineHighlights} blockIndex={i} highlightColor={currentTheme.highlight} />
                       </p>
@@ -1630,14 +1468,14 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                                       Go to page
                                     </span>
                                     <span className="text-xs tabular-nums opacity-60">
-                                      {displayPage} of {totalPages}
+                                      {currentPage} of {totalPages}
                                     </span>
                                   </div>
                                   <input
                                     type="range"
                                     min={1}
                                     max={totalPages}
-                                    value={displayPage}
+                                    value={currentPage}
                                     onChange={(e) => jumpToPage(parseInt(e.target.value))}
                                     className="w-full h-2 rounded-full appearance-none cursor-pointer"
                                     style={{
@@ -1700,7 +1538,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                                   style={{ backgroundColor: `${currentTheme.text}06` }}
                                 >
                                   <div>
-                                    <div className="text-lg font-bold tabular-nums" style={{ color: currentTheme.progressFill }}>{displayPage}</div>
+                                    <div className="text-lg font-bold tabular-nums" style={{ color: currentTheme.progressFill }}>{currentPage}</div>
                                     <div className="text-[10px] opacity-40">of {totalPages} pages</div>
                                   </div>
                                   <div>
@@ -1813,7 +1651,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                     >
                       <List className="w-3.5 h-3.5 opacity-50" />
                       <span className="text-[11px] tabular-nums font-medium opacity-60">
-                        Page {displayPage} of {totalPages}
+                        {currentPage}/{totalPages}
                       </span>
                     </button>
                     {chapters.length > 0 && (
