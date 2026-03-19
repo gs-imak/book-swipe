@@ -36,11 +36,9 @@ const FONT_OPTIONS: { id: ReaderFont; label: string; family: string }[] = [
 
 type AmbientSound = "rain" | "fireplace" | "cafe" | "library" | "forest"
 const AMBIENT_SOUNDS: { id: AmbientSound; label: string; url: string; emoji: string }[] = [
-  { id: "rain", label: "Rain", url: "https://cdn.pixabay.com/audio/2022/10/30/audio_711e25fb3f.mp3", emoji: "🌧" },
-  { id: "fireplace", label: "Fireplace", url: "https://cdn.pixabay.com/audio/2024/11/04/audio_4956b2c2d1.mp3", emoji: "🔥" },
-  { id: "cafe", label: "Cafe", url: "https://cdn.pixabay.com/audio/2022/03/09/audio_c89cbe9854.mp3", emoji: "☕" },
-  { id: "library", label: "Library", url: "https://cdn.pixabay.com/audio/2022/10/30/audio_711e25fb3f.mp3", emoji: "📚" },
-  { id: "forest", label: "Forest", url: "https://cdn.pixabay.com/audio/2022/03/09/audio_c89cbe9854.mp3", emoji: "🌲" },
+  { id: "rain", label: "Rain", url: "/sounds/rain.mp3", emoji: "🌧" },
+  { id: "fireplace", label: "Fireplace", url: "/sounds/fireplace.mp3", emoji: "🔥" },
+  { id: "cafe", label: "Cafe", url: "/sounds/cafe.mp3", emoji: "☕" },
 ]
 
 type AutoScrollSpeed = "slow" | "medium" | "fast"
