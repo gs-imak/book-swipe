@@ -43,16 +43,17 @@ const AMBIENT_SOUNDS: { id: AmbientSound; label: string; emoji: string; file: st
 ]
 
 // Create ambient sound player from local MP3 files
-function createAmbientPlayer(soundId: AmbientSound): { start: () => void; stop: () => void } | null {
+function createAmbientPlayer(soundId: AmbientSound, volume: number): { start: () => void; stop: () => void; setVolume: (v: number) => void } | null {
   const soundDef = AMBIENT_SOUNDS.find(s => s.id === soundId)
   if (!soundDef) return null
   try {
     const audio = new Audio(soundDef.file)
     audio.loop = true
-    audio.volume = 0.4
+    audio.volume = volume
     return {
       start: () => { audio.play().catch(() => {}) },
       stop: () => { audio.pause(); audio.currentTime = 0 },
+      setVolume: (v: number) => { audio.volume = Math.max(0, Math.min(1, v)) },
     }
   } catch {
     return null
@@ -430,7 +431,8 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   }, [focusMode, pomodoroRunning])
 
   // Focus Mode: manage ambient audio via Web Audio API
-  const ambientRef = useRef<{ stop: () => void } | null>(null)
+  const ambientRef = useRef<{ stop: () => void; setVolume: (v: number) => void } | null>(null)
+  const [ambientVolume, setAmbientVolume] = useState(0.4)
 
   // Start ambient sound — called directly from click handlers
   const startAmbientSound = useCallback((soundId: AmbientSound) => {
@@ -439,12 +441,12 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       ambientRef.current = null
     }
     if (!soundId) return
-    const player = createAmbientPlayer(soundId)
+    const player = createAmbientPlayer(soundId, ambientVolume)
     if (player) {
       player.start()
       ambientRef.current = player
     }
-  }, [])
+  }, [ambientVolume])
 
   const stopAmbientSound = useCallback(() => {
     if (ambientRef.current) {
@@ -2493,6 +2495,28 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                     >
                       None
                     </button>
+                  </div>
+
+                  {/* Volume slider */}
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-[10px] opacity-40">🔈</span>
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={Math.round(ambientVolume * 100)}
+                      onChange={(e) => {
+                        const v = parseInt(e.target.value) / 100
+                        setAmbientVolume(v)
+                        if (ambientRef.current) ambientRef.current.setVolume(v)
+                      }}
+                      className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer"
+                      style={{
+                        accentColor: currentTheme.progressFill,
+                        background: `linear-gradient(to right, ${currentTheme.progressFill} ${ambientVolume * 100}%, ${currentTheme.progressTrack} ${ambientVolume * 100}%)`,
+                      }}
+                    />
+                    <span className="text-[10px] opacity-40">🔊</span>
                   </div>
                 </div>
               </motion.div>
