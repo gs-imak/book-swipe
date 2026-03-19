@@ -34,12 +34,109 @@ const FONT_OPTIONS: { id: ReaderFont; label: string; family: string }[] = [
   { id: "opendyslexic", label: "OpenDyslexic", family: "'OpenDyslexic', sans-serif" },
 ]
 
-type AmbientSound = "rain" | "fireplace" | "cafe" | "library" | "forest"
-const AMBIENT_SOUNDS: { id: AmbientSound; label: string; url: string; emoji: string }[] = [
-  { id: "rain", label: "Rain", url: "/sounds/rain.mp3", emoji: "🌧" },
-  { id: "fireplace", label: "Fireplace", url: "/sounds/fireplace.mp3", emoji: "🔥" },
-  { id: "cafe", label: "Cafe", url: "/sounds/cafe.mp3", emoji: "☕" },
+type AmbientSound = "rain" | "fireplace" | "cafe"
+const AMBIENT_SOUNDS: { id: AmbientSound; label: string; emoji: string }[] = [
+  { id: "rain", label: "Rain", emoji: "🌧" },
+  { id: "fireplace", label: "Fireplace", emoji: "🔥" },
+  { id: "cafe", label: "Cafe", emoji: "☕" },
 ]
+
+// Web Audio API ambient sound generators — no files needed
+function createAmbientSound(type: AmbientSound): { start: () => void; stop: () => void } | null {
+  try {
+    const ctx = new AudioContext()
+    const gainNode = ctx.createGain()
+    gainNode.gain.value = 0.15
+    gainNode.connect(ctx.destination)
+
+    if (type === "rain") {
+      // Brown noise filtered to sound like rain
+      const bufferSize = 2 * ctx.sampleRate
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
+      const data = buffer.getChannelData(0)
+      let lastOut = 0
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1
+        data[i] = (lastOut + (0.02 * white)) / 1.02
+        lastOut = data[i]
+        data[i] *= 3.5
+      }
+      const source = ctx.createBufferSource()
+      source.buffer = buffer
+      source.loop = true
+      const filter = ctx.createBiquadFilter()
+      filter.type = "lowpass"
+      filter.frequency.value = 800
+      source.connect(filter)
+      filter.connect(gainNode)
+      return {
+        start: () => { ctx.resume(); source.start(0) },
+        stop: () => { try { source.stop(); ctx.close() } catch {} },
+      }
+    }
+
+    if (type === "fireplace") {
+      // Crackling: random short bursts of filtered noise
+      const bufferSize = 2 * ctx.sampleRate
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
+      const data = buffer.getChannelData(0)
+      for (let i = 0; i < bufferSize; i++) {
+        const crackle = Math.random() > 0.997 ? (Math.random() * 0.5) : 0
+        const hiss = (Math.random() * 2 - 1) * 0.03
+        data[i] = hiss + crackle
+      }
+      const source = ctx.createBufferSource()
+      source.buffer = buffer
+      source.loop = true
+      const filter = ctx.createBiquadFilter()
+      filter.type = "bandpass"
+      filter.frequency.value = 600
+      filter.Q.value = 0.5
+      source.connect(filter)
+      filter.connect(gainNode)
+      gainNode.gain.value = 0.3
+      return {
+        start: () => { ctx.resume(); source.start(0) },
+        stop: () => { try { source.stop(); ctx.close() } catch {} },
+      }
+    }
+
+    if (type === "cafe") {
+      // Warm pink noise with gentle modulation
+      const bufferSize = 2 * ctx.sampleRate
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
+      const data = buffer.getChannelData(0)
+      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1
+        b0 = 0.99886 * b0 + white * 0.0555179
+        b1 = 0.99332 * b1 + white * 0.0750759
+        b2 = 0.96900 * b2 + white * 0.1538520
+        b3 = 0.86650 * b3 + white * 0.3104856
+        b4 = 0.55000 * b4 + white * 0.5329522
+        b5 = -0.7616 * b5 - white * 0.0168980
+        data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11
+        b6 = white * 0.115926
+      }
+      const source = ctx.createBufferSource()
+      source.buffer = buffer
+      source.loop = true
+      const filter = ctx.createBiquadFilter()
+      filter.type = "lowpass"
+      filter.frequency.value = 500
+      source.connect(filter)
+      filter.connect(gainNode)
+      return {
+        start: () => { ctx.resume(); source.start(0) },
+        stop: () => { try { source.stop(); ctx.close() } catch {} },
+      }
+    }
+
+    return null
+  } catch {
+    return null
+  }
+}
 
 type AutoScrollSpeed = "slow" | "medium" | "fast"
 const AUTO_SCROLL_SPEEDS: { id: AutoScrollSpeed; label: string; seconds: number }[] = [
@@ -313,7 +410,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const [pomodoroRunning, setPomodoroRunning] = useState(false)
   const [pomodoroFinished, setPomodoroFinished] = useState(false)
   const [ambientSound, setAmbientSound] = useState<AmbientSound>("rain")
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+  // audioRef removed — ambient sounds use Web Audio API via ambientRef
   const pomodoroIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Feature: Auto-scroll
@@ -410,36 +507,33 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     }
   }, [focusMode, pomodoroRunning])
 
-  // Focus Mode: manage ambient audio
+  // Focus Mode: manage ambient audio via Web Audio API
+  const ambientRef = useRef<{ stop: () => void } | null>(null)
   useEffect(() => {
-    if (!focusMode) {
-      if (audioRef.current) {
-        audioRef.current.pause()
-        audioRef.current = null
-      }
-      return
+    if (ambientRef.current) {
+      ambientRef.current.stop()
+      ambientRef.current = null
     }
-    const soundDef = AMBIENT_SOUNDS.find(s => s.id === ambientSound)
-    if (!soundDef) return
-    if (audioRef.current) {
-      audioRef.current.pause()
+    if (!focusMode || !ambientSound) return
+    const sound = createAmbientSound(ambientSound)
+    if (sound) {
+      sound.start()
+      ambientRef.current = sound
     }
-    const audio = new Audio(soundDef.url)
-    audio.loop = true
-    audio.volume = 0.35
-    audio.play().catch(() => { /* autoplay blocked */ })
-    audioRef.current = audio
     return () => {
-      audio.pause()
+      if (ambientRef.current) {
+        ambientRef.current.stop()
+        ambientRef.current = null
+      }
     }
   }, [focusMode, ambientSound])
 
   // Cleanup audio on unmount or reader close
   useEffect(() => {
     if (!isOpen) {
-      if (audioRef.current) {
-        audioRef.current.pause()
-        audioRef.current = null
+      if (ambientRef.current) {
+        ambientRef.current.stop()
+        ambientRef.current = null
       }
       setFocusMode(false)
       setPomodoroRunning(false)
@@ -2432,10 +2526,11 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                     ))}
                     <button
                       onClick={() => {
-                        if (audioRef.current) {
-                          audioRef.current.pause()
-                          audioRef.current = null
+                        if (ambientRef.current) {
+                          ambientRef.current.stop()
+                          ambientRef.current = null
                         }
+                        setAmbientSound("" as AmbientSound)
                       }}
                       className="px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors"
                       style={{
