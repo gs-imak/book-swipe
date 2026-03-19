@@ -439,18 +439,26 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     // Normalize line endings (safety net for cached text with \r\n)
     let normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n")
 
-    // Strip Gutenberg boilerplate from the start and end
-    // Remove everything before "*** START OF" marker if present
+    // Strip Gutenberg boilerplate — save credits to show at the end
+    let savedCredits = ""
+
+    // Extract header (before "*** START OF") — contains Gutenberg license
     const startMarker = normalized.indexOf("*** START OF")
     if (startMarker !== -1) {
       const afterMarker = normalized.indexOf("\n", startMarker)
       if (afterMarker !== -1) normalized = normalized.slice(afterMarker + 1)
     }
-    // Remove everything after "*** END OF" marker if present
+
+    // Extract footer (after "*** END OF") — contains Gutenberg license
     const endMarker = normalized.indexOf("*** END OF")
     if (endMarker !== -1) normalized = normalized.slice(0, endMarker)
-    // Remove "Produced by" credits (usually 1-3 lines at the very start)
-    normalized = normalized.replace(/^\s*(?:Produced by|Transcribed by|E-text prepared by)[\s\S]*?\n\n/i, "\n\n")
+
+    // Extract "Produced by" credits — move to end instead of removing
+    const creditMatch = normalized.match(/^\s*((?:Produced by|Transcribed by|E-text prepared by)[\s\S]*?)\n\n/i)
+    if (creditMatch) {
+      savedCredits = creditMatch[1].trim()
+      normalized = normalized.slice(creditMatch[0].length)
+    }
 
     const raw = normalized.split(/\n{2,}/).filter((p) => p.trim().length > 0)
     const result: TextBlock[] = []
@@ -616,6 +624,12 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       // Only drop-cap if starts with a letter (or a quote followed by a letter)
       const dropCapOk = isAfterHeading && unwrapped.length > 40 && /^[A-Za-z"'\u201C\u2018\u2019]/.test(unwrapped)
       result.push({ type: "paragraph", text: unwrapped, dropCap: dropCapOk })
+    }
+
+    // Append credits at the end of the book
+    if (savedCredits) {
+      result.push({ type: "separator" })
+      result.push({ type: "centered", lines: savedCredits.split("\n").map(l => l.trim()).filter(l => l.length > 0) })
     }
 
     return result
