@@ -1229,6 +1229,56 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                     }
 
                     if (block.type === "centered") {
+                      // Check if this is a title page block (before the first heading)
+                      const isBeforeFirstHeading = !blocks.slice(0, i).some(b => b.type === "heading")
+                      const isTitleBlock = isBeforeFirstHeading && i < 5
+
+                      if (isTitleBlock) {
+                        // Title page — large, vertically centered, dramatic
+                        const isFirstBlock = i === 0
+                        return (
+                          <div
+                            key={i}
+                            className="text-center flex flex-col items-center justify-center"
+                            data-block-index={i}
+                            style={{
+                              fontFamily,
+                              color: currentTheme.text,
+                              breakInside: "avoid",
+                              maxWidth: "65ch",
+                              margin: "0 auto",
+                              minHeight: isFirstBlock ? "60vh" : undefined,
+                              paddingTop: isFirstBlock ? "15vh" : "2em",
+                              paddingBottom: "2em",
+                            }}
+                          >
+                            {block.lines.map((line, j) => {
+                              // First line of first block = book title (large)
+                              // Lines starting with "by" = author (medium, muted)
+                              const isByLine = /^by\s/i.test(line)
+                              const isTitle = isFirstBlock && j === 0 && !isByLine
+                              return (
+                                <div
+                                  key={j}
+                                  style={{
+                                    fontSize: isTitle ? `${fontSize * 2.2}px` : isByLine ? `${fontSize * 1.2}px` : `${fontSize * 1.1}px`,
+                                    fontWeight: isTitle ? 700 : 400,
+                                    lineHeight: isTitle ? "1.2" : "1.6",
+                                    letterSpacing: isTitle ? "0.02em" : "0.01em",
+                                    opacity: isByLine ? 0.6 : isTitle ? 1 : 0.7,
+                                    marginBottom: isTitle ? "0.6em" : isByLine ? "0.3em" : "0.2em",
+                                    fontStyle: isByLine ? "italic" : "normal",
+                                  }}
+                                >
+                                  <RenderInlineText text={line} />
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )
+                      }
+
+                      // Regular centered block (not title page)
                       return (
                         <div
                           key={i}
