@@ -49,7 +49,7 @@ function createAmbientSound(type: AmbientSound): { start: () => void; stop: () =
     gainNode.connect(ctx.destination)
     let started = false
 
-    function makeStop() {
+    const makeStop = () => {
       return () => {
         try { gainNode.disconnect() } catch {}
         try { ctx.close() } catch {}
@@ -57,7 +57,7 @@ function createAmbientSound(type: AmbientSound): { start: () => void; stop: () =
       }
     }
 
-    function makeBuffer(generator: (data: Float32Array, sampleRate: number) => void, filterType: BiquadFilterType, filterFreq: number, volume: number, filterQ?: number) {
+    const makeBuffer = (generator: (data: Float32Array, sampleRate: number) => void, filterType: BiquadFilterType, filterFreq: number, volume: number, filterQ?: number) => {
       gainNode.gain.value = volume
       const bufferSize = 2 * ctx.sampleRate
       const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
