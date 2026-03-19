@@ -28,8 +28,15 @@ export const BROWSE_CATEGORIES = [
   { id: "travel", label: "Travel", emoji: "\uD83C\uDF0D", topic: "travel" },
 ] as const
 
+function getGutenbergLang(): string {
+  if (typeof window === "undefined") return "en"
+  const lang = localStorage.getItem("bookswipe_language") || "en"
+  return lang === "all" ? "" : lang
+}
+
 export async function browseGutenberg(topic: string): Promise<GutenbergBrowseResult> {
-  const params = new URLSearchParams({ languages: "en" })
+  const lang = getGutenbergLang()
+  const params = new URLSearchParams(lang ? { languages: lang } : {})
   if (topic) params.set("topic", topic)
   const res = await fetch(`https://gutendex.com/books?${params.toString()}`)
   if (!res.ok) throw new Error("Failed to fetch")
@@ -37,7 +44,8 @@ export async function browseGutenberg(topic: string): Promise<GutenbergBrowseRes
 }
 
 export async function searchFreeBooks(query: string): Promise<GutenbergBrowseResult> {
-  const params = new URLSearchParams({ search: query, languages: "en" })
+  const lang = getGutenbergLang()
+  const params = new URLSearchParams(lang ? { search: query, languages: lang } : { search: query })
   const res = await fetch(`https://gutendex.com/books?${params.toString()}`)
   if (!res.ok) throw new Error("Failed to search")
   return res.json() as Promise<GutenbergBrowseResult>

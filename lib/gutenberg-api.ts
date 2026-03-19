@@ -128,7 +128,9 @@ export async function searchGutenberg(
 
   let data: GutendexResponse;
   try {
-    const url = `https://gutendex.com/books/?search=${encodeURIComponent(title)}&languages=en`;
+    const lang = typeof window !== "undefined" ? (localStorage.getItem("bookswipe_language") || "en") : "en";
+    const gutLang = lang === "all" ? "" : `&languages=${encodeURIComponent(lang)}`;
+    const url = `https://gutendex.com/books/?search=${encodeURIComponent(title)}${gutLang}`;
     const res = await fetch(url);
     if (!res.ok) return null;
     data = (await res.json()) as GutendexResponse;

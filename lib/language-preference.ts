@@ -6,7 +6,9 @@ const LANGUAGE_KEY = "bookswipe_language"
 
 export type BookLanguage =
   | "en" | "fr" | "es" | "de" | "it" | "pt"
-  | "nl" | "ja" | "zh" | "ko" | "ru" | "ar"
+  | "nl" | "sv" | "da" | "no" | "pl" | "fi"
+  | "cs" | "ro" | "hu" | "el"
+  | "ja" | "zh" | "ko" | "ru" | "ar"
   | "all"
 
 export const LANGUAGE_LABELS: Record<BookLanguage, string> = {
@@ -17,6 +19,15 @@ export const LANGUAGE_LABELS: Record<BookLanguage, string> = {
   it: "Italiano",
   pt: "Português",
   nl: "Nederlands",
+  sv: "Svenska",
+  da: "Dansk",
+  no: "Norsk",
+  pl: "Polski",
+  fi: "Suomi",
+  cs: "Čeština",
+  ro: "Română",
+  hu: "Magyar",
+  el: "Ελληνικά",
   ja: "日本語",
   zh: "中文",
   ko: "한국어",
@@ -34,6 +45,15 @@ const ISO_TO_OL: Record<string, string[]> = {
   it: ["ita"],
   pt: ["por"],
   nl: ["dut", "nld"],
+  sv: ["swe"],
+  da: ["dan"],
+  no: ["nor", "nob", "nno"],
+  pl: ["pol"],
+  fi: ["fin"],
+  cs: ["cze", "ces"],
+  ro: ["rum", "ron"],
+  hu: ["hun"],
+  el: ["gre", "ell"],
   ja: ["jpn"],
   zh: ["chi", "zho"],
   ko: ["kor"],
