@@ -246,18 +246,18 @@ export function FreeBooksBrowser() {
                 className="absolute inset-0 flex items-center justify-center"
               >
                 <div
-                  className="text-center space-y-4 px-6 py-8 rounded-2xl bg-[rgba(253,251,247,0.92)] dark:bg-[rgba(28,25,23,0.92)]"
-                  style={{ backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}
+                  className="text-center space-y-6 px-10 py-10 rounded-2xl bg-[rgba(253,251,247,0.92)] dark:bg-[rgba(28,25,23,0.92)]"
+                  style={{ backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", minWidth: 280 }}
                 >
                   {/* Bouncing books */}
-                  <div className="flex items-end justify-center gap-2 h-12">
+                  <div className="flex items-end justify-center gap-3 h-16">
                     {[0, 1, 2].map(i => (
                       <motion.div
                         key={i}
-                        className="rounded-md bg-amber-500"
-                        style={{ width: 12 + i * 3, originY: 1 }}
+                        className="rounded-lg bg-amber-500"
+                        style={{ width: 16 + i * 5, originY: 1 }}
                         animate={{
-                          height: [24 + i * 6, 36 + i * 6, 24 + i * 6],
+                          height: [32 + i * 10, 50 + i * 10, 32 + i * 10],
                           opacity: [0.4, 1, 0.4],
                         }}
                         transition={{ duration: 1, repeat: Infinity, delay: i * 0.2, ease: "easeInOut" }}
@@ -266,14 +266,15 @@ export function FreeBooksBrowser() {
                   </div>
 
                   <div>
-                    <p className="text-sm font-semibold text-stone-800 dark:text-stone-200">
+                    <p className="text-base font-semibold text-stone-800 dark:text-stone-200">
                       {loadProgress < 25 ? "Opening the library..." : loadProgress < 50 ? "Browsing the shelves..." : loadProgress < 75 ? "Picking the best titles..." : "Almost there..."}
                     </p>
+                    <p className="text-sm text-stone-400 dark:text-stone-500 mt-1">70,000+ free classics</p>
                   </div>
 
                   {/* Progress bar */}
-                  <div className="max-w-[200px] mx-auto">
-                    <div className="h-1.5 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
+                  <div className="max-w-[260px] mx-auto">
+                    <div className="h-2 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
                       <motion.div
                         className="h-full rounded-full"
                         style={{ background: "linear-gradient(90deg, #d97706, #f59e0b, #d97706)", backgroundSize: "200% 100%" }}

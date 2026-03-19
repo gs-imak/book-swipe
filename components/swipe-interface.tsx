@@ -459,8 +459,8 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
           </div>
         </div>
 
-        {/* Card stack */}
-        <div className="flex-1 flex items-center justify-center p-3 sm:p-4">
+        {/* Card stack + action buttons together */}
+        <div className="flex-1 flex flex-col items-center justify-center p-3 sm:p-4 pb-16 sm:pb-6">
           <div className="relative w-full max-w-sm">
             <motion.div
               className="relative sm:h-[560px] md:h-[600px]"
@@ -490,11 +490,9 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
               </AnimatePresence>
             </motion.div>
           </div>
-        </div>
 
-        {/* Action buttons */}
-        <div className="pb-16 sm:pb-6 pt-2">
-          <div className="max-w-sm mx-auto px-4">
+          {/* Action buttons — directly below card */}
+          <div className="w-full max-w-sm px-4 mt-4">
             <div className="flex justify-center items-center gap-4 mb-3">
               <motion.button
                 whileTap={{ scale: 0.9 }}
