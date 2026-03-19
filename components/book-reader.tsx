@@ -368,14 +368,29 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     }
   }, [text, fontSize, readerFont, bookId, colWidth])
 
+  // Track if user is dragging (selecting text) vs tapping
+  const mouseDownRef = useRef<{ x: number; y: number; time: number } | null>(null)
+
+  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    mouseDownRef.current = { x: e.clientX, y: e.clientY, time: Date.now() }
+  }, [])
+
   // Tap zone handler: left third = prev page, right third = next page, center = ignore
   const handleReaderTap = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     // Don't turn page if tapping on interactive elements
     const target = e.target as HTMLElement
-    if (target.closest("[data-selection-bar]") || target.closest("button") || target.closest("a")) return
+    if (target.closest("[data-selection-bar]") || target.closest("button") || target.closest("a") || target.closest("mark")) return
     // Don't turn page if there's an active text selection
     const sel = window.getSelection()
     if (sel && !sel.isCollapsed) return
+    // Don't turn page if user dragged (was selecting text)
+    if (mouseDownRef.current) {
+      const dx = Math.abs(e.clientX - mouseDownRef.current.x)
+      const dy = Math.abs(e.clientY - mouseDownRef.current.y)
+      const dt = Date.now() - mouseDownRef.current.time
+      mouseDownRef.current = null
+      if (dx > 5 || dy > 5 || dt > 300) return // moved or held too long = not a tap
+    }
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
     const x = e.clientX - rect.left
     const third = rect.width / 3
@@ -969,7 +984,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
         >
           {/* Top bar */}
           <div
-            className="sticky top-0 z-10 flex-shrink-0"
+            className="sticky top-0 z-30 flex-shrink-0"
             style={{
               backgroundColor: currentTheme.barBg,
               backdropFilter: "blur(12px)",
@@ -1118,6 +1133,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                   flex: 1,
                   padding: "0 clamp(20px, 6vw, 80px)",
                 }}
+                onMouseDown={handleMouseDown}
                 onClick={handleReaderTap}
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
