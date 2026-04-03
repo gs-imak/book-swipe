@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Heart, MessageSquare, Tag, Calendar, Clock, Smile, PartyPopper, Brain, Sparkles, Cloud, AlertTriangle, type LucideIcon } from "lucide-react"
+import { Heart, MessageSquare, Tag, Calendar, Clock, Smile, PartyPopper, Brain, Sparkles, Cloud, AlertTriangle, BookOpen, Smartphone, Headphones, type LucideIcon } from "lucide-react"
 import { Button } from "./ui/button"
 import { StarRating } from "./star-rating"
 import { BookCover } from "@/components/book-cover"
@@ -47,6 +47,8 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
   const [selectedTags, setSelectedTags] = useState<string[]>(existingReview?.tags || [])
   const [favorite, setFavorite] = useState(existingReview?.favorite || false)
   const [selectedWarnings, setSelectedWarnings] = useState<string[]>(existingReview?.contentWarnings || [])
+  const [format, setFormat] = useState<"print" | "ebook" | "audiobook" | "">(existingReview?.format || "")
+  const [pace, setPace] = useState<"slow" | "medium" | "fast" | "">(existingReview?.pace || "")
   const [isSubmitting, setIsSubmitting] = useState(false)
   
   const { triggerActivity } = useGamification()
@@ -72,6 +74,8 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
       tags: selectedTags,
       mood: selectedMood,
       contentWarnings: selectedWarnings.length > 0 ? selectedWarnings : undefined,
+      format: format || undefined,
+      pace: pace || undefined,
       createdAt: existingReview?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
@@ -213,6 +217,57 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
               }`}
             >
               {w}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Reading Format */}
+      <div className="space-y-3">
+        <label id="review-format-label" className="text-sm font-semibold text-stone-700 dark:text-stone-300">How did you read it?</label>
+        <div role="group" aria-labelledby="review-format-label" className="flex flex-wrap gap-2">
+          {([
+            { value: "print", label: "Print", Icon: BookOpen },
+            { value: "ebook", label: "eBook", Icon: Smartphone },
+            { value: "audiobook", label: "Audiobook", Icon: Headphones },
+          ] as const).map(({ value, label, Icon }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setFormat(prev => prev === value ? "" : value)}
+              className={`h-7 px-3 rounded-full text-xs font-medium border transition-all flex items-center gap-1.5 ${
+                format === value
+                  ? "bg-amber-50 dark:bg-amber-900/30 border-amber-400 text-amber-800 dark:text-amber-300"
+                  : "bg-stone-50 dark:bg-stone-800/50 border-stone-200 text-stone-500 hover:border-stone-300"
+              }`}
+            >
+              <Icon className="w-3 h-3" />
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Pace */}
+      <div className="space-y-3">
+        <label id="review-pace-label" className="text-sm font-semibold text-stone-700 dark:text-stone-300">How was the pacing?</label>
+        <div role="group" aria-labelledby="review-pace-label" className="flex flex-wrap gap-2">
+          {([
+            { value: "slow", label: "Slow" },
+            { value: "medium", label: "Medium" },
+            { value: "fast", label: "Fast" },
+          ] as const).map(({ value, label }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setPace(prev => prev === value ? "" : value)}
+              className={`h-7 px-3 rounded-full text-xs font-medium border transition-all ${
+                pace === value
+                  ? "bg-amber-50 dark:bg-amber-900/30 border-amber-400 text-amber-800 dark:text-amber-300"
+                  : "bg-stone-50 dark:bg-stone-800/50 border-stone-200 text-stone-500 hover:border-stone-300"
+              }`}
+            >
+              {label}
             </button>
           ))}
         </div>

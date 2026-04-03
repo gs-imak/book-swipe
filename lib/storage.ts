@@ -115,6 +115,8 @@ export interface BookReview {
   tags: string[]
   mood: string
   contentWarnings?: string[]
+  format?: "print" | "ebook" | "audiobook"
+  pace?: "slow" | "medium" | "fast"
   createdAt: string
   updatedAt: string
 }
@@ -460,14 +462,26 @@ const DEFAULT_SHELVES: Shelf[] = [
   { id: "want-to-read", name: "Want to Read", emoji: "\u{1F4DA}", isDefault: true, createdAt: new Date().toISOString() },
   { id: "currently-reading", name: "Currently Reading", emoji: "\u{1F4D6}", isDefault: true, createdAt: new Date().toISOString() },
   { id: "finished", name: "Finished", emoji: "\u2705", isDefault: true, createdAt: new Date().toISOString() },
+  { id: "dnf", name: "Did Not Finish", emoji: "\u{1F6AB}", isDefault: true, createdAt: new Date().toISOString() },
 ]
 
 export function getShelves(): Shelf[] {
   const stored = safeGetJSON<Shelf[] | null>(SHELVES_KEY, null)
-  if (stored) return stored
-  // Seed defaults on first access
-  safeSetJSON(SHELVES_KEY, DEFAULT_SHELVES)
-  return DEFAULT_SHELVES
+  if (!stored) {
+    safeSetJSON(SHELVES_KEY, DEFAULT_SHELVES)
+    return DEFAULT_SHELVES
+  }
+  // Ensure all default shelves exist (for upgrades)
+  const ids = new Set(stored.map(s => s.id))
+  let updated = false
+  DEFAULT_SHELVES.forEach(ds => {
+    if (!ids.has(ds.id)) {
+      stored.push(ds)
+      updated = true
+    }
+  })
+  if (updated) safeSetJSON(SHELVES_KEY, stored)
+  return stored
 }
 
 export function saveShelves(shelves: Shelf[]): void {
