@@ -236,7 +236,7 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-background z-[60]"
+        className="fixed inset-0 lg:left-16 bg-background z-[60]"
       >
         {/* Header */}
         <div className="bg-background/90 backdrop-blur-md border-b border-stone-200/60 dark:border-stone-800 sticky top-0 z-10">

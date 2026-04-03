@@ -230,7 +230,7 @@ export function GlobalSearch({ isOpen, onClose, onBookClick }: GlobalSearchProps
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: "4%" }}
           transition={{ type: "spring", stiffness: 400, damping: 35 }}
-          className="fixed inset-0 z-[60] bg-stone-50/[0.98] dark:bg-stone-950/[0.98] backdrop-blur-xl"
+          className="fixed inset-0 lg:left-16 z-[60] bg-stone-50/[0.98] dark:bg-stone-950/[0.98] backdrop-blur-xl"
           role="dialog"
           aria-modal="true"
           aria-label="Search your library, notes, and reviews"
