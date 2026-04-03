@@ -22,10 +22,19 @@ import { OnboardingGuide } from "@/components/onboarding-guide"
 import { motion, AnimatePresence, MotionConfig } from "framer-motion"
 import { getTheme, applyTheme } from "@/lib/theme"
 import { WhatsNewModal } from "@/components/whats-new-modal"
+import { Skeleton, BookGridSkeleton } from "@/components/ui/skeleton"
 
 // Code-split heavy components that aren't needed on initial load
 const FreeBooksBrowser = dynamic(() => import("@/components/free-books-browser").then(m => ({ default: m.FreeBooksBrowser })), {
-  loading: () => <div className="min-h-screen bg-background flex items-center justify-center"><div className="w-8 h-8 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" /></div>,
+  loading: () => (
+    <div className="min-h-screen bg-background">
+      <div className="max-w-6xl mx-auto px-4 pt-16 space-y-4">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-10 w-full rounded-xl" />
+        <BookGridSkeleton count={8} />
+      </div>
+    </div>
+  ),
 })
 
 const GUIDE_SEEN_KEY = "bookswipe_guide_seen"
