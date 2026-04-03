@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import { Book } from "@/lib/book-data"
 import { getLikedBooks, clearLikedBooks, addBookToReading, getReadingProgress, addLikedBook, removeLikedBook, getBookReviews, getShelfAssignments } from "@/lib/storage"
 import { Button } from "@/components/ui/button"
@@ -11,7 +11,7 @@ import { BookDetailModal } from "./book-detail-modal"
 import { StarRating } from "./star-rating"
 import { getUserStats } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
-import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy, Search, Library, SlidersHorizontal, Download, X as XIcon, Target, FolderOpen } from "lucide-react"
+import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy, Search, Library, SlidersHorizontal, Download, X as XIcon, Target, FolderOpen, ChevronRight } from "lucide-react"
 import { SittingReadingDoodle, ReadingSideDoodle, ReadingDoodle, FloatDoodle, GroovyDoodle, LovingDoodle } from "./illustrations"
 import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
@@ -20,6 +20,7 @@ import { BookSearch } from "./book-search"
 import { DiscoverHub } from "./discover-hub"
 import { DailyPickCard } from "./daily-pick-card"
 import { ShelfManager } from "./shelf-manager"
+import { ConfirmDialog } from "./confirm-dialog"
 import { ReadingPath } from "./reading-path"
 import { ReadingGoalSetter } from "./reading-goal-setter"
 import { QuotesGallery } from "./quotes-gallery"
@@ -57,6 +58,15 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set())
   const [showHidden, setShowHidden] = useState(false)
   const [authorFilter, setAuthorFilter] = useState<string | null>(null)
+  const [currentlyReading, setCurrentlyReading] = useState<ReturnType<typeof getReadingProgress>>([])
+  const [showAllReading, setShowAllReading] = useState(false)
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
+
+  // Progressive loading: render books in batches for scroll performance
+  const BOOKS_PER_PAGE = 30
+  const [visibleCount, setVisibleCount] = useState(BOOKS_PER_PAGE)
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+  const observerRef = useRef<IntersectionObserver | null>(null)
 
   const { triggerActivity, showAchievementsPanel } = useGamification()
   const { showToast } = useToast()
@@ -68,6 +78,11 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
     setReadingSpd(getReadingSpeed())
     setShowBackupBanner(shouldShowBackupReminder())
     setHiddenIds(new Set(getHiddenBookIds()))
+    setCurrentlyReading(
+      getReadingProgress()
+        .filter(p => p.status === "reading")
+        .sort((a, b) => new Date(b.lastReadDate).getTime() - new Date(a.lastReadDate).getTime())
+    )
   }, [])
 
   useEffect(() => {
@@ -95,11 +110,14 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   }, [likedBooks, reviewVersion])
 
   const handleClearAll = () => {
-    if (confirm("Are you sure you want to clear all your liked books? This action cannot be undone.")) {
-      clearLikedBooks()
-      setLikedBooks([])
-      showToast("Library cleared", "info")
-    }
+    setShowClearConfirm(true)
+  }
+
+  const confirmClearAll = () => {
+    clearLikedBooks()
+    setLikedBooks([])
+    setShowClearConfirm(false)
+    showToast("Library cleared", "info")
   }
 
   const handleSearchSave = (book: Book) => {
@@ -161,6 +179,44 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
         return 0
     }
   })
+
+  // Reset visible count when filters/sort change so user sees first page
+  useEffect(() => {
+    setVisibleCount(BOOKS_PER_PAGE)
+  }, [filter, sortBy, shelfFilter, formatFilter, authorFilter, showHidden])
+
+  // Slice the visible portion for rendering
+  const visibleBooks = sortedBooks.slice(0, visibleCount)
+  const hasMore = visibleCount < sortedBooks.length
+
+  // Sentinel callback ref: sets up IntersectionObserver when the sentinel div mounts
+  const sentinelCallback = useCallback((node: HTMLDivElement | null) => {
+    if (observerRef.current) {
+      observerRef.current.disconnect()
+      observerRef.current = null
+    }
+    if (node) {
+      observerRef.current = new IntersectionObserver(
+        (entries) => {
+          if (entries[0]?.isIntersecting) {
+            setVisibleCount(prev => prev + BOOKS_PER_PAGE)
+          }
+        },
+        { rootMargin: "200px" }
+      )
+      observerRef.current.observe(node)
+    }
+    sentinelRef.current = node
+  }, [])
+
+  // Cleanup observer on unmount
+  useEffect(() => {
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect()
+      }
+    }
+  }, [])
 
   const genres = useMemo(() => Array.from(new Set(likedBooks.flatMap(book => book.genre))), [likedBooks])
 
@@ -328,6 +384,157 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                 </button>
               </motion.div>
             )}
+
+            {/* ━━━ Continue Reading Card ━━━ */}
+            {currentlyReading.length > 0 && (() => {
+              const primary = currentlyReading[0]
+              const pct = primary.totalPages > 0
+                ? Math.round((primary.currentPage / primary.totalPages) * 100)
+                : 0
+              const timeLabel = primary.timeSpentMinutes >= 60
+                ? `${Math.floor(primary.timeSpentMinutes / 60)}h ${primary.timeSpentMinutes % 60}m`
+                : `${primary.timeSpentMinutes}m`
+              const othersCount = currentlyReading.length - 1
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 28 }}
+                >
+                  <button
+                    onClick={() => handleBookClick(primary.book)}
+                    className="w-full text-left rounded-2xl border border-stone-200/70 dark:border-stone-700/60 bg-stone-50/80 dark:bg-stone-800/50 p-4 transition-all hover:border-amber-300/60 dark:hover:border-amber-600/40 hover:shadow-sm group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
+                  >
+                    <div className="flex gap-4">
+                      {/* Book cover */}
+                      <div className="relative w-16 h-24 sm:w-20 sm:h-[120px] flex-shrink-0 rounded-lg overflow-hidden bg-stone-100 dark:bg-stone-700 ring-1 ring-stone-200/50 dark:ring-stone-600/50 shadow-sm">
+                        <BookCover
+                          src={primary.book.cover}
+                          fallbackSrc={primary.book.coverFallback}
+                          alt={primary.book.title}
+                          fill
+                          className="object-contain"
+                          sizes="80px"
+                        />
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                        <div>
+                          <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-500 mb-1">
+                            Continue Reading
+                          </p>
+                          <h3 className="text-sm sm:text-base font-bold text-stone-900 dark:text-stone-100 leading-tight line-clamp-1 group-hover:text-amber-800 dark:group-hover:text-amber-400 transition-colors">
+                            {primary.book.title}
+                          </h3>
+                          <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5 truncate">
+                            {primary.book.author}
+                          </p>
+                        </div>
+
+                        {/* Progress bar */}
+                        <div className="mt-2.5 space-y-1.5">
+                          <div className="h-1.5 w-full bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
+                            <motion.div
+                              className="h-full bg-amber-500 rounded-full"
+                              initial={{ width: 0 }}
+                              animate={{ width: `${pct}%` }}
+                              transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between text-[11px] text-stone-500 dark:text-stone-400">
+                            <span>
+                              Page {primary.currentPage} of {primary.totalPages}
+                              <span className="mx-1.5 text-stone-300 dark:text-stone-600">|</span>
+                              {pct}%
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {timeLabel} read
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Arrow */}
+                      <div className="flex items-center flex-shrink-0 self-center">
+                        <div className="w-8 h-8 rounded-full bg-stone-900 dark:bg-stone-100 flex items-center justify-center group-hover:bg-amber-600 dark:group-hover:bg-amber-500 transition-colors shadow-sm">
+                          <ChevronRight className="w-4 h-4 text-white dark:text-stone-900" />
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* "Reading X more" indicator */}
+                  {othersCount > 0 && (
+                    <div className="mt-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setShowAllReading(!showAllReading)
+                        }}
+                        className="text-xs font-medium text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-500 transition-colors px-1"
+                      >
+                        {showAllReading ? "Show less" : `Reading ${othersCount} more...`}
+                      </button>
+                      <AnimatePresence>
+                        {showAllReading && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="flex flex-col gap-2 mt-2">
+                              {currentlyReading.slice(1).map((prog) => {
+                                const p = prog.totalPages > 0
+                                  ? Math.round((prog.currentPage / prog.totalPages) * 100)
+                                  : 0
+                                return (
+                                  <button
+                                    key={prog.bookId}
+                                    onClick={() => handleBookClick(prog.book)}
+                                    className="flex items-center gap-3 rounded-xl border border-stone-200/50 dark:border-stone-700/40 bg-stone-50/60 dark:bg-stone-800/30 px-3 py-2.5 text-left hover:border-amber-300/60 dark:hover:border-amber-600/40 transition-all group/sub focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+                                  >
+                                    <div className="relative w-8 h-12 flex-shrink-0 rounded overflow-hidden bg-stone-100 dark:bg-stone-700">
+                                      <BookCover
+                                        src={prog.book.cover}
+                                        fallbackSrc={prog.book.coverFallback}
+                                        alt={prog.book.title}
+                                        fill
+                                        className="object-contain"
+                                        sizes="32px"
+                                      />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs font-semibold text-stone-800 dark:text-stone-200 truncate group-hover/sub:text-amber-800 dark:group-hover/sub:text-amber-400 transition-colors">
+                                        {prog.book.title}
+                                      </p>
+                                      <div className="flex items-center gap-2 mt-1">
+                                        <div className="h-1 flex-1 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
+                                          <div
+                                            className="h-full bg-amber-500 rounded-full"
+                                            style={{ width: `${p}%` }}
+                                          />
+                                        </div>
+                                        <span className="text-[10px] text-stone-400 dark:text-stone-500 flex-shrink-0 tabular-nums">
+                                          {p}%
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
+                </motion.div>
+              )
+            })()}
 
             {/* ━━━ SECTION 1: Personal Greeting + Stats ━━━ */}
             <motion.div {...fadeInUp(0)}>
@@ -639,9 +846,9 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
-                className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5"
               >
-                {sortedBooks.map((book, index) => {
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5">
+                {visibleBooks.map((book, index) => {
                   const review = reviewMap[book.id] || null
                   const bookShelfIds = shelfMap[book.id] || []
                   const firstShelf = bookShelfIds.length > 0 ? shelves.find(s => s.id === bookShelfIds[0]) : null
@@ -719,6 +926,27 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                     </motion.div>
                   )
                 })}
+                </div>
+
+                {/* Scroll sentinel + progress indicator */}
+                {sortedBooks.length > BOOKS_PER_PAGE && (
+                  <div className="mt-6 flex flex-col items-center gap-3">
+                    <p className="text-xs text-stone-400 dark:text-stone-500 tabular-nums">
+                      Showing {Math.min(visibleCount, sortedBooks.length)} of {sortedBooks.length} books
+                    </p>
+                    {hasMore && (
+                      <>
+                        <div ref={sentinelCallback} className="w-full h-px" aria-hidden="true" />
+                        <button
+                          onClick={() => setVisibleCount(sortedBooks.length)}
+                          className="px-4 py-2 rounded-lg text-xs font-medium text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+                        >
+                          Load all ({sortedBooks.length - visibleCount} remaining)
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
               </motion.div>
               )}
               </AnimatePresence>
@@ -828,6 +1056,17 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
         isOpen={showCollections}
         onClose={() => setShowCollections(false)}
         onBookClick={handleBookClick}
+      />
+
+      {/* Clear Library Confirmation */}
+      <ConfirmDialog
+        isOpen={showClearConfirm}
+        onConfirm={confirmClearAll}
+        onCancel={() => setShowClearConfirm(false)}
+        title="Clear entire library?"
+        message="All your liked books will be permanently removed. This action cannot be undone."
+        confirmLabel="Clear All"
+        variant="danger"
       />
     </div>
   )
