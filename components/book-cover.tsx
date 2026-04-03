@@ -1,8 +1,22 @@
 "use client"
 
 import Image from "next/image"
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useMemo } from "react"
 import { BookOpen } from "lucide-react"
+
+function getPlaceholderColor(seed: string): string {
+  let hash = 0
+  for (let i = 0; i < seed.length; i++) hash = seed.charCodeAt(i) + ((hash << 5) - hash)
+  const hue = Math.abs(hash) % 360
+  return `hsl(${hue}, 15%, 85%)`
+}
+
+function getShimmerHighlight(seed: string): string {
+  let hash = 0
+  for (let i = 0; i < seed.length; i++) hash = seed.charCodeAt(i) + ((hash << 5) - hash)
+  const hue = Math.abs(hash) % 360
+  return `hsl(${hue}, 12%, 91%)`
+}
 
 interface BookCoverProps {
   src: string
@@ -19,7 +33,10 @@ export function BookCover({ src, fallbackSrc, alt, fill, sizes, priority, classN
   const [hasError, setHasError] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
 
-  // Reset loaded state when src changes
+  const colorSeed = alt || src || "book"
+  const placeholderBg = useMemo(() => getPlaceholderColor(colorSeed), [colorSeed])
+  const shimmerHighlight = useMemo(() => getShimmerHighlight(colorSeed), [colorSeed])
+
   useEffect(() => {
     setCurrentSrc(src)
     setHasError(false)
@@ -46,10 +63,30 @@ export function BookCover({ src, fallbackSrc, alt, fill, sizes, priority, classN
 
   return (
     <>
-      {/* Loading skeleton */}
-      {!isLoaded && (
-        <div className="absolute inset-0 bg-gradient-to-br from-stone-200 via-stone-100 to-stone-200 animate-pulse" />
-      )}
+      <div
+        className="absolute inset-0 overflow-hidden"
+        style={{
+          backgroundColor: placeholderBg,
+          opacity: isLoaded ? 0 : 1,
+          transition: "opacity 400ms ease-out",
+          pointerEvents: "none",
+        }}
+        aria-hidden="true"
+      >
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(
+              105deg,
+              transparent 40%,
+              ${shimmerHighlight} 50%,
+              transparent 60%
+            )`,
+            backgroundSize: "200% 100%",
+            animation: isLoaded ? "none" : "bookcover-shimmer 1.8s ease-in-out infinite",
+          }}
+        />
+      </div>
       <Image
         key={currentSrc}
         src={currentSrc}
@@ -58,10 +95,19 @@ export function BookCover({ src, fallbackSrc, alt, fill, sizes, priority, classN
         sizes={sizes}
         priority={priority}
         quality={85}
-        className={`${className} transition-opacity duration-200 ${isLoaded ? "opacity-100" : "opacity-0"}`}
+        className={`${className} ${isLoaded ? "opacity-100" : "opacity-0"}`}
+        style={{
+          transition: "opacity 300ms ease-out",
+        }}
         onLoad={() => setIsLoaded(true)}
         onError={handleError}
       />
+      <style jsx global>{`
+        @keyframes bookcover-shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
     </>
   )
 }
