@@ -7,7 +7,6 @@ import { GutenbergBook, fetchBookText, fetchBookImages } from "@/lib/gutenberg-a
 import { saveReadingPosition, getReadingPosition, getBookNotesForBook, saveBookNote, deleteBookNote, type BookNote } from "@/lib/storage"
 import { addVocabWord } from "@/lib/vocabulary"
 import { VocabFlashcards } from "./vocab-flashcards"
-import { generateRecap, type RecapSection } from "@/lib/story-recap"
 
 type ReaderTheme = "light" | "sepia" | "dark"
 
@@ -317,7 +316,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const [showChapterDropdown, setShowChapterDropdown] = useState(false)
   const [images, setImages] = useState<string[]>([])
   const [readerNotes, setReaderNotes] = useState<BookNote[]>([])
-  const [navTab, setNavTab] = useState<"contents" | "notes" | "recap">("contents")
+  const [navTab, setNavTab] = useState<"contents" | "notes">("contents")
   const [selectionBar, setSelectionBar] = useState<{ x: number; y: number; text: string; blockIndex: number } | null>(null)
   const [noteInputFor, setNoteInputFor] = useState<{ text: string; blockIndex: number } | null>(null)
   const [noteInputValue, setNoteInputValue] = useState("")
@@ -344,10 +343,6 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
   // Feature: Vocabulary Builder
   const [showVocab, setShowVocab] = useState(false)
-
-  // Feature: Story Recap
-  const [showRecap, setShowRecap] = useState(false)
-  const [recapData, setRecapData] = useState<RecapSection[]>([])
 
   // Feature: One-time reader hints
   const [showHints, setShowHints] = useState(false)
@@ -2046,21 +2041,6 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                                 </span>
                               )}
                             </button>
-                            <button
-                              onClick={() => {
-                                setNavTab("recap")
-                                if (text && recapData.length === 0) {
-                                  setRecapData(generateRecap(text, progress / 100))
-                                }
-                              }}
-                              className="px-3 py-1 rounded-lg text-xs font-semibold transition-all"
-                              style={{
-                                backgroundColor: navTab === "recap" ? `${currentTheme.progressFill}20` : "transparent",
-                                color: navTab === "recap" ? currentTheme.progressFill : `${currentTheme.text}80`,
-                              }}
-                            >
-                              Recap
-                            </button>
                           </div>
                           <button onClick={() => { setShowNavPanel(false); setSearchOpen(false) }} className="p-2 -mr-2 rounded-lg">
                             <X className="w-5 h-5 opacity-60" />
@@ -2264,43 +2244,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                               </div>
                             )}
                           </div>
-                        ) : (
-                          <div className="px-4 py-2">
-                            {progress <= 0 ? (
-                              <div className="text-center py-12">
-                                <BookOpen className="w-8 h-8 mx-auto mb-3 opacity-20" />
-                                <p className="text-sm opacity-60">Start reading first</p>
-                                <p className="text-xs opacity-30 mt-1">A recap will appear once you begin reading.</p>
-                              </div>
-                            ) : recapData.length === 0 ? (
-                              <div className="text-center py-12">
-                                <BookOpen className="w-8 h-8 mx-auto mb-3 opacity-20" />
-                                <p className="text-sm opacity-60">No recap available</p>
-                                <p className="text-xs opacity-30 mt-1">Not enough content to summarize yet.</p>
-                              </div>
-                            ) : (
-                              <div className="space-y-3">
-                                <p className="text-[10px] uppercase tracking-wider opacity-60 font-semibold mb-3">
-                                  Story so far ({progress}% read)
-                                </p>
-                                {recapData.map((section, i) => (
-                                  <div
-                                    key={i}
-                                    className="rounded-lg p-3"
-                                    style={{ backgroundColor: `${currentTheme.text}06` }}
-                                  >
-                                    <p className="text-xs font-semibold mb-1.5" style={{ color: currentTheme.progressFill }}>
-                                      {section.chapter}
-                                    </p>
-                                    <p className="text-xs opacity-70 leading-relaxed">
-                                      {section.summary}
-                                    </p>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
+                        ) : null}
                       </div>
                     </motion.div>
                     </>
