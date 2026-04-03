@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, BookOpen, Star, Sparkles, TrendingUp, Flame, Heart } from "lucide-react"
+import { X, BookOpen, Star, Sparkles, TrendingUp, Flame, Heart, Download } from "lucide-react"
 import { getLikedBooks, getBookReviews, getReadingGoals } from "@/lib/storage"
 import { BookCover } from "@/components/book-cover"
 import { Book } from "@/lib/book-data"
@@ -239,7 +239,7 @@ function SlideBestBook({ stats }: { stats: WrappedStats }) {
   )
 }
 
-function SlideArchetype({ stats, onClose }: { stats: WrappedStats; onClose: () => void }) {
+function SlideArchetype({ stats, onClose, onShare }: { stats: WrappedStats; onClose: () => void; onShare: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center px-8 space-y-6">
       <motion.div
@@ -275,12 +275,21 @@ function SlideArchetype({ stats, onClose }: { stats: WrappedStats; onClose: () =
         <p className="text-stone-500 text-sm leading-relaxed">
           Keep going. The next great book is one swipe away.
         </p>
-        <button
-          onClick={(e) => { e.stopPropagation(); onClose() }}
-          className="mt-2 h-11 px-8 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold transition-colors active:scale-[0.97]"
-        >
-          Keep Reading
-        </button>
+        <div className="flex flex-col items-center gap-2 mt-2">
+          <button
+            onClick={(e) => { e.stopPropagation(); onShare() }}
+            className="h-11 px-7 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold transition-colors active:scale-[0.97] flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Download Stats Card
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onClose() }}
+            className="h-10 px-8 rounded-xl text-stone-400 hover:text-stone-200 text-sm transition-colors"
+          >
+            Keep Reading
+          </button>
+        </div>
       </motion.div>
     </div>
   )
@@ -350,6 +359,162 @@ export function ReadingWrapped({ isOpen, onClose }: ReadingWrappedProps) {
       streak: goals.streak,
     })
   }, [isOpen])
+
+  const handleShare = useCallback(() => {
+    if (!stats) return
+
+    const canvas = document.createElement("canvas")
+    canvas.width = 1080
+    canvas.height = 1350
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
+
+    // Background gradient
+    const gradient = ctx.createLinearGradient(0, 0, 0, 1350)
+    gradient.addColorStop(0, "#FDFBF7")
+    gradient.addColorStop(1, "#FEF3C7")
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, 1080, 1350)
+
+    // Decorative top bar
+    const topBar = ctx.createLinearGradient(0, 0, 1080, 0)
+    topBar.addColorStop(0, "#D97706")
+    topBar.addColorStop(1, "#F59E0B")
+    ctx.fillStyle = topBar
+    ctx.fillRect(0, 0, 1080, 8)
+
+    // "Reading Wrapped" label
+    ctx.fillStyle = "#D97706"
+    ctx.font = "600 28px system-ui, sans-serif"
+    ctx.textAlign = "center"
+    ctx.fillText("READING WRAPPED", 540, 80)
+
+    // Year + title
+    ctx.fillStyle = "#292524"
+    ctx.font = "bold 88px Georgia, serif"
+    ctx.fillText(String(stats.year), 540, 175)
+
+    // Archetype
+    ctx.fillStyle = "#D97706"
+    ctx.font = "bold 44px Georgia, serif"
+    ctx.fillText(stats.archetype, 540, 250)
+
+    // Divider
+    ctx.strokeStyle = "#E7D5B3"
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.moveTo(120, 290)
+    ctx.lineTo(960, 290)
+    ctx.stroke()
+
+    // Stats grid — 2 columns, 2 rows
+    const statItems = [
+      { value: String(stats.totalBooks), label: "Books Read" },
+      { value: stats.totalPages.toLocaleString(), label: "Pages Explored" },
+      { value: stats.topGenre || "—", label: "Top Genre" },
+      { value: stats.topAuthor || "—", label: "Favourite Author" },
+    ]
+
+    statItems.forEach(function(item, i) {
+      const col = i % 2
+      const row = Math.floor(i / 2)
+      const x = col === 0 ? 290 : 790
+      const y = 420 + row * 260
+
+      // Card background
+      ctx.fillStyle = "#FFFBEB"
+      const cardW = 380
+      const cardH = 190
+      const cardX = x - cardW / 2
+      const cardY = y - 100
+      const r = 24
+      ctx.beginPath()
+      ctx.moveTo(cardX + r, cardY)
+      ctx.lineTo(cardX + cardW - r, cardY)
+      ctx.quadraticCurveTo(cardX + cardW, cardY, cardX + cardW, cardY + r)
+      ctx.lineTo(cardX + cardW, cardY + cardH - r)
+      ctx.quadraticCurveTo(cardX + cardW, cardY + cardH, cardX + cardW - r, cardY + cardH)
+      ctx.lineTo(cardX + r, cardY + cardH)
+      ctx.quadraticCurveTo(cardX, cardY + cardH, cardX, cardY + cardH - r)
+      ctx.lineTo(cardX, cardY + r)
+      ctx.quadraticCurveTo(cardX, cardY, cardX + r, cardY)
+      ctx.closePath()
+      ctx.fill()
+
+      // Value
+      const isLong = item.value.length > 12
+      ctx.font = isLong ? "bold 34px Georgia, serif" : "bold 68px system-ui, sans-serif"
+      ctx.fillStyle = "#292524"
+      ctx.textAlign = "center"
+      ctx.fillText(item.value, x, isLong ? y - 10 : y + 8)
+
+      // Label
+      ctx.font = "500 22px system-ui, sans-serif"
+      ctx.fillStyle = "#78716C"
+      ctx.fillText(item.label, x, y + 54)
+    })
+
+    // Best book section
+    if (stats.bestBook) {
+      ctx.fillStyle = "#44403C"
+      ctx.font = "500 26px system-ui, sans-serif"
+      ctx.textAlign = "center"
+      ctx.fillText("Highest Rated", 540, 1010)
+
+      ctx.fillStyle = "#292524"
+      ctx.font = "bold 38px Georgia, serif"
+      const title = stats.bestBook.title.length > 32
+        ? stats.bestBook.title.slice(0, 31) + "…"
+        : stats.bestBook.title
+      ctx.fillText(title, 540, 1068)
+
+      ctx.fillStyle = "#78716C"
+      ctx.font = "24px system-ui, sans-serif"
+      ctx.fillText(stats.bestBook.author, 540, 1108)
+
+      // Star rating
+      const starSize = 28
+      const starGap = 8
+      const totalStarW = 5 * starSize + 4 * starGap
+      const starStartX = 540 - totalStarW / 2
+      for (let s = 0; s < 5; s++) {
+        ctx.fillStyle = s < stats.bestRating ? "#F59E0B" : "#D6D3D1"
+        const sx = starStartX + s * (starSize + starGap)
+        ctx.font = (starSize) + "px system-ui, sans-serif"
+        ctx.textAlign = "left"
+        ctx.fillText("★", sx, 1148)
+      }
+      ctx.textAlign = "center"
+    }
+
+    // Divider before footer
+    ctx.strokeStyle = "#E7D5B3"
+    ctx.lineWidth = 1.5
+    ctx.beginPath()
+    ctx.moveTo(120, 1210)
+    ctx.lineTo(960, 1210)
+    ctx.stroke()
+
+    // Footer branding
+    ctx.font = "bold 30px Georgia, serif"
+    ctx.fillStyle = "#D97706"
+    ctx.textAlign = "center"
+    ctx.fillText("BookSwipe", 540, 1270)
+
+    ctx.font = "22px system-ui, sans-serif"
+    ctx.fillStyle = "#A8A29E"
+    ctx.fillText("bookswipe.app", 540, 1310)
+
+    canvas.toBlob(function(blob) {
+      if (!blob) return
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = "bookswipe-" + String(stats.year) + "-wrapped.png"
+      a.click()
+      URL.revokeObjectURL(url)
+    }, "image/png")
+  }, [stats])
 
   const advance = useCallback(() => {
     setSlide(s => Math.min(s + 1, TOTAL_SLIDES - 1))
@@ -442,7 +607,7 @@ export function ReadingWrapped({ isOpen, onClose }: ReadingWrappedProps) {
                 {slide === 2 && <SlidePages stats={stats} />}
                 {slide === 3 && <SlideGenre stats={stats} />}
                 {slide === 4 && <SlideBestBook stats={stats} />}
-                {slide === 5 && <SlideArchetype stats={stats} onClose={onClose} />}
+                {slide === 5 && <SlideArchetype stats={stats} onClose={onClose} onShare={handleShare} />}
               </motion.div>
             </AnimatePresence>
           </div>
