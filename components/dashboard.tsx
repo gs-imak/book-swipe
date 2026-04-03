@@ -240,9 +240,9 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
 
   const stats = {
     totalBooks: likedBooks.length,
-    totalPages: likedBooks.reduce((sum, book) => sum + book.pages, 0),
+    totalPages: likedBooks.reduce((sum, book) => sum + (book.pages || 0), 0),
     averageRating: likedBooks.length > 0
-      ? (likedBooks.reduce((sum, book) => sum + book.rating, 0) / likedBooks.length).toFixed(1)
+      ? (likedBooks.filter(b => b.rating).reduce((sum, book) => sum + (book.rating || 0), 0) / (likedBooks.filter(b => b.rating).length || 1)).toFixed(1)
       : "0",
     favoriteGenre: genres.length > 0
       ? genres.reduce((a, b) =>
@@ -554,6 +554,9 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               )
             })()}
 
+            {/* ━━━ Desktop 2-col: Greeting/Daily Pick + Streaks/Mood ━━━ */}
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-6 lg:items-start">
+
             {/* ━━━ SECTION 1: Personal Greeting + Stats ━━━ */}
             <motion.div {...fadeInUp(0)}>
               <div className="flex items-start justify-between gap-4 mb-5">
@@ -575,13 +578,21 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                         <BookOpen className="w-3.5 h-3.5 text-stone-400" />
                         {stats.totalBooks} books
                       </span>
-                      <span className="w-0.5 h-0.5 rounded-full bg-stone-300 hidden sm:block" />
-                      <span className="hidden sm:inline">{stats.totalPages.toLocaleString()} pages</span>
-                      <span className="w-0.5 h-0.5 rounded-full bg-stone-300" />
-                      <span className="flex items-center gap-0.5">
-                        <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                        {stats.averageRating}
-                      </span>
+                      {stats.totalPages > 0 && (
+                        <>
+                          <span className="w-0.5 h-0.5 rounded-full bg-stone-300 hidden sm:block" />
+                          <span className="hidden sm:inline">{stats.totalPages.toLocaleString()} pages</span>
+                        </>
+                      )}
+                      {Number(stats.averageRating) > 0 && (
+                        <>
+                          <span className="w-0.5 h-0.5 rounded-full bg-stone-300" />
+                          <span className="flex items-center gap-0.5">
+                            <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                            {stats.averageRating}
+                          </span>
+                        </>
+                      )}
                       {(() => {
                         const todayMin = getReadingTimeToday()
                         if (todayMin > 0) return (
@@ -776,7 +787,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               })()}
 
               {/* Mood-Based Quick Browse */}
-              <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-0.5">
+              <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-0.5 lg:flex-wrap">
                 {([
                   { mood: "Adventurous", bg: "bg-amber-50 dark:bg-amber-900/20", text: "text-amber-700 dark:text-amber-400", activeBg: "bg-amber-600", activeText: "text-white" },
                   { mood: "Cozy", bg: "bg-orange-50 dark:bg-orange-900/20", text: "text-orange-700 dark:text-orange-400", activeBg: "bg-orange-600", activeText: "text-white" },
@@ -814,13 +825,18 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               </div>
             </motion.div>
 
-            {/* ━━━ Reading Goal Setter (shown once until user sets a goal) ━━━ */}
-            <ReadingGoalSetter />
+            </div>{/* end desktop 2-col grid */}
 
-            {/* ━━━ SECTION 2: Reading Progress (currently reading up front) ━━━ */}
-            <motion.div {...fadeInUp(0.05)}>
-              <ReadingProgressTracker onStartReading={onStartDiscovery} />
-            </motion.div>
+            {/* ━━━ Desktop 2-col: Goal + Progress ━━━ */}
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-6 lg:items-start">
+              {/* ━━━ Reading Goal Setter (shown once until user sets a goal) ━━━ */}
+              <ReadingGoalSetter />
+
+              {/* ━━━ SECTION 2: Reading Progress (currently reading up front) ━━━ */}
+              <motion.div {...fadeInUp(0.05)}>
+                <ReadingProgressTracker onStartReading={onStartDiscovery} />
+              </motion.div>
+            </div>
 
             {/* ━━━ SECTION 3: Your Library (the core — moved UP) ━━━ */}
             <motion.div {...fadeInUp(0.08)} className="space-y-4">
@@ -1049,7 +1065,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
               >
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-5">
                 {visibleBooks.map((book, index) => {
                   const review = reviewMap[book.id] || null
                   const bookShelfIds = shelfMap[book.id] || []
@@ -1117,9 +1133,15 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
 
                         {/* Meta */}
                         <div className="flex items-center gap-2 text-xs text-stone-400 dark:text-stone-500 pt-0.5 flex-wrap">
-                          <span>{book.pages}p</span>
-                          <span className="w-0.5 h-0.5 rounded-full bg-stone-300" />
-                          <span>{estimateReadingTime(book.pages, readingSpd)}</span>
+                          {book.pages ? (
+                            <>
+                              <span>{book.pages}p</span>
+                              <span className="w-0.5 h-0.5 rounded-full bg-stone-300" />
+                              <span>{estimateReadingTime(book.pages, readingSpd)}</span>
+                            </>
+                          ) : (
+                            <span>Unknown length</span>
+                          )}
                           {book.formats?.ebook && (
                             <span className="px-1 py-px rounded bg-blue-50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 text-[9px] font-medium">eBook</span>
                           )}
