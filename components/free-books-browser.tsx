@@ -177,16 +177,16 @@ export function FreeBooksBrowser() {
   }
 
   return (
-    <div className="flex flex-col bg-stone-50 dark:bg-stone-800/50" style={{ minHeight: "100dvh" }}>
+    <div className="flex flex-col bg-background" style={{ minHeight: "100dvh" }}>
       {/* Header */}
       <div
-        className="bg-white dark:bg-stone-900 border-b border-stone-100 dark:border-stone-800 px-4 pb-3 flex-shrink-0"
-        style={{ paddingTop: "max(16px, env(safe-area-inset-top, 16px))" }}
+        className="bg-background/90 backdrop-blur-md border-b border-stone-200/60 dark:border-stone-700/60 px-4 sm:px-6 pb-3 flex-shrink-0 sticky top-0 z-20"
+        style={{ paddingTop: "max(12px, env(safe-area-inset-top, 12px))" }}
       >
-        <div className="max-w-md lg:max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-2 mb-3">
             <BookOpen className="w-5 h-5 text-amber-600" />
-            <h1 className="text-lg font-bold text-stone-900 dark:text-stone-100">Free Books</h1>
+            <h1 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">Free Books</h1>
             <span className="text-[10px] text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 border border-amber-100 px-2 py-0.5 rounded-full font-medium">
               70k+ classics
             </span>
@@ -206,8 +206,8 @@ export function FreeBooksBrowser() {
 
       {/* Categories */}
       {!searchQuery && (
-        <div className="flex-shrink-0 bg-white dark:bg-stone-900 border-b border-stone-100 dark:border-stone-800 overflow-x-auto hide-scrollbar">
-          <div className="max-w-2xl mx-auto px-4 py-2.5 flex flex-nowrap overflow-x-auto hide-scrollbar gap-1.5">
+        <div className="flex-shrink-0 bg-background/90 backdrop-blur-md border-b border-stone-200/60 dark:border-stone-700/60 overflow-x-auto hide-scrollbar">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 flex flex-nowrap overflow-x-auto hide-scrollbar gap-1.5">
             {BROWSE_CATEGORIES.map(cat => (
               <button
                 key={cat.id}
@@ -227,7 +227,7 @@ export function FreeBooksBrowser() {
 
       {/* Book grid */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-md lg:max-w-4xl mx-auto px-4 py-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
           {loading && books.length === 0 ? (
             <div>
               {slowLoad && (
