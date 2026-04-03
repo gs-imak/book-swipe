@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { motion } from "framer-motion"
-import { Search, BookOpen, AlertCircle } from "lucide-react"
+import { Search, BookOpen, AlertCircle, Loader2 } from "lucide-react"
 import { BookCardSkeleton } from "@/components/ui/skeleton"
 import { GutenbergBook } from "@/lib/gutenberg-api"
 import {
@@ -25,6 +25,15 @@ export function FreeBooksBrowser() {
   const [searchQuery, setSearchQuery] = useState("")
   const [readerBook, setReaderBook] = useState<GutenbergBook | null>(null)
   const [readerOpen, setReaderOpen] = useState(false)
+  const [slowLoad, setSlowLoad] = useState(false)
+
+  // Show "taking longer" message after 5s of loading
+  useEffect(() => {
+    if (!loading || books.length > 0) { setSlowLoad(false); return }
+    const timer = setTimeout(() => setSlowLoad(true), 5000)
+    return () => clearTimeout(timer)
+  }, [loading, books.length])
+
   // Load by category — show cached data instantly, fetch fresh in background
   useEffect(() => {
     if (searchQuery) return
@@ -193,25 +202,40 @@ export function FreeBooksBrowser() {
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-md mx-auto px-4 py-4">
           {loading && books.length === 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {Array.from({ length: 9 }).map((_, i) => (
+            <div>
+              {slowLoad && (
                 <motion.div
-                  key={i}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.04 }}
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center justify-center gap-2 py-3 mb-4 text-sm text-stone-500 dark:text-stone-400"
                 >
-                  <BookCardSkeleton />
+                  <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
+                  <span>The book server is slow — hang tight...</span>
                 </motion.div>
-              ))}
+              )}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {Array.from({ length: 9 }).map((_, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: i * 0.04 }}
+                  >
+                    <BookCardSkeleton />
+                  </motion.div>
+                ))}
+              </div>
             </div>
           ) : error ? (
-            <div className="flex flex-col items-center justify-center h-64 text-stone-400 gap-2">
+            <div className="flex flex-col items-center justify-center h-64 text-stone-400 gap-3">
               <AlertCircle className="w-8 h-8 opacity-40" />
-              <p className="text-sm">Couldn&apos;t load books. Check your connection.</p>
+              <div className="text-center">
+                <p className="text-sm font-medium text-stone-500 dark:text-stone-400">Couldn&apos;t load books</p>
+                <p className="text-xs text-stone-400 dark:text-stone-500 mt-1">The Gutenberg server may be temporarily down.</p>
+              </div>
               <button
                 onClick={() => handleCategorySelect(selectedCategory)}
-                className="text-xs text-amber-600 font-medium mt-1"
+                className="px-4 py-2 rounded-lg text-xs font-semibold bg-amber-600 text-white hover:bg-amber-700 transition-colors"
               >
                 Try again
               </button>

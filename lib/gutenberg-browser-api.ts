@@ -39,10 +39,10 @@ const _memCache = new Map<string, { data: GutenbergBrowseResult; ts: number }>()
 const CACHE_TTL = 30 * 60 * 1000 // 30 minutes
 const LS_PREFIX = "gutenberg_cache_"
 
-function getCachedResult(key: string): GutenbergBrowseResult | null {
+function getCachedResult(key: string, ignoreExpiry = false): GutenbergBrowseResult | null {
   // Check memory first
   const mem = _memCache.get(key)
-  if (mem && Date.now() - mem.ts < CACHE_TTL) return mem.data
+  if (mem && (ignoreExpiry || Date.now() - mem.ts < CACHE_TTL)) return mem.data
 
   // Check localStorage
   if (typeof window === "undefined") return null
@@ -50,7 +50,7 @@ function getCachedResult(key: string): GutenbergBrowseResult | null {
     const stored = localStorage.getItem(LS_PREFIX + key)
     if (!stored) return null
     const parsed = JSON.parse(stored) as { data: GutenbergBrowseResult; ts: number }
-    if (Date.now() - parsed.ts < CACHE_TTL) {
+    if (ignoreExpiry || Date.now() - parsed.ts < CACHE_TTL) {
       _memCache.set(key, parsed) // promote to memory
       return parsed.data
     }
@@ -66,16 +66,30 @@ function setCachedResult(key: string, data: GutenbergBrowseResult): void {
   } catch { /* quota exceeded — memory cache still works */ }
 }
 
+const FETCH_TIMEOUT = 10_000 // 10 seconds
+
 async function cachedFetch(url: string): Promise<GutenbergBrowseResult> {
   const cacheKey = url.replace("https://gutendex.com/books?", "")
   const cached = getCachedResult(cacheKey)
   if (cached) return cached
 
-  const res = await fetch(url)
-  if (!res.ok) throw new Error("Failed to fetch")
-  const data = await res.json() as GutenbergBrowseResult
-  setCachedResult(cacheKey, data)
-  return data
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT)
+
+  try {
+    const res = await fetch(url, { signal: controller.signal })
+    clearTimeout(timer)
+    if (!res.ok) throw new Error("Failed to fetch")
+    const data = await res.json() as GutenbergBrowseResult
+    setCachedResult(cacheKey, data)
+    return data
+  } catch (err) {
+    clearTimeout(timer)
+    // If request failed, check if we have stale cache to show
+    const stale = getCachedResult(cacheKey, true)
+    if (stale) return stale
+    throw err
+  }
 }
 
 export function getCacheKey(topic: string): string {
