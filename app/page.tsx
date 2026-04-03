@@ -16,7 +16,7 @@ import { getLikedBooks, migrateCoverUrls, isOnboarded, setOnboarded, getSavedPre
 import { TasteProfile } from "@/components/taste-profile"
 import { InstallPrompt } from "@/components/install-prompt"
 import { OnboardingGuide } from "@/components/onboarding-guide"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, MotionConfig } from "framer-motion"
 import { getTheme, applyTheme } from "@/lib/theme"
 
 // Code-split heavy components that aren't needed on initial load
@@ -320,20 +320,22 @@ export default function App() {
   }, [])
 
   return (
-    <ToastProvider>
-      <GamificationProvider onShowAchievements={() => setShowAchievements(true)}>
-        <ErrorBoundary>
-          <Home
-            onShowAchievements={setShowAchievements}
-            isAchievementsOpen={showAchievements}
+    <MotionConfig reducedMotion="user">
+      <ToastProvider>
+        <GamificationProvider onShowAchievements={() => setShowAchievements(true)}>
+          <ErrorBoundary>
+            <Home
+              onShowAchievements={setShowAchievements}
+              isAchievementsOpen={showAchievements}
+            />
+          </ErrorBoundary>
+          <AchievementsPanel
+            isOpen={showAchievements}
+            onClose={() => setShowAchievements(false)}
           />
-        </ErrorBoundary>
-        <AchievementsPanel
-          isOpen={showAchievements}
-          onClose={() => setShowAchievements(false)}
-        />
-        <InstallPrompt />
-      </GamificationProvider>
-    </ToastProvider>
+          <InstallPrompt />
+        </GamificationProvider>
+      </ToastProvider>
+    </MotionConfig>
   )
 }
