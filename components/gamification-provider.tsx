@@ -2,8 +2,11 @@
 
 import { createContext, useContext, useState, useCallback, ReactNode } from "react"
 import { GamificationEvent, handleUserActivity } from "@/lib/gamification"
+import { hapticSuccess, hapticMedium, hapticLevelUp } from "@/lib/haptics"
 import { GamificationToast } from "./gamification-toast"
 import { ConfettiCelebration, FireworksCelebration } from "./confetti-celebration"
+
+const STREAK_ACHIEVEMENT_IDS = new Set(['daily_reader', 'week_warrior', 'streak_master', 'unstoppable'])
 
 interface GamificationContextType {
   triggerActivity: (activity: string, data?: Record<string, unknown>) => void
@@ -48,11 +51,23 @@ export function GamificationProvider({ children, onShowAchievements }: Gamificat
         const hasLevelUp = significantEvents.some(e => e.type === 'level_up')
         
         if (hasAchievement && hasLevelUp) {
-          // Both achievement and level up - fireworks!
           setShowFireworks(true)
         } else if (hasAchievement || hasLevelUp) {
-          // Just achievement or level up - confetti
           setShowConfetti(true)
+        }
+
+        // Haptic feedback — level-up gets priority, then streak, then general achievement
+        if (hasLevelUp) {
+          hapticLevelUp()
+        } else {
+          const hasStreakAchievement = significantEvents.some(
+            e => e.type === 'achievement_unlocked' && e.achievement && STREAK_ACHIEVEMENT_IDS.has(e.achievement.id)
+          )
+          if (hasStreakAchievement) {
+            hapticMedium()
+          } else if (hasAchievement) {
+            hapticSuccess()
+          }
         }
       }
     } catch {

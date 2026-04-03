@@ -15,3 +15,7 @@ export function hapticHeavy() {
 export function hapticSuccess() {
   try { navigator?.vibrate?.([10, 30, 10]) } catch { /* unsupported */ }
 }
+
+export function hapticLevelUp() {
+  try { navigator?.vibrate?.([100, 50, 200]) } catch { /* unsupported */ }
+}
