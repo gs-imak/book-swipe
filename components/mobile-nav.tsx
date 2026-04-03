@@ -1,7 +1,8 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Home, Sparkles, Trophy, BarChart3, BookOpen } from "lucide-react"
+import { Home, Sparkles, Trophy, BarChart3, BookOpen, Search } from "lucide-react"
+import { NewDot } from "./new-badge"
 
 type NavView = "dashboard" | "swipe" | "read" | "achievements" | "profile"
 
@@ -9,9 +10,16 @@ interface MobileNavProps {
   currentView: NavView
   onNavigate: (view: NavView) => void
   likedCount?: number
+  onSearch?: () => void
 }
 
-export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNavProps) {
+const NAV_NEW_FEATURES: Record<string, string[]> = {
+  dashboard: ["collections", "challenges", "global_search"],
+  read: ["series_detection"],
+  profile: ["tags", "settings", "activity_feed"],
+}
+
+export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch }: MobileNavProps) {
   const navItems = [
     {
       id: "dashboard" as const,
@@ -42,6 +50,25 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNav
 
   return (
     <>
+      {/* Floating search button above nav */}
+      {onSearch && (
+        <motion.button
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.15 }}
+          onClick={onSearch}
+          aria-label="Search library, notes, and reviews"
+          className="fixed z-50 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-4 py-2 rounded-full bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 shadow-lg shadow-stone-900/20 dark:shadow-stone-100/20 hover:shadow-xl hover:scale-105 active:scale-95 transition-all touch-manipulation"
+          style={{
+            bottom: "calc(60px + env(safe-area-inset-bottom, 0px))",
+          }}
+          whileTap={{ scale: 0.92 }}
+        >
+          <Search className="w-3.5 h-3.5" strokeWidth={2.2} />
+          <span className="text-xs font-semibold tracking-wide">Search</span>
+        </motion.button>
+      )}
+
       <motion.nav
         aria-label="Main navigation"
         initial={{ y: 100, opacity: 0 }}
@@ -57,6 +84,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNav
             {navItems.map((item) => {
               const Icon = item.icon
               const isActive = currentView === item.id
+              const featureIds = NAV_NEW_FEATURES[item.id]
 
               return (
                 <motion.button
@@ -84,6 +112,10 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0 }: MobileNav
                       >
                         {likedCount > 99 ? "99" : likedCount}
                       </motion.div>
+                    )}
+
+                    {featureIds && featureIds.length > 0 && (
+                      <NewDot featureIds={featureIds} className="-top-0.5 -right-0.5" />
                     )}
                   </div>
 

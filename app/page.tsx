@@ -14,10 +14,14 @@ import { ErrorBoundary } from "@/components/error-boundary"
 import { UserPreferences } from "@/lib/book-data"
 import { getLikedBooks, migrateCoverUrls, isOnboarded, setOnboarded, getSavedPreferences, savePreferences } from "@/lib/storage"
 import { TasteProfile } from "@/components/taste-profile"
+import { GlobalSearch } from "@/components/global-search"
+import { BookDetailModal } from "@/components/book-detail-modal"
+import { Book } from "@/lib/book-data"
 import { InstallPrompt } from "@/components/install-prompt"
 import { OnboardingGuide } from "@/components/onboarding-guide"
 import { motion, AnimatePresence, MotionConfig } from "framer-motion"
 import { getTheme, applyTheme } from "@/lib/theme"
+import { WhatsNewModal } from "@/components/whats-new-modal"
 
 // Code-split heavy components that aren't needed on initial load
 const FreeBooksBrowser = dynamic(() => import("@/components/free-books-browser").then(m => ({ default: m.FreeBooksBrowser })), {
@@ -79,6 +83,8 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   const [likedBooksCount, setLikedBooksCount] = useState(0)
   const [showTasteProfile, setShowTasteProfile] = useState(false)
   const [showGuide, setShowGuide] = useState(false)
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false)
+  const [globalSearchBook, setGlobalSearchBook] = useState<Book | null>(null)
   const [ready, setReady] = useState(false)
   const { showToast } = useToast()
 
@@ -364,12 +370,33 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
         onClose={handleCloseTasteProfile}
       />
 
+      {/* Global Search */}
+      <GlobalSearch
+        isOpen={showGlobalSearch}
+        onClose={() => setShowGlobalSearch(false)}
+        onBookClick={(book) => {
+          setShowGlobalSearch(false)
+          setGlobalSearchBook(book)
+        }}
+      />
+
+      {/* Book detail from global search */}
+      <BookDetailModal
+        book={globalSearchBook}
+        isOpen={!!globalSearchBook}
+        onClose={() => setGlobalSearchBook(null)}
+        onBookClick={(book) => {
+          setGlobalSearchBook(book)
+        }}
+      />
+
       {/* Mobile Bottom Navigation - persists across dashboard/swipe transitions */}
       {showNav && (
         <MobileNav
           currentView={getCurrentNavView()}
           onNavigate={handleMobileNavigation}
           likedCount={likedBooksCount}
+          onSearch={() => setShowGlobalSearch(true)}
         />
       )}
     </>
@@ -443,6 +470,7 @@ export default function App() {
             onClose={handleCloseAchievements}
           />
           <InstallPrompt />
+          <WhatsNewModal />
         </GamificationProvider>
       </ToastProvider>
     </MotionConfig>

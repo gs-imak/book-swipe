@@ -9,6 +9,8 @@ import { Book } from "@/lib/book-data"
 import { DedicationOverlay } from "./dedication-overlay"
 import { ProfileShareCard } from "./profile-share-card"
 import { ReadingStats } from "./reading-stats"
+import { ActivityFeed } from "./activity-feed"
+import { NotificationSettings } from "./notification-settings"
 import { getTheme, toggleTheme } from "@/lib/theme"
 
 interface TasteProfileProps {
@@ -456,6 +458,12 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
                 )}
               </>
             )}
+            {/* Recent Activity */}
+            <motion.div {...fadeIn(0.48)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
+              <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">Recent Activity</h3>
+              <ActivityFeed limit={15} />
+            </motion.div>
+
             {/* Settings */}
             <motion.div {...fadeIn(0.5)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-700/60 dark:border-stone-800 shadow-sm">
               <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-4">Settings</h3>
@@ -481,6 +489,11 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
                   />
                 </button>
               </div>
+            </motion.div>
+
+            {/* Notifications */}
+            <motion.div {...fadeIn(0.52)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
+              <NotificationSettings />
             </motion.div>
 
             {/* Actions */}

@@ -59,7 +59,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
   const [showTagDropdown, setShowTagDropdown] = useState(false)
   const [creatingTag, setCreatingTag] = useState(false)
   const [newTagName, setNewTagName] = useState("")
-  const [newTagColor, setNewTagColor] = useState(TAG_COLORS[4])
+  const [newTagColor, setNewTagColor] = useState<string>(TAG_COLORS[4])
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
   const tagDropdownRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLDivElement>(null)

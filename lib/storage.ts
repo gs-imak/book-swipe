@@ -30,6 +30,7 @@ function safeSetJSON(key: string, value: unknown): boolean {
   }
 }
 
+const ACTIVITY_LOG_KEY = "bookswipe_activity_log"
 const LIKED_BOOKS_KEY = "bookswipe_liked_books"
 const READING_PROGRESS_KEY = "bookswipe_reading_progress"
 const READING_GOALS_KEY = "bookswipe_reading_goals"
@@ -44,6 +45,30 @@ const LAST_EXPORT_KEY = "bookswipe_last_export"
 const BACKUP_DISMISSED_KEY = "bookswipe_backup_dismissed"
 const ONBOARDED_KEY = "bookswipe_onboarded"
 const USER_PREFERENCES_KEY = "bookswipe_user_preferences"
+
+export interface ActivityEntry {
+  id: string
+  type: "liked" | "finished" | "started_reading" | "reviewed" | "added_to_shelf" | "created_collection" | "achievement_unlocked"
+  bookId?: string
+  bookTitle?: string
+  detail?: string
+  timestamp: string
+}
+
+export function logActivity(entry: Omit<ActivityEntry, "id" | "timestamp">): void {
+  const log = safeGetJSON<ActivityEntry[]>(ACTIVITY_LOG_KEY, [])
+  const newEntry: ActivityEntry = {
+    ...entry,
+    id: Date.now().toString(36) + Math.random().toString(36).substr(2, 6),
+    timestamp: new Date().toISOString(),
+  }
+  log.unshift(newEntry)
+  safeSetJSON(ACTIVITY_LOG_KEY, log.slice(0, 200))
+}
+
+export function getActivityLog(): ActivityEntry[] {
+  return safeGetJSON<ActivityEntry[]>(ACTIVITY_LOG_KEY, [])
+}
 
 export interface ReadingProgress {
   bookId: string
@@ -167,6 +192,7 @@ export function addLikedBook(book: Book): boolean {
   const success = safeSetJSON(LIKED_BOOKS_KEY, updated)
   if (success && typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('bookswipe:liked-changed', { detail: updated.length }))
+    logActivity({ type: "liked", bookId: book.id, bookTitle: book.title })
   }
   return success
 }
@@ -216,6 +242,7 @@ export function addBookToReading(book: Book): void {
     
     currentProgress.push(newProgress)
     saveReadingProgress(currentProgress)
+    logActivity({ type: "started_reading", bookId: book.id, bookTitle: book.title })
   }
 }
 
@@ -710,4 +737,128 @@ export function saveReadingPosition(bookId: string, charOffset: number): void {
 export function getReadingPosition(bookId: string): number {
   const positions = safeGetJSON<Record<string, number>>(READING_POSITION_KEY, {})
   return positions[bookId] ?? 0
+}
+
+// ── Reading time helpers ─────────────────────────────────────────────────────
+
+export function getReadingTimeToday(): number {
+  const today = new Date().toISOString().split("T")[0]
+  return getReadingProgress()
+    .filter(p => p.lastReadDate && p.lastReadDate.startsWith(today))
+    .reduce((sum, p) => sum + (p.timeSpentMinutes || 0), 0)
+}
+
+export function getTotalReadingTime(): number {
+  return getReadingProgress().reduce((sum, p) => sum + (p.timeSpentMinutes || 0), 0)
+}
+
+// ── Tags / Labels ───────────────────────────────────────────────────────────
+
+const TAG_DEFINITIONS_KEY = "bookswipe_tag_definitions"
+const BOOK_TAGS_KEY = "bookswipe_book_tags"
+
+export const TAG_COLORS = [
+  "#ef4444", "#f97316", "#f59e0b", "#22c55e",
+  "#3b82f6", "#a855f7", "#ec4899", "#78716c",
+] as const
+
+export interface TagDefinition {
+  id: string
+  name: string
+  color: string
+  createdAt: string
+}
+
+interface BookTagEntry {
+  bookId: string
+  tagId: string
+}
+
+export function getTagDefinitions(): TagDefinition[] {
+  return safeGetJSON<TagDefinition[]>(TAG_DEFINITIONS_KEY, [])
+}
+
+export function createTag(name: string, color: string): TagDefinition {
+  const tags = getTagDefinitions()
+  const tag: TagDefinition = {
+    id: `tag_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    name: name.trim(),
+    color,
+    createdAt: new Date().toISOString(),
+  }
+  tags.push(tag)
+  safeSetJSON(TAG_DEFINITIONS_KEY, tags)
+  return tag
+}
+
+export function deleteTag(id: string): void {
+  safeSetJSON(TAG_DEFINITIONS_KEY, getTagDefinitions().filter(t => t.id !== id))
+  // Also remove all assignments for this tag
+  const entries = safeGetJSON<BookTagEntry[]>(BOOK_TAGS_KEY, [])
+  safeSetJSON(BOOK_TAGS_KEY, entries.filter(e => e.tagId !== id))
+}
+
+export function getBookTags(bookId: string): TagDefinition[] {
+  const entries = safeGetJSON<BookTagEntry[]>(BOOK_TAGS_KEY, [])
+  const tagIds = entries.filter(e => e.bookId === bookId).map(e => e.tagId)
+  const allTags = getTagDefinitions()
+  return allTags.filter(t => tagIds.includes(t.id))
+}
+
+export function addTagToBook(bookId: string, tagId: string): void {
+  const entries = safeGetJSON<BookTagEntry[]>(BOOK_TAGS_KEY, [])
+  if (entries.some(e => e.bookId === bookId && e.tagId === tagId)) return
+  entries.push({ bookId, tagId })
+  safeSetJSON(BOOK_TAGS_KEY, entries)
+}
+
+export function removeTagFromBook(bookId: string, tagId: string): void {
+  const entries = safeGetJSON<BookTagEntry[]>(BOOK_TAGS_KEY, [])
+  safeSetJSON(BOOK_TAGS_KEY, entries.filter(e => !(e.bookId === bookId && e.tagId === tagId)))
+}
+
+export function getBooksWithTag(tagId: string): string[] {
+  const entries = safeGetJSON<BookTagEntry[]>(BOOK_TAGS_KEY, [])
+  return entries.filter(e => e.tagId === tagId).map(e => e.bookId)
+}
+
+// ── Feature discovery / What's New ──────────────────────────────────────────
+
+const FEATURE_VERSION_KEY = "bookswipe_feature_version"
+const SEEN_FEATURES_KEY = "bookswipe_seen_features"
+
+export const CURRENT_FEATURE_VERSION = 2
+
+export function getUserFeatureVersion(): number {
+  return safeGetJSON<number>(FEATURE_VERSION_KEY, 0)
+}
+
+export function setUserFeatureVersion(v: number): void {
+  safeSetJSON(FEATURE_VERSION_KEY, v)
+}
+
+export function getSeenFeatures(): string[] {
+  return safeGetJSON<string[]>(SEEN_FEATURES_KEY, [])
+}
+
+export function markFeatureSeen(featureId: string): void {
+  const seen = getSeenFeatures()
+  if (!seen.includes(featureId)) {
+    seen.push(featureId)
+    safeSetJSON(SEEN_FEATURES_KEY, seen)
+  }
+}
+
+export function markAllFeaturesSeen(): void {
+  // Mark all known v2 features as seen
+  const all = ["tags", "global_search", "activity_feed", "settings", "series_detection", "notifications"]
+  safeSetJSON(SEEN_FEATURES_KEY, all)
+}
+
+export function isFeatureNew(featureId: string): boolean {
+  return !getSeenFeatures().includes(featureId)
+}
+
+export function isFeatureSeen(featureId: string): boolean {
+  return getSeenFeatures().includes(featureId)
 }

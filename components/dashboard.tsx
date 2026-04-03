@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import { Book } from "@/lib/book-data"
-import { getLikedBooks, clearLikedBooks, addBookToReading, getReadingProgress, addLikedBook, removeLikedBook, getBookReviews, getShelfAssignments } from "@/lib/storage"
+import { getLikedBooks, clearLikedBooks, addBookToReading, getReadingProgress, addLikedBook, removeLikedBook, getBookReviews, getShelfAssignments, getReadingTimeToday } from "@/lib/storage"
 import { Button } from "@/components/ui/button"
 import { AdminPanel } from "./admin-panel"
 import { ReadingProgressTracker } from "./reading-progress"
@@ -564,6 +564,25 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                         <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
                         {stats.averageRating}
                       </span>
+                      {(() => {
+                        const todayMin = getReadingTimeToday()
+                        if (todayMin > 0) return (
+                          <>
+                            <span className="w-0.5 h-0.5 rounded-full bg-stone-300" />
+                            <span className="flex items-center gap-0.5">
+                              <Clock className="w-3 h-3 text-stone-400" />
+                              {todayMin >= 60 ? `${Math.floor(todayMin / 60)}h ${todayMin % 60}m` : `${todayMin}m`} today
+                            </span>
+                          </>
+                        )
+                        return null
+                      })()}
+                      {userStats.currentStreak > 0 && (
+                        <>
+                          <span className="w-0.5 h-0.5 rounded-full bg-stone-300" />
+                          <span className="text-amber-600 dark:text-amber-400 font-medium">{userStats.currentStreak}d streak</span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
