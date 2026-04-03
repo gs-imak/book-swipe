@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Sparkles, Heart, X, Bookmark, Star } from "lucide-react"
+import { Sparkles, X, Bookmark, Star, BookOpen } from "lucide-react"
 import { Book } from "@/lib/book-data"
 import { type DailyPick, addLikedBook } from "@/lib/storage"
 import { generateDailyPick, dismissDailyPick, saveDailyPickToLibrary } from "@/lib/daily-pick"
@@ -11,6 +11,15 @@ import { BookCover } from "@/components/book-cover"
 interface DailyPickCardProps {
   onBookClick?: (book: Book) => void
   onBookLiked?: (book: Book) => void
+}
+
+function truncateDescription(desc: string, maxSentences = 3): string {
+  if (!desc) return ""
+  const sentences = desc.match(/[^.!?]+[.!?]+/g)
+  if (!sentences) return desc
+  const sliced = sentences.slice(0, maxSentences).join(" ").trim()
+  if (sentences.length > maxSentences) return sliced
+  return sliced
 }
 
 export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) {
@@ -32,7 +41,7 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation()
-    addLikedBook(pick.book) // atomic add — no race condition
+    addLikedBook(pick.book)
     onBookLiked?.(pick.book)
     saveDailyPickToLibrary()
     setPick({ ...pick, saved: true })
@@ -44,93 +53,133 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
     setPick(null)
   }
 
+  const teaser = truncateDescription(pick.book.description)
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, delay: 0.25 }}
+      transition={{ duration: 0.5, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
     >
-      <div className="flex items-center gap-2 mb-3">
-        <Sparkles className="w-4 h-4 text-amber-600" />
-        <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-100 font-serif">Today&apos;s Pick</h3>
-      </div>
-
       <motion.div
         onClick={() => onBookClick?.(pick.book)}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 border border-amber-200/60 shadow-sm cursor-pointer group"
-        whileHover={{ y: -2, transition: { duration: 0.2 } }}
+        className="relative w-full overflow-hidden rounded-2xl cursor-pointer group"
+        whileHover={{ y: -3, transition: { duration: 0.25 } }}
       >
-        <div className="flex gap-4 p-4 sm:p-5">
-          {/* Cover */}
-          <div className="relative w-20 h-28 sm:w-24 sm:h-36 flex-shrink-0 rounded-xl overflow-hidden shadow-md border border-white/60">
-            <BookCover
+        {/* Blurred cover background */}
+        {pick.book.cover && (
+          <div className="absolute inset-0 z-0">
+            <img
               src={pick.book.cover}
-              fallbackSrc={pick.book.coverFallback}
-              alt={pick.book.title}
-              fill
-              className="object-contain"
-              sizes="(max-width: 640px) 160px, 192px"
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-30 dark:opacity-20"
             />
-            <div className="absolute top-1.5 right-1.5 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
-              <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
-              <span className="text-[10px] font-bold text-stone-700 dark:text-stone-300">{pick.book.rating}</span>
-            </div>
+          </div>
+        )}
+
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 z-[1] bg-gradient-to-br from-stone-50/90 via-amber-50/70 to-stone-50/85 dark:from-stone-800/95 dark:via-amber-900/30 dark:to-stone-800/90" />
+
+        {/* Border overlay for definition */}
+        <div className="absolute inset-0 z-[1] rounded-2xl ring-1 ring-inset ring-amber-300/30 dark:ring-amber-600/20" />
+
+        {/* Content */}
+        <div className="relative z-[2] p-4 sm:p-5">
+          {/* Label */}
+          <div className="flex items-center gap-2 mb-3.5">
+            <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-amber-700 dark:text-amber-400">
+              Pick of the Day
+            </span>
           </div>
 
-          {/* Info */}
-          <div className="flex-1 min-w-0 flex flex-col justify-between">
-            <div>
-              <h3 className="font-bold text-stone-900 dark:text-stone-100 line-clamp-2 leading-tight font-serif text-base sm:text-lg group-hover:text-amber-800 dark:text-amber-300 transition-colors">
-                {pick.book.title}
-              </h3>
-              <p className="text-sm text-stone-500 mt-0.5">{pick.book.author}</p>
+          <div className="flex gap-4 sm:gap-5">
+            {/* Cover — larger */}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{
+                type: "spring",
+                stiffness: 260,
+                damping: 20,
+                delay: 0.35
+              }}
+              className="relative w-24 h-36 sm:w-28 sm:h-[10.5rem] flex-shrink-0 rounded-xl overflow-hidden shadow-lg shadow-stone-900/10 dark:shadow-black/30 border border-white/40 dark:border-stone-600/30"
+            >
+              <BookCover
+                src={pick.book.cover}
+                fallbackSrc={pick.book.coverFallback}
+                alt={pick.book.title}
+                fill
+                className="object-contain"
+                sizes="(max-width: 640px) 192px, 224px"
+              />
+            </motion.div>
 
-              {/* Reasons */}
-              {pick.reasons.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {pick.reasons.slice(0, 2).map((reason, i) => (
-                    <span
-                      key={i}
-                      className="text-xs px-2 py-0.5 rounded-full bg-white/70 text-amber-800 dark:text-amber-300 border border-amber-200/50"
-                    >
-                      {reason.description}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
+            {/* Info */}
+            <div className="flex-1 min-w-0 flex flex-col">
+              <div>
+                <h3 className="font-bold text-stone-900 dark:text-stone-100 line-clamp-2 leading-tight font-serif text-base sm:text-lg group-hover:text-amber-800 dark:group-hover:text-amber-300 transition-colors">
+                  {pick.book.title}
+                </h3>
+                <p className="text-sm text-stone-500 dark:text-stone-400 mt-0.5">
+                  {pick.book.author}
+                </p>
 
-            {/* Actions */}
-            <div className="flex items-center gap-2 mt-3">
-              {pick.saved ? (
-                <div className="flex items-center gap-2">
-                  <span className="flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-400 font-medium">
-                    <Bookmark className="w-3.5 h-3.5 fill-amber-600" />
-                    In Library
+                {/* Rating */}
+                <div className="flex items-center gap-1 mt-1.5">
+                  <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                  <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">
+                    {pick.book.rating}
                   </span>
-                  <button
-                    onClick={() => onBookClick?.(pick.book)}
-                    className="h-9 px-3.5 bg-amber-100 hover:bg-amber-200 text-amber-800 dark:text-amber-300 text-xs font-medium rounded-xl transition-all active:scale-[0.98]"
-                  >
-                    View Details
-                  </button>
+                  {pick.reasons.length > 0 && (
+                    <span className="ml-1.5 text-xs px-2 py-0.5 rounded-full bg-white/60 dark:bg-stone-700/50 text-amber-800 dark:text-amber-300 border border-amber-200/40 dark:border-amber-700/30">
+                      {pick.reasons[0].description}
+                    </span>
+                  )}
                 </div>
-              ) : (
+
+                {/* Description teaser */}
+                {teaser && (
+                  <p className="mt-2.5 text-[13px] italic text-stone-600 dark:text-stone-400 line-clamp-3 leading-relaxed">
+                    &ldquo;{teaser}&rdquo;
+                  </p>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-2 mt-auto pt-3">
+                {pick.saved ? (
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-400 font-medium">
+                      <Bookmark className="w-3.5 h-3.5 fill-amber-600 dark:fill-amber-500" />
+                      In Library
+                    </span>
+                    <button
+                      onClick={() => onBookClick?.(pick.book)}
+                      className="h-9 px-3.5 bg-amber-100/80 hover:bg-amber-200/80 dark:bg-amber-800/30 dark:hover:bg-amber-700/40 text-amber-800 dark:text-amber-300 text-xs font-medium rounded-xl transition-all active:scale-[0.98]"
+                    >
+                      View Details
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleLike}
+                    className="h-9 px-4 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-white text-white dark:text-stone-900 text-xs font-semibold rounded-xl transition-all active:scale-[0.98] flex items-center gap-1.5 shadow-sm"
+                  >
+                    <BookOpen className="w-3.5 h-3.5" />
+                    Add to Library
+                  </button>
+                )}
                 <button
-                  onClick={handleLike}
-                  className="h-9 px-3.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium rounded-xl transition-all active:scale-[0.98] flex items-center gap-1.5"
+                  onClick={handleDismiss}
+                  className="h-9 px-3 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-white/40 dark:hover:bg-stone-700/40 text-xs rounded-xl transition-all active:scale-[0.98] flex items-center gap-1"
                 >
-                  <Heart className="w-3.5 h-3.5" />
-                  Save
+                  <X className="w-3.5 h-3.5" />
+                  Pass
                 </button>
-              )}
-              <button
-                onClick={handleDismiss}
-                className="h-9 px-3 text-stone-400 hover:text-stone-600 hover:bg-white/60 text-xs rounded-xl transition-all active:scale-[0.98] flex items-center gap-1"
-              >
-                <X className="w-3.5 h-3.5" />
-                Pass
-              </button>
+              </div>
             </div>
           </div>
         </div>
