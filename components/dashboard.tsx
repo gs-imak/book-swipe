@@ -473,6 +473,17 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                             <span className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
                               {timeLabel} read
+                              {primary.currentPage > 0 && primary.timeSpentMinutes > 0 && primary.totalPages > primary.currentPage && (() => {
+                                const pagesPerMinute = primary.currentPage / primary.timeSpentMinutes
+                                const pagesLeft = primary.totalPages - primary.currentPage
+                                const minutesLeft = Math.round(pagesLeft / pagesPerMinute)
+                                const hoursLeft = Math.round(minutesLeft / 60)
+                                const daysLeft = Math.ceil(minutesLeft / (primary.timeSpentMinutes / Math.max(1, Math.ceil((Date.now() - new Date(primary.startedDate).getTime()) / 86400000))))
+                                const estimate = hoursLeft < 2 ? `~${minutesLeft}m left` : hoursLeft < 24 ? `~${hoursLeft}h left` : `~${daysLeft} day${daysLeft !== 1 ? "s" : ""} left`
+                                return (
+                                  <span className="text-amber-600 dark:text-amber-500 font-medium ml-1.5">· {estimate}</span>
+                                )
+                              })()}
                             </span>
                           </div>
                         </div>

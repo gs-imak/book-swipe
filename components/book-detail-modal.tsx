@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Star, Heart, MessageSquare, FileText, Calendar, Clock, BookOpen, Library, Share2, Trash2, Loader2, EyeOff, Plus, ChevronRight, Tag, CheckCircle2, Sparkles, Users, AlertTriangle } from "lucide-react"
+import { X, Star, Heart, MessageSquare, FileText, Calendar, Clock, BookOpen, Library, Share2, Trash2, Loader2, EyeOff, Plus, ChevronRight, Tag, CheckCircle2, Sparkles, Users, AlertTriangle, TrendingUp } from "lucide-react"
 import { Book } from "@/lib/book-data"
 import { BookReview, getBookReview, getShelvesForBook, getShelves, type Shelf, addLikedBook, getLikedBooks, getBookTags, getTagDefinitions, addTagToBook, removeTagFromBook, createTag, type TagDefinition, TAG_COLORS, getReadingProgress, updateReadingProgress, addBookToReading, recordBookView, isSuggestionDismissed, dismissSuggestion } from "@/lib/storage"
 import { scoreBooks } from "@/lib/scoring-engine"
@@ -309,6 +309,23 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                       )}
                     </>
                   )}
+                  {/* Reading pace estimation */}
+                  {(() => {
+                    const prog = getReadingProgress().find(p => p.bookId === book.id)
+                    if (!prog || prog.currentPage <= 0 || prog.timeSpentMinutes <= 0) return null
+                    const pagesPerMinute = prog.currentPage / prog.timeSpentMinutes
+                    const pagesLeft = prog.totalPages - prog.currentPage
+                    const minutesLeft = Math.round(pagesLeft / pagesPerMinute)
+                    const hoursLeft = Math.round(minutesLeft / 60)
+                    return minutesLeft > 0 ? (
+                      <div className="flex items-center gap-1 text-amber-600 dark:text-amber-500">
+                        <TrendingUp className="w-3.5 h-3.5" />
+                        <span className="text-xs font-medium">
+                          {hoursLeft < 2 ? `${minutesLeft}m to finish` : `~${hoursLeft}h to finish`}
+                        </span>
+                      </div>
+                    ) : null
+                  })()}
                 </div>
 
                 {/* Action buttons — primary row */}
