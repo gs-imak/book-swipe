@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Star, Heart, MessageSquare, FileText, Calendar, Clock, BookOpen, Library, Share2, Trash2, Loader2, EyeOff, Plus, ChevronRight, Tag, CheckCircle2, Sparkles } from "lucide-react"
+import { X, Star, Heart, MessageSquare, FileText, Calendar, Clock, BookOpen, Library, Share2, Trash2, Loader2, EyeOff, Plus, ChevronRight, Tag, CheckCircle2, Sparkles, Users, AlertTriangle } from "lucide-react"
 import { Book } from "@/lib/book-data"
-import { BookReview, getBookReview, getShelvesForBook, getShelves, type Shelf, addLikedBook, getBookTags, getTagDefinitions, addTagToBook, removeTagFromBook, createTag, type TagDefinition, TAG_COLORS, getReadingProgress, updateReadingProgress, addBookToReading, recordBookView, isSuggestionDismissed, dismissSuggestion } from "@/lib/storage"
+import { BookReview, getBookReview, getShelvesForBook, getShelves, type Shelf, addLikedBook, getLikedBooks, getBookTags, getTagDefinitions, addTagToBook, removeTagFromBook, createTag, type TagDefinition, TAG_COLORS, getReadingProgress, updateReadingProgress, addBookToReading, recordBookView, isSuggestionDismissed, dismissSuggestion } from "@/lib/storage"
 import { scoreBooks } from "@/lib/scoring-engine"
 import { getCachedBooks } from "@/lib/book-cache"
 import { detectSeries, findNextInSeries, type SeriesInfo } from "@/lib/series-detection"
@@ -66,6 +66,25 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
   const tagDropdownRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
+
+  const likedSimilarBooks = useMemo(() => {
+    if (!book) return []
+    const allBooks = getLikedBooks()
+    const scored = allBooks
+      .filter(b => b.id !== book.id)
+      .map(b => {
+        let score = 0
+        book.genre.forEach(g => { if (b.genre.includes(g)) score += 2 })
+        book.mood.forEach(m => { if (b.mood.includes(m)) score += 1 })
+        if (b.author === book.author) score += 3
+        return { book: b, score }
+      })
+      .filter(s => s.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 4)
+      .map(s => s.book)
+    return scored
+  }, [book])
 
   useEffect(() => {
     if (book) {
@@ -273,6 +292,12 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                     <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                     <span className="font-medium text-stone-700 dark:text-stone-300">{book.rating}</span>
                   </div>
+                  {book.metadata?.readinglogCount && book.metadata.readinglogCount > 0 && (
+                    <div className="flex items-center gap-1">
+                      <Users className="w-3.5 h-3.5 text-stone-400 dark:text-stone-500" />
+                      <span>{book.metadata.readinglogCount.toLocaleString()} readers</span>
+                    </div>
+                  )}
                   {/* Format badges */}
                   {book.formats && (
                     <>
@@ -522,6 +547,34 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                     </button>
                   )}
                 </div>
+
+                {/* Content Warnings */}
+                {(() => {
+                  const warnings: string[] = []
+                  // From user review
+                  if (existingReview?.contentWarnings) warnings.push(...existingReview.contentWarnings)
+                  // Auto-detect from genres/mood/description
+                  const lower = [...book.genre, ...book.mood, ...(book.description ? [book.description] : [])].join(" ").toLowerCase()
+                  if (!warnings.includes("Violence") && lower.match(/violen|war|battle|murder|kill/)) warnings.push("Violence")
+                  if (!warnings.includes("Death / Grief") && lower.match(/death|grief|loss|dying|funeral/)) warnings.push("Death / Grief")
+                  if (!warnings.includes("Mental Health") && lower.match(/depress|anxiety|mental|suicid|trauma/)) warnings.push("Mental Health")
+                  if (warnings.length === 0) return null
+                  return (
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider flex items-center gap-1.5">
+                        <AlertTriangle className="w-3 h-3" />
+                        Content Warnings
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {warnings.map(w => (
+                          <span key={w} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-700/40">
+                            {w}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })()}
 
                 {/* Genres & Moods */}
                 <div>
@@ -841,6 +894,38 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                           </div>
                           <p className="text-xs text-stone-500 dark:text-stone-400 text-center leading-tight w-20 line-clamp-2">
                             {similar.title}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* If You Liked This — from user's library */}
+                {likedSimilarBooks.length > 0 && (
+                  <div className="space-y-3 pt-2">
+                    <p className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider">
+                      If you liked this
+                    </p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {likedSimilarBooks.map(sb => (
+                        <button
+                          key={sb.id}
+                          onClick={() => onBookClick?.(sb)}
+                          className="text-left group"
+                        >
+                          <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-stone-100 dark:bg-stone-800 ring-1 ring-stone-200/50 dark:ring-stone-700/50 mb-1.5">
+                            <BookCover
+                              src={sb.cover}
+                              fallbackSrc={sb.coverFallback}
+                              alt={sb.title}
+                              fill
+                              className="object-contain"
+                              sizes="80px"
+                            />
+                          </div>
+                          <p className="text-[10px] font-medium text-stone-700 dark:text-stone-300 line-clamp-2 leading-tight group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
+                            {sb.title}
                           </p>
                         </button>
                       ))}
