@@ -1,12 +1,12 @@
 "use client"
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react"
+import dynamic from "next/dynamic"
 import { Book } from "@/lib/book-data"
 import { getLikedBooks, clearLikedBooks, addBookToReading, getReadingProgress, addLikedBook, removeLikedBook, getBookReviews, getBookNotes, getShelfAssignments, getReadingTimeToday } from "@/lib/storage"
 import { Button } from "@/components/ui/button"
 import { AdminPanel } from "./admin-panel"
 import { ReadingProgressTracker } from "./reading-progress"
-import { SmartRecommendations } from "./smart-recommendations"
 import { BookDetailModal } from "./book-detail-modal"
 import { StarRating } from "./star-rating"
 import { getUserStats } from "@/lib/storage"
@@ -17,16 +17,19 @@ import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
 import { useToast } from "./toast-provider"
 import { BookSearch } from "./book-search"
-import { DiscoverHub } from "./discover-hub"
 import { DailyPickCard } from "./daily-pick-card"
 import { ShelfManager } from "./shelf-manager"
 import { ConfirmDialog } from "./confirm-dialog"
-import { ReadingPath } from "./reading-path"
 import { ReadingGoalSetter } from "./reading-goal-setter"
-import { QuotesGallery } from "./quotes-gallery"
-import { ReadingWrapped } from "./reading-wrapped"
-import { ReadingChallenges } from "./reading-challenges"
-import { BookCollections } from "./book-collections"
+
+// Lazy-load below-the-fold discovery components
+const SmartRecommendations = dynamic(() => import("./smart-recommendations").then(m => ({ default: m.SmartRecommendations })), { ssr: false })
+const DiscoverHub = dynamic(() => import("./discover-hub").then(m => ({ default: m.DiscoverHub })), { ssr: false })
+const ReadingPath = dynamic(() => import("./reading-path").then(m => ({ default: m.ReadingPath })), { ssr: false })
+const QuotesGallery = dynamic(() => import("./quotes-gallery").then(m => ({ default: m.QuotesGallery })), { ssr: false })
+const ReadingWrapped = dynamic(() => import("./reading-wrapped").then(m => ({ default: m.ReadingWrapped })), { ssr: false })
+const ReadingChallenges = dynamic(() => import("./reading-challenges").then(m => ({ default: m.ReadingChallenges })), { ssr: false })
+const BookCollections = dynamic(() => import("./book-collections").then(m => ({ default: m.BookCollections })), { ssr: false })
 import { getShelves, getBooksForShelf, shouldShowBackupReminder, dismissBackupReminder, getHiddenBookIds, hideBook, unhideBook, type Shelf } from "@/lib/storage"
 import { estimateReadingTime, getReadingSpeed, setReadingSpeed, getAllSpeeds, type ReadingSpeed } from "@/lib/reading-time"
 
@@ -1150,6 +1153,23 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                     </motion.div>
                   )
                 })}
+
+                {/* Inline discover prompt when library is small */}
+                {visibleBooks.length < 5 && (
+                  <motion.button
+                    onClick={onStartDiscovery}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15, type: "spring", stiffness: 300, damping: 28 }}
+                    whileHover={{ y: -3, transition: { type: "spring", stiffness: 400, damping: 30 } }}
+                    className="group aspect-[2/3] rounded-xl border-2 border-dashed border-stone-200 dark:border-stone-700 hover:border-amber-400 dark:hover:border-amber-600 bg-stone-50/50 dark:bg-stone-800/30 flex flex-col items-center justify-center gap-2 transition-all"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center group-hover:bg-amber-200 dark:group-hover:bg-amber-800/40 transition-colors">
+                      <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-500" />
+                    </div>
+                    <span className="text-xs font-semibold text-stone-500 dark:text-stone-400 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">Discover more</span>
+                  </motion.button>
+                )}
                 </div>
 
                 {/* Scroll sentinel + progress indicator */}

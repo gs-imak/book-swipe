@@ -1,7 +1,9 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Home, Sparkles, Trophy, BarChart3, BookOpen, Search } from "lucide-react"
+import { Home, Sparkles, Trophy, BarChart3, BookOpen, Search, Sun, Moon } from "lucide-react"
+import { getTheme, toggleTheme } from "@/lib/theme"
 import { NewDot } from "./new-badge"
 
 type NavView = "dashboard" | "swipe" | "read" | "achievements" | "profile"
@@ -20,6 +22,9 @@ const NAV_NEW_FEATURES: Record<string, string[]> = {
 }
 
 export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch }: MobileNavProps) {
+  const [isDark, setIsDark] = useState(false)
+  useEffect(() => { setIsDark(getTheme() === "dark") }, [])
+
   const navItems = [
     {
       id: "dashboard" as const,
@@ -173,19 +178,31 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch }:
           </div>
         </div>
 
-        {/* Desktop: search shortcut at bottom of sidebar */}
-        {onSearch && (
-          <div className="hidden lg:flex lg:items-center lg:justify-center lg:py-3 lg:border-t lg:border-stone-200/80 lg:dark:border-stone-700/80 lg:shrink-0">
+        {/* Desktop: search + theme toggle at bottom of sidebar */}
+        <div className="hidden lg:flex lg:flex-col lg:shrink-0 lg:border-t lg:border-stone-200/80 lg:dark:border-stone-700/80">
+          {onSearch && (
+            <div className="lg:flex lg:items-center lg:justify-center lg:pt-3 lg:pb-1">
+              <button
+                onClick={onSearch}
+                aria-label="Search"
+                className="flex flex-col items-center gap-0.5 py-2 px-1 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors duration-150 w-[calc(100%-8px)]"
+              >
+                <Search className="w-[20px] h-[20px]" strokeWidth={1.8} />
+                <span className="text-[10px] font-medium">Search</span>
+              </button>
+            </div>
+          )}
+          <div className="lg:flex lg:items-center lg:justify-center lg:py-2">
             <button
-              onClick={onSearch}
-              aria-label="Search"
+              onClick={() => { const next = toggleTheme(); setIsDark(next === "dark") }}
+              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
               className="flex flex-col items-center gap-0.5 py-2 px-1 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors duration-150 w-[calc(100%-8px)]"
             >
-              <Search className="w-[20px] h-[20px]" strokeWidth={1.8} />
-              <span className="text-[10px] font-medium">Search</span>
+              {isDark ? <Sun className="w-[20px] h-[20px]" strokeWidth={1.8} /> : <Moon className="w-[20px] h-[20px]" strokeWidth={1.8} />}
+              <span className="text-[10px] font-medium">{isDark ? "Light" : "Dark"}</span>
             </button>
           </div>
-        )}
+        </div>
 
         <div className="h-safe lg:h-0" />
       </motion.nav>
