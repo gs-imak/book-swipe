@@ -119,6 +119,13 @@
   }
 }
 
+/* Desktop sidebar offset — pushes page content right when sidebar nav is present */
+@media (min-width: 1024px) {
+  body:has([data-desktop-sidebar]) {
+    padding-left: 4rem; /* matches lg:w-16 (64px) */
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
