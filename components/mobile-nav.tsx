@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Home, Sparkles, Trophy, BarChart3, BookOpen, Search, Sun, Moon } from "lucide-react"
+import { Home, Sparkles, Trophy, BarChart3, BookOpen, Search, Sun, Moon, Camera } from "lucide-react"
 import { getTheme, toggleTheme } from "@/lib/theme"
 import { NewDot } from "./new-badge"
 
@@ -13,6 +13,7 @@ interface MobileNavProps {
   onNavigate: (view: NavView) => void
   likedCount?: number
   onSearch?: () => void
+  onScan?: () => void
 }
 
 const NAV_NEW_FEATURES: Record<string, string[]> = {
@@ -21,7 +22,7 @@ const NAV_NEW_FEATURES: Record<string, string[]> = {
   profile: ["tags", "settings", "activity_feed"],
 }
 
-export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch }: MobileNavProps) {
+export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, onScan }: MobileNavProps) {
   const [isDark, setIsDark] = useState(false)
   useEffect(() => { setIsDark(getTheme() === "dark") }, [])
 
@@ -55,24 +56,40 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch }:
 
   return (
     <>
-      {/* Floating search button above nav — mobile only, hidden on desktop (sidebar has its own) */}
-      {onSearch && (
-        <motion.button
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.15 }}
-          onClick={onSearch}
-          aria-label="Search library, notes, and reviews"
-          className="fixed z-50 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-4 py-2 rounded-full bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 shadow-lg shadow-stone-900/20 dark:shadow-stone-100/20 hover:shadow-xl hover:scale-105 active:scale-95 transition-all touch-manipulation lg:hidden"
-          style={{
-            bottom: "calc(60px + env(safe-area-inset-bottom, 0px))",
-          }}
-          whileTap={{ scale: 0.92 }}
-        >
-          <Search className="w-3.5 h-3.5" strokeWidth={2.2} />
-          <span className="text-xs font-semibold tracking-wide">Search</span>
-        </motion.button>
-      )}
+      {/* Floating action buttons above nav — mobile only, hidden on desktop (sidebar has its own) */}
+      <div
+        className="fixed z-50 left-1/2 -translate-x-1/2 flex items-center gap-2 lg:hidden"
+        style={{ bottom: "calc(60px + env(safe-area-inset-bottom, 0px))" }}
+      >
+        {onSearch && (
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.15 }}
+            onClick={onSearch}
+            aria-label="Search library, notes, and reviews"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 shadow-lg shadow-stone-900/20 dark:shadow-stone-100/20 hover:shadow-xl hover:scale-105 active:scale-95 transition-all touch-manipulation"
+            whileTap={{ scale: 0.92 }}
+          >
+            <Search className="w-3.5 h-3.5" strokeWidth={2.2} />
+            <span className="text-xs font-semibold tracking-wide">Search</span>
+          </motion.button>
+        )}
+        {onScan && (
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.22 }}
+            onClick={onScan}
+            aria-label="Scan a book barcode"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-amber-600 text-white shadow-lg shadow-amber-600/30 hover:shadow-xl hover:scale-105 active:scale-95 transition-all touch-manipulation"
+            whileTap={{ scale: 0.92 }}
+          >
+            <Camera className="w-3.5 h-3.5" strokeWidth={2.2} />
+            <span className="text-xs font-semibold tracking-wide">Scan</span>
+          </motion.button>
+        )}
+      </div>
 
       <motion.nav
         aria-label="Main navigation"
@@ -178,7 +195,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch }:
           </div>
         </div>
 
-        {/* Desktop: search + theme toggle at bottom of sidebar */}
+        {/* Desktop: search + scan + theme toggle at bottom of sidebar */}
         <div className="hidden lg:flex lg:flex-col lg:shrink-0 lg:border-t lg:border-stone-200/80 lg:dark:border-stone-700/80">
           {onSearch && (
             <div className="lg:flex lg:items-center lg:justify-center lg:pt-3 lg:pb-1">
@@ -189,6 +206,18 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch }:
               >
                 <Search className="w-[20px] h-[20px]" strokeWidth={1.8} />
                 <span className="text-[10px] font-medium">Search</span>
+              </button>
+            </div>
+          )}
+          {onScan && (
+            <div className="lg:flex lg:items-center lg:justify-center lg:pb-1">
+              <button
+                onClick={onScan}
+                aria-label="Scan a book barcode"
+                className="flex flex-col items-center gap-0.5 py-2 px-1 rounded-lg text-amber-600 dark:text-amber-500 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors duration-150 w-[calc(100%-8px)]"
+              >
+                <Camera className="w-[20px] h-[20px]" strokeWidth={1.8} />
+                <span className="text-[10px] font-medium">Scan</span>
               </button>
             </div>
           )}

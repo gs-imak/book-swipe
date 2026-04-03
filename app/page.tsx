@@ -23,6 +23,7 @@ import { motion, AnimatePresence, MotionConfig } from "framer-motion"
 import { getTheme, applyTheme } from "@/lib/theme"
 import { WhatsNewModal } from "@/components/whats-new-modal"
 import { Skeleton, BookGridSkeleton } from "@/components/ui/skeleton"
+import { BarcodeScanner } from "@/components/barcode-scanner"
 
 // Code-split heavy components that aren't needed on initial load
 const FreeBooksBrowser = dynamic(() => import("@/components/free-books-browser").then(m => ({ default: m.FreeBooksBrowser })), {
@@ -94,6 +95,7 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   const [showGuide, setShowGuide] = useState(false)
   const [showGlobalSearch, setShowGlobalSearch] = useState(false)
   const [globalSearchBook, setGlobalSearchBook] = useState<Book | null>(null)
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false)
   const [ready, setReady] = useState(false)
   const { showToast } = useToast()
 
@@ -425,6 +427,12 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
         }}
       />
 
+      {/* Barcode Scanner */}
+      <BarcodeScanner
+        isOpen={showBarcodeScanner}
+        onClose={() => setShowBarcodeScanner(false)}
+      />
+
       {/* Mobile Bottom Navigation - persists across dashboard/swipe transitions */}
       {showNav && (
         <MobileNav
@@ -432,6 +440,7 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
           onNavigate={handleMobileNavigation}
           likedCount={likedBooksCount}
           onSearch={() => setShowGlobalSearch(true)}
+          onScan={() => setShowBarcodeScanner(true)}
         />
       )}
     </>
