@@ -24,7 +24,7 @@ import {
   saveShelfAssignments,
   markBackupExported,
 } from "@/lib/storage"
-import { Download, Upload, Shield, AlertTriangle, BookOpen, FileSpreadsheet, Globe } from "lucide-react"
+import { Download, Upload, Shield, AlertTriangle, BookOpen, FileSpreadsheet, Globe, HardDrive, Check, X } from "lucide-react"
 import {
   type BookLanguage,
   LANGUAGE_LABELS,
@@ -33,7 +33,15 @@ import {
 } from "@/lib/language-preference"
 import { useToast } from "./toast-provider"
 import { GoodreadsImport } from "./goodreads-import"
-import { exportToGoodreadsCSV, exportToNotionCSV, downloadCSV } from "@/lib/export-utils"
+import {
+  exportToGoodreadsCSV,
+  exportToNotionCSV,
+  downloadCSV,
+  exportFullBackupJSON,
+  importFullBackupJSON,
+  previewFullBackupJSON,
+  downloadJSON,
+} from "@/lib/export-utils"
 
 interface AdminPanelProps {
   onBooksLoaded: (books: Book[]) => void
@@ -59,7 +67,13 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
   const [importing, setImporting] = useState(false)
   const [showGoodreadsImport, setShowGoodreadsImport] = useState(false)
   const [language, setLanguage] = useState<BookLanguage>(getLanguagePreference)
+  const [fullBackupPreview, setFullBackupPreview] = useState<{
+    json: string
+    stats: { books: number; reviews: number; notes: number; totalKeys: number }
+  } | null>(null)
+  const [importingFull, setImportingFull] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const fullBackupInputRef = useRef<HTMLInputElement>(null)
   const { showToast } = useToast()
 
   const handleLanguageChange = (lang: BookLanguage) => {
@@ -222,6 +236,51 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
     }
   }
 
+  const handleFullBackupExport = () => {
+    const json = exportFullBackupJSON()
+    const date = new Date().toISOString().split("T")[0]
+    downloadJSON(json, `bookswipe-full-backup-${date}.json`)
+    markBackupExported()
+    showToast("Full backup downloaded")
+  }
+
+  const handleFullBackupFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      const text = await file.text()
+      const preview = previewFullBackupJSON(text)
+
+      if (!preview.success || !preview.stats) {
+        showToast(preview.error || "Invalid backup file", "error")
+        return
+      }
+
+      setFullBackupPreview({ json: text, stats: preview.stats })
+    } catch {
+      showToast("Failed to read file", "error")
+    } finally {
+      if (fullBackupInputRef.current) fullBackupInputRef.current.value = ""
+    }
+  }
+
+  const handleFullBackupConfirm = () => {
+    if (!fullBackupPreview) return
+    setImportingFull(true)
+
+    const result = importFullBackupJSON(fullBackupPreview.json)
+
+    if (result.success) {
+      showToast(`Restored ${result.stats?.totalKeys || 0} data entries`)
+      setFullBackupPreview(null)
+      setTimeout(() => window.location.reload(), 600)
+    } else {
+      showToast(result.error || "Import failed", "error")
+      setImportingFull(false)
+    }
+  }
+
   const likedCount = getLikedBooks().length
   const reviewCount = getBookReviews().length
   const noteCount = getBookNotes().length
@@ -309,6 +368,68 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
           className="hidden"
         />
       </div>
+
+      {/* Full Backup (JSON) */}
+      <div className="pt-2 border-t border-stone-200/60 dark:border-stone-700/60 space-y-2">
+        <p className="text-xs text-stone-500 font-medium">Full Backup (all data)</p>
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            onClick={handleFullBackupExport}
+            variant="outline"
+            className="h-10 border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 dark:text-stone-300 rounded-xl text-sm"
+          >
+            <HardDrive className="w-4 h-4 mr-1.5" />
+            Export Full
+          </Button>
+          <Button
+            onClick={() => fullBackupInputRef.current?.click()}
+            variant="outline"
+            className="h-10 border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 dark:text-stone-300 rounded-xl text-sm"
+          >
+            <Upload className="w-4 h-4 mr-1.5" />
+            Import Full
+          </Button>
+          <input
+            ref={fullBackupInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleFullBackupFileSelect}
+            className="hidden"
+          />
+        </div>
+      </div>
+
+      {/* Full Backup Import Confirmation */}
+      {fullBackupPreview && (
+        <div className="p-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30 space-y-2">
+          <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
+            Confirm full restore
+          </p>
+          <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+            This will overwrite your current data with: {fullBackupPreview.stats.books} books,{" "}
+            {fullBackupPreview.stats.reviews} reviews, {fullBackupPreview.stats.notes} notes
+            ({fullBackupPreview.stats.totalKeys} total entries).
+          </p>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleFullBackupConfirm}
+              disabled={importingFull}
+              className="flex-1 h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl text-sm"
+            >
+              <Check className="w-4 h-4 mr-1.5" />
+              {importingFull ? "Restoring..." : "Confirm Restore"}
+            </Button>
+            <Button
+              onClick={() => setFullBackupPreview(null)}
+              disabled={importingFull}
+              variant="outline"
+              className="h-9 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 rounded-xl text-sm px-4"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Goodreads / Notion */}
       <div className="pt-2 border-t border-stone-200/60 dark:border-stone-700/60 space-y-2">

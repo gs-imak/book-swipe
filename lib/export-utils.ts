@@ -186,7 +186,7 @@ export function exportToNotionCSV(): string {
   return csv
 }
 
-// --- Download helper ---
+// --- Download helpers ---
 
 export function downloadCSV(csv: string, filename: string): void {
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
@@ -196,4 +196,166 @@ export function downloadCSV(csv: string, filename: string): void {
   a.download = filename
   a.click()
   URL.revokeObjectURL(url)
+}
+
+export function downloadJSON(json: string, filename: string): void {
+  const blob = new Blob([json], { type: "application/json;charset=utf-8;" })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+// --- Full JSON Backup ---
+
+const BACKUP_KEYS = [
+  "bookswipe_liked_books",
+  "bookswipe_reading_progress",
+  "bookswipe_reading_goals",
+  "bookswipe_book_reviews",
+  "bookswipe_book_notes",
+  "bookswipe_achievements",
+  "bookswipe_user_stats",
+  "bookswipe_shelves",
+  "bookswipe_shelf_assignments",
+  "bookswipe_collections",
+  "bookswipe_daily_pick",
+  "bookswipe_user_preferences",
+  "bookswipe_vocabulary",
+  "bookswipe_challenges",
+  "bookswipe_hidden_books",
+  "bookswipe_reading_positions",
+  "bookswipe_theme",
+  "bookswipe_onboarded",
+  "bookswipe_reading_buddies",
+  "bookswipe_my_buddy_codes",
+  "bookswipe_price_watch",
+  "bookswipe_language",
+  "bookswipe_reading_speed",
+  "bookswipe_reader_theme",
+  "bookswipe_reader_font",
+  "bookswipe_bionic_mode",
+  "bookswipe_passed_books",
+  "bookswipe_goal_configured",
+] as const
+
+export function exportFullBackupJSON(): string {
+  const data: Record<string, unknown> = {}
+
+  BACKUP_KEYS.forEach(key => {
+    try {
+      const raw = localStorage.getItem(key)
+      if (raw !== null) {
+        try {
+          data[key] = JSON.parse(raw)
+        } catch {
+          data[key] = raw
+        }
+      }
+    } catch {
+      // skip inaccessible keys
+    }
+  })
+
+  const backup = {
+    metadata: {
+      version: 1,
+      exportDate: new Date().toISOString(),
+      appVersion: "bookswipe",
+    },
+    data,
+  }
+
+  return JSON.stringify(backup, null, 2)
+}
+
+interface ImportResult {
+  success: boolean
+  error?: string
+  stats?: { books: number; reviews: number; notes: number; totalKeys: number }
+}
+
+export function importFullBackupJSON(jsonString: string): ImportResult {
+  try {
+    const parsed = JSON.parse(jsonString)
+
+    if (!parsed || typeof parsed !== "object") {
+      return { success: false, error: "Invalid JSON structure" }
+    }
+
+    if (!parsed.metadata || !parsed.data || typeof parsed.data !== "object") {
+      return { success: false, error: "Missing metadata or data in backup file" }
+    }
+
+    if (parsed.metadata.appVersion !== "bookswipe") {
+      return { success: false, error: "This file is not a BookSwipe backup" }
+    }
+
+    const data = parsed.data as Record<string, unknown>
+    let totalKeys = 0
+
+    Object.entries(data).forEach(([key, value]) => {
+      if (!key.startsWith("bookswipe_")) return
+      try {
+        const serialized = typeof value === "string" ? value : JSON.stringify(value)
+        localStorage.setItem(key, serialized)
+        totalKeys++
+      } catch {
+        // skip keys that fail to write (quota, etc.)
+      }
+    })
+
+    const books = Array.isArray(data["bookswipe_liked_books"])
+      ? (data["bookswipe_liked_books"] as unknown[]).length
+      : 0
+    const reviews = Array.isArray(data["bookswipe_book_reviews"])
+      ? (data["bookswipe_book_reviews"] as unknown[]).length
+      : 0
+    const notes = Array.isArray(data["bookswipe_book_notes"])
+      ? (data["bookswipe_book_notes"] as unknown[]).length
+      : 0
+
+    return {
+      success: true,
+      stats: { books, reviews, notes, totalKeys },
+    }
+  } catch {
+    return { success: false, error: "Failed to parse JSON file" }
+  }
+}
+
+export function previewFullBackupJSON(jsonString: string): ImportResult {
+  try {
+    const parsed = JSON.parse(jsonString)
+
+    if (!parsed || typeof parsed !== "object" || !parsed.metadata || !parsed.data) {
+      return { success: false, error: "Invalid backup file format" }
+    }
+
+    if (parsed.metadata.appVersion !== "bookswipe") {
+      return { success: false, error: "This file is not a BookSwipe backup" }
+    }
+
+    const data = parsed.data as Record<string, unknown>
+    const totalKeys = Object.keys(data).filter(k => k.startsWith("bookswipe_")).length
+
+    const books = Array.isArray(data["bookswipe_liked_books"])
+      ? (data["bookswipe_liked_books"] as unknown[]).length
+      : 0
+    const reviews = Array.isArray(data["bookswipe_book_reviews"])
+      ? (data["bookswipe_book_reviews"] as unknown[]).length
+      : 0
+    const notes = Array.isArray(data["bookswipe_book_notes"])
+      ? (data["bookswipe_book_notes"] as unknown[]).length
+      : 0
+
+    return {
+      success: true,
+      stats: { books, reviews, notes, totalKeys },
+    }
+  } catch {
+    return { success: false, error: "Failed to parse JSON file" }
+  }
 }
