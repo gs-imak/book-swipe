@@ -227,7 +227,19 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   }
 
   const handleStartDiscovery = () => {
-    navigateTo("questionnaire")
+    // Skip questionnaire — start swiping immediately with broad defaults
+    if (!userPreferences) {
+      const defaults: UserPreferences = {
+        favoriteGenres: [],
+        currentMood: [],
+        readingTime: "30-60 minutes",
+        preferredLength: "No preference",
+        contentPreferences: [],
+      }
+      setUserPreferences(defaults)
+      savePreferences(defaults)
+    }
+    navigateTo("swipe")
   }
 
   const handleQuestionnaireComplete = (preferences: UserPreferences) => {
@@ -247,8 +259,15 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
 
   const handleBackToSwipe = () => {
     if (!userPreferences) {
-      navigateTo("questionnaire")
-      return
+      const defaults: UserPreferences = {
+        favoriteGenres: [],
+        currentMood: [],
+        readingTime: "30-60 minutes",
+        preferredLength: "No preference",
+        contentPreferences: [],
+      }
+      setUserPreferences(defaults)
+      savePreferences(defaults)
     }
     navigateTo("swipe")
   }
@@ -260,10 +279,17 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
       navigateTo("dashboard", { tasteProfile: false, achievements: true })
     } else if (view === "swipe") {
       if (!userPreferences) {
-        navigateTo("questionnaire")
-      } else {
-        navigateTo("swipe")
+        const defaults: UserPreferences = {
+          favoriteGenres: [],
+          currentMood: [],
+          readingTime: "30-60 minutes",
+          preferredLength: "No preference",
+          contentPreferences: [],
+        }
+        setUserPreferences(defaults)
+        savePreferences(defaults)
       }
+      navigateTo("swipe")
     } else if (view === "read") {
       navigateTo("read")
     } else {
