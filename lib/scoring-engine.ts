@@ -1,7 +1,7 @@
 "use client"
 
 import { Book } from "./book-data"
-import { getBookReviews, getPassedBookIds } from "./storage"
+import { getBookReviews, getPassedBookIds, getPassedFeatures } from "./storage"
 
 export interface RecommendationReason {
   type: "genre" | "mood" | "author" | "rating" | "community" | "similar"
@@ -336,16 +336,47 @@ export function scoreBooks(
   // Always recompute user vector with current vocab (vocab changes per candidate set)
   const userVector = computeTFIDF(userProfile, vocab)
 
-  // Build negative profile from passed/disliked books for penalty
+  // Build negative profile from stored passed book features (not just current candidates)
   const passedIds = new Set(getPassedBookIds())
-  const passedBooks = filtered.filter(b => passedIds.has(b.id))
+  const passedFeatures = getPassedFeatures()
   let negativeVector: SparseVector = {}
-  if (passedBooks.length >= 3) {
-    // Build a "dislike profile" from genres/moods of passed books
-    const negFeatures = passedBooks.slice(-20).map(buildFeatureString).join(" ")
-    negativeVector = computeTFIDF(negFeatures, vocab)
+  if (passedFeatures.genres.length >= 5) {
+    // Build negative profile from aggregated passed book features
+    const negText = [
+      ...passedFeatures.genres.slice(-100),
+      ...passedFeatures.genres.slice(-100), // genres weighted 2x
+      ...passedFeatures.moods.slice(-100),
+    ].join(" ")
+    negativeVector = computeTFIDF(negText, vocab)
   }
   const hasNegative = Object.keys(negativeVector).length > 0
+
+  // Build dimension preferences from reviews (e.g., user loves "plot" → boost plotty books)
+  const reviews = getBookReviews()
+  const dimPrefs: Record<string, number> = {}
+  let dimCount = 0
+  reviews.forEach(r => {
+    if (r.dimensions) {
+      Object.entries(r.dimensions).forEach(([dim, val]) => {
+        dimPrefs[dim] = (dimPrefs[dim] || 0) + val
+        dimCount++
+      })
+    }
+  })
+  // Normalize to average preference per dimension
+  if (dimCount > 0) {
+    Object.keys(dimPrefs).forEach(dim => {
+      dimPrefs[dim] = dimPrefs[dim] / reviews.filter(r => r.dimensions && r.dimensions[dim]).length
+    })
+  }
+
+  // Build pace preference from reviews
+  const paceCounts: Record<string, number> = { slow: 0, medium: 0, fast: 0 }
+  reviews.forEach(r => {
+    if (r.pace) paceCounts[r.pace]++
+  })
+  const preferredPace = Object.entries(paceCounts).sort((a, b) => b[1] - a[1])[0]
+  const hasPacePreference = preferredPace && preferredPace[1] >= 2
 
   // Detect user's explored genres for novelty injection
   const likedGenres = new Set<string>()
@@ -390,6 +421,20 @@ export function scoreBooks(
     const isNovel = bookGenres.some(g => !likedGenres.has(g))
     if (isNovel && book.rating >= 3.8) {
       score += 0.05 // Small bump to surface unexplored high-quality books
+    }
+
+    // Pace preference: boost books matching user's preferred reading pace
+    if (hasPacePreference) {
+      const bookMoodsLower = book.mood.map(m => m.toLowerCase())
+      const paceMap: Record<string, string[]> = {
+        fast: ["fast-paced", "thrilling", "suspenseful", "action", "gripping"],
+        slow: ["slow-burn", "contemplative", "literary", "meditative", "atmospheric"],
+        medium: ["steady", "balanced", "engaging"],
+      }
+      const preferred = paceMap[preferredPace[0]] || []
+      if (bookMoodsLower.some(m => preferred.some(p => m.includes(p)))) {
+        score += 0.03
+      }
     }
 
     // Compute per-liked-book similarity for reason generation

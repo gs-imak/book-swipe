@@ -255,7 +255,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
     } else {
       hapticLight()
       setPassedBooks(prev => [...prev, currentBook])
-      addPassedBookId(currentBook.id) // persist for negative signal
+      addPassedBookId(currentBook.id, currentBook.genre, currentBook.mood) // persist for negative signal
     }
 
     setUndoStack(prev => [...prev, { book: currentBook, direction }])

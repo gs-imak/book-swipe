@@ -648,20 +648,36 @@ function clearBookCacheForMigration(): void {
 // ── Passed / swiped-left books (negative signal) ────────────────────────────
 
 const PASSED_BOOKS_KEY = "bookswipe_passed_books"
+const PASSED_FEATURES_KEY = "bookswipe_passed_features"
 
 /** Record a book the user swiped left on (negative signal for recommendations) */
-export function addPassedBookId(bookId: string): void {
+export function addPassedBookId(bookId: string, genres?: string[], moods?: string[]): void {
   const passed = safeGetJSON<string[]>(PASSED_BOOKS_KEY, [])
   if (!passed.includes(bookId)) {
     // Keep last 200 to avoid unbounded growth
     const updated = [...passed, bookId].slice(-200)
     safeSetJSON(PASSED_BOOKS_KEY, updated)
   }
+  // Store genre/mood features for negative profile building
+  if (genres || moods) {
+    const features = safeGetJSON<{ genres: string[]; moods: string[] }>(PASSED_FEATURES_KEY, { genres: [], moods: [] })
+    if (genres) features.genres.push(...genres)
+    if (moods) features.moods.push(...moods)
+    // Keep last 500 entries
+    features.genres = features.genres.slice(-500)
+    features.moods = features.moods.slice(-500)
+    safeSetJSON(PASSED_FEATURES_KEY, features)
+  }
 }
 
 /** Get all passed book IDs */
 export function getPassedBookIds(): string[] {
   return safeGetJSON<string[]>(PASSED_BOOKS_KEY, [])
+}
+
+/** Get aggregated features from passed books for negative profiling */
+export function getPassedFeatures(): { genres: string[]; moods: string[] } {
+  return safeGetJSON<{ genres: string[]; moods: string[] }>(PASSED_FEATURES_KEY, { genres: [], moods: [] })
 }
 
 // ── Hidden / Archived books ──────────────────────────────────────────────────
