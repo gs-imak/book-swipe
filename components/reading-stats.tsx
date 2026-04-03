@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, BarChart3, TrendingUp, Calendar, BookOpen, Target, Flame } from "lucide-react"
+import { X, BarChart3, TrendingUp, Calendar, BookOpen, Target, Flame, Clock, Zap } from "lucide-react"
 import {
   getLikedBooks,
   getReadingProgress,
@@ -10,7 +10,9 @@ import {
   getBookNotes,
   getUserStats,
   getReadingGoals,
+  getReadingPaceInsights,
   type ReadingProgress,
+  type ReadingPaceInsights,
   type BookReview,
   type BookNote,
   type UserStats,
@@ -37,6 +39,7 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
   const [notes, setNotes] = useState<BookNote[]>([])
   const [stats, setStats] = useState<UserStats | null>(null)
   const [goals, setGoals] = useState<ReadingGoals | null>(null)
+  const [paceInsights, setPaceInsights] = useState<ReadingPaceInsights | null>(null)
 
   useEffect(() => {
     if (isOpen) {
@@ -46,6 +49,7 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
       setNotes(getBookNotes())
       setStats(getUserStats())
       setGoals(getReadingGoals())
+      setPaceInsights(getReadingPaceInsights())
     }
   }, [isOpen])
 
@@ -437,6 +441,91 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                     />
                   </div>
                 </motion.div>
+
+                {/* ── Reading Pace ── */}
+                {paceInsights && (paceInsights.avgPagesPerHour > 0 || paceInsights.booksFinished > 0) && (
+                  <motion.div {...fadeIn(0.36)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-800 shadow-sm">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Zap className="w-4 h-4 text-amber-600" />
+                      <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider">Reading Pace</h3>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {paceInsights.avgPagesPerHour > 0 && (
+                        <InsightCard
+                          icon={<Clock className="w-4 h-4 text-amber-600" />}
+                          label="Your reading speed"
+                          value={`~${paceInsights.avgPagesPerHour} pages/hour`}
+                        />
+                      )}
+                      {paceInsights.bestDay !== "N/A" && (
+                        <InsightCard
+                          icon={<Calendar className="w-4 h-4 text-amber-600" />}
+                          label="Most active day"
+                          value={`You read most on ${paceInsights.bestDay}s`}
+                        />
+                      )}
+                      {paceInsights.booksFinished > 0 && (
+                        <InsightCard
+                          icon={<Target className="w-4 h-4 text-amber-600" />}
+                          label="Avg time to finish"
+                          value={`${paceInsights.avgDaysPerBook} day${paceInsights.avgDaysPerBook !== 1 ? "s" : ""} per book`}
+                        />
+                      )}
+                      {paceInsights.totalMinutes > 0 && (
+                        <InsightCard
+                          icon={<Flame className="w-4 h-4 text-amber-600" />}
+                          label="Total reading time"
+                          value={
+                            paceInsights.totalMinutes >= 60
+                              ? `${Math.round(paceInsights.totalMinutes / 60)} hour${Math.round(paceInsights.totalMinutes / 60) !== 1 ? "s" : ""}`
+                              : `${paceInsights.totalMinutes} min`
+                          }
+                        />
+                      )}
+                    </div>
+
+                    {/* Per-book completion estimates for currently reading */}
+                    {paceInsights.avgPagesPerHour > 0 && (() => {
+                      const currentlyReading = progress.filter(p => p.status === "reading" && p.totalPages > 0)
+                      if (currentlyReading.length === 0) return null
+                      return (
+                        <div className="mt-4 pt-4 border-t border-stone-100 dark:border-stone-800">
+                          <p className="text-[11px] text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-3">
+                            At your pace
+                          </p>
+                          <div className="space-y-2">
+                            {currentlyReading.map(book => {
+                              const remaining = Math.max(0, book.totalPages - book.currentPage)
+                              const estimate = paceInsights.estimatedCompletion(remaining)
+                              const pct = book.totalPages > 0 ? Math.round((book.currentPage / book.totalPages) * 100) : 0
+                              return (
+                                <div key={book.bookId} className="flex items-center gap-3 p-2.5 bg-stone-50 dark:bg-stone-800/60 rounded-lg">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm text-stone-700 dark:text-stone-300 font-medium truncate">
+                                      {book.book.title}
+                                    </p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <div className="flex-1 h-1.5 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
+                                        <div
+                                          className="h-full bg-amber-500 rounded-full transition-all"
+                                          style={{ width: `${pct}%` }}
+                                        />
+                                      </div>
+                                      <span className="text-[10px] text-stone-400 tabular-nums flex-shrink-0">{pct}%</span>
+                                    </div>
+                                  </div>
+                                  <span className="text-xs font-medium text-amber-600 dark:text-amber-400 flex-shrink-0 whitespace-nowrap">
+                                    {estimate} left
+                                  </span>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )
+                    })()}
+                  </motion.div>
+                )}
               </>
             )}
           </div>

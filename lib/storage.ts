@@ -862,3 +862,116 @@ export function isFeatureNew(featureId: string): boolean {
 export function isFeatureSeen(featureId: string): boolean {
   return getSeenFeatures().includes(featureId)
 }
+
+// ── Reading pace insights ────────────────────────────────────────────────────
+
+export interface ReadingPaceInsights {
+  avgPagesPerHour: number
+  bestDay: string
+  totalMinutes: number
+  booksFinished: number
+  avgDaysPerBook: number
+  estimatedCompletion: (remainingPages: number) => string
+}
+
+export function getReadingPaceInsights(): ReadingPaceInsights {
+  const entries = getReadingProgress()
+
+  const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+
+  // Average pages per hour from entries with tracked time
+  const entriesWithTime = entries.filter(p => p.timeSpentMinutes > 0 && p.currentPage > 0)
+  let avgPagesPerHour = 0
+  if (entriesWithTime.length > 0) {
+    const totalPages = entriesWithTime.reduce((s, p) => s + p.currentPage, 0)
+    const totalHours = entriesWithTime.reduce((s, p) => s + p.timeSpentMinutes, 0) / 60
+    avgPagesPerHour = totalHours > 0 ? Math.round(totalPages / totalHours) : 0
+  }
+
+  // Best reading day — group lastReadDate by day of week
+  const dayCounts: Record<number, number> = {}
+  entries.forEach(p => {
+    if (p.lastReadDate) {
+      const dow = new Date(p.lastReadDate).getDay()
+      dayCounts[dow] = (dayCounts[dow] || 0) + 1
+    }
+  })
+  let bestDayIndex = 0
+  let bestDayCount = 0
+  Object.entries(dayCounts).forEach(([dayStr, count]) => {
+    const day = Number(dayStr)
+    if (count > bestDayCount) {
+      bestDayCount = count
+      bestDayIndex = day
+    }
+  })
+  const bestDay = bestDayCount > 0 ? DAY_NAMES[bestDayIndex] : "N/A"
+
+  // Total reading minutes
+  const totalMinutes = entries.reduce((s, p) => s + (p.timeSpentMinutes || 0), 0)
+
+  // Completed books count and avg days per book
+  const completed = entries.filter(p => p.status === "completed")
+  const booksFinished = completed.length
+
+  let avgDaysPerBook = 0
+  if (completed.length > 0) {
+    const totalDays = completed.reduce((sum, p) => {
+      const start = new Date(p.startedDate).getTime()
+      const end = new Date(p.lastReadDate).getTime()
+      const diffDays = Math.max(1, Math.round((end - start) / (1000 * 60 * 60 * 24)))
+      return sum + diffDays
+    }, 0)
+    avgDaysPerBook = Math.round(totalDays / completed.length)
+  }
+
+  // Estimated completion based on average pace
+  const estimatedCompletion = (remainingPages: number): string => {
+    if (avgPagesPerHour <= 0 || remainingPages <= 0) return "N/A"
+    const hoursNeeded = remainingPages / avgPagesPerHour
+    if (hoursNeeded < 1) return "< 1 hour"
+    if (hoursNeeded < 24) return `~${Math.round(hoursNeeded)} hour${Math.round(hoursNeeded) !== 1 ? "s" : ""}`
+    const daysNeeded = Math.round(hoursNeeded / 24)
+    return `~${daysNeeded} day${daysNeeded !== 1 ? "s" : ""}`
+  }
+
+  return {
+    avgPagesPerHour,
+    bestDay,
+    totalMinutes,
+    booksFinished,
+    avgDaysPerBook,
+    estimatedCompletion,
+  }
+}
+
+// ── Smart shelf suggestions ──────────────────────────────────────────────────
+
+const BOOK_VIEW_COUNT_KEY = "bookswipe_book_views"
+const DISMISSED_SUGGESTIONS_KEY = "bookswipe_dismissed_suggestions"
+
+export function recordBookView(bookId: string): number {
+  const views = safeGetJSON<Record<string, number>>(BOOK_VIEW_COUNT_KEY, {})
+  views[bookId] = (views[bookId] || 0) + 1
+  safeSetJSON(BOOK_VIEW_COUNT_KEY, views)
+  return views[bookId]
+}
+
+export function getBookViewCount(bookId: string): number {
+  const views = safeGetJSON<Record<string, number>>(BOOK_VIEW_COUNT_KEY, {})
+  return views[bookId] || 0
+}
+
+export function dismissSuggestion(bookId: string, type: string): void {
+  const dismissed = safeGetJSON<string[]>(DISMISSED_SUGGESTIONS_KEY, [])
+  const key = `${bookId}::${type}`
+  if (!dismissed.includes(key)) {
+    dismissed.push(key)
+    safeSetJSON(DISMISSED_SUGGESTIONS_KEY, dismissed)
+  }
+}
+
+export function isSuggestionDismissed(bookId: string, type: string): boolean {
+  const dismissed = safeGetJSON<string[]>(DISMISSED_SUGGESTIONS_KEY, [])
+  return dismissed.includes(`${bookId}::${type}`)
+}
