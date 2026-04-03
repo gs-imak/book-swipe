@@ -26,12 +26,24 @@ type ReaderFont = "georgia" | "merriweather" | "lora" | "system" | "literata" | 
 
 const FONT_OPTIONS: { id: ReaderFont; label: string; family: string }[] = [
   { id: "georgia", label: "Georgia", family: "Georgia, 'Source Serif 4', serif" },
-  { id: "merriweather", label: "Merriweather", family: "var(--font-merriweather), Georgia, serif" },
-  { id: "lora", label: "Lora", family: "var(--font-lora), Georgia, serif" },
-  { id: "literata", label: "Literata", family: "var(--font-literata), Georgia, serif" },
+  { id: "merriweather", label: "Merriweather", family: "Merriweather, Georgia, serif" },
+  { id: "lora", label: "Lora", family: "Lora, Georgia, serif" },
+  { id: "literata", label: "Literata", family: "Literata, Georgia, serif" },
   { id: "system", label: "Sans-serif", family: "system-ui, -apple-system, sans-serif" },
   { id: "opendyslexic", label: "OpenDyslexic", family: "'OpenDyslexic', sans-serif" },
 ]
+
+// Load reader fonts on demand via Google Fonts (not bundled at page level)
+const READER_FONT_URL = "https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Lora:wght@400;500;700&family=Literata:wght@400;500;700&display=swap"
+let _readerFontsLoaded = false
+function loadReaderFonts() {
+  if (_readerFontsLoaded || typeof document === "undefined") return
+  _readerFontsLoaded = true
+  const link = document.createElement("link")
+  link.rel = "stylesheet"
+  link.href = READER_FONT_URL
+  document.head.appendChild(link)
+}
 
 type AmbientSound = "library" | "fireplace" | "coffeeshop" | "dark"
 const AMBIENT_SOUNDS: { id: AmbientSound; label: string; file: string }[] = [
@@ -377,6 +389,11 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   useEffect(() => {
     if (isOpen) loadNotes()
   }, [isOpen, loadNotes])
+
+  // Load reading fonts on demand when reader opens
+  useEffect(() => {
+    if (isOpen) loadReaderFonts()
+  }, [isOpen])
 
   // Bionic mode persistence
   useEffect(() => {

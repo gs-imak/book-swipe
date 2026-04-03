@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Source_Serif_4, DM_Sans, Merriweather, Lora, Literata } from 'next/font/google'
+import { Source_Serif_4, DM_Sans } from 'next/font/google'
 import './globals.css'
 
 const sourceSerif = Source_Serif_4({
@@ -11,25 +11,6 @@ const sourceSerif = Source_Serif_4({
 const dmSans = DM_Sans({
   subsets: ['latin'],
   variable: '--font-sans',
-  display: 'swap',
-})
-
-const merriweather = Merriweather({
-  subsets: ['latin'],
-  weight: ['300', '400', '700'],
-  variable: '--font-merriweather',
-  display: 'swap',
-})
-
-const lora = Lora({
-  subsets: ['latin'],
-  variable: '--font-lora',
-  display: 'swap',
-})
-
-const literata = Literata({
-  subsets: ['latin'],
-  variable: '--font-literata',
   display: 'swap',
 })
 
@@ -74,7 +55,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${dmSans.variable} ${sourceSerif.variable} ${merriweather.variable} ${lora.variable} ${literata.variable} font-sans`}>
+      <body className={`${dmSans.variable} ${sourceSerif.variable} font-sans`}>
         <div className="min-h-screen bg-background">
           {children}
         </div>

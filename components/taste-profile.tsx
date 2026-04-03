@@ -249,13 +249,22 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
         {/* Header */}
         <div className="bg-background/90 backdrop-blur-md border-b border-stone-200/60 dark:border-stone-700/60 sticky top-0 z-10">
           <div className="max-w-2xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
-            <h1 className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100 font-serif">Taste Profile</h1>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors tap-target touch-manipulation"
-            >
-              <X className="w-5 h-5 text-stone-400" />
-            </button>
+            <h1 className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100 font-serif">Your Profile</h1>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => { const next = toggleTheme(); setIsDark(next === "dark") }}
+                aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+                className="p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors tap-target touch-manipulation"
+              >
+                {isDark ? <Sun className="w-5 h-5 text-stone-400" /> : <Moon className="w-5 h-5 text-stone-400" />}
+              </button>
+              <button
+                onClick={onClose}
+                className="p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors tap-target touch-manipulation"
+              >
+                <X className="w-5 h-5 text-stone-400" />
+              </button>
+            </div>
           </div>
         </div>
 

@@ -2,6 +2,7 @@ export interface GutenbergBook {
   id: number;
   title: string;
   authors: { name: string }[];
+  subjects?: string[];
   formats: Record<string, string>;
 }
 

@@ -70,6 +70,12 @@ function filterBooks(books: Book[], preferences: UserPreferences): Book[] {
     })
   }
 
+  const contentPrefs = new Set((preferences.contentPreferences || []).map(p => p.toLowerCase()))
+  const hasContentPrefs = contentPrefs.size > 0 && !contentPrefs.has("no specific preferences")
+
+  const DARK_MOODS = new Set(["dark", "grim", "heavy", "disturbing", "bleak", "violent", "tragic", "horror"])
+  const ESCAPIST_MOODS = new Set(["escapist", "light", "fun", "uplifting", "whimsical", "cozy", "adventurous", "romantic"])
+
   const scored = books.map(book => {
     const genreMatch = matchesGenre(book.genre)
     const moodMatch = matchesMood(book.mood)
@@ -94,6 +100,32 @@ function filterBooks(books: Book[], preferences: UserPreferences): Book[] {
     }
     if (matchesLength) score += 0.5
     score += book.rating / 10
+
+    // Content preferences scoring
+    if (hasContentPrefs) {
+      const bookMoodsLower = book.mood.map(m => m.toLowerCase())
+      const descLower = (book.description || "").toLowerCase()
+
+      if (contentPrefs.has("avoid heavy/dark themes")) {
+        if (bookMoodsLower.some(m => DARK_MOODS.has(m))) score -= 1.5
+      }
+      if (contentPrefs.has("looking for escapism")) {
+        if (bookMoodsLower.some(m => ESCAPIST_MOODS.has(m))) score += 0.5
+      }
+      if (contentPrefs.has("prefer recent publications")) {
+        if (book.publishedYear >= 2000) score += 0.5
+        else if (book.publishedYear < 1950 && book.publishedYear > 0) score -= 0.3
+      }
+      if (contentPrefs.has("open to classics")) {
+        if (book.publishedYear > 0 && book.publishedYear < 1970) score += 0.3
+      }
+      if (contentPrefs.has("prefer diverse characters")) {
+        if (descLower.match(/diverse|multicultural|identity|immigrant|heritage|culture/)) score += 0.4
+      }
+      if (contentPrefs.has("want strong female protagonists")) {
+        if (descLower.match(/she |her |woman|female|heroine|mother|daughter|sister|queen|girl/)) score += 0.4
+      }
+    }
 
     return { book, score }
   })

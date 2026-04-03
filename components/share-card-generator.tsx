@@ -25,6 +25,7 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
   const [preview, setPreview] = useState<string | null>(null)
   const [generating, setGenerating] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [review, setReview] = useState<BookReview | null>(null)
   const blobRef = useRef<Blob | null>(null)
 
@@ -44,9 +45,12 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
     let cancelled = false
     const timer = setTimeout(async () => {
       setGenerating(true)
+      setError(null)
       const blob = await generateShareCard(book, review, { template, quote: quote.trim() || undefined })
-      if (cancelled || !blob) {
+      if (cancelled) return
+      if (!blob) {
         setGenerating(false)
+        setError("Failed to generate image. Try a different template.")
         return
       }
       blobRef.current = blob
@@ -128,7 +132,11 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
           <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-4">
             {/* Preview */}
             <div className="relative aspect-[4/5] rounded-xl overflow-hidden bg-stone-100 dark:bg-stone-800 border border-stone-200/60 dark:border-stone-700/60">
-              {preview ? (
+              {error ? (
+                <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-stone-400">
+                  <p className="text-sm">{error}</p>
+                </div>
+              ) : preview ? (
                 <img src={preview} alt="Share card preview" className="w-full h-full object-contain" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">

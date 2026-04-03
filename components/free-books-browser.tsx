@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { motion } from "framer-motion"
-import { Search, BookOpen, AlertCircle, Loader2 } from "lucide-react"
+import { Search, BookOpen, AlertCircle, Loader2, Heart, Check } from "lucide-react"
 import { BookCardSkeleton } from "@/components/ui/skeleton"
 import { GutenbergBook } from "@/lib/gutenberg-api"
+import { Book } from "@/lib/book-data"
+import { addLikedBook, getLikedBooks } from "@/lib/storage"
 import {
   BROWSE_CATEGORIES,
   browseGutenberg,
@@ -26,6 +28,31 @@ export function FreeBooksBrowser() {
   const [readerBook, setReaderBook] = useState<GutenbergBook | null>(null)
   const [readerOpen, setReaderOpen] = useState(false)
   const [slowLoad, setSlowLoad] = useState(false)
+  const [savedIds, setSavedIds] = useState<Set<string>>(() => {
+    const liked = getLikedBooks()
+    return new Set(liked.map(b => b.id))
+  })
+
+  const handleSaveToLibrary = useCallback((book: GutenbergBook) => {
+    const rawAuthor = book.authors[0]?.name ?? "Unknown"
+    const author = rawAuthor.includes(",") ? rawAuthor.split(",").reverse().join(" ").trim() : rawAuthor
+    const coverUrl = getCoverUrl(book)
+    const libBook: Book = {
+      id: `gutenberg-${book.id}`,
+      title: book.title,
+      author,
+      cover: coverUrl || "",
+      rating: 0,
+      pages: 0,
+      genre: book.subjects?.slice(0, 3) || ["Classic"],
+      mood: [],
+      description: "",
+      publishedYear: 0,
+      readingTime: "",
+    }
+    addLikedBook(libBook)
+    setSavedIds(prev => new Set(prev).add(libBook.id))
+  }, [])
 
   // Show "taking longer" message after 5s of loading
   useEffect(() => {
@@ -156,7 +183,7 @@ export function FreeBooksBrowser() {
         className="bg-white dark:bg-stone-900 border-b border-stone-100 dark:border-stone-800 px-4 pb-3 flex-shrink-0"
         style={{ paddingTop: "max(16px, env(safe-area-inset-top, 16px))" }}
       >
-        <div className="max-w-md mx-auto">
+        <div className="max-w-md lg:max-w-4xl mx-auto">
           <div className="flex items-center gap-2 mb-3">
             <BookOpen className="w-5 h-5 text-amber-600" />
             <h1 className="text-lg font-bold text-stone-900 dark:text-stone-100">Free Books</h1>
@@ -200,7 +227,7 @@ export function FreeBooksBrowser() {
 
       {/* Book grid */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-md mx-auto px-4 py-4">
+        <div className="max-w-md lg:max-w-4xl mx-auto px-4 py-4">
           {loading && books.length === 0 ? (
             <div>
               {slowLoad && (
@@ -213,7 +240,7 @@ export function FreeBooksBrowser() {
                   <span>The book server is slow — hang tight...</span>
                 </motion.div>
               )}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-4">
                 {Array.from({ length: 9 }).map((_, i) => (
                   <motion.div
                     key={i}
@@ -252,9 +279,9 @@ export function FreeBooksBrowser() {
                   <div className="w-3 h-3 rounded-full animate-pulse bg-stone-300 dark:bg-stone-600" /> Refreshing...
                 </div>
               )}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-4">
                 {books.map((book, i) => (
-                  <BookGridCard key={book.id} book={book} onRead={handleRead} index={i} />
+                  <BookGridCard key={book.id} book={book} onRead={handleRead} onSave={handleSaveToLibrary} isSaved={savedIds.has(`gutenberg-${book.id}`)} index={i} />
                 ))}
               </div>
             </div>
@@ -279,10 +306,14 @@ export function FreeBooksBrowser() {
 function BookGridCard({
   book,
   onRead,
+  onSave,
+  isSaved,
   index,
 }: {
   book: GutenbergBook
   onRead: (book: GutenbergBook) => void
+  onSave: (book: GutenbergBook) => void
+  isSaved: boolean
   index: number
 }) {
   const [imgError, setImgError] = useState(false)
@@ -305,13 +336,14 @@ function BookGridCard({
 
   return (
     <motion.div
-      className="flex flex-col"
+      className="flex flex-col group"
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -3, transition: { type: "spring", stiffness: 400, damping: 30 } }}
       transition={{ delay: Math.min(index * 0.03, 0.2), type: "spring", stiffness: 300, damping: 28 }}
     >
       <div
-        className="relative w-full aspect-[2/3] rounded-xl overflow-hidden bg-stone-200 mb-2 shadow-sm cursor-pointer"
+        className="relative w-full aspect-[2/3] rounded-xl overflow-hidden bg-stone-100 dark:bg-stone-800 mb-2.5 shadow-sm group-hover:shadow-md transition-shadow ring-1 ring-stone-200/50 dark:ring-stone-700/50 cursor-pointer"
         onClick={() => onRead(book)}
       >
         {coverUrl && !imgError ? (
@@ -348,14 +380,28 @@ function BookGridCard({
         <h4 className="font-semibold text-xs text-stone-900 dark:text-stone-100 line-clamp-2 leading-tight min-h-[1.875rem]">
           {book.title}
         </h4>
-        <p className="text-[11px] text-stone-400 dark:text-stone-500 truncate mb-1.5">{author}</p>
-        <button
-          onClick={() => onRead(book)}
-          className="mt-auto w-full flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium bg-amber-600 text-white hover:bg-amber-700 active:scale-[0.98] transition-all"
-        >
-          <BookOpen className="w-3 h-3" />
-          Read Free
-        </button>
+        <p className="text-[11px] text-stone-400 dark:text-stone-500 truncate mb-2">{author}</p>
+        <div className="mt-auto flex gap-1.5">
+          <button
+            onClick={() => onRead(book)}
+            className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium bg-amber-600 text-white hover:bg-amber-700 active:scale-[0.98] transition-all"
+          >
+            <BookOpen className="w-3 h-3" />
+            Read
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); if (!isSaved) onSave(book) }}
+            disabled={isSaved}
+            className={`flex items-center justify-center gap-1 py-1.5 px-2.5 rounded-lg text-xs font-medium transition-all active:scale-[0.98] ${
+              isSaved
+                ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
+                : "bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700"
+            }`}
+          >
+            {isSaved ? <Check className="w-3 h-3" /> : <Heart className="w-3 h-3" />}
+            {isSaved ? "Saved" : "Save"}
+          </button>
+        </div>
       </div>
     </motion.div>
   )

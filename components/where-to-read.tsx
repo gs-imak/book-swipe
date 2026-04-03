@@ -105,17 +105,7 @@ export function WhereToRead({ book }: WhereToReadProps) {
                 <span className="text-xs text-stone-500">Not available for sale</span>
               )}
             </div>
-            <button
-              onClick={toggleWatch}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
-                watching
-                  ? "bg-amber-100 text-amber-700 dark:text-amber-400 border border-amber-200"
-                  : "bg-white dark:bg-stone-900 text-stone-500 hover:text-stone-700 border border-stone-200"
-              }`}
-            >
-              <Eye className="w-3 h-3" />
-              {watching ? "Watching" : "Watch Price"}
-            </button>
+            {/* Price watch list UI not yet implemented — button removed */}
           </div>
           {priceInfo.buyLink && (
             <a

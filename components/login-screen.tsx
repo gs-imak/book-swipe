@@ -321,15 +321,17 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             </p>
           </div>
           <div className="flex items-center gap-6">
-            <span className="text-xs text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 transition-colors cursor-pointer">
-              Privacy
+            <span className="text-xs text-stone-400 dark:text-stone-500">
+              No tracking · No accounts · 100% free
             </span>
-            <span className="text-xs text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 transition-colors cursor-pointer">
-              About
-            </span>
-            <span className="text-xs text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 transition-colors cursor-pointer">
+            <a
+              href="https://github.com/gs-imak/book-swipe"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
+            >
               GitHub
-            </span>
+            </a>
           </div>
         </div>
       </footer>
