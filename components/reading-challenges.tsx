@@ -6,6 +6,59 @@ import { X, Target, BookOpen, FileText, Flame, Compass, CheckCircle2, ChevronDow
 import { getLikedBooks, getReadingProgress, getBookReviews, getUserStats } from "@/lib/storage"
 
 const CHALLENGES_KEY = "bookswipe_challenges"
+const PROMPT_CHALLENGES_KEY = "bookswipe_prompt_challenges"
+
+interface PromptChallenge {
+  id: string
+  prompt: string
+  category: string
+  icon: string
+}
+
+const PROMPT_CHALLENGES: PromptChallenge[] = [
+  // Genre Explorer
+  { id: "genre-new", prompt: "Read a book from a genre you've never tried", category: "Genre Explorer", icon: "🗺️" },
+  { id: "genre-poetry", prompt: "Read a poetry collection", category: "Genre Explorer", icon: "✍️" },
+  { id: "genre-graphic", prompt: "Read a graphic novel or manga", category: "Genre Explorer", icon: "🎨" },
+  // Format
+  { id: "format-audio", prompt: "Listen to an audiobook", category: "Format", icon: "🎧" },
+  { id: "format-short", prompt: "Read a book under 200 pages", category: "Format", icon: "📄" },
+  { id: "format-long", prompt: "Read a book over 500 pages", category: "Format", icon: "📚" },
+  // Time Travel
+  { id: "time-old", prompt: "Read a book published before 1950", category: "Time Travel", icon: "🕰️" },
+  { id: "time-new", prompt: "Read a book published this year", category: "Time Travel", icon: "🗓️" },
+  { id: "time-classic", prompt: "Read a classic you've been avoiding", category: "Time Travel", icon: "⏳" },
+  // Diversity
+  { id: "div-country", prompt: "Read a book by an author from a different country", category: "Diversity", icon: "🌍" },
+  { id: "div-translation", prompt: "Read a book in translation", category: "Diversity", icon: "🌐" },
+  { id: "div-protagonist", prompt: "Read a book with a protagonist unlike you", category: "Diversity", icon: "🧑‍🤝‍🧑" },
+  // Wild Card
+  { id: "wild-stranger", prompt: "Read a book recommended by a stranger", category: "Wild Card", icon: "🎲" },
+  { id: "wild-one-word", prompt: "Read a book with a one-word title", category: "Wild Card", icon: "🔤" },
+  { id: "wild-banned", prompt: "Read a book that was banned", category: "Wild Card", icon: "🚫" },
+  { id: "wild-reread", prompt: "Reread a childhood favorite", category: "Wild Card", icon: "🧸" },
+  { id: "wild-shelf", prompt: "Read the first book on your shelf", category: "Wild Card", icon: "📖" },
+]
+
+function loadCompletedPrompts(): string[] {
+  try {
+    if (typeof window === "undefined") return []
+    const stored = localStorage.getItem(PROMPT_CHALLENGES_KEY)
+    if (!stored) return []
+    return JSON.parse(stored) as string[]
+  } catch {
+    return []
+  }
+}
+
+function saveCompletedPrompts(ids: string[]) {
+  try {
+    if (typeof window === "undefined") return
+    localStorage.setItem(PROMPT_CHALLENGES_KEY, JSON.stringify(ids))
+  } catch {
+    // ignore storage errors
+  }
+}
 
 interface ChallengeTargets {
   monthlyBooks: number    // 2 | 4 | 6 | 8
@@ -113,6 +166,7 @@ export function ReadingChallenges({ isOpen, onClose }: ReadingChallengesProps) {
   const [targets, setTargets] = useState<ChallengeTargets>(DEFAULT_TARGETS)
   const [challenges, setChallenges] = useState<Challenge[]>([])
   const [showGoalEditor, setShowGoalEditor] = useState(false)
+  const [completedPrompts, setCompletedPrompts] = useState<string[]>([])
 
   const buildChallenges = useCallback((t: ChallengeTargets): Challenge[] => {
     const stats = getUserStats()
@@ -185,6 +239,7 @@ export function ReadingChallenges({ isOpen, onClose }: ReadingChallengesProps) {
       const t = loadTargets()
       setTargets(t)
       setChallenges(buildChallenges(t))
+      setCompletedPrompts(loadCompletedPrompts())
     }
   }, [isOpen, buildChallenges])
 
@@ -213,7 +268,16 @@ export function ReadingChallenges({ isOpen, onClose }: ReadingChallengesProps) {
     setChallenges(buildChallenges(updated))
   }
 
-  const completedCount = challenges.filter(c => c.current >= c.target).length
+  const togglePrompt = (id: string) => {
+    const next = completedPrompts.includes(id)
+      ? completedPrompts.filter(p => p !== id)
+      : [...completedPrompts, id]
+    setCompletedPrompts(next)
+    saveCompletedPrompts(next)
+  }
+
+  const completedCount = challenges.filter(c => c.current >= c.target).length + completedPrompts.length
+  const totalCount = challenges.length + PROMPT_CHALLENGES.length
 
   return (
     <AnimatePresence>
@@ -244,7 +308,7 @@ export function ReadingChallenges({ isOpen, onClose }: ReadingChallengesProps) {
                     Reading Challenges
                   </h2>
                   <p className="text-[11px] text-stone-400 dark:text-stone-500">
-                    {completedCount} of {challenges.length} complete
+                    {completedCount} of {totalCount} complete
                   </p>
                 </div>
               </div>
@@ -418,6 +482,58 @@ export function ReadingChallenges({ isOpen, onClose }: ReadingChallengesProps) {
                   </motion.div>
                 )
               })}
+
+              {/* Reading Prompts section */}
+              <div className="pt-2">
+                <div className="flex items-center gap-2 mb-3">
+                  <h3 className="text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-widest">
+                    Reading Prompts
+                  </h3>
+                  <div className="flex-1 h-px bg-stone-100 dark:bg-stone-800" />
+                  <span className="text-[11px] text-stone-400 dark:text-stone-500">
+                    {completedPrompts.length}/{PROMPT_CHALLENGES.length}
+                  </span>
+                </div>
+
+                {(["Genre Explorer", "Format", "Time Travel", "Diversity", "Wild Card"] as const).map(category => {
+                  const items = PROMPT_CHALLENGES.filter(p => p.category === category)
+                  return (
+                    <div key={category} className="mb-4">
+                      <p className="text-[10px] font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-widest mb-2">
+                        {category}
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {items.map(item => {
+                          const done = completedPrompts.includes(item.id)
+                          return (
+                            <button
+                              key={item.id}
+                              onClick={() => togglePrompt(item.id)}
+                              className={`relative text-left rounded-xl p-3 border transition-all active:scale-95 ${
+                                done
+                                  ? "border-emerald-200 dark:border-emerald-700/50 bg-emerald-50 dark:bg-emerald-900/20"
+                                  : "border-stone-100 dark:border-stone-800 bg-stone-50 dark:bg-stone-800/50 hover:bg-stone-100 dark:hover:bg-stone-800"
+                              }`}
+                            >
+                              <span className="text-xl block mb-1.5 leading-none">{item.icon}</span>
+                              <p className={`text-[11px] leading-snug font-medium ${
+                                done
+                                  ? "text-emerald-700 dark:text-emerald-400 line-through decoration-emerald-400/60"
+                                  : "text-stone-700 dark:text-stone-300"
+                              }`}>
+                                {item.prompt}
+                              </p>
+                              {done && (
+                                <CheckCircle2 className="absolute top-2 right-2 w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
+                              )}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
 
               {/* Footer nudge */}
               <p className="text-center text-[11px] text-stone-400 dark:text-stone-500 pb-2 pt-1">
