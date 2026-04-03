@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Star, Heart, MessageSquare, FileText, Calendar, Clock, BookOpen, Library, Share2, Trash2, Loader2, EyeOff, Plus } from "lucide-react"
+import { X, Star, Heart, MessageSquare, FileText, Calendar, Clock, BookOpen, Library, Share2, Trash2, Loader2, EyeOff, Plus, ChevronRight, Tag } from "lucide-react"
 import { Book } from "@/lib/book-data"
-import { BookReview, getBookReview, getShelvesForBook, getShelves, type Shelf } from "@/lib/storage"
+import { BookReview, getBookReview, getShelvesForBook, getShelves, type Shelf, addLikedBook, getBookTags, getTagDefinitions, addTagToBook, removeTagFromBook, createTag, type TagDefinition, TAG_COLORS } from "@/lib/storage"
 import { scoreBooks } from "@/lib/scoring-engine"
 import { getCachedBooks } from "@/lib/book-cache"
+import { detectSeries, findNextInSeries, type SeriesInfo } from "@/lib/series-detection"
 import { QuickReview } from "./quick-review"
 import { ReviewDisplay } from "./review-display"
 import { BookNotes } from "./book-notes"
@@ -14,6 +15,7 @@ import { BookCover } from "@/components/book-cover"
 import { ShelfPicker } from "./shelf-picker"
 import { ShareCardGenerator } from "./share-card-generator"
 import { WhereToRead } from "./where-to-read"
+import { ConfirmDialog } from "./confirm-dialog"
 import { estimateReadingTime } from "@/lib/reading-time"
 import { useFocusTrap } from "@/lib/use-focus-trap"
 import dynamic from "next/dynamic"
@@ -50,6 +52,16 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
   // undefined = still searching, null = no match found, GutenbergBook = match found
   const [showReader, setShowReader] = useState(false)
   const [similarBooks, setSimilarBooks] = useState<Book[]>([])
+  const [seriesInfo, setSeriesInfo] = useState<SeriesInfo | null>(null)
+  const [seriesBooks, setSeriesBooks] = useState<Book[]>([])
+  const [seriesLoading, setSeriesLoading] = useState(false)
+  const [bookTagDefs, setBookTagDefs] = useState<TagDefinition[]>([])
+  const [showTagDropdown, setShowTagDropdown] = useState(false)
+  const [creatingTag, setCreatingTag] = useState(false)
+  const [newTagName, setNewTagName] = useState("")
+  const [newTagColor, setNewTagColor] = useState(TAG_COLORS[4])
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
+  const tagDropdownRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
 
@@ -69,19 +81,56 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
       const shelfIds = getShelvesForBook(book.id)
       const allShelves = getShelves()
       setAssignedShelves(allShelves.filter(s => shelfIds.includes(s.id)))
+      // Load assigned tags
+      setBookTagDefs(getBookTags(book.id))
+      setShowTagDropdown(false)
+      setCreatingTag(false)
       // Compute similar books using the current book as the "liked" input
       const cached = getCachedBooks().filter(b => b.id !== book.id)
       const scored = scoreBooks(cached, [book])
       setSimilarBooks(scored.slice(0, 6).map(s => s.book))
+      // Detect series and fetch next books
+      const detected = detectSeries(book)
+      setSeriesInfo(detected)
+      setSeriesBooks([])
+      if (detected) {
+        setSeriesLoading(true)
+        findNextInSeries(book, detected).then((books) => {
+          if (!cancelled) {
+            setSeriesBooks(books)
+            setSeriesLoading(false)
+          }
+        }).catch(() => {
+          if (!cancelled) setSeriesLoading(false)
+        })
+      }
       return () => { cancelled = true }
     }
   }, [book])
+
+  // Close tag dropdown on outside click
+  useEffect(() => {
+    if (!showTagDropdown) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (tagDropdownRef.current && !tagDropdownRef.current.contains(e.target as Node)) {
+        setShowTagDropdown(false)
+        setCreatingTag(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [showTagDropdown])
 
   // Close on Escape key (only if no sub-modal is open)
   useEffect(() => {
     if (!isOpen) return
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !showShelfPicker && !showShareCard) {
+        if (showTagDropdown) {
+          setShowTagDropdown(false)
+          setCreatingTag(false)
+          return
+        }
         onClose()
       }
     }
@@ -386,6 +435,162 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                   </div>
                 </div>
 
+                {/* Tags / Labels */}
+                <div>
+                  <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2.5">
+                    Tags
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {bookTagDefs.map((tag) => (
+                      <span
+                        key={tag.id}
+                        className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full transition-colors"
+                        style={{
+                          backgroundColor: tag.color + "20",
+                          color: tag.color,
+                        }}
+                      >
+                        {tag.name}
+                        <button
+                          onClick={() => {
+                            removeTagFromBook(book.id, tag.id)
+                            setBookTagDefs(getBookTags(book.id))
+                          }}
+                          className="ml-0.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 p-0.5 transition-colors"
+                          aria-label={`Remove tag ${tag.name}`}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                    <div className="relative" ref={tagDropdownRef}>
+                      <button
+                        onClick={() => {
+                          setShowTagDropdown(!showTagDropdown)
+                          setCreatingTag(false)
+                          setNewTagName("")
+                        }}
+                        className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700 hover:text-stone-700 dark:hover:text-stone-200 transition-colors"
+                      >
+                        <Tag className="w-3 h-3" />
+                        Add tag
+                      </button>
+                      <AnimatePresence>
+                        {showTagDropdown && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 4, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 4, scale: 0.95 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute top-full left-0 mt-1.5 z-20 w-56 bg-white dark:bg-stone-900 rounded-xl shadow-lg border border-stone-200 dark:border-stone-700 overflow-hidden"
+                          >
+                            {!creatingTag ? (
+                              <div className="max-h-48 overflow-y-auto">
+                                {getTagDefinitions()
+                                  .filter(t => !bookTagDefs.some(bt => bt.id === t.id))
+                                  .map((tag) => (
+                                    <button
+                                      key={tag.id}
+                                      onClick={() => {
+                                        addTagToBook(book.id, tag.id)
+                                        setBookTagDefs(getBookTags(book.id))
+                                      }}
+                                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-left hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
+                                    >
+                                      <span
+                                        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                                        style={{ backgroundColor: tag.color }}
+                                      />
+                                      <span className="text-stone-700 dark:text-stone-300 truncate">{tag.name}</span>
+                                    </button>
+                                  ))
+                                }
+                                <button
+                                  onClick={() => {
+                                    setCreatingTag(true)
+                                    setNewTagName("")
+                                    setNewTagColor(TAG_COLORS[4])
+                                  }}
+                                  className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-left border-t border-stone-100 dark:border-stone-800 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors text-amber-700 dark:text-amber-400 font-medium"
+                                >
+                                  <Plus className="w-3.5 h-3.5" />
+                                  Create new tag
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="p-3 space-y-2.5">
+                                <input
+                                  type="text"
+                                  placeholder="Tag name..."
+                                  value={newTagName}
+                                  onChange={(e) => setNewTagName(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter" && newTagName.trim()) {
+                                      const created = createTag(newTagName.trim(), newTagColor)
+                                      addTagToBook(book.id, created.id)
+                                      setBookTagDefs(getBookTags(book.id))
+                                      setCreatingTag(false)
+                                      setShowTagDropdown(false)
+                                      setNewTagName("")
+                                    }
+                                  }}
+                                  autoFocus
+                                  maxLength={50}
+                                  className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-800 dark:text-stone-200 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
+                                />
+                                <div className="flex gap-1.5 flex-wrap">
+                                  {TAG_COLORS.map((c) => (
+                                    <button
+                                      key={c}
+                                      onClick={() => setNewTagColor(c)}
+                                      className="w-6 h-6 rounded-full transition-all flex items-center justify-center"
+                                      style={{
+                                        backgroundColor: c,
+                                        boxShadow: newTagColor === c ? `0 0 0 2px white, 0 0 0 4px ${c}` : "none",
+                                      }}
+                                      aria-label={`Select color ${c}`}
+                                    >
+                                      {newTagColor === c && (
+                                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                      )}
+                                    </button>
+                                  ))}
+                                </div>
+                                <div className="flex gap-1.5">
+                                  <button
+                                    onClick={() => setCreatingTag(false)}
+                                    className="flex-1 text-xs px-2.5 py-1.5 rounded-lg bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      if (newTagName.trim()) {
+                                        const created = createTag(newTagName.trim(), newTagColor)
+                                        addTagToBook(book.id, created.id)
+                                        setBookTagDefs(getBookTags(book.id))
+                                        setCreatingTag(false)
+                                        setShowTagDropdown(false)
+                                        setNewTagName("")
+                                      }
+                                    }}
+                                    disabled={!newTagName.trim()}
+                                    className="flex-1 text-xs px-2.5 py-1.5 rounded-lg bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-medium"
+                                  >
+                                    Create
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Where to Read */}
                 <div>
                   <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2.5">
@@ -424,6 +629,78 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                   </h3>
                   <BookNotes bookId={book.id} compact />
                 </div>
+
+                {/* Series */}
+                {seriesInfo && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2.5">
+                      <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider">
+                        Continue the Series
+                      </h3>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 font-semibold border border-amber-200/60 dark:border-amber-800/40">
+                        Book {seriesInfo.bookNumber} of {seriesInfo.seriesName}
+                      </span>
+                    </div>
+
+                    {seriesLoading ? (
+                      <div className="flex items-center gap-2 py-4">
+                        <Loader2 className="w-4 h-4 text-amber-500 animate-spin" />
+                        <span className="text-xs text-stone-400 dark:text-stone-500">Finding series books...</span>
+                      </div>
+                    ) : seriesBooks.length > 0 ? (
+                      <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1">
+                        {seriesBooks.map((seriesBook) => {
+                          const sbInfo = detectSeries(seriesBook)
+                          return (
+                            <div
+                              key={seriesBook.id}
+                              className="flex-shrink-0 group flex flex-col items-center gap-1.5"
+                            >
+                              <button
+                                onClick={() => onBookClick?.(seriesBook)}
+                                className="relative"
+                                title={`${seriesBook.title} by ${seriesBook.author}`}
+                              >
+                                <div className="relative w-[48px] h-[72px] rounded-lg overflow-hidden shadow-sm border border-stone-200/60 dark:border-stone-700/60 group-hover:shadow-md group-hover:border-amber-300 dark:group-hover:border-amber-700 transition-all">
+                                  <BookCover
+                                    src={seriesBook.cover}
+                                    fallbackSrc={seriesBook.coverFallback}
+                                    alt={seriesBook.title}
+                                    fill
+                                    className="object-cover"
+                                    sizes="48px"
+                                  />
+                                </div>
+                                {sbInfo && (
+                                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center shadow-sm">
+                                    {sbInfo.bookNumber}
+                                  </span>
+                                )}
+                              </button>
+                              <p className="text-[10px] text-stone-500 dark:text-stone-400 text-center leading-tight w-[48px] line-clamp-2">
+                                {seriesBook.title}
+                              </p>
+                              <button
+                                onClick={() => {
+                                  addLikedBook(seriesBook)
+                                  onStartReading?.(seriesBook)
+                                }}
+                                className="text-[9px] px-2 py-0.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-amber-100 dark:hover:bg-amber-900/40 hover:text-amber-700 dark:hover:text-amber-400 transition-colors font-medium flex items-center gap-0.5"
+                              >
+                                <Plus className="w-2.5 h-2.5" />
+                                Add
+                              </button>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-stone-400 dark:text-stone-500 italic py-2">
+                        No other books found in this series.
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {/* Similar Books */}
                 {similarBooks.length > 0 && (
