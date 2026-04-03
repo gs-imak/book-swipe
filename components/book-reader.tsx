@@ -359,6 +359,19 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   // Feature: One-time reader hints
   const [showHints, setShowHints] = useState(false)
 
+  // Session tracking for end-of-session summary
+  const sessionStartRef = useRef(Date.now())
+  const sessionStartProgressRef = useRef(0)
+  const sessionStartRecordedRef = useRef(false)
+  const [showSessionSummary, setShowSessionSummary] = useState(false)
+  const [sessionStats, setSessionStats] = useState<{
+    pagesRead: number
+    minutesSpent: number
+    progressPct: number
+    totalPages: number
+    pagesLeft: number
+  } | null>(null)
+
   // CSS column pagination state
   const [paginatedPage, setPaginatedPage] = useState(0)
   const [columnTotal, setColumnTotal] = useState(1)
@@ -605,10 +618,22 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
           const pct = pages > 1 ? Math.round((clamped / (pages - 1)) * 100) : 0
           setProgress(pct)
           setPaginatedPage(clamped)
+          // Record session start progress (once, after position is restored)
+          if (!sessionStartRecordedRef.current) {
+            sessionStartRecordedRef.current = true
+            sessionStartRef.current = Date.now()
+            sessionStartProgressRef.current = pct
+          }
         } else {
           // Start at page 0
           el.style.transform = "translateX(0)"
           setPaginatedPage(0)
+          // Record session start at beginning
+          if (!sessionStartRecordedRef.current) {
+            sessionStartRecordedRef.current = true
+            sessionStartRef.current = Date.now()
+            sessionStartProgressRef.current = 0
+          }
         }
       } else {
         // Font/size changed: clamp current page and re-apply transform
@@ -1050,6 +1075,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   useEffect(() => {
     if (!isOpen) {
       hasRestoredRef.current = false
+      sessionStartRecordedRef.current = false
       if (debounceRef.current) clearTimeout(debounceRef.current)
       return
     }
