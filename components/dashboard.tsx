@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import { Book } from "@/lib/book-data"
-import { getLikedBooks, clearLikedBooks, addBookToReading, getReadingProgress, addLikedBook, removeLikedBook, getBookReviews, getShelfAssignments, getReadingTimeToday } from "@/lib/storage"
+import { getLikedBooks, clearLikedBooks, addBookToReading, getReadingProgress, addLikedBook, removeLikedBook, getBookReviews, getBookNotes, getShelfAssignments, getReadingTimeToday } from "@/lib/storage"
 import { Button } from "@/components/ui/button"
 import { AdminPanel } from "./admin-panel"
 import { ReadingProgressTracker } from "./reading-progress"
@@ -11,7 +11,7 @@ import { BookDetailModal } from "./book-detail-modal"
 import { StarRating } from "./star-rating"
 import { getUserStats } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
-import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy, Search, Library, SlidersHorizontal, Download, X as XIcon, Target, FolderOpen, ChevronRight } from "lucide-react"
+import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy, Search, Library, SlidersHorizontal, Download, X as XIcon, Target, FolderOpen, ChevronRight, Flame } from "lucide-react"
 import { SittingReadingDoodle, ReadingSideDoodle, ReadingDoodle, FloatDoodle, GroovyDoodle, LovingDoodle } from "./illustrations"
 import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
@@ -58,6 +58,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set())
   const [showHidden, setShowHidden] = useState(false)
   const [authorFilter, setAuthorFilter] = useState<string | null>(null)
+  const [moodFilter, setMoodFilter] = useState<string | null>(null)
   const [currentlyReading, setCurrentlyReading] = useState<ReturnType<typeof getReadingProgress>>([])
   const [showAllReading, setShowAllReading] = useState(false)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
@@ -156,6 +157,17 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   const savedBookIds = useMemo(() => new Set(likedBooks.map(b => b.id)), [likedBooks])
 
   const shelfBookIds = useMemo(() => shelfFilter ? new Set(getBooksForShelf(shelfFilter)) : null, [shelfFilter])
+  const MOOD_KEYWORDS: Record<string, string[]> = {
+    "Adventurous": ["adventurous", "epic", "thrilling", "immersive", "exciting"],
+    "Cozy": ["cozy", "heartwarming", "feel-good", "light-hearted", "warm", "comforting"],
+    "Intellectual": ["thought-provoking", "philosophical", "complex", "contemplative", "reflective", "smart"],
+    "Romantic": ["romantic", "emotional", "love", "passionate", "sensual"],
+    "Thrilling": ["suspenseful", "gripping", "twisty", "tense", "dark", "thrilling"],
+    "Relaxing": ["relaxing", "gentle", "peaceful", "simple", "calming", "uplifting", "spiritual"],
+    "Inspiring": ["inspiring", "motivational", "empowering", "powerful", "eye-opening", "honest"],
+    "Dark": ["dark", "atmospheric", "melancholic", "tragic", "haunting", "gothic"],
+  }
+
   const filteredBooks = useMemo(() => likedBooks.filter(book => {
     if (!showHidden && hiddenIds.has(book.id)) return false
     if (showHidden && !hiddenIds.has(book.id)) return false
@@ -163,11 +175,17 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
     if (formatFilter === "ebook" && !book.formats?.ebook) return false
     if (formatFilter === "audio" && !book.formats?.audiobook) return false
     if (authorFilter && book.author !== authorFilter) return false
+    if (moodFilter) {
+      const keywords = MOOD_KEYWORDS[moodFilter] || []
+      const bookMoods = book.mood.map(m => m.toLowerCase())
+      const hasMatch = keywords.some(kw => bookMoods.some(bm => bm.includes(kw)))
+      if (!hasMatch) return false
+    }
     if (filter === "all") return true
     return book.genre.some(genre =>
       genre.toLowerCase().includes(filter.toLowerCase())
     )
-  }), [likedBooks, shelfBookIds, formatFilter, filter, hiddenIds, showHidden, authorFilter])
+  }), [likedBooks, shelfBookIds, formatFilter, filter, hiddenIds, showHidden, authorFilter, moodFilter])
 
   const sortedBooks = [...filteredBooks].sort((a, b) => {
     switch (sortBy) {
@@ -183,7 +201,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
   // Reset visible count when filters/sort change so user sees first page
   useEffect(() => {
     setVisibleCount(BOOKS_PER_PAGE)
-  }, [filter, sortBy, shelfFilter, formatFilter, authorFilter, showHidden])
+  }, [filter, sortBy, shelfFilter, formatFilter, authorFilter, moodFilter, showHidden])
 
   // Slice the visible portion for rendering
   const visibleBooks = sortedBooks.slice(0, visibleCount)
@@ -240,7 +258,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
     { value: "pages", label: "Pages ↑" },
   ]
 
-  const hasActiveFilters = shelfFilter !== null || filter !== "all" || formatFilter !== "all" || authorFilter !== null
+  const hasActiveFilters = shelfFilter !== null || filter !== "all" || formatFilter !== "all" || authorFilter !== null || moodFilter !== null
 
   // Time-based greeting
   const getGreeting = () => {
@@ -631,6 +649,171 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               )}
             </motion.div>
 
+            {/* ━━━ Reading Streaks Calendar + Mood Browse ━━━ */}
+            <motion.div {...fadeInUp(0.02)} className="space-y-4">
+              {/* Calendar Heatmap */}
+              {(() => {
+                const now = new Date()
+                const year = now.getFullYear()
+                const month = now.getMonth()
+                const monthName = now.toLocaleString("default", { month: "long" })
+                const daysInMonth = new Date(year, month + 1, 0).getDate()
+                const firstDayOfWeek = new Date(year, month, 1).getDay()
+
+                const activityCounts: Record<string, number> = {}
+                const countDay = (dateStr: string | undefined) => {
+                  if (!dateStr) return
+                  const d = new Date(dateStr)
+                  if (d.getFullYear() === year && d.getMonth() === month) {
+                    const key = d.getDate().toString()
+                    activityCounts[key] = (activityCounts[key] || 0) + 1
+                  }
+                }
+
+                getReadingProgress().forEach(p => countDay(p.lastReadDate))
+                getBookReviews().forEach(r => { countDay(r.createdAt); countDay(r.updatedAt) })
+                getBookNotes().forEach(n => countDay(n.createdAt))
+
+                const todayDate = now.getDate()
+                let streak = 0
+                for (let d = todayDate; d >= 1; d--) {
+                  if (activityCounts[d.toString()]) {
+                    streak++
+                  } else {
+                    break
+                  }
+                }
+
+                const weeks: (number | null)[][] = []
+                let currentWeek: (number | null)[] = []
+                const startOffset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1
+                for (let i = 0; i < startOffset; i++) currentWeek.push(null)
+                for (let day = 1; day <= daysInMonth; day++) {
+                  currentWeek.push(day)
+                  if (currentWeek.length === 7) {
+                    weeks.push(currentWeek)
+                    currentWeek = []
+                  }
+                }
+                if (currentWeek.length > 0) {
+                  while (currentWeek.length < 7) currentWeek.push(null)
+                  weeks.push(currentWeek)
+                }
+
+                const dayLabels = ["M", "T", "W", "T", "F", "S", "S"]
+
+                const getCellColor = (count: number) => {
+                  if (count === 0) return "bg-stone-100 dark:bg-stone-800"
+                  if (count === 1) return "bg-amber-200 dark:bg-amber-800/60"
+                  if (count === 2) return "bg-amber-400 dark:bg-amber-600/80"
+                  return "bg-amber-600 dark:bg-amber-500"
+                }
+
+                return (
+                  <div className="rounded-xl border border-stone-200/70 dark:border-stone-700/60 bg-stone-50/80 dark:bg-stone-800/40 p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+                          {monthName} {year}
+                        </p>
+                      </div>
+                      {streak > 0 && (
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-900/30">
+                          <Flame className="w-3.5 h-3.5 text-amber-500" />
+                          <span className="text-xs font-bold text-amber-700 dark:text-amber-400">{streak} day streak</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex gap-1">
+                      <div className="flex flex-col gap-1 mr-1.5 pt-0">
+                        {dayLabels.map((label, i) => (
+                          <div
+                            key={i}
+                            className="h-3 flex items-center"
+                            style={{ fontSize: "9px", lineHeight: "12px" }}
+                          >
+                            <span className={`text-stone-400 dark:text-stone-500 font-medium ${i % 2 === 0 ? "opacity-100" : "opacity-0"}`}>
+                              {label}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex gap-1 flex-1">
+                        {weeks.map((week, wi) => (
+                          <div key={wi} className="flex flex-col gap-1 flex-1">
+                            {week.map((day, di) => {
+                              const count = day ? (activityCounts[day.toString()] || 0) : 0
+                              const isToday = day === todayDate
+                              return (
+                                <div
+                                  key={di}
+                                  className={`h-3 w-full rounded-sm transition-colors ${
+                                    day === null
+                                      ? "bg-transparent"
+                                      : getCellColor(count)
+                                  } ${isToday ? "ring-1 ring-stone-400 dark:ring-stone-500" : ""}`}
+                                  title={day ? `${monthName} ${day}: ${count} ${count === 1 ? "activity" : "activities"}` : ""}
+                                />
+                              )
+                            })}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 mt-2.5 justify-end">
+                      <span className="text-[9px] text-stone-400 dark:text-stone-500">Less</span>
+                      <div className="h-2.5 w-2.5 rounded-sm bg-stone-100 dark:bg-stone-800" />
+                      <div className="h-2.5 w-2.5 rounded-sm bg-amber-200 dark:bg-amber-800/60" />
+                      <div className="h-2.5 w-2.5 rounded-sm bg-amber-400 dark:bg-amber-600/80" />
+                      <div className="h-2.5 w-2.5 rounded-sm bg-amber-600 dark:bg-amber-500" />
+                      <span className="text-[9px] text-stone-400 dark:text-stone-500">More</span>
+                    </div>
+                  </div>
+                )
+              })()}
+
+              {/* Mood-Based Quick Browse */}
+              <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-0.5">
+                {([
+                  { mood: "Adventurous", bg: "bg-amber-50 dark:bg-amber-900/20", text: "text-amber-700 dark:text-amber-400", activeBg: "bg-amber-600", activeText: "text-white" },
+                  { mood: "Cozy", bg: "bg-orange-50 dark:bg-orange-900/20", text: "text-orange-700 dark:text-orange-400", activeBg: "bg-orange-600", activeText: "text-white" },
+                  { mood: "Intellectual", bg: "bg-blue-50 dark:bg-blue-900/20", text: "text-blue-700 dark:text-blue-400", activeBg: "bg-blue-600", activeText: "text-white" },
+                  { mood: "Romantic", bg: "bg-rose-50 dark:bg-rose-900/20", text: "text-rose-700 dark:text-rose-400", activeBg: "bg-rose-600", activeText: "text-white" },
+                  { mood: "Thrilling", bg: "bg-red-50 dark:bg-red-900/20", text: "text-red-700 dark:text-red-400", activeBg: "bg-red-600", activeText: "text-white" },
+                  { mood: "Relaxing", bg: "bg-emerald-50 dark:bg-emerald-900/20", text: "text-emerald-700 dark:text-emerald-400", activeBg: "bg-emerald-600", activeText: "text-white" },
+                  { mood: "Inspiring", bg: "bg-violet-50 dark:bg-violet-900/20", text: "text-violet-700 dark:text-violet-400", activeBg: "bg-violet-600", activeText: "text-white" },
+                  { mood: "Dark", bg: "bg-stone-100 dark:bg-stone-700/40", text: "text-stone-700 dark:text-stone-300", activeBg: "bg-stone-800 dark:bg-stone-200", activeText: "text-white dark:text-stone-900" },
+                ] as const).map((item) => {
+                  const isActive = moodFilter === item.mood
+                  return (
+                    <button
+                      key={item.mood}
+                      onClick={() => setMoodFilter(isActive ? null : item.mood)}
+                      className={`flex-shrink-0 rounded-full py-1 px-3 text-xs font-medium transition-all ${
+                        isActive
+                          ? `${item.activeBg} ${item.activeText}`
+                          : `${item.bg} ${item.text} hover:opacity-80`
+                      }`}
+                    >
+                      {item.mood}
+                    </button>
+                  )
+                })}
+                {moodFilter && (
+                  <button
+                    onClick={() => setMoodFilter(null)}
+                    className="flex-shrink-0 rounded-full py-1 px-2.5 text-xs font-medium text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors flex items-center gap-1"
+                  >
+                    <XIcon className="w-3 h-3" />
+                    Clear
+                  </button>
+                )}
+              </div>
+            </motion.div>
+
             {/* ━━━ Reading Goal Setter (shown once until user sets a goal) ━━━ */}
             <ReadingGoalSetter />
 
@@ -852,7 +1035,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                   </div>
                   <p className="text-sm text-stone-500 dark:text-stone-400">No books match these filters</p>
                   <button
-                    onClick={() => { setFilter("all"); setShelfFilter(null); setFormatFilter("all"); setAuthorFilter(null); setShowHidden(false) }}
+                    onClick={() => { setFilter("all"); setShelfFilter(null); setFormatFilter("all"); setAuthorFilter(null); setMoodFilter(null); setShowHidden(false) }}
                     className="mt-2 text-xs text-amber-600 hover:text-amber-700 font-medium"
                   >
                     Clear filters
