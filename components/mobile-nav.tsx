@@ -59,7 +59,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
       {/* Floating action buttons above nav — mobile only, hidden on desktop (sidebar has its own) */}
       <div
         className="fixed z-50 left-1/2 -translate-x-1/2 flex items-center gap-2 lg:hidden"
-        style={{ bottom: "calc(60px + env(safe-area-inset-bottom, 0px))" }}
+        style={{ bottom: "calc(68px + env(safe-area-inset-bottom, 0px))" }}
       >
         {onSearch && (
           <motion.button

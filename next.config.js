@@ -57,16 +57,16 @@ const nextConfig = {
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(), payment=()',
+            value: 'camera=(self), microphone=(), geolocation=(), payment=()',
           },
           {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
-              "style-src 'self' 'unsafe-inline'",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' https: data: blob:",
-              "font-src 'self' https://cdn.jsdelivr.net",
+              "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com",
               "media-src 'self' https://cdn.pixabay.com",
               "connect-src 'self' https://www.googleapis.com https://openlibrary.org https://covers.openlibrary.org https://gutendex.com https://www.gutenberg.org https://bookcover.longitood.com https://cdn.pixabay.com",
               "frame-ancestors 'none'",
