@@ -88,8 +88,8 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
             sizes="(max-width: 640px) 100vw, 400px"
             priority={isTop}
           />
-          {/* Bottom gradient for text legibility */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          {/* Bottom gradient — heavier on bottom 40% for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 via-[40%] to-transparent" />
         </div>
 
         {/* LIKE / NOPE stamps */}
@@ -118,8 +118,8 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
 
         {/* Recommendation reason pill */}
         {reason && (
-          <div className="absolute top-14 left-5 z-10 max-w-[60%]">
-            <span className="inline-block bg-white/20 backdrop-blur-sm border border-white/25 text-white text-[11px] font-medium px-2.5 py-1 rounded-full truncate max-w-full">
+          <div className="absolute top-14 left-5 z-10 max-w-[70%]">
+            <span className="inline-block bg-amber-500/25 backdrop-blur-sm border border-amber-400/30 text-amber-100 text-[11px] font-semibold px-2.5 py-1 rounded-full truncate max-w-full">
               {reason}
             </span>
           </div>
@@ -165,12 +165,17 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
             <span className="w-1 h-1 rounded-full bg-white/40" />
             <div className="flex items-center gap-1">
               <Clock className="w-3.5 h-3.5" />
-              <span>{book.readingTime}</span>
+              <span>{book.pages >= 60 ? `~${Math.round(book.pages / 40)}h` : `~${Math.round(book.pages / 40 * 60)}m`}</span>
+            </div>
+            <span className="w-1 h-1 rounded-full bg-white/40" />
+            <div className="flex items-center gap-1">
+              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+              <span>{book.rating}</span>
             </div>
           </div>
 
           {/* Genre tags */}
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-1.5 mb-1.5">
             {book.genre.slice(0, 3).map((genre) => (
               <span
                 key={genre}
@@ -180,6 +185,20 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
               </span>
             ))}
           </div>
+
+          {/* Mood pills */}
+          {book.mood.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {book.mood.slice(0, 3).map((mood) => (
+                <span
+                  key={mood}
+                  className="bg-white/10 text-white/70 text-[10px] px-2 py-0.5 rounded-full font-medium"
+                >
+                  {mood}
+                </span>
+              ))}
+            </div>
+          )}
         </motion.div>
 
         {/* Expanded info sheet */}
@@ -217,7 +236,17 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
           {/* Scrollable content */}
           <div className="flex-1 overflow-y-auto overscroll-contain">
             <div className="p-5 space-y-5">
-              {/* Header */}
+              {/* Recommendation reason badge */}
+              {reason && (
+                <div className="flex">
+                  <span className="inline-flex items-center gap-1.5 bg-amber-500/15 text-amber-700 dark:text-amber-400 text-xs font-semibold px-3 py-1.5 rounded-full border border-amber-200/60 dark:border-amber-700/40">
+                    <Star className="w-3 h-3 fill-amber-500 text-amber-500 flex-shrink-0" />
+                    {reason}
+                  </span>
+                </div>
+              )}
+
+              {/* Title and Author */}
               <div>
                 <h2
                   className="text-xl font-bold text-stone-900 dark:text-stone-100 mb-1 font-serif"
@@ -227,8 +256,13 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
                 <p className="text-base text-stone-500">{book.author}</p>
               </div>
 
-              {/* Stats */}
+              {/* Stats: rating + pages + estimated time */}
               <div className="grid grid-cols-3 gap-2">
+                <div className="bg-white dark:bg-stone-900 rounded-xl p-3 border border-stone-200/60 dark:border-stone-700/60 shadow-sm text-center">
+                  <Star className="w-4 h-4 text-amber-500 mx-auto mb-1" />
+                  <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{book.rating}</p>
+                  <p className="text-[11px] text-stone-400">rating</p>
+                </div>
                 <div className="bg-white dark:bg-stone-900 rounded-xl p-3 border border-stone-200/60 dark:border-stone-700/60 shadow-sm text-center">
                   <BookOpen className="w-4 h-4 text-stone-400 mx-auto mb-1" />
                   <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{book.pages}</p>
@@ -236,32 +270,9 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
                 </div>
                 <div className="bg-white dark:bg-stone-900 rounded-xl p-3 border border-stone-200/60 dark:border-stone-700/60 shadow-sm text-center">
                   <Clock className="w-4 h-4 text-stone-400 mx-auto mb-1" />
-                  <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{book.readingTime.replace(' hours', 'h').replace(' hour', 'h')}</p>
+                  <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{book.pages >= 60 ? `~${Math.round(book.pages / 40)}h` : `~${Math.round(book.pages / 40 * 60)}m`}</p>
                   <p className="text-[11px] text-stone-400">read time</p>
                 </div>
-                <div className="bg-white dark:bg-stone-900 rounded-xl p-3 border border-stone-200/60 dark:border-stone-700/60 shadow-sm text-center">
-                  <Star className="w-4 h-4 text-amber-500 mx-auto mb-1" />
-                  <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{book.rating}</p>
-                  <p className="text-[11px] text-stone-400">rating</p>
-                </div>
-              </div>
-
-              {/* Description — collapsible */}
-              <div>
-                <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
-                  About
-                </h3>
-                <p className={`text-sm text-stone-600 dark:text-stone-300 leading-relaxed ${descExpanded ? "" : "line-clamp-3"}`}>
-                  {book.description}
-                </p>
-                {book.description.length > 150 && (
-                  <button
-                    onClick={() => setDescExpanded(!descExpanded)}
-                    className="text-xs text-amber-700 dark:text-amber-400 font-medium mt-1.5 hover:underline"
-                  >
-                    {descExpanded ? "Show less" : "Read more"}
-                  </button>
-                )}
               </div>
 
               {/* Genres */}
@@ -282,20 +293,40 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
               </div>
 
               {/* Moods */}
+              {book.mood.length > 0 && (
+                <div>
+                  <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
+                    Vibes
+                  </h3>
+                  <div className="flex flex-wrap gap-1.5">
+                    {book.mood.map((mood) => (
+                      <span
+                        key={mood}
+                        className="bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs px-3 py-1.5 rounded-full font-medium border border-amber-100 dark:border-amber-800/40"
+                      >
+                        {mood}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Description — collapsible */}
               <div>
                 <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
-                  Vibes
+                  About
                 </h3>
-                <div className="flex flex-wrap gap-1.5">
-                  {book.mood.map((mood) => (
-                    <span
-                      key={mood}
-                      className="bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs px-3 py-1.5 rounded-full font-medium border border-amber-100"
-                    >
-                      {mood}
-                    </span>
-                  ))}
-                </div>
+                <p className={`text-sm text-stone-600 dark:text-stone-300 leading-relaxed ${descExpanded ? "" : "line-clamp-3"}`}>
+                  {book.description}
+                </p>
+                {book.description.length > 150 && (
+                  <button
+                    onClick={() => setDescExpanded(!descExpanded)}
+                    className="text-xs text-amber-700 dark:text-amber-400 font-medium mt-1.5 hover:underline"
+                  >
+                    {descExpanded ? "Show less" : "Read more"}
+                  </button>
+                )}
               </div>
 
               {/* Action button */}

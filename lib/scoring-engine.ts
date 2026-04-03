@@ -194,9 +194,31 @@ export function buildUserProfile(likedBooks: Book[]): string {
 // --- Reason Generation ---
 function generateReasons(
   book: Book,
-  likedBooks: Book[]
+  likedBooks: Book[],
+  similarityScores?: { book: Book; sim: number }[]
 ): RecommendationReason[] {
   const reasons: RecommendationReason[] = []
+
+  // Find most similar liked book (strongest "similar to X" signal)
+  if (similarityScores && similarityScores.length > 0) {
+    const best = similarityScores[0]
+    if (best.sim > 0.15) {
+      reasons.push({
+        type: "similar",
+        description: `Similar to ${best.book.title}`,
+      })
+    }
+  }
+
+  // Author overlap — very strong signal, put near top
+  const likedAuthors: Record<string, boolean> = {}
+  likedBooks.forEach((b) => { likedAuthors[b.author] = true })
+  if (likedAuthors[book.author]) {
+    reasons.push({
+      type: "author",
+      description: `More from ${book.author}`,
+    })
+  }
 
   // Genre overlap
   const likedGenres: Record<string, number> = {}
@@ -212,28 +234,23 @@ function generateReasons(
     )[0]
     reasons.push({
       type: "genre",
-      description: `Matches your favorite genre: ${bestGenre}`,
-    })
-  }
-
-  // Author overlap
-  const likedAuthors: Record<string, boolean> = {}
-  likedBooks.forEach((b) => { likedAuthors[b.author] = true })
-  if (likedAuthors[book.author]) {
-    reasons.push({
-      type: "author",
-      description: `By an author you love: ${book.author}`,
+      description: `Matches your love of ${bestGenre}`,
     })
   }
 
   // Mood overlap
-  const likedMoods: Record<string, boolean> = {}
-  likedBooks.forEach((b) => b.mood.forEach((m) => { likedMoods[m] = true }))
+  const likedMoods: Record<string, number> = {}
+  likedBooks.forEach((b) => b.mood.forEach((m) => {
+    likedMoods[m] = (likedMoods[m] || 0) + 1
+  }))
   const matchedMoods = book.mood.filter((m) => likedMoods[m])
   if (matchedMoods.length > 0) {
+    const bestMood = matchedMoods.sort(
+      (a, b) => (likedMoods[b] || 0) - (likedMoods[a] || 0)
+    )[0]
     reasons.push({
       type: "mood",
-      description: `Captures a mood you enjoy: ${matchedMoods[0]}`,
+      description: `Fits your ${bestMood} mood`,
     })
   }
 
@@ -248,8 +265,13 @@ function generateReasons(
     })
   }
 
-  // Rating
-  if (book.rating >= 4.0) {
+  // Rating + genre combo for richer phrasing
+  if (book.rating >= 4.0 && matchedGenres.length > 0) {
+    reasons.push({
+      type: "rating",
+      description: `Highly rated in ${matchedGenres[0]}`,
+    })
+  } else if (book.rating >= 4.0) {
     reasons.push({
       type: "rating",
       description: `Highly rated (${book.rating}/5)`,
@@ -258,7 +280,7 @@ function generateReasons(
 
   return reasons.length > 0
     ? reasons.slice(0, 3)
-    : [{ type: "similar", description: "Similar to books you liked" }]
+    : [{ type: "similar", description: "Picked for you" }]
 }
 
 // --- Vocabulary Cache ---
@@ -329,6 +351,14 @@ export function scoreBooks(
   const likedGenres = new Set<string>()
   likedBooks.forEach(b => b.genre.forEach(g => likedGenres.add(g.toLowerCase())))
 
+  // Pre-compute TF-IDF vectors for each liked book (for "Similar to X" reasons)
+  // Limit to last 10 liked books to keep it fast
+  const recentLiked = likedBooks.slice(-10)
+  const likedVectors = recentLiked.map(lb => ({
+    book: lb,
+    vector: computeTFIDF(buildFeatureString(lb), vocab),
+  }))
+
   // Score each candidate
   const scored: ScoredBook[] = filtered.map((book, i) => {
     const bookVector = computeTFIDF(candidateTexts[i], vocab)
@@ -362,7 +392,12 @@ export function scoreBooks(
       score += 0.05 // Small bump to surface unexplored high-quality books
     }
 
-    const reasons = generateReasons(book, likedBooks)
+    // Compute per-liked-book similarity for reason generation
+    const similarityScores = likedVectors
+      .map(lv => ({ book: lv.book, sim: cosineSimilarity(lv.vector, bookVector) }))
+      .sort((a, b) => b.sim - a.sim)
+
+    const reasons = generateReasons(book, likedBooks, similarityScores)
 
     return { book, score, finalScore: score, reasons }
   })
