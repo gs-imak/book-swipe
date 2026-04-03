@@ -21,6 +21,7 @@ import { DailyPickCard } from "./daily-pick-card"
 import { ShelfManager } from "./shelf-manager"
 import { ConfirmDialog } from "./confirm-dialog"
 import { ReadingGoalSetter } from "./reading-goal-setter"
+import { SmartNextRead } from "./smart-next-read"
 
 // Lazy-load below-the-fold discovery components
 const SmartRecommendations = dynamic(() => import("./smart-recommendations").then(m => ({ default: m.SmartRecommendations })), { ssr: false })
@@ -829,6 +830,19 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
             </motion.div>
 
             </div>{/* end desktop 2-col grid */}
+
+            {/* ━━━ What to Read Next ━━━ */}
+            <SmartNextRead
+              onBookClick={handleBookClick}
+              onStartReading={(book) => {
+                handleStartReading(book)
+                setCurrentlyReading(
+                  getReadingProgress()
+                    .filter(p => p.status === "reading")
+                    .sort((a, b) => new Date(b.lastReadDate).getTime() - new Date(a.lastReadDate).getTime())
+                )
+              }}
+            />
 
             {/* ━━━ Desktop 2-col: Goal + Progress ━━━ */}
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-6 lg:items-start">
