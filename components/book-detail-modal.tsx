@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Star, Heart, MessageSquare, FileText, Calendar, Clock, BookOpen, Library, Share2, Trash2, Loader2, EyeOff, Plus, ChevronRight, Tag } from "lucide-react"
+import { X, Star, Heart, MessageSquare, FileText, Calendar, Clock, BookOpen, Library, Share2, Trash2, Loader2, EyeOff, Plus, ChevronRight, Tag, CheckCircle2, Sparkles } from "lucide-react"
 import { Book } from "@/lib/book-data"
-import { BookReview, getBookReview, getShelvesForBook, getShelves, type Shelf, addLikedBook, getBookTags, getTagDefinitions, addTagToBook, removeTagFromBook, createTag, type TagDefinition, TAG_COLORS } from "@/lib/storage"
+import { BookReview, getBookReview, getShelvesForBook, getShelves, type Shelf, addLikedBook, getBookTags, getTagDefinitions, addTagToBook, removeTagFromBook, createTag, type TagDefinition, TAG_COLORS, getReadingProgress, updateReadingProgress, addBookToReading, recordBookView, isSuggestionDismissed, dismissSuggestion } from "@/lib/storage"
 import { scoreBooks } from "@/lib/scoring-engine"
 import { getCachedBooks } from "@/lib/book-cache"
 import { detectSeries, findNextInSeries, type SeriesInfo } from "@/lib/series-detection"
@@ -61,6 +61,8 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
   const [newTagName, setNewTagName] = useState("")
   const [newTagColor, setNewTagColor] = useState<string>(TAG_COLORS[4])
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
+  const [showFinishedSuggestion, setShowFinishedSuggestion] = useState(false)
+  const [showStartReadingSuggestion, setShowStartReadingSuggestion] = useState(false)
   const tagDropdownRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -85,6 +87,30 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
       setBookTagDefs(getBookTags(book.id))
       setShowTagDropdown(false)
       setCreatingTag(false)
+      // Smart shelf suggestions
+      const viewCount = recordBookView(book.id)
+      const progress = getReadingProgress()
+      const bookProgress = progress.find(p => p.bookId === book.id)
+      if (
+        bookProgress &&
+        bookProgress.status !== "completed" &&
+        bookProgress.totalPages > 0 &&
+        (bookProgress.currentPage / bookProgress.totalPages) >= 0.95 &&
+        !isSuggestionDismissed(book.id, "finished")
+      ) {
+        setShowFinishedSuggestion(true)
+      } else {
+        setShowFinishedSuggestion(false)
+      }
+      if (
+        viewCount >= 3 &&
+        !bookProgress &&
+        !isSuggestionDismissed(book.id, "start-reading")
+      ) {
+        setShowStartReadingSuggestion(true)
+      } else {
+        setShowStartReadingSuggestion(false)
+      }
       // Compute similar books using the current book as the "liked" input
       const cached = getCachedBooks().filter(b => b.id !== book.id)
       const scored = scoreBooks(cached, [book])
@@ -388,6 +414,93 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
 
           {/* Content */}
           <div ref={contentRef} className="p-5 sm:p-6 overflow-y-auto flex-1 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+            {/* Smart shelf suggestion banners */}
+            <AnimatePresence>
+              {showFinishedSuggestion && (
+                <motion.div
+                  key="finished-suggestion"
+                  initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                  animate={{ opacity: 1, height: "auto", marginBottom: 16 }}
+                  exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="overflow-hidden"
+                >
+                  <div className="rounded-xl p-3.5 flex items-center gap-3 border border-emerald-200/60 dark:border-emerald-800/40" style={{ background: "linear-gradient(135deg, #fef3c7 0%, #d1fae5 100%)" }}>
+                    <div className="flex-shrink-0 w-9 h-9 rounded-full bg-emerald-500/15 flex items-center justify-center">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-stone-800 leading-snug">Looks like you've finished this book!</p>
+                      <p className="text-xs text-stone-500 mt-0.5">Mark it as completed?</p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => {
+                          updateReadingProgress(book.id, { status: "completed" })
+                          setShowFinishedSuggestion(false)
+                          dismissSuggestion(book.id, "finished")
+                        }}
+                        className="h-8 px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors active:scale-[0.97]"
+                      >
+                        Yes, I'm done
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowFinishedSuggestion(false)
+                          dismissSuggestion(book.id, "finished")
+                        }}
+                        className="text-[11px] text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 font-medium transition-colors px-1"
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {showStartReadingSuggestion && (
+                <motion.div
+                  key="start-reading-suggestion"
+                  initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                  animate={{ opacity: 1, height: "auto", marginBottom: 16 }}
+                  exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="overflow-hidden"
+                >
+                  <div className="rounded-xl p-3.5 flex items-center gap-3 bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-800/40">
+                    <div className="flex-shrink-0 w-9 h-9 rounded-full bg-blue-500/15 flex items-center justify-center">
+                      <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-stone-800 dark:text-stone-200 leading-snug">You keep coming back to this one.</p>
+                      <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Ready to start reading?</p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => {
+                          addBookToReading(book)
+                          setShowStartReadingSuggestion(false)
+                          dismissSuggestion(book.id, "start-reading")
+                        }}
+                        className="h-8 px-3.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors active:scale-[0.97]"
+                      >
+                        Start Reading
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowStartReadingSuggestion(false)
+                          dismissSuggestion(book.id, "start-reading")
+                        }}
+                        className="text-[11px] text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 font-medium transition-colors px-1"
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {activeTab === "overview" && (
               <div className="space-y-5">
                 {/* Description */}
