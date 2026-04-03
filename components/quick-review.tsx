@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Heart, MessageSquare, Tag, Calendar, Clock, Smile, PartyPopper, Brain, Sparkles, Cloud, AlertTriangle, BookOpen, Smartphone, Headphones, type LucideIcon } from "lucide-react"
+import { Heart, MessageSquare, Tag, Calendar, Clock, Smile, PartyPopper, Brain, Sparkles, Cloud, AlertTriangle, BookOpen, Smartphone, Headphones, ChevronDown, type LucideIcon } from "lucide-react"
 import { Button } from "./ui/button"
 import { StarRating } from "./star-rating"
 import { BookCover } from "@/components/book-cover"
@@ -49,9 +49,19 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
   const [selectedWarnings, setSelectedWarnings] = useState<string[]>(existingReview?.contentWarnings || [])
   const [format, setFormat] = useState<"print" | "ebook" | "audiobook" | "">(existingReview?.format || "")
   const [pace, setPace] = useState<"slow" | "medium" | "fast" | "">(existingReview?.pace || "")
+  const [dimensions, setDimensions] = useState<Record<string, number>>(existingReview?.dimensions || {})
+  const [dimensionsOpen, setDimensionsOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  
+
   const { triggerActivity } = useGamification()
+
+  const DIMENSIONS = [
+    { key: "plot", label: "Plot", description: "How engaging was the story?" },
+    { key: "characters", label: "Characters", description: "How well-developed were the characters?" },
+    { key: "writing", label: "Writing", description: "How was the prose/writing style?" },
+    { key: "emotion", label: "Emotion", description: "How much did it affect you emotionally?" },
+    { key: "originality", label: "Originality", description: "How fresh/unique was it?" },
+  ]
 
   const handleTagToggle = (tag: string) => {
     setSelectedTags(prev => 
@@ -76,6 +86,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
       contentWarnings: selectedWarnings.length > 0 ? selectedWarnings : undefined,
       format: format || undefined,
       pace: pace || undefined,
+      dimensions: Object.keys(dimensions).length > 0 ? dimensions : undefined,
       createdAt: existingReview?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
@@ -141,6 +152,48 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
           showLabel={true}
           aria-labelledby="review-rating-label"
         />
+      </div>
+
+      {/* Rate by Dimension */}
+      <div className="border border-stone-200 dark:border-stone-700 rounded-xl overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setDimensionsOpen(prev => !prev)}
+          className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
+          aria-expanded={dimensionsOpen}
+        >
+          <span>Rate by dimension</span>
+          <ChevronDown
+            className={`w-4 h-4 text-stone-400 transition-transform duration-200 ${dimensionsOpen ? "rotate-180" : ""}`}
+          />
+        </button>
+        {dimensionsOpen && (
+          <div className="px-4 pb-4 pt-1 space-y-3 border-t border-stone-100 dark:border-stone-800">
+            {DIMENSIONS.map(({ key, label, description }) => (
+              <div key={key} className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="text-xs font-medium text-stone-700 dark:text-stone-300">{label}</span>
+                  <p className="text-xs text-stone-400 dark:text-stone-500 truncate">{description}</p>
+                </div>
+                <div className="flex gap-1 flex-shrink-0">
+                  {[1, 2, 3, 4, 5].map(v => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => setDimensions(prev => ({ ...prev, [key]: v }))}
+                      className={`w-3 h-3 rounded-full transition-colors ${
+                        (dimensions[key] || 0) >= v
+                          ? "bg-amber-500"
+                          : "bg-stone-200 dark:bg-stone-700 hover:bg-stone-300 dark:hover:bg-stone-600"
+                      }`}
+                      aria-label={`${label} ${v} of 5`}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Mood */}

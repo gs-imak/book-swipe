@@ -117,6 +117,7 @@ export interface BookReview {
   contentWarnings?: string[]
   format?: "print" | "ebook" | "audiobook"
   pace?: "slow" | "medium" | "fast"
+  dimensions?: Record<string, number>
   createdAt: string
   updatedAt: string
 }
