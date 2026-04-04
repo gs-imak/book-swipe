@@ -66,49 +66,59 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 lg:left-16 bg-black/40 backdrop-blur-sm z-50 flex items-start md:items-center justify-center p-3 sm:p-4 pb-24 pt-4"
-        onClick={onClose}
+        className="fixed inset-0 lg:left-16 bg-background z-[60]"
       >
-        <motion.div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="achievements-title"
-          initial={{ opacity: 0, y: 30, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 30, scale: 0.97 }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="bg-background rounded-2xl shadow-2xl max-w-2xl w-full max-h-[calc(100vh-120px)] sm:max-h-[85vh] overflow-hidden flex flex-col border border-stone-200/60 dark:border-stone-700/60"
-          onClick={(e) => e.stopPropagation()}
+        {/* Sticky Header */}
+        <div className="bg-background/90 backdrop-blur-md border-b border-stone-200/60 dark:border-stone-700/60 sticky top-0 z-10">
+          <div className="max-w-2xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+            <h2
+              id="achievements-title"
+              className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100 font-serif"
+            >
+              Awards
+            </h2>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors tap-target touch-manipulation"
+            >
+              <X className="w-5 h-5 text-stone-400" />
+            </button>
+          </div>
+        </div>
+
+        {/* Scrollable Content */}
+        <div
+          className="overflow-y-auto overscroll-contain"
+          style={{ height: "calc(100vh - 57px)", WebkitOverflowScrolling: "touch" as any }}
         >
-          {/* Header */}
-          <div className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 flex-shrink-0">
-            <div className="flex items-start justify-between mb-5">
-              <div className="flex items-center gap-3">
+          <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 pb-24">
+
+            {/* Level & XP */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.05 }}
+              className="text-center py-4"
+            >
+              <div className="flex items-center justify-center gap-3 mb-3">
                 <div className="w-11 h-11 bg-amber-50 dark:bg-amber-900/30 rounded-xl flex items-center justify-center">
                   <Trophy className="w-5 h-5 text-amber-600" />
                 </div>
-                <div>
-                  <h2
-                    id="achievements-title"
-                    className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100 tracking-tight font-serif"
-                  >
-                    Reading Journey
-                  </h2>
-                  <p className="text-sm text-stone-500 dark:text-stone-400">
+                <div className="text-left">
+                  <p className="text-sm font-medium text-stone-500 dark:text-stone-400">
                     Level {currentLevel} &middot; {unlockedCount}/{totalAchievements} unlocked
                   </p>
                 </div>
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 -mr-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors tap-target touch-manipulation"
-              >
-                <X className="w-5 h-5 text-stone-400 dark:text-stone-500" />
-              </button>
-            </div>
+            </motion.div>
 
             {/* Level Progress */}
-            <div className="bg-white dark:bg-stone-900 rounded-xl p-4 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+              className="bg-white dark:bg-stone-900 rounded-xl p-4 border border-stone-200/60 dark:border-stone-700/60 shadow-sm"
+            >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Level {currentLevel}</span>
                 <span className="text-xs text-stone-400 dark:text-stone-500">{currentPoints} / {pointsForNext} XP</span>
@@ -125,11 +135,9 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
               <p className="text-xs text-stone-400 dark:text-stone-500 mt-1.5">
                 {pointsToNext > 0 ? `${pointsToNext} XP to level ${currentLevel + 1}` : "Max level reached!"}
               </p>
-            </div>
-          </div>
+            </motion.div>
 
-          {/* Tabs */}
-          <div className="px-5 sm:px-6 flex-shrink-0">
+            {/* Tabs */}
             <div className="flex gap-1 bg-stone-100 dark:bg-stone-800 rounded-lg p-1" role="tablist">
               {tabs.map((tab) => (
                 <button
@@ -147,10 +155,8 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
                 </button>
               ))}
             </div>
-          </div>
 
-          {/* Content */}
-          <div className="p-5 sm:p-6 overflow-y-auto flex-1 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+            {/* Tab Content */}
             {activeTab === 'overview' && (
               <OverviewTab
                 stats={stats}
@@ -166,10 +172,8 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
             {activeTab === 'stats' && (
               <StatsTab stats={stats} />
             )}
-
-            <div className="h-4 sm:h-0" />
           </div>
-        </motion.div>
+        </div>
       </motion.div>
     </AnimatePresence>
   )
