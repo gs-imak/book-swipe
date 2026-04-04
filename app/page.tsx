@@ -23,6 +23,9 @@ import { motion, AnimatePresence, MotionConfig } from "framer-motion"
 import { getTheme, applyTheme } from "@/lib/theme"
 import { WhatsNewModal } from "@/components/whats-new-modal"
 import { Skeleton, BookGridSkeleton } from "@/components/ui/skeleton"
+import { AuthModal } from "@/components/auth-modal"
+import { onAuthChange, syncToCloud, getUser } from "@/lib/supabase-sync"
+import { isSupabaseConfigured } from "@/lib/supabase"
 import { BarcodeScanner } from "@/components/barcode-scanner"
 
 // Code-split heavy components that aren't needed on initial load
@@ -96,6 +99,8 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   const [showGlobalSearch, setShowGlobalSearch] = useState(false)
   const [globalSearchBook, setGlobalSearchBook] = useState<Book | null>(null)
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [cloudUser, setCloudUser] = useState<any>(null)
   const [ready, setReady] = useState(false)
   const { showToast } = useToast()
 
@@ -148,6 +153,27 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
     window.addEventListener("popstate", onPopstate)
     return () => window.removeEventListener("popstate", onPopstate)
   }, [isLoggedIn, userPreferences, navigateTo])
+
+  // ---------------------------------------------------------------------------
+  // Supabase auth listener — track sign-in state and auto-sync
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return
+    // Check if already signed in
+    getUser().then(u => setCloudUser(u))
+    // Listen for changes
+    const { data } = onAuthChange((user) => {
+      setCloudUser(user)
+      if (user) {
+        // Auto-sync to cloud on sign-in
+        syncToCloud().then(result => {
+          if (result.synced) showToast("Library synced to cloud")
+        })
+      }
+    })
+    return () => data.subscription.unsubscribe()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // ---------------------------------------------------------------------------
   // Listen for storage errors and show toast
@@ -433,6 +459,16 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
         onClose={() => setShowBarcodeScanner(false)}
       />
 
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onAuthSuccess={() => {
+          setShowAuthModal(false)
+          showToast("Signed in! Syncing your library...")
+        }}
+      />
+
       {/* Mobile Bottom Navigation - persists across dashboard/swipe transitions */}
       {showNav && (
         <MobileNav
@@ -441,6 +477,8 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
           likedCount={likedBooksCount}
           onSearch={() => setShowGlobalSearch(true)}
           onScan={() => setShowBarcodeScanner(true)}
+          onSignIn={isSupabaseConfigured() ? () => setShowAuthModal(true) : undefined}
+          isSignedIn={!!cloudUser}
         />
       )}
     </>

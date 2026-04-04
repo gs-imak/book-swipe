@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useGamification } from "./gamification-provider"
 import { useToast } from "./toast-provider"
 import { hapticLight, hapticMedium, hapticSuccess } from "@/lib/haptics"
+import { recordSwipe } from "@/lib/supabase-sync"
 
 interface SwipeInterfaceProps {
   preferences: UserPreferences
@@ -260,6 +261,9 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
 
     setUndoStack(prev => [...prev, { book: currentBook, direction }])
     setCurrentIndex(prev => prev + 1)
+
+    // Record swipe to cloud for collaborative filtering (fire-and-forget)
+    recordSwipe(currentBook.id, direction, currentBook)
   }
 
   const handleUndo = () => {
