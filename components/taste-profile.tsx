@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, BookOpen, Star, Clock, Heart, TrendingUp, Moon, Sun, Share2, BarChart3 } from "lucide-react"
+import { X, BookOpen, Star, Clock, Heart, TrendingUp, Share2, BarChart3 } from "lucide-react"
 import { ReadingDoodle, SittingReadingDoodle } from "./illustrations"
 import { getLikedBooks, getBookReviews, getBookNotes, getReadingProgress, getUserStats, type BookReview } from "@/lib/storage"
 import { Book } from "@/lib/book-data"
@@ -11,7 +11,6 @@ import { ProfileShareCard } from "./profile-share-card"
 import { ReadingStats } from "./reading-stats"
 import { ActivityFeed } from "./activity-feed"
 import { NotificationSettings } from "./notification-settings"
-import { getTheme, toggleTheme } from "@/lib/theme"
 
 interface TasteProfileProps {
   isOpen: boolean
@@ -65,7 +64,6 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
   const [likedBooks, setLikedBooks] = useState<Book[]>([])
   const [reviews, setReviews] = useState<BookReview[]>([])
   const [showDedication, setShowDedication] = useState(false)
-  const [isDark, setIsDark] = useState(false)
   const [showProfileCard, setShowProfileCard] = useState(false)
   const [showStats, setShowStats] = useState(false)
 
@@ -73,7 +71,6 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
     if (isOpen) {
       setLikedBooks(getLikedBooks())
       setReviews(getBookReviews())
-      setIsDark(getTheme() === "dark")
     }
   }, [isOpen])
 
@@ -250,21 +247,12 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
         <div className="bg-background/90 backdrop-blur-md border-b border-stone-200/60 dark:border-stone-700/60 sticky top-0 z-10">
           <div className="max-w-2xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
             <h1 className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100 font-serif">Your Profile</h1>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => { const next = toggleTheme(); setIsDark(next === "dark") }}
-                aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-                className="p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors tap-target touch-manipulation"
-              >
-                {isDark ? <Sun className="w-5 h-5 text-stone-400" /> : <Moon className="w-5 h-5 text-stone-400" />}
-              </button>
-              <button
-                onClick={onClose}
-                className="p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors tap-target touch-manipulation"
-              >
-                <X className="w-5 h-5 text-stone-400" />
-              </button>
-            </div>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors tap-target touch-manipulation"
+            >
+              <X className="w-5 h-5 text-stone-400" />
+            </button>
           </div>
         </div>
 
@@ -471,33 +459,6 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
             <motion.div {...fadeIn(0.48)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
               <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">Recent Activity</h3>
               <ActivityFeed limit={15} />
-            </motion.div>
-
-            {/* Settings */}
-            <motion.div {...fadeIn(0.5)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-700/60 dark:border-stone-800 shadow-sm">
-              <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-4">Settings</h3>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {isDark ? <Moon className="w-4 h-4 text-amber-500" /> : <Sun className="w-4 h-4 text-amber-500" />}
-                  <div>
-                    <p className="text-sm font-medium text-stone-900 dark:text-stone-100">Dark Mode</p>
-                    <p className="text-xs text-stone-400">Switch between light and dark themes</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    const next = toggleTheme()
-                    setIsDark(next === "dark")
-                  }}
-                  role="switch"
-                  aria-checked={isDark}
-                  className={`relative w-11 h-6 rounded-full transition-colors ${isDark ? "bg-amber-600" : "bg-stone-300"}`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${isDark ? "translate-x-5" : "translate-x-0"}`}
-                  />
-                </button>
-              </div>
             </motion.div>
 
             {/* Notifications */}

@@ -202,63 +202,6 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
 
       <div className="max-w-lg mx-auto px-4 pt-5 pb-20 space-y-4">
 
-        {/* ─── Appearance ─── */}
-        <motion.section
-          custom={0}
-          initial="hidden"
-          animate="visible"
-          variants={sectionVariants}
-          className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200/60 dark:border-stone-700/60 shadow-sm overflow-hidden"
-        >
-          <div className="px-5 pt-4 pb-2">
-            <h2 className="text-base font-serif font-semibold text-stone-900 dark:text-stone-100 flex items-center gap-2.5">
-              {currentTheme === "dark" ? (
-                <Moon className="w-[18px] h-[18px] text-amber-500" />
-              ) : (
-                <Sun className="w-[18px] h-[18px] text-amber-600" />
-              )}
-              Appearance
-            </h2>
-          </div>
-
-          <div className="px-5 pb-4">
-            {/* Theme toggle */}
-            <div className="flex items-center justify-between py-3">
-              <div>
-                <p className="text-sm font-medium text-stone-800 dark:text-stone-200">Theme</p>
-                <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
-                  {currentTheme === "dark" ? "Dark mode is on" : "Light mode is on"}
-                </p>
-              </div>
-              <button
-                onClick={handleThemeToggle}
-                role="switch"
-                aria-checked={currentTheme === "dark"}
-                aria-label="Toggle dark mode"
-                className={`relative w-14 h-8 rounded-full transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${
-                  currentTheme === "dark"
-                    ? "bg-amber-600"
-                    : "bg-stone-200 dark:bg-stone-700"
-                }`}
-              >
-                <motion.div
-                  layout
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center ${
-                    currentTheme === "dark" ? "left-7" : "left-1"
-                  }`}
-                >
-                  {currentTheme === "dark" ? (
-                    <Moon className="w-3.5 h-3.5 text-amber-600" />
-                  ) : (
-                    <Sun className="w-3.5 h-3.5 text-amber-500" />
-                  )}
-                </motion.div>
-              </button>
-            </div>
-          </div>
-        </motion.section>
-
         {/* ─── Reading ─── */}
         <motion.section
           custom={1}

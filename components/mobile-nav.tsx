@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Home, Sparkles, Trophy, BarChart3, BookOpen, Search, Sun, Moon, Camera } from "lucide-react"
 import { getTheme, toggleTheme } from "@/lib/theme"
-import { NewDot } from "./new-badge"
 
 type NavView = "dashboard" | "swipe" | "read" | "achievements" | "profile"
 
@@ -14,12 +13,6 @@ interface MobileNavProps {
   likedCount?: number
   onSearch?: () => void
   onScan?: () => void
-}
-
-const NAV_NEW_FEATURES: Record<string, string[]> = {
-  dashboard: ["collections", "challenges", "global_search"],
-  read: ["series_detection"],
-  profile: ["tags", "settings", "activity_feed"],
 }
 
 export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, onScan }: MobileNavProps) {
@@ -122,8 +115,6 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
             {navItems.map((item) => {
               const Icon = item.icon
               const isActive = currentView === item.id
-              const featureIds = NAV_NEW_FEATURES[item.id]
-
               return (
                 <motion.button
                   key={item.id}
@@ -143,14 +134,6 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
                   ].join(" ")}
                   whileTap={{ scale: 0.92 }}
                 >
-                  {/* Active indicator bar — desktop only */}
-                  {isActive && (
-                    <span
-                      className="hidden lg:block absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full bg-amber-600"
-                      aria-hidden="true"
-                    />
-                  )}
-
                   <div className="relative">
                     <Icon
                       className={[
@@ -171,10 +154,6 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
                       >
                         {likedCount > 99 ? "99" : likedCount}
                       </motion.div>
-                    )}
-
-                    {featureIds && featureIds.length > 0 && (
-                      <NewDot featureIds={featureIds} className="-top-0.5 -right-0.5" />
                     )}
                   </div>
 
