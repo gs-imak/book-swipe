@@ -69,7 +69,7 @@ function setCachedResult(key: string, data: GutenbergBrowseResult): void {
 const FETCH_TIMEOUT = 10_000 // 10 seconds
 
 async function cachedFetch(url: string): Promise<GutenbergBrowseResult> {
-  const cacheKey = url.replace("https://gutendex.com/books?", "")
+  const cacheKey = url.replace("/api/gutenberg-browse?", "")
   const cached = getCachedResult(cacheKey)
   if (cached) return cached
 
@@ -108,13 +108,13 @@ export async function browseGutenberg(topic: string): Promise<GutenbergBrowseRes
   const lang = getGutenbergLang()
   const params = new URLSearchParams(lang ? { languages: lang } : {})
   if (topic) params.set("topic", topic)
-  return cachedFetch(`https://gutendex.com/books?${params.toString()}`)
+  return cachedFetch(`/api/gutenberg-browse?${params.toString()}`)
 }
 
 export async function searchFreeBooks(query: string): Promise<GutenbergBrowseResult> {
   const lang = getGutenbergLang()
   const params = new URLSearchParams(lang ? { search: query, languages: lang } : { search: query })
-  return cachedFetch(`https://gutendex.com/books?${params.toString()}`)
+  return cachedFetch(`/api/gutenberg-browse?${params.toString()}`)
 }
 
 export function hasReadableText(book: GutenbergBook): boolean {
