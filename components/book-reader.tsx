@@ -539,12 +539,14 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
   // Turn page by delta (-1 or +1), updating transform and progress
   const turnPage = useCallback((delta: number) => {
-    if (!text) return
+    if (!text || colWidth <= 0) return
     setPaginatedPage(prev => {
       const next = Math.max(0, Math.min(prev + delta, columnTotal - 1))
       const el = pagesRef.current
       if (el) {
-        el.style.transform = `translateX(-${next * el.clientWidth}px)`
+        // Use stored colWidth (matches the CSS columnWidth) rather than
+        // el.clientWidth, which can disagree if the viewport just changed.
+        el.style.transform = `translateX(-${next * colWidth}px)`
       }
       // Update progress based on page position
       const pct = columnTotal > 1 ? Math.round((next / (columnTotal - 1)) * 100) : (next === 0 ? 0 : 100)
@@ -557,7 +559,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       }, 300)
       return next
     })
-  }, [columnTotal, text, bookId])
+  }, [columnTotal, colWidth, text, bookId])
 
   // Auto-scroll: turn pages at configured interval (placed after turnPage definition)
   useEffect(() => {
@@ -583,27 +585,35 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
   // Navigate directly to a specific page index (used by chapter/search navigation)
   const goToPageIndex = useCallback((pageIdx: number) => {
+    if (colWidth <= 0) return
     const clamped = Math.max(0, Math.min(pageIdx, columnTotal - 1))
     const el = pagesRef.current
     if (el) {
-      el.style.transform = `translateX(-${clamped * el.clientWidth}px)`
+      el.style.transform = `translateX(-${clamped * colWidth}px)`
     }
     const pct = columnTotal > 1 ? Math.round((clamped / (columnTotal - 1)) * 100) : 0
     setProgress(pct)
     setPaginatedPage(clamped)
-  }, [columnTotal])
+  }, [columnTotal, colWidth])
 
-  // Measure columns after content renders or font/size changes
+  // Measure columns after content renders, font/size changes, or viewport changes.
+  // Must re-run on mobile resize/orientation/URL-bar toggle so that colWidth stays
+  // in sync with the actual CSS column width — otherwise the translateX offset
+  // drifts off a column boundary and we see bleed on both edges.
   useEffect(() => {
     if (!text) return
-    if (measureTimerRef.current) clearTimeout(measureTimerRef.current)
-    measureTimerRef.current = setTimeout(() => {
+
+    const measure = () => {
       const el = pagesRef.current
       if (!el) return
-      const w = el.clientWidth
+      // getBoundingClientRect gives subpixel-accurate width; floor to integer
+      // so CSS columnWidth and JS transform always agree byte-for-byte.
+      const rect = el.getBoundingClientRect()
+      const w = Math.floor(rect.width)
       if (w <= 0) return
-      setColWidth(prev => prev === w ? prev : w)
+
       const pages = Math.max(1, Math.ceil(el.scrollWidth / w))
+      setColWidth(prev => (prev === w ? prev : w))
       setColumnTotal(pages)
 
       if (!hasRestoredRef.current) {
@@ -625,10 +635,8 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
             sessionStartProgressRef.current = pct
           }
         } else {
-          // Start at page 0
           el.style.transform = "translateX(0)"
           setPaginatedPage(0)
-          // Record session start at beginning
           if (!sessionStartRecordedRef.current) {
             sessionStartRecordedRef.current = true
             sessionStartRef.current = Date.now()
@@ -636,18 +644,43 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
           }
         }
       } else {
-        // Font/size changed: clamp current page and re-apply transform
+        // Re-measurement (font/size/viewport change): clamp current page and re-apply transform
         setPaginatedPage(prev => {
           const clamped = Math.min(prev, pages - 1)
           el.style.transform = `translateX(-${clamped * w}px)`
           return clamped
         })
       }
-    }, 100)
+    }
+
+    // Initial measure — slight delay so modal open transitions settle
+    if (measureTimerRef.current) clearTimeout(measureTimerRef.current)
+    measureTimerRef.current = setTimeout(measure, 100)
+
+    // Debounced re-measure for resize/orientation/ResizeObserver
+    const scheduleRemeasure = () => {
+      if (measureTimerRef.current) clearTimeout(measureTimerRef.current)
+      measureTimerRef.current = setTimeout(measure, 150)
+    }
+
+    window.addEventListener("resize", scheduleRemeasure)
+    window.addEventListener("orientationchange", scheduleRemeasure)
+
+    // Watch the scroll container itself — catches iOS Safari URL bar hide/show,
+    // software keyboard open/close, and any flex layout recalculation.
+    let ro: ResizeObserver | null = null
+    if (typeof ResizeObserver !== "undefined" && scrollRef.current) {
+      ro = new ResizeObserver(scheduleRemeasure)
+      ro.observe(scrollRef.current)
+    }
+
     return () => {
       if (measureTimerRef.current) clearTimeout(measureTimerRef.current)
+      window.removeEventListener("resize", scheduleRemeasure)
+      window.removeEventListener("orientationchange", scheduleRemeasure)
+      ro?.disconnect()
     }
-  }, [text, fontSize, readerFont, bookId, colWidth])
+  }, [text, fontSize, readerFont, bookId])
 
   // Track if user is dragging (selecting text) vs tapping
   const mouseDownRef = useRef<{ x: number; y: number; time: number } | null>(null)
@@ -1560,7 +1593,11 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 <div
                   ref={pagesRef}
                   style={{
+                    // Explicit definite width prevents the column flow from
+                    // bleeding between pages when flex layout is in transition.
+                    width: "100%",
                     height: "100%",
+                    boxSizing: "border-box",
                     paddingTop: "1.5rem",
                     paddingBottom: "1.5rem",
                     ...(colWidth > 0 ? { columnWidth: `${colWidth}px` } : {}),
