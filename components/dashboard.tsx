@@ -11,7 +11,7 @@ import { BookDetailModal } from "./book-detail-modal"
 import { StarRating } from "./star-rating"
 import { getUserStats } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
-import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy, Search, Library, SlidersHorizontal, Download, X as XIcon, Target, FolderOpen, ChevronRight, Flame } from "lucide-react"
+import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy, Search, Library, SlidersHorizontal, Download, X as XIcon, Target, FolderOpen, ChevronRight, Flame, Camera } from "lucide-react"
 import { SittingReadingDoodle, ReadingSideDoodle, ReadingDoodle, FloatDoodle, GroovyDoodle, LovingDoodle } from "./illustrations"
 import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
@@ -38,9 +38,10 @@ interface DashboardProps {
   onBack?: () => void
   onStartDiscovery: () => void
   showBackButton?: boolean
+  onScan?: () => void
 }
 
-export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: DashboardProps) {
+export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onScan }: DashboardProps) {
   const [likedBooks, setLikedBooks] = useState<Book[]>([])
   const [filter, setFilter] = useState<string>("all")
   const [sortBy, setSortBy] = useState<"recent" | "rating" | "pages">("recent")
@@ -300,7 +301,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
                 </h1>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               <button
                 onClick={() => setShowSearch(true)}
                 aria-label="Search books"
@@ -308,6 +309,15 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true }: D
               >
                 <Search className="w-5 h-5 text-stone-500 dark:text-stone-400" />
               </button>
+              {onScan && (
+                <button
+                  onClick={onScan}
+                  aria-label="Scan a book barcode"
+                  className="flex items-center justify-center p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors tap-target touch-manipulation"
+                >
+                  <Camera className="w-5 h-5 text-amber-600 dark:text-amber-500" />
+                </button>
+              )}
               <button
                 onClick={() => setShowChallenges(true)}
                 aria-label="Reading challenges"

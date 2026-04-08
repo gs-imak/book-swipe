@@ -417,6 +417,7 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
               onBack={currentView === "dashboard" && userPreferences ? handleBackToSwipe : undefined}
               onStartDiscovery={handleStartDiscovery}
               showBackButton={currentView === "dashboard" && userPreferences !== null}
+              onScan={() => setShowBarcodeScanner(true)}
             />
           </motion.div>
         )}

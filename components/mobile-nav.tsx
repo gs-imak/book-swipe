@@ -51,40 +51,12 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
 
   return (
     <>
-      {/* Floating action buttons above nav — mobile only, hidden on desktop (sidebar has its own) */}
-      <div
-        className="fixed z-50 left-1/2 -translate-x-1/2 flex items-center gap-2 lg:hidden"
-        style={{ bottom: "calc(68px + env(safe-area-inset-bottom, 0px))" }}
-      >
-        {onSearch && (
-          <motion.button
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.15 }}
-            onClick={onSearch}
-            aria-label="Search library, notes, and reviews"
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 shadow-lg shadow-stone-900/20 dark:shadow-stone-100/20 hover:shadow-xl hover:scale-105 active:scale-95 transition-all touch-manipulation"
-            whileTap={{ scale: 0.92 }}
-          >
-            <Search className="w-3.5 h-3.5" strokeWidth={2.2} />
-            <span className="text-xs font-semibold tracking-wide">Search</span>
-          </motion.button>
-        )}
-        {onScan && (
-          <motion.button
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.22 }}
-            onClick={onScan}
-            aria-label="Scan a book barcode"
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-amber-600 text-white shadow-lg shadow-amber-600/30 hover:shadow-xl hover:scale-105 active:scale-95 transition-all touch-manipulation"
-            whileTap={{ scale: 0.92 }}
-          >
-            <Camera className="w-3.5 h-3.5" strokeWidth={2.2} />
-            <span className="text-xs font-semibold tracking-wide">Scan</span>
-          </motion.button>
-        )}
-      </div>
+      {/*
+        Mobile floating Search/Scan pills were removed — they duplicated the
+        header Search button and hung in dead space above the tab bar. Scan
+        now lives in the Library header next to Search. On desktop, Search
+        and Scan stay in the left sidebar below the nav items (see below).
+      */}
 
       <motion.nav
         aria-label="Main navigation"
