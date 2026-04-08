@@ -18,9 +18,12 @@ interface FallbackBook extends GutenbergBook {
 }
 
 function gutenbergFormats(id: number): Record<string, string> {
+  // /files/{id}/{id}-0.txt is the primary text encoding (UTF-8 with BOM)
+  // and /cache/epub/{id}/pg{id}.txt is the fallback. Both verified 200 OK
+  // via Vercel→gutenberg.org. The `.utf-8` suffix variant returns 404.
   return {
-    "text/plain; charset=utf-8": `https://www.gutenberg.org/cache/epub/${id}/pg${id}.txt.utf-8`,
-    "text/plain; charset=us-ascii": `https://www.gutenberg.org/files/${id}/${id}-0.txt`,
+    "text/plain; charset=utf-8": `https://www.gutenberg.org/files/${id}/${id}-0.txt`,
+    "text/plain; charset=us-ascii": `https://www.gutenberg.org/cache/epub/${id}/pg${id}.txt`,
     "text/html": `https://www.gutenberg.org/cache/epub/${id}/pg${id}-images.html`,
     "image/jpeg": `https://www.gutenberg.org/cache/epub/${id}/pg${id}.cover.medium.jpg`,
   }
