@@ -1432,7 +1432,15 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
               paddingTop: "env(safe-area-inset-top)",
             }}
           >
-            <div className="relative flex items-center justify-between px-4 h-14">
+            {/*
+              3-column grid: back arrow | title+progress | icons.
+              min-w-0 on the center column lets truncate work — otherwise the
+              long book title expands and overlaps both edges on mobile.
+              On mobile we hide the title text (user already knows which book
+              they opened) and show only the progress bar. Icon gap tightens
+              to give the center column breathing room.
+            */}
+            <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 sm:px-4 h-14">
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={onClose}
@@ -1443,11 +1451,10 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 <ArrowLeft className="w-5 h-5" />
               </motion.button>
 
-              {/* Absolutely centered title — not affected by left/right button count */}
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-                <p className="text-sm font-medium truncate opacity-70">{bookTitle}</p>
-                <div className="flex items-center justify-center gap-2 mt-0.5">
-                  <div className="w-[140px] h-1 rounded-full overflow-hidden" style={{ backgroundColor: currentTheme.progressTrack }}>
+              <div className="min-w-0 text-center pointer-events-none">
+                <p className="hidden sm:block text-sm font-medium truncate opacity-70">{bookTitle}</p>
+                <div className="flex items-center justify-center gap-2 sm:mt-0.5">
+                  <div className="w-[100px] sm:w-[140px] h-1 rounded-full overflow-hidden" style={{ backgroundColor: currentTheme.progressTrack }}>
                     <motion.div
                       className="h-full rounded-full"
                       style={{ backgroundColor: currentTheme.progressFill }}
@@ -1460,11 +1467,11 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 </div>
               </div>
 
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0 sm:gap-1">
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={() => { if (focusMode) stopAmbientSound(); toggleFocusMode(); setFocusMinimized(false) }}
-                  className="tap-target flex items-center justify-center rounded-lg p-2 transition-colors"
+                  className="tap-target flex items-center justify-center rounded-lg p-1.5 sm:p-2 transition-colors"
                   style={{ color: focusMode ? currentTheme.progressFill : currentTheme.text }}
                   aria-label={focusMode ? "Exit focus mode" : "Enter focus mode"}
                 >
@@ -1473,7 +1480,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setShowVocab(true)}
-                  className="tap-target flex items-center justify-center rounded-lg p-2 transition-colors"
+                  className="tap-target flex items-center justify-center rounded-lg p-1.5 sm:p-2 transition-colors"
                   style={{ color: currentTheme.text }}
                   aria-label="Open vocabulary builder"
                 >
@@ -1482,7 +1489,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={handleToggleBookmark}
-                  className="tap-target flex items-center justify-center rounded-lg p-2 transition-colors"
+                  className="tap-target flex items-center justify-center rounded-lg p-1.5 sm:p-2 transition-colors"
                   style={{ color: isBookmarked ? currentTheme.progressFill : currentTheme.text }}
                   aria-label={isBookmarked ? "Remove bookmark" : "Bookmark this page"}
                 >
@@ -1491,7 +1498,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setShowFontMenu(!showFontMenu)}
-                  className="tap-target flex items-center justify-center rounded-lg p-2 transition-colors"
+                  className="tap-target flex items-center justify-center rounded-lg p-1.5 sm:p-2 transition-colors"
                   style={{ color: currentTheme.text }}
                   aria-label="Change font"
                 >
@@ -1500,7 +1507,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={cycleTheme}
-                  className="tap-target flex items-center justify-center rounded-lg p-2 -mr-2 transition-colors"
+                  className="tap-target flex items-center justify-center rounded-lg p-1.5 sm:p-2 -mr-2 transition-colors"
                   style={{ color: currentTheme.text }}
                   aria-label={`Switch theme, currently ${theme}`}
                 >
