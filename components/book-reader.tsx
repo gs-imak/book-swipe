@@ -1580,7 +1580,6 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
               <div
                 ref={scrollRef}
                 style={{
-                  overflow: "hidden",
                   position: "relative",
                   flex: 1,
                   padding: "0 clamp(20px, 6vw, 80px)",
@@ -1590,6 +1589,22 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
               >
+                {/*
+                  Inner clip wrapper. CRITICAL: scrollRef's overflow:hidden
+                  was clipping at its PADDING edge (the border box, full
+                  viewport width), not at the content area. That left the
+                  ~22px right padding strip exposed, where the next column
+                  would bleed through. This wrapper sits inside the padding
+                  and clips at the actual column width.
+                */}
+                <div
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    overflow: "hidden",
+                    position: "relative",
+                  }}
+                >
                 <div
                   ref={pagesRef}
                   style={{
@@ -1933,6 +1948,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                       </p>
                     )
                   })}
+                </div>
                 </div>
               </div>
 
