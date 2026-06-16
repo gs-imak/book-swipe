@@ -445,7 +445,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                           fallbackSrc={primary.book.coverFallback}
                           alt={primary.book.title}
                           fill
-                          className="object-contain"
+                          className="object-cover"
                           sizes="80px"
                         />
                       </div>
@@ -558,7 +558,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                                         fallbackSrc={prog.book.coverFallback}
                                         alt={prog.book.title}
                                         fill
-                                        className="object-contain"
+                                        className="object-cover"
                                         sizes="32px"
                                       />
                                     </div>
@@ -1139,7 +1139,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                           fallbackSrc={book.coverFallback}
                           alt={book.title}
                           fill
-                          className="object-contain"
+                          className="object-cover"
                           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                         />
                         {/* Rating badge */}

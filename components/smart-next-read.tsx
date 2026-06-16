@@ -187,7 +187,7 @@ export function SmartNextRead({ onBookClick, onStartReading }: SmartNextReadProp
                   fallbackSrc={book.coverFallback}
                   alt={book.title}
                   fill
-                  className="object-contain"
+                  className="object-cover"
                   sizes="56px"
                 />
               </div>

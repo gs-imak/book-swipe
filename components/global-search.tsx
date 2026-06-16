@@ -345,7 +345,7 @@ export function GlobalSearch({ isOpen, onClose, onBookClick }: GlobalSearchProps
                               fallbackSrc={result.book.coverFallback}
                               alt={result.book.title}
                               fill
-                              className="object-contain"
+                              className="object-cover"
                               sizes="96px"
                             />
                           </div>
@@ -398,7 +398,7 @@ export function GlobalSearch({ isOpen, onClose, onBookClick }: GlobalSearchProps
                                 fallbackSrc={result.book.coverFallback}
                                 alt={result.book.title}
                                 fill
-                                className="object-contain"
+                                className="object-cover"
                                 sizes="96px"
                               />
                             </div>
@@ -455,7 +455,7 @@ export function GlobalSearch({ isOpen, onClose, onBookClick }: GlobalSearchProps
                                 fallbackSrc={result.book.coverFallback}
                                 alt={result.book.title}
                                 fill
-                                className="object-contain"
+                                className="object-cover"
                                 sizes="96px"
                               />
                             </div>

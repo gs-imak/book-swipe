@@ -33,7 +33,7 @@ export function BookCover({
   fill,
   sizes,
   priority,
-  className = "object-contain",
+  className = "object-cover",
 }: BookCoverProps) {
   const [currentSrc, setCurrentSrc] = useState(src)
   const [hasError, setHasError] = useState(false)
