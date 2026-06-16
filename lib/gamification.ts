@@ -9,7 +9,8 @@ import {
   addPoints,
   getBookReviews,
   getBookNotes,
-  getLikedBooks
+  getLikedBooks,
+  getReadingProgress
 } from "./storage"
 import { ACHIEVEMENTS, POINTS_CONFIG } from "./achievements"
 import type { Achievement } from "./storage"
@@ -37,19 +38,31 @@ export function initializeAchievements(): void {
   }
 }
 
-// Check and update streak
+// Local calendar day as YYYY-MM-DD. Used as the single, consistent
+// representation for the stored reading cursor and "today"/"yesterday"
+// so the streak math is timezone-stable across reloads.
+function toLocalDateKey(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+// Check and update streak.
+// Driven ONLY by `lastReadingDate` so point-earning actions (like, review,
+// note) that touch `lastActivityDate` cannot inflate or clobber the streak.
 export function updateReadingStreak(): number {
   const stats = getUserStats()
-  const today = new Date().toDateString()
-  const lastActivity = stats.lastActivityDate ? new Date(stats.lastActivityDate).toDateString() : ''
-  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString()
+  const today = toLocalDateKey(new Date())
+  const lastReading = stats.lastReadingDate ? toLocalDateKey(new Date(stats.lastReadingDate)) : ''
+  const yesterday = toLocalDateKey(new Date(Date.now() - 24 * 60 * 60 * 1000))
 
   let newStreak = stats.currentStreak
 
-  if (lastActivity === today) {
+  if (lastReading === today) {
     // Already counted today
     return newStreak
-  } else if (lastActivity === yesterday) {
+  } else if (lastReading === yesterday) {
     // Continuing streak
     newStreak = stats.currentStreak + 1
   } else {
@@ -62,7 +75,7 @@ export function updateReadingStreak(): number {
   updateUserStats({
     currentStreak: newStreak,
     longestStreak,
-    lastActivityDate: new Date().toISOString()
+    lastReadingDate: new Date().toISOString()
   })
 
   return newStreak
@@ -190,12 +203,16 @@ function getActivityDescription(activity: string): string {
   }
 }
 
-// Calculate weekly reading time (last 7 days)
+// Calculate weekly reading time in minutes (trailing 7 days).
+// The codebase tracks per-book reading progress with a `lastReadDate` and a
+// cumulative `timeSpentMinutes`; there is no per-session/per-day reading log,
+// so we approximate the week by summing time for books whose last read fell
+// within the trailing 7 days (same windowing pattern as getWeeklyPagesRead).
 function calculateWeeklyReadingTime(): number {
-  const stats = getUserStats()
-  // For now, return a portion of total reading time
-  // In a real app, you'd track daily reading sessions
-  return Math.min(stats.totalReadingTime, 600) // Cap at 10 hours
+  const weekAgoMs = Date.now() - 7 * 24 * 60 * 60 * 1000
+  return getReadingProgress()
+    .filter(p => p.lastReadDate && new Date(p.lastReadDate).getTime() >= weekAgoMs)
+    .reduce((sum, p) => sum + (p.timeSpentMinutes || 0), 0)
 }
 
 // Get current value for specific achievement

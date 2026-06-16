@@ -30,6 +30,16 @@ function safeSetJSON(key: string, value: unknown): boolean {
   }
 }
 
+// Collision-resistant ID generator. Prefers crypto.randomUUID() and falls
+// back to the legacy timestamp+random scheme where it is unavailable
+// (older browsers, non-secure contexts).
+function generateId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID()
+  }
+  return Date.now().toString(36) + Math.random().toString(36).substr(2, 6)
+}
+
 const ACTIVITY_LOG_KEY = "bookswipe_activity_log"
 const LIKED_BOOKS_KEY = "bookswipe_liked_books"
 const READING_PROGRESS_KEY = "bookswipe_reading_progress"
@@ -59,7 +69,7 @@ export function logActivity(entry: Omit<ActivityEntry, "id" | "timestamp">): voi
   const log = safeGetJSON<ActivityEntry[]>(ACTIVITY_LOG_KEY, [])
   const newEntry: ActivityEntry = {
     ...entry,
-    id: Date.now().toString(36) + Math.random().toString(36).substr(2, 6),
+    id: generateId(),
     timestamp: new Date().toISOString(),
   }
   log.unshift(newEntry)
@@ -144,6 +154,10 @@ export interface UserStats {
   currentStreak: number
   longestStreak: number
   lastActivityDate: string
+  // Dedicated cursor for streak math, written ONLY by updateReadingStreak.
+  // Kept separate from lastActivityDate so non-reading point-earning actions
+  // (like, review, note) cannot drive the reading streak.
+  lastReadingDate: string
   level: number
   totalPoints: number
   genrePreferences: Record<string, number>
@@ -413,6 +427,7 @@ export function getUserStats(): UserStats {
     currentStreak: 0,
     longestStreak: 0,
     lastActivityDate: "",
+    lastReadingDate: "",
     level: 1,
     totalPoints: 0,
     genrePreferences: {},
