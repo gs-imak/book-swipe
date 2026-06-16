@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useCallback, ReactNode } from "react"
+import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { CheckCircle, AlertCircle, Info, X } from "lucide-react"
 
@@ -28,18 +28,41 @@ export function useToast() {
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
+  // Track each toast's auto-dismiss timer so we can clear it on unmount
+  // or when the toast is dismissed early, preventing setState-after-unmount.
+  const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
+
+  const clearTimer = useCallback((id: string) => {
+    const timer = timersRef.current.get(id)
+    if (timer) {
+      clearTimeout(timer)
+      timersRef.current.delete(id)
+    }
+  }, [])
 
   const showToast = useCallback((message: string, type: ToastType = "success") => {
     const id = Date.now().toString() + Math.random().toString(36).slice(2)
     setToasts(prev => [...prev.slice(-2), { id, message, type }])
 
-    setTimeout(() => {
+    const timer = setTimeout(() => {
+      timersRef.current.delete(id)
       setToasts(prev => prev.filter(t => t.id !== id))
     }, 3000)
+    timersRef.current.set(id, timer)
   }, [])
 
   const dismiss = useCallback((id: string) => {
+    clearTimer(id)
     setToasts(prev => prev.filter(t => t.id !== id))
+  }, [clearTimer])
+
+  // Clear any pending auto-dismiss timers when the provider unmounts.
+  useEffect(() => {
+    const timers = timersRef.current
+    return () => {
+      timers.forEach(clearTimeout)
+      timers.clear()
+    }
   }, [])
 
   const icons = {

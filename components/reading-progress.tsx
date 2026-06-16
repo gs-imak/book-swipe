@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { ReadingProgress, ReadingGoals, getReadingProgress, updateReadingProgress, removeFromReading, getReadingGoals, updateReadingGoals } from "@/lib/storage"
 import { BookOpen, Clock, Target, Flame, Plus, Minus, Play, Pause, CheckCircle, X, Ban, RotateCcw } from "lucide-react"
@@ -19,15 +19,31 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
   const [editingPage, setEditingPage] = useState<string | null>(null)
   const [pageInput, setPageInput] = useState("")
 
+  // Hold the pending flash timer so it can be cleared on unmount / re-flash,
+  // preventing setState-after-unmount.
+  const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Guards the page-edit commit so onBlur + onSubmit can't double-apply.
+  const pageCommittedRef = useRef(false)
+
   const flashUpdate = useCallback((bookId: string) => {
+    if (flashTimerRef.current) clearTimeout(flashTimerRef.current)
     setJustUpdated(bookId)
-    const t = setTimeout(() => setJustUpdated(null), 600)
-    return () => clearTimeout(t)
+    flashTimerRef.current = setTimeout(() => {
+      flashTimerRef.current = null
+      setJustUpdated(null)
+    }, 600)
   }, [])
 
   useEffect(() => {
     setReadingBooks(getReadingProgress())
     setGoals(getReadingGoals())
+  }, [])
+
+  // Clear any pending flash timer on unmount.
+  useEffect(() => {
+    return () => {
+      if (flashTimerRef.current) clearTimeout(flashTimerRef.current)
+    }
   }, [])
 
   const handleProgressUpdate = (bookId: string, rawPage: number) => {
@@ -55,6 +71,19 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
 
     setReadingBooks(getReadingProgress())
     flashUpdate(bookId)
+  }
+
+  // Commit the page-edit input exactly once. Pressing Enter fires onSubmit and
+  // the resulting unmount also fires the input's onBlur — this guard prevents
+  // the progress update from being applied twice.
+  const commitPageEdit = (bookId: string) => {
+    if (pageCommittedRef.current) return
+    pageCommittedRef.current = true
+    const page = parseInt(pageInput)
+    if (!isNaN(page)) {
+      handleProgressUpdate(bookId, page)
+    }
+    setEditingPage(null)
   }
 
   const handleRemoveBook = (bookId: string) => {
@@ -172,11 +201,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                         <form
                           onSubmit={(e) => {
                             e.preventDefault()
-                            const page = parseInt(pageInput)
-                            if (!isNaN(page)) {
-                              handleProgressUpdate(book.bookId, page)
-                            }
-                            setEditingPage(null)
+                            commitPageEdit(book.bookId)
                           }}
                           className="flex items-center gap-1"
                         >
@@ -186,13 +211,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                             max={book.totalPages}
                             value={pageInput}
                             onChange={(e) => setPageInput(e.target.value)}
-                            onBlur={() => {
-                              const page = parseInt(pageInput)
-                              if (!isNaN(page)) {
-                                handleProgressUpdate(book.bookId, page)
-                              }
-                              setEditingPage(null)
-                            }}
+                            onBlur={() => commitPageEdit(book.bookId)}
                             autoFocus
                             className="w-14 h-6 text-xs text-stone-700 dark:text-stone-300 bg-white dark:bg-stone-900 border border-stone-300 rounded px-1.5 text-center focus:outline-none focus:border-emerald-400"
                           />
@@ -201,6 +220,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                       ) : (
                         <button
                           onClick={() => {
+                            pageCommittedRef.current = false
                             setEditingPage(book.bookId)
                             setPageInput(String(book.currentPage))
                           }}
