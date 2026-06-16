@@ -128,18 +128,27 @@ export async function searchGutenberg(
   }
 
   let data: GutendexResponse;
+  // Abort the upstream request if gutendex.com is slow/unresponsive so the
+  // call fails fast instead of hanging up to the platform timeout.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 7_000);
   try {
     const lang = typeof window !== "undefined" ? (localStorage.getItem("bookswipe_language") || "en") : "en";
     const gutLang = lang === "all" ? "" : `&languages=${encodeURIComponent(lang)}`;
     const url = `https://gutendex.com/books/?search=${encodeURIComponent(title)}${gutLang}`;
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: controller.signal });
     if (!res.ok) return null;
     data = (await res.json()) as GutendexResponse;
   } catch {
+    // Network error, abort/timeout, or invalid JSON — fail gracefully.
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 
-  const candidates = data.results;
+  // Validate the JSON shape before trusting it; gutendex may return an error
+  // object or an unexpected payload.
+  const candidates = Array.isArray(data?.results) ? data.results : [];
   let bestScore = 0;
   let bestCandidate: GutenbergBook | null = null;
 
