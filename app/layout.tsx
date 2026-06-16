@@ -31,7 +31,7 @@ export const metadata: Metadata = {
       { url: '/favicon.ico', sizes: 'any' },
       { url: '/favicon.png', type: 'image/png', sizes: '64x64' },
     ],
-    apple: '/logo/bookswipe_logo.png',
+    apple: '/icons/apple-touch-icon.png',
   },
   manifest: '/manifest.json',
   openGraph: {
