@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 
-const API_KEY = process.env.GOOGLE_BOOKS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY
+const API_KEY = process.env.GOOGLE_BOOKS_API_KEY
 const GOOGLE_BOOKS_BASE = "https://www.googleapis.com/books/v1/volumes"
 
 // Inline constants to avoid importing client-tainted config module into server route
