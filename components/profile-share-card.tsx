@@ -20,10 +20,10 @@ export function ProfileShareCard({ isOpen, onClose }: ProfileShareCardProps) {
   const generate = useCallback(async () => {
     setGenerating(true)
     const canvas = canvasRef.current
-    if (!canvas) return
+    if (!canvas) { setGenerating(false); return }
 
     const ctx = canvas.getContext("2d")
-    if (!ctx) return
+    if (!ctx) { setGenerating(false); return }
 
     const W = 600
     const H = 800
