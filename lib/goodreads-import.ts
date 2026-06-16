@@ -56,11 +56,14 @@ export function parseGoodreadsCSV(text: string): GoodreadsRow[] {
   // Limit file size to 10MB to prevent DoS
   if (text.length > 10 * 1024 * 1024) return []
 
-  const lines = text.split("\n")
-  if (lines.length < 2) return []
+  // Split into logical records, treating newlines inside quoted fields as
+  // literal characters (RFC 4180). A record only ends on a newline seen
+  // OUTSIDE quotes; field-level quote handling stays in parseCSVLine.
+  const records = splitCSVRecords(text)
+  if (records.length < 2) return []
 
   // Parse header
-  const headers = parseCSVLine(lines[0])
+  const headers = parseCSVLine(records[0])
   const missing = validateGoodreadsHeaders(headers)
   if (missing.length > 0) return [] // Not a valid Goodreads CSV
 
@@ -75,10 +78,10 @@ export function parseGoodreadsCSV(text: string): GoodreadsRow[] {
   }
 
   const rows: GoodreadsRow[] = []
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim()
-    if (!line) continue
-    const cols = parseCSVLine(line)
+  for (let i = 1; i < records.length; i++) {
+    const record = records[i]
+    if (!record.trim()) continue
+    const cols = parseCSVLine(record)
     if (cols.length < 3) continue
 
     rows.push({
@@ -97,6 +100,56 @@ export function parseGoodreadsCSV(text: string): GoodreadsRow[] {
   }
 
   return rows
+}
+
+// Single-pass record splitter. Walks the full text tracking quote state so a
+// newline inside a quoted field is kept as a literal character; a record only
+// ends on a newline (\n, \r, or \r\n) seen OUTSIDE quotes. Honors the RFC 4180
+// doubled-quote escape ("" inside quotes = literal ") so escaped quotes don't
+// flip quote state and split a record mid-field.
+function splitCSVRecords(text: string): string[] {
+  const records: string[] = []
+  let current = ""
+  let inQuotes = false
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i]
+    if (inQuotes) {
+      if (char === '"') {
+        if (i + 1 < text.length && text[i + 1] === '"') {
+          // Escaped quote: keep both chars, stay in quotes. parseCSVLine
+          // collapses "" -> " when it parses fields.
+          current += '""'
+          i++
+        } else {
+          inQuotes = false
+          current += char
+        }
+      } else {
+        // Includes newlines: literal content of the quoted field.
+        current += char
+      }
+    } else {
+      if (char === '"') {
+        inQuotes = true
+        current += char
+      } else if (char === "\n" || char === "\r") {
+        // Record boundary outside quotes. Collapse \r\n into one break.
+        if (char === "\r" && i + 1 < text.length && text[i + 1] === "\n") {
+          i++
+        }
+        records.push(current)
+        current = ""
+      } else {
+        current += char
+      }
+    }
+  }
+  // Trailing record (no terminating newline).
+  if (current.length > 0) {
+    records.push(current)
+  }
+  return records
 }
 
 function parseCSVLine(line: string): string[] {
