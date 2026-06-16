@@ -240,7 +240,9 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
       }
     })
     setBookReasons(reasons)
-  }, [filteredBooks])
+    // Re-run when the deck changes or the user's liked books change (the
+    // likedBooks state mirrors getLikedBooks() and updates on every swipe/undo).
+  }, [filteredBooks, likedBooks])
 
   const handleSwipe = (direction: "left" | "right") => {
     const currentBook = filteredBooks[currentIndex]
