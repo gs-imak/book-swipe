@@ -44,6 +44,11 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'www.gutenberg.org',
       },
+      {
+        // Apple Books / iTunes artwork CDN (is1-ssl … is5-ssl).
+        protocol: 'https',
+        hostname: '**.mzstatic.com',
+      },
     ],
   },
   async headers() {

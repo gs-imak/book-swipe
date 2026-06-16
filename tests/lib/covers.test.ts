@@ -1,17 +1,9 @@
 import { describe, it, expect } from "vitest"
 import {
-  amazonCoverUrl,
   upgradeGoogleBooksCoverUrl,
-  resolveBestCover,
+  itunesHiResArtwork,
+  isItunesCover,
 } from "@/lib/covers"
-
-describe("amazonCoverUrl", () => {
-  it("builds a largest-available (_SCLZZZZZZZ_) URL from an ISBN-10", () => {
-    expect(amazonCoverUrl("0525559477")).toBe(
-      "https://m.media-amazon.com/images/P/0525559477.01._SCLZZZZZZZ_.jpg"
-    )
-  })
-})
 
 describe("upgradeGoogleBooksCoverUrl", () => {
   it("forces https and drops the page-curl edge effect", () => {
@@ -35,24 +27,29 @@ describe("upgradeGoogleBooksCoverUrl", () => {
   })
 })
 
-describe("resolveBestCover", () => {
-  it("leads with an Amazon cover when an ISBN resolves, keeping the original as fallback", () => {
-    const r = resolveBestCover({ isbn: "9780525559474", googleCover: "https://books.google.com/c?id=X&zoom=2" })
-    expect(r.cover).toBe("https://m.media-amazon.com/images/P/0525559477.01._SCLZZZZZZZ_.jpg")
-    expect(r.coverFallback).toBe("https://books.google.com/c?id=X&zoom=2")
+describe("itunesHiResArtwork", () => {
+  it("swaps the artwork size box for a larger one (default 1000)", () => {
+    expect(
+      itunesHiResArtwork("https://is1-ssl.mzstatic.com/image/thumb/abc/source/100x100bb.jpg")
+    ).toBe("https://is1-ssl.mzstatic.com/image/thumb/abc/source/1000x1000bb.jpg")
   })
 
-  it("falls back to the Google cover (no fallback) when no ISBN-10 exists", () => {
-    const g = "https://books.google.com/c?id=Y&zoom=2"
-    const r = resolveBestCover({ isbn: undefined, googleCover: g })
-    expect(r.cover).toBe(g)
-    expect(r.coverFallback).toBeUndefined()
+  it("honours a custom pixel size", () => {
+    expect(
+      itunesHiResArtwork("https://is1-ssl.mzstatic.com/image/thumb/abc/source/100x100bb.jpg", 600)
+    ).toContain("/600x600bb.")
   })
 
-  it("does not set an Amazon cover for a 979-prefixed ISBN-13", () => {
-    const g = "https://books.google.com/c?id=Z&zoom=2"
-    const r = resolveBestCover({ isbn: "9791234567896", googleCover: g })
-    expect(r.cover).toBe(g)
-    expect(r.coverFallback).toBeUndefined()
+  it("returns empty input unchanged and leaves non-matching URLs alone", () => {
+    expect(itunesHiResArtwork("")).toBe("")
+    expect(itunesHiResArtwork("https://example.com/cover.jpg")).toBe("https://example.com/cover.jpg")
+  })
+})
+
+describe("isItunesCover", () => {
+  it("is true for Apple artwork URLs, false otherwise", () => {
+    expect(isItunesCover("https://is3-ssl.mzstatic.com/image/thumb/x/1000x1000bb.jpg")).toBe(true)
+    expect(isItunesCover("https://covers.openlibrary.org/b/id/1-L.jpg")).toBe(false)
+    expect(isItunesCover(undefined)).toBe(false)
   })
 })

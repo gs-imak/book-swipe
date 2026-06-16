@@ -4,12 +4,6 @@ export interface BookMetadata {
   wantToReadCount?: number
   ratingsCount?: number
   source: 'sample' | 'google' | 'openlibrary'
-  /**
-   * Open Library OLID of the edition that owns this book's cover image. Used to
-   * resolve the correct-edition ISBN (and thus a Goodreads-grade Amazon cover)
-   * in a background pass — see upgradeOpenLibraryCovers in openlibrary-api.
-   */
-  coverEditionKey?: string
 }
 
 export interface BookFormats {

@@ -64,7 +64,8 @@ function isBookCoverUrl(url) {
     'images-na.ssl-images-amazon.com',
     'www.gutenberg.org',
   ]
-  return coverHosts.some(host => url.hostname === host)
+  // Apple Books / iTunes artwork is served from is1-ssl … is5-ssl.mzstatic.com.
+  return coverHosts.some(host => url.hostname === host) || url.hostname.endsWith('.mzstatic.com')
 }
 
 // Fetch handler

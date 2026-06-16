@@ -1,26 +1,15 @@
 /**
- * Centralized book-cover URL resolution.
+ * Cover URL helpers.
  *
- * One place that knows how to turn raw API data into the best cover URL we can
- * serve, plus a graceful fallback. The priority is Goodreads-grade quality:
+ * Covers come from each book's own source of record (correct edition, reliable):
+ *   - Google Books `imageLinks` for Google-sourced books (upgraded for sharpness)
+ *   - Open Library `-L` for OL-sourced books
  *
- *   1. Amazon by ISBN-10  — the same images Goodreads serves (~500px, correct
- *      edition because it's keyed on the ISBN, not a fuzzy title match).
- *   2. The source's own cover (upgraded Google Books, or Open Library -L) as a
- *      fallback for books with no derivable ISBN-10 or no Amazon cover.
- *
- * Amazon returns a 43-byte 1×1 gif when it has no cover for an id; <BookCover>
- * detects that (naturalWidth ≤ 1) and steps down to `coverFallback`.
+ * High-resolution covers are then layered on in a background pass via the
+ * iTunes / Apple Books API (see lib/itunes-covers.ts) — an official, exact-ISBN
+ * source on a robust CDN, replacing the fragile Amazon image hotlinking that
+ * produced missing (1x1 gif) and wrong-edition covers.
  */
-
-import { toIsbn10 } from "./isbn"
-
-/** Largest-available Amazon cover for an ISBN-10. */
-export function amazonCoverUrl(isbn10: string): string {
-  // `_SCLZZZZZZZ_` asks for the largest stored size; arbitrary `_SX###_` codes
-  // can silently return a tiny fallback render, so we don't use them.
-  return `https://m.media-amazon.com/images/P/${isbn10}.01._SCLZZZZZZZ_.jpg`
-}
 
 /**
  * Upgrade a Google Books cover thumbnail URL to a sharper, secure variant.
@@ -51,31 +40,17 @@ export function upgradeGoogleBooksCoverUrl(url: string): string {
   return upgraded
 }
 
-export interface ResolvedCover {
-  /** Best cover to try first. */
-  cover: string
-  /** Next source to try if `cover` fails or returns Amazon's 1×1 "no image". */
-  coverFallback?: string
+/**
+ * Turn an iTunes `artworkUrl100` into a high-resolution cover URL. Apple artwork
+ * URLs end in a size segment like `/100x100bb.jpg`; swapping it for a larger box
+ * yields a crisp ~1000px cover (`bb` preserves aspect ratio).
+ */
+export function itunesHiResArtwork(artworkUrl: string, px = 1000): string {
+  if (!artworkUrl) return artworkUrl
+  return artworkUrl.replace(/\/\d+x\d+bb\./, `/${px}x${px}bb.`)
 }
 
-/**
- * Resolve the best cover URL for a book given its ISBN and the source-native
- * cover (an upgraded Google Books URL). Prefers the Amazon high-res cover keyed
- * on ISBN-10, falling back to the source cover.
- */
-export function resolveBestCover({
-  isbn,
-  googleCover,
-}: {
-  isbn?: string
-  googleCover: string
-}): ResolvedCover {
-  const isbn10 = toIsbn10(isbn)
-  if (isbn10) {
-    return {
-      cover: amazonCoverUrl(isbn10),
-      coverFallback: googleCover || undefined,
-    }
-  }
-  return { cover: googleCover, coverFallback: undefined }
+/** True for Apple/iTunes artwork URLs (so we don't re-upgrade an already-iTunes cover). */
+export function isItunesCover(url: string | undefined): boolean {
+  return !!url && url.includes("mzstatic.com")
 }

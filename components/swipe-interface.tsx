@@ -8,7 +8,8 @@ import { addLikedBook, removeLikedBook, getLikedBooks, addPassedBookId, getPasse
 import { scoreBooks } from "@/lib/scoring-engine"
 import { getBooksByCategory, bookSearchQueries } from "@/lib/books-api"
 import { getCachedBooks, addBooksToCache, updateBooksInCache } from "@/lib/book-cache"
-import { searchOpenLibrary, upgradeOpenLibraryCovers } from "@/lib/openlibrary-api"
+import { searchOpenLibrary } from "@/lib/openlibrary-api"
+import { upgradeCoversWithItunes } from "@/lib/itunes-covers"
 import { Heart, X, Undo2, RotateCcw, Settings, Library, BookOpen, Loader2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useGamification } from "./gamification-provider"
@@ -162,11 +163,12 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   const { triggerActivity } = useGamification()
   const { showToast } = useToast()
 
-  // Background OL cover upgrade: resolve correct-edition Amazon covers and patch
-  // both the live deck and the cache. Best-effort — failures keep the OL cover.
+  // Background cover upgrade: resolve high-res iTunes covers by ISBN and patch
+  // both the live deck and the cache. Best-effort — failures keep the source
+  // (Google / Open Library) cover, which is already correct and reliable.
   const upgradeDeckCovers = useCallback(async (deck: Book[]) => {
     try {
-      const changed = await upgradeOpenLibraryCovers(deck)
+      const changed = await upgradeCoversWithItunes(deck)
       if (changed.length === 0) return
       updateBooksInCache(changed)
       const patch = new Map(changed.map((b) => [b.id, b]))

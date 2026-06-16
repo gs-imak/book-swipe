@@ -103,16 +103,7 @@ export function BookCover({
         style={{
           transition: "opacity 300ms ease-out",
         }}
-        onLoad={(e) => {
-          // Amazon serves a 1×1 "no image" gif for ISBNs it has no cover for —
-          // that loads successfully (never fires onError), so detect the tiny
-          // image here and step down the fallback chain instead.
-          if (e.currentTarget.naturalWidth <= 1) {
-            handleError()
-            return
-          }
-          setIsLoaded(true)
-        }}
+        onLoad={() => setIsLoaded(true)}
         onError={handleError}
       />
     </>

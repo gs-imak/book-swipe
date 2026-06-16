@@ -2,7 +2,7 @@ import { Book } from "./book-data"
 import { getCachedBooks, addBooksToCache, isQueryCached, markQueryCompleted, queryCache } from "./book-cache"
 import { searchOpenLibrary, searchOpenLibraryByQuery } from "./openlibrary-api"
 import { getLanguagePreference } from "./language-preference"
-import { resolveBestCover, upgradeGoogleBooksCoverUrl } from "./covers"
+import { upgradeGoogleBooksCoverUrl } from "./covers"
 
 // Deterministic pseudo-rating from a string (always returns the same value for the same input)
 function stableRating(seed: string, min = 3.5, max = 4.5): number {
@@ -225,13 +225,10 @@ function transformGoogleBookToBook(googleBook: unknown): Book | null {
   
   const isbn = volumeInfo.industryIdentifiers?.find(id => id.type === 'ISBN_13')?.identifier ||
                volumeInfo.industryIdentifiers?.find(id => id.type === 'ISBN_10')?.identifier
-  const googleCover = getBestCoverImage(volumeInfo.imageLinks)
-  if (!googleCover) return null // No usable cover — skip this book
-
-  // Prefer the Goodreads-grade Amazon cover (keyed on ISBN-10 → correct edition,
-  // ~500px) when we have an ISBN, falling back to the Google cover otherwise.
-  // <BookCover> steps down to coverFallback if Amazon has no image for the id.
-  const { cover, coverFallback } = resolveBestCover({ isbn, googleCover })
+  // Google Books' own cover for this volume — correct edition, reliable. A
+  // higher-res iTunes cover is layered on later via upgradeCoversWithItunes.
+  const cover = getBestCoverImage(volumeInfo.imageLinks)
+  if (!cover) return null // No usable cover — skip this book
 
   // Detect formats
   const isEbook = googleBook.saleInfo?.isEbook ||
@@ -248,7 +245,6 @@ function transformGoogleBookToBook(googleBook: unknown): Book | null {
     title: volumeInfo.title,
     author: volumeInfo.authors[0],
     cover,
-    coverFallback,
     rating: Math.round(rating * 10) / 10,
     pages,
     genre: volumeInfo.categories || ['General'],
