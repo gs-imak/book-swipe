@@ -3,7 +3,7 @@
 import { type Book } from "./book-data"
 import { getLikedBooks } from "./storage"
 import { getCachedBooks } from "./book-cache"
-import { scoreBooks } from "./scoring-engine"
+import { scoreBooks, snapshotProfileCache, restoreProfileCache } from "./scoring-engine"
 
 export interface BookChain {
   startBook: Book
@@ -61,23 +61,31 @@ export function generateBookChain(startBook: Book, chainLength: number = 4): Boo
   let currentBook = startBook
   const usedIds = new Set<string>([startBook.id])
 
-  for (let i = 0; i < chainLength; i++) {
-    // Score remaining candidates based on similarity to the current book
-    const candidates = uniquePool.filter(b => !usedIds.has(b.id))
-    if (candidates.length === 0) break
+  // Chain building scores against a single-book "liked" set, which would
+  // overwrite scoring-engine's shared user-profile cache and contaminate real
+  // recommendations. Snapshot the cache and restore it once we're done.
+  const cacheSnapshot = snapshotProfileCache()
+  try {
+    for (let i = 0; i < chainLength; i++) {
+      // Score remaining candidates based on similarity to the current book
+      const candidates = uniquePool.filter(b => !usedIds.has(b.id))
+      if (candidates.length === 0) break
 
-    const scored = scoreBooks(candidates, [currentBook], {
-      excludeIds: usedIds,
-    })
+      const scored = scoreBooks(candidates, [currentBook], {
+        excludeIds: usedIds,
+      })
 
-    if (scored.length === 0) break
+      if (scored.length === 0) break
 
-    // Pick from top 5 with slight variation to keep it interesting
-    const topN = Math.min(5, scored.length)
-    const pick = scored[Math.floor(Math.random() * topN)]
-    chain.push(pick.book)
-    usedIds.add(pick.book.id)
-    currentBook = pick.book
+      // Pick from top 5 with slight variation to keep it interesting
+      const topN = Math.min(5, scored.length)
+      const pick = scored[Math.floor(Math.random() * topN)]
+      chain.push(pick.book)
+      usedIds.add(pick.book.id)
+      currentBook = pick.book
+    }
+  } finally {
+    restoreProfileCache(cacheSnapshot)
   }
 
   if (chain.length < 2) return null
