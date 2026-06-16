@@ -17,27 +17,66 @@ export function InstallPrompt() {
 
   useEffect(() => {
     // Don't show if already dismissed recently (30 days)
-    try {
-      const dismissed = localStorage.getItem(INSTALL_DISMISSED_KEY)
-      if (dismissed) {
-        const daysSince = (Date.now() - new Date(dismissed).getTime()) / (1000 * 60 * 60 * 24)
-        if (daysSince < 30) return
+    const recentlyDismissed = () => {
+      try {
+        const dismissed = localStorage.getItem(INSTALL_DISMISSED_KEY)
+        if (dismissed) {
+          const daysSince = (Date.now() - new Date(dismissed).getTime()) / (1000 * 60 * 60 * 24)
+          return daysSince < 30
+        }
+      } catch { /* ignore */ }
+      return false
+    }
+    if (recentlyDismissed()) return
+
+    // Read the liked-book count fresh each time we decide whether to show.
+    const likedCount = () => {
+      try {
+        const liked = localStorage.getItem("bookswipe_liked_books")
+        return liked ? JSON.parse(liked).length : 0
+      } catch {
+        return 0
       }
-    } catch { /* ignore */ }
+    }
+
+    // Engaged = 3+ liked books. We hold onto the deferred prompt and re-check
+    // the count over time, so users who like books AFTER the event fires
+    // still get the prompt (the event only fires once).
+    let prompt: BeforeInstallPromptEvent | null = null
+
+    const maybeShow = () => {
+      if (prompt && !recentlyDismissed() && likedCount() >= 3) {
+        setShow(true)
+        return true
+      }
+      return false
+    }
 
     const handler = (e: Event) => {
       e.preventDefault()
-      setDeferredPrompt(e as BeforeInstallPromptEvent)
-      // Only show to engaged users (3+ liked books)
-      try {
-        const liked = localStorage.getItem("bookswipe_liked_books")
-        const count = liked ? JSON.parse(liked).length : 0
-        if (count >= 3) setShow(true)
-      } catch { /* ignore */ }
+      prompt = e as BeforeInstallPromptEvent
+      setDeferredPrompt(prompt)
+      maybeShow()
+    }
+
+    // Re-evaluate when likes change in another tab, on focus, and periodically.
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "bookswipe_liked_books" || e.key === null) maybeShow()
     }
 
     window.addEventListener("beforeinstallprompt", handler)
-    return () => window.removeEventListener("beforeinstallprompt", handler)
+    window.addEventListener("storage", onStorage)
+    window.addEventListener("focus", maybeShow)
+    const interval = window.setInterval(() => {
+      if (maybeShow()) window.clearInterval(interval)
+    }, 5000)
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler)
+      window.removeEventListener("storage", onStorage)
+      window.removeEventListener("focus", maybeShow)
+      window.clearInterval(interval)
+    }
   }, [])
 
   const handleInstall = async () => {

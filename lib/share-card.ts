@@ -20,6 +20,7 @@ async function loadImageAsBlob(url: string): Promise<HTMLImageElement | null> {
     const objectUrl = URL.createObjectURL(blob)
     return new Promise((resolve) => {
       const img = new Image()
+      img.crossOrigin = "anonymous"
       img.onload = () => {
         URL.revokeObjectURL(objectUrl)
         resolve(img)
@@ -314,11 +315,20 @@ export async function generateShareCard(book: Book, review: BookReview | null, o
   }
 
   return new Promise((resolve) => {
-    canvas.toBlob((blob) => resolve(blob), "image/png")
+    canvas.toBlob((blob) => {
+      // toBlob yields null when encoding fails or the canvas is tainted —
+      // resolve null so callers can surface failure instead of hanging.
+      resolve(blob)
+    }, "image/png")
   })
 }
 
 export async function copyImageToClipboard(blob: Blob): Promise<boolean> {
+  // Guard for environments without the async Clipboard API or ClipboardItem
+  // (e.g. older Firefox/Safari) so the caller can fall back gracefully.
+  if (typeof navigator === "undefined" || !navigator.clipboard?.write || typeof ClipboardItem === "undefined") {
+    return false
+  }
   try {
     await navigator.clipboard.write([
       new ClipboardItem({ "image/png": blob })

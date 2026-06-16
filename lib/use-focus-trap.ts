@@ -19,12 +19,32 @@ export function useFocusTrap(
     const container = containerRef.current
     const previouslyFocused = document.activeElement as HTMLElement | null
 
-    // Focus the container itself if nothing inside is focused
-    const firstFocusable = container.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)
-    if (firstFocusable) {
-      firstFocusable.focus()
-    } else {
+    // Move focus into the container. Returns true once a focusable child was
+    // found, so we can stop re-trying for late-arriving content.
+    const focusFirst = (): boolean => {
+      const firstFocusable = container.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)
+      if (firstFocusable) {
+        firstFocusable.focus()
+        return true
+      }
+      // Nothing focusable yet — park focus on the container as a fallback.
       container.focus()
+      return false
+    }
+
+    // Observe for late-arriving focusable children (async preview/buttons).
+    // Keep re-trying until focus actually lands inside the container, then
+    // disconnect so we don't fight the user's own focus moves.
+    let observer: MutationObserver | null = null
+    if (!focusFirst()) {
+      observer = new MutationObserver(() => {
+        if (container.contains(document.activeElement) && document.activeElement !== container) {
+          observer?.disconnect()
+          return
+        }
+        if (focusFirst()) observer?.disconnect()
+      })
+      observer.observe(container, { childList: true, subtree: true })
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -56,8 +76,17 @@ export function useFocusTrap(
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
-      // Restore focus to previously focused element
-      if (previouslyFocused && previouslyFocused.focus) {
+      observer?.disconnect()
+      // Restore focus only if the element is still in the document and visible.
+      // A detached/hidden element (e.g. removed with its modal) would either
+      // throw or silently move focus to <body>, so guard before focusing.
+      if (
+        previouslyFocused &&
+        typeof previouslyFocused.focus === 'function' &&
+        previouslyFocused.isConnected &&
+        document.contains(previouslyFocused) &&
+        previouslyFocused.offsetParent !== null
+      ) {
         previouslyFocused.focus()
       }
     }
