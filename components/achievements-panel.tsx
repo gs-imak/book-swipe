@@ -51,8 +51,10 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
   const currentLevel = stats.level
   const pointsForNext = getPointsForNextLevel(currentLevel)
   const currentPoints = stats.totalPoints
-  const pointsToNext = pointsForNext - currentPoints
-  const levelProgress = ((currentPoints % pointsForNext) / pointsForNext) * 100
+  const levelStart = (currentLevel - 1) ** 2 * 100
+  const levelEnd = pointsForNext
+  const levelProgress = Math.min(100, Math.max(0, ((currentPoints - levelStart) / (levelEnd - levelStart)) * 100))
+  const pointsToNext = Math.max(0, levelEnd - currentPoints)
 
   const tabs = [
     { id: 'overview' as const, label: 'Overview' },
