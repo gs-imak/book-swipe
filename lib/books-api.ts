@@ -62,6 +62,33 @@ export interface GoogleBook {
   }
 }
 
+// Upgrade a Google Books cover thumbnail URL to a sharper, secure variant.
+// Pure URL transform: forces https, strips the curl-edge effect, and bumps the
+// `zoom` parameter so we request a larger render. Leaves non-Google URLs (and
+// URLs that don't match the expected pattern) untouched.
+export function upgradeGoogleBooksCoverUrl(url: string): string {
+  if (!url) return url
+
+  // Force HTTPS and drop the page-curl edge effect on every cover form.
+  let upgraded = url
+    .replace(/^http:\/\//i, 'https://')
+    .replace(/&edge=curl/gi, '')
+
+  const isGoogleCover =
+    upgraded.includes('books.google.com') ||
+    upgraded.includes('books.googleusercontent.com')
+
+  if (isGoogleCover) {
+    // Bump small/default zoom levels (0 or 1) up to zoom=2 for a sharper image.
+    // Leave already-large zoom levels (2+) as-is so we don't request broken sizes.
+    upgraded = upgraded.replace(/([?&])zoom=(\d+)/gi, (match, sep, level) =>
+      parseInt(level, 10) <= 1 ? `${sep}zoom=2` : match
+    )
+  }
+
+  return upgraded
+}
+
 // Fetch a high-quality cover from the bookcover API (Goodreads source)
 // Track rate limit state to avoid flooding the API
 let _coverRateLimitedUntil = 0
@@ -302,21 +329,7 @@ function transformGoogleBookToBook(googleBook: unknown): Book | null {
 
     if (!coverUrl) return ''
 
-    // Ensure HTTPS and clean up the URL
-    let optimizedUrl = coverUrl
-      .replace('http:', 'https:')
-      .replace(/&edge=curl/g, '') // Remove curl edge effect
-
-    // For Google Books images, keep the API's own URL (most reliable for correct cover).
-    // Only bump very small thumbnails (zoom=0/1) to zoom=3 for better quality.
-    if (optimizedUrl.includes('books.google.com') || optimizedUrl.includes('books.googleusercontent.com')) {
-      const zoomMatch = optimizedUrl.match(/zoom=(\d+)/)
-      if (zoomMatch && parseInt(zoomMatch[1]) <= 1) {
-        optimizedUrl = optimizedUrl.replace(/zoom=\d+/g, 'zoom=3')
-      }
-    }
-
-    return optimizedUrl
+    return upgradeGoogleBooksCoverUrl(coverUrl)
   }
   
   const isbn = volumeInfo.industryIdentifiers?.find(id => id.type === 'ISBN_13')?.identifier ||
