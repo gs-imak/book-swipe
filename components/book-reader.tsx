@@ -1188,6 +1188,8 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     if (!isOpen) return
 
     const handleKey = (e: KeyboardEvent) => {
+      const tgt = e.target as HTMLElement | null
+      if (tgt && (tgt.tagName === "INPUT" || tgt.tagName === "TEXTAREA" || tgt.isContentEditable)) return
       if (e.key === "Escape") onClose()
       if (e.key === "ArrowRight" || e.key === " ") {
         e.preventDefault()
