@@ -55,6 +55,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        {/*
+          No-FOUC theme script. Runs before paint and mirrors lib/theme.ts:
+          key "bookswipe_theme", dark = add the "dark" class to <html> only
+          when the stored value is exactly "dark" (default light). The
+          useEffect-based logic remains the source of truth post-hydration.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{if(localStorage.getItem("bookswipe_theme")==="dark"){document.documentElement.classList.add("dark");var m=document.querySelector('meta[name="theme-color"]');if(m){m.setAttribute("content","#0a0a0a");}}}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className={`${dmSans.variable} ${sourceSerif.variable} font-sans`}>
         <div className="min-h-screen bg-background">
           {children}

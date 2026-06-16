@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 /**
- * Run the Supabase schema setup.
- * Executes each SQL statement via the PostgREST RPC endpoint.
+ * Check the Supabase schema setup.
+ *
+ * PostgREST can't execute arbitrary DDL, so this script does NOT create
+ * tables. It verifies the connection and reports which tables exist; the
+ * schema itself must be applied from lib/supabase-schema.sql via the
+ * Supabase dashboard SQL editor or `npx supabase db query`.
  *
  * Usage: node scripts/setup-db.mjs
  */
@@ -38,57 +42,11 @@ const supabase = createClient(url, serviceKey, {
   db: { schema: 'public' },
 })
 
-// Split SQL into statements (simple splitter on semicolons not inside $$ blocks)
-const sqlFile = readFileSync(resolve(__dirname, '..', 'lib', 'supabase-schema.sql'), 'utf-8')
-
-// Remove comments
-const cleanSQL = sqlFile
-  .split('\n')
-  .filter(line => !line.trim().startsWith('--'))
-  .join('\n')
-
-// Split on semicolons but preserve $$ blocks
-const statements = []
-let current = ''
-let inDollarQuote = false
-for (const line of cleanSQL.split('\n')) {
-  if (line.includes('$$')) {
-    inDollarQuote = !inDollarQuote
-  }
-  current += line + '\n'
-  if (!inDollarQuote && line.trim().endsWith(';')) {
-    const stmt = current.trim()
-    if (stmt.length > 1) statements.push(stmt)
-    current = ''
-  }
-}
-if (current.trim()) statements.push(current.trim())
-
-console.log(`Found ${statements.length} SQL statements to execute`)
-
-// Execute via fetch to the Supabase SQL endpoint
-async function runSQL(sql) {
-  const res = await fetch(`${url}/rest/v1/rpc`, {
-    method: 'POST',
-    headers: {
-      'apikey': serviceKey,
-      'Authorization': `Bearer ${serviceKey}`,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=minimal',
-    },
-    body: JSON.stringify({ query: sql }),
-  })
-  return { status: res.status, ok: res.ok }
-}
-
-// The PostgREST API doesn't support arbitrary SQL.
-// We need to use a different approach — create tables via the Supabase client.
-
 async function setupTables() {
-  console.log('Setting up database tables...')
+  console.log('Checking database tables...')
 
   // Test connection first
-  const { data, error } = await supabase.from('profiles').select('id').limit(1)
+  const { error } = await supabase.from('profiles').select('id').limit(1)
 
   if (error && error.code === '42P01') {
     // Table doesn't exist — we need to run the SQL

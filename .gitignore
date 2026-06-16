@@ -32,6 +32,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# stray dev files at repo root (ad-hoc test scripts, screenshots)
+/test-*.mjs
+/screenshot-*.png
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
