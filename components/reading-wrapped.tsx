@@ -327,14 +327,15 @@ export function ReadingWrapped({ isOpen, onClose }: ReadingWrappedProps) {
     // Best rated book (by user review rating, fallback to community rating)
     let bestBook: Book | null = null
     let bestRating = 0
+    const clampRating = (r: number) => Math.max(0, Math.min(5, Number.isFinite(r) ? r : 0))
     if (reviews.length > 0) {
       const best = reviews.sort((a, b) => b.rating - a.rating)[0]
       bestBook = books.find(b => b.id === best.bookId) ?? null
-      bestRating = best.rating
+      bestRating = clampRating(best.rating)
     } else if (books.length > 0) {
       const topBook = [...books].sort((a, b) => b.rating - a.rating)[0]
       bestBook = topBook
-      bestRating = Math.round(topBook.rating)
+      bestRating = Math.round(clampRating(topBook.rating))
     }
 
     // Top mood
