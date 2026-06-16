@@ -126,10 +126,7 @@ alter table public.reviews enable row level security;
 alter table public.reading_progress enable row level security;
 alter table public.swipe_history enable row level security;
 
--- Profiles: users can read/update their own profile
-create policy "Users can view own profile" on public.profiles for select using (auth.uid() = id);
-create policy "Users can update own profile" on public.profiles for update using (auth.uid() = id);
-create policy "Users can insert own profile" on public.profiles for insert with check (auth.uid() = id);
+-- Profiles policies are created below, after the drop block, so re-runs are idempotent.
 
 -- Migration safety: drop the OLD (pre-hardening) policies by their original names so
 -- re-running this script on a live instance actually removes the leaky SELECT policies
@@ -147,6 +144,19 @@ drop policy if exists "Users read own swipes" on public.swipe_history;
 drop policy if exists "Users insert own swipes" on public.swipe_history;
 drop policy if exists "Users update own swipes" on public.swipe_history;
 drop policy if exists "Users delete own swipes" on public.swipe_history;
+-- Pre-existing policies that previously had no drop-guard (idempotency fix so the whole
+-- script is safe to re-run against an existing database without erroring mid-way):
+drop policy if exists "Users can view own profile" on public.profiles;
+drop policy if exists "Users can update own profile" on public.profiles;
+drop policy if exists "Users can insert own profile" on public.profiles;
+drop policy if exists "Anyone can read books" on public.books;
+drop policy if exists "Users manage own library" on public.user_books;
+drop policy if exists "Users manage own progress" on public.reading_progress;
+
+-- Profiles: users can read/update their own profile
+create policy "Users can view own profile" on public.profiles for select using (auth.uid() = id);
+create policy "Users can update own profile" on public.profiles for update using (auth.uid() = id);
+create policy "Users can insert own profile" on public.profiles for insert with check (auth.uid() = id);
 
 -- Books: any authenticated user can read the shared catalog.
 create policy "Anyone can read books" on public.books for select to authenticated using (true);
