@@ -114,12 +114,48 @@ function getWeeklyPagesRead(): number {
     .reduce((sum, p) => sum + (p.currentPage || 0), 0)
 }
 
+// Local calendar day as YYYY-MM-DD (timezone-stable comparison key).
+function toLocalDayKey(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
+
+// Count the number of consecutive calendar days, ending today (or yesterday),
+// on which at least one review was written. A gap of a full day breaks the run.
 function getConsecutiveReviewStreak(): number {
   const reviews = getBookReviews()
   if (reviews.length === 0) return 0
-  // Sort by createdAt descending and count consecutive reviews from the most recent
-  const sorted = [...reviews].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-  return Math.min(sorted.length, 10) // cap at 10 for display
+
+  // Distinct local days that have at least one review.
+  const reviewDays = new Set(
+    reviews
+      .filter(r => r.createdAt)
+      .map(r => toLocalDayKey(new Date(r.createdAt)))
+  )
+  if (reviewDays.size === 0) return 0
+
+  const today = toLocalDayKey(new Date())
+  const yesterday = toLocalDayKey(new Date(Date.now() - 24 * 60 * 60 * 1000))
+
+  // Anchor the run to today if reviewed today, else yesterday; otherwise the
+  // streak has already lapsed.
+  let cursor: Date
+  if (reviewDays.has(today)) {
+    cursor = new Date()
+  } else if (reviewDays.has(yesterday)) {
+    cursor = new Date(Date.now() - 24 * 60 * 60 * 1000)
+  } else {
+    return 0
+  }
+
+  let streak = 0
+  while (reviewDays.has(toLocalDayKey(cursor))) {
+    streak++
+    cursor.setDate(cursor.getDate() - 1)
+  }
+  return Math.min(streak, 10) // cap at 10 for display
 }
 
 function getMonthlyGenreCount(): number {
