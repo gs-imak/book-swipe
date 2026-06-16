@@ -17,7 +17,7 @@ interface GoodreadsImportProps {
   onComplete?: () => void
 }
 
-type Step = "upload" | "preview" | "progress" | "results"
+type Step = "upload" | "preview" | "progress" | "results" | "error"
 
 export function GoodreadsImport({ isOpen, onClose, onComplete }: GoodreadsImportProps) {
   const [step, setStep] = useState<Step>("upload")
@@ -25,6 +25,7 @@ export function GoodreadsImport({ isOpen, onClose, onComplete }: GoodreadsImport
   const [rows, setRows] = useState<GoodreadsRow[]>([])
   const [progress, setProgress] = useState<ImportProgress | null>(null)
   const [result, setResult] = useState<ImportResult | null>(null)
+  const [errorMessage, setErrorMessage] = useState("")
   const [importRatings, setImportRatings] = useState(true)
   const [importShelves, setImportShelves] = useState(true)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -32,20 +33,40 @@ export function GoodreadsImport({ isOpen, onClose, onComplete }: GoodreadsImport
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const text = await file.text()
-    setCsvText(text)
-    const parsed = parseGoodreadsCSV(text)
-    setRows(parsed)
-    setStep("preview")
+    try {
+      const text = await file.text()
+      const parsed = parseGoodreadsCSV(text)
+      if (parsed.length === 0) {
+        setErrorMessage(
+          "This file doesn't look like a valid Goodreads export. Make sure you uploaded the CSV downloaded from goodreads.com/review/import."
+        )
+        setStep("error")
+        return
+      }
+      setCsvText(text)
+      setRows(parsed)
+      setStep("preview")
+    } catch {
+      setErrorMessage("We couldn't read that file. Please try exporting from Goodreads again.")
+      setStep("error")
+    } finally {
+      // Reset so selecting the same file again re-triggers onChange.
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    }
   }
 
   const handleStartImport = async () => {
     setStep("progress")
-    const result = await importGoodreadsData(csvText, (p) => {
-      setProgress({ ...p })
-    }, { importRatings, importShelves })
-    setResult(result)
-    setStep("results")
+    try {
+      const result = await importGoodreadsData(csvText, (p) => {
+        setProgress({ ...p })
+      }, { importRatings, importShelves })
+      setResult(result)
+      setStep("results")
+    } catch {
+      setErrorMessage("Something went wrong during the import. Some books may not have been added.")
+      setStep("error")
+    }
   }
 
   const handleDone = () => {
@@ -54,6 +75,7 @@ export function GoodreadsImport({ isOpen, onClose, onComplete }: GoodreadsImport
     setRows([])
     setProgress(null)
     setResult(null)
+    setErrorMessage("")
     onComplete?.()
     onClose()
   }
@@ -285,6 +307,35 @@ export function GoodreadsImport({ isOpen, onClose, onComplete }: GoodreadsImport
                 >
                   Done
                 </button>
+              </div>
+            )}
+
+            {/* Error */}
+            {step === "error" && (
+              <div className="space-y-5 py-4">
+                <div className="text-center">
+                  <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+                  <h3 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">Import Failed</h3>
+                  <p className="text-sm text-stone-600 dark:text-stone-400 mt-2 leading-relaxed">{errorMessage}</p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleDone}
+                    className="flex-1 h-10 bg-white dark:bg-stone-900 border border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 text-sm font-medium rounded-xl transition-colors"
+                  >
+                    Close
+                  </button>
+                  <button
+                    onClick={() => {
+                      setErrorMessage("")
+                      setStep("upload")
+                    }}
+                    className="flex-1 h-10 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium rounded-xl transition-colors"
+                  >
+                    Try Again
+                  </button>
+                </div>
               </div>
             )}
           </div>
