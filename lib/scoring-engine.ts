@@ -287,11 +287,29 @@ function generateReasons(
 // Memoize vocabulary + user vector per liked-books set to avoid recalculation
 let _cachedLikedKey = ""
 let _cachedUserProfile = ""
-let _cachedUserVector: SparseVector = {}
 
 function getLikedBooksKey(likedBooks: Book[]): string {
-  // Fast fingerprint: ids + count
-  return likedBooks.map(b => b.id).join(",")
+  // Fast fingerprint: ids + count, plus a fingerprint of review ratings so that
+  // editing/adding a rating (same liked set) invalidates the cached profile —
+  // buildUserProfile weights books by their review rating.
+  const idKey = likedBooks.map(b => b.id).join(",")
+  const ratingKey = getBookReviews()
+    .map(r => `${r.bookId}:${r.rating}`)
+    .sort()
+    .join("|")
+  return `${idKey}#${ratingKey}`
+}
+
+// Snapshot/restore the shared user-profile cache. Callers that score against an
+// ad-hoc "liked" set (e.g. single-book chain building) use this to avoid
+// overwriting the real user's cached profile, which would contaminate recs.
+export function snapshotProfileCache(): { key: string; profile: string } {
+  return { key: _cachedLikedKey, profile: _cachedUserProfile }
+}
+
+export function restoreProfileCache(snapshot: { key: string; profile: string }): void {
+  _cachedLikedKey = snapshot.key
+  _cachedUserProfile = snapshot.profile
 }
 
 // --- Main Scoring Pipeline ---
@@ -324,7 +342,6 @@ export function scoreBooks(
     userProfile = buildUserProfile(likedBooks)
     _cachedUserProfile = userProfile
     _cachedLikedKey = likedKey
-    _cachedUserVector = {} // invalidate vector cache
   }
 
   const candidateTexts = filtered.map(buildFeatureString)
@@ -351,26 +368,8 @@ export function scoreBooks(
   }
   const hasNegative = Object.keys(negativeVector).length > 0
 
-  // Build dimension preferences from reviews (e.g., user loves "plot" → boost plotty books)
-  const reviews = getBookReviews()
-  const dimPrefs: Record<string, number> = {}
-  let dimCount = 0
-  reviews.forEach(r => {
-    if (r.dimensions) {
-      Object.entries(r.dimensions).forEach(([dim, val]) => {
-        dimPrefs[dim] = (dimPrefs[dim] || 0) + val
-        dimCount++
-      })
-    }
-  })
-  // Normalize to average preference per dimension
-  if (dimCount > 0) {
-    Object.keys(dimPrefs).forEach(dim => {
-      dimPrefs[dim] = dimPrefs[dim] / reviews.filter(r => r.dimensions && r.dimensions[dim]).length
-    })
-  }
-
   // Build pace preference from reviews
+  const reviews = getBookReviews()
   const paceCounts: Record<string, number> = { slow: 0, medium: 0, fast: 0 }
   reviews.forEach(r => {
     if (r.pace) paceCounts[r.pace]++

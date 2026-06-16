@@ -204,7 +204,6 @@ export async function searchAllBooks(query: string, limit = 20): Promise<Book[]>
   for (const book of [...o, ...g]) {
     const key = dedupeKey(book)
     if (seen.has(key)) continue
-    seen.add(book.id)
     seen.add(key)
     merged.push(book)
   }
