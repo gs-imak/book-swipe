@@ -214,7 +214,7 @@ function SlideBestBook({ stats }: { stats: WrappedStats }) {
                 fallbackSrc={stats.bestBook.coverFallback}
                 alt={stats.bestBook.title}
                 fill
-                className="object-contain"
+                className="object-cover"
                 sizes="224px"
               />
             </div>

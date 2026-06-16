@@ -218,7 +218,7 @@ export function BarcodeScanner({ isOpen, onClose }: BarcodeScannerProps) {
                       src={foundBook.cover}
                       alt={foundBook.title}
                       fill
-                      className="object-contain"
+                      className="object-cover"
                       sizes="64px"
                     />
                   </div>

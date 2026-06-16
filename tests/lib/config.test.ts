@@ -5,8 +5,6 @@ import {
   CACHE_TTL_MS,
   API_RATE_LIMIT,
   API_RATE_WINDOW_MS,
-  COVER_FETCH_TIMEOUT_MS,
-  COVER_BATCH_CONCURRENCY,
   SEARCH_DEBOUNCE_MS,
   SEARCH_MAX_RESULTS,
 } from "@/lib/config"
@@ -18,8 +16,6 @@ describe("config constants — all values must be positive numbers", () => {
     ["CACHE_TTL_MS", CACHE_TTL_MS],
     ["API_RATE_LIMIT", API_RATE_LIMIT],
     ["API_RATE_WINDOW_MS", API_RATE_WINDOW_MS],
-    ["COVER_FETCH_TIMEOUT_MS", COVER_FETCH_TIMEOUT_MS],
-    ["COVER_BATCH_CONCURRENCY", COVER_BATCH_CONCURRENCY],
     ["SEARCH_DEBOUNCE_MS", SEARCH_DEBOUNCE_MS],
     ["SEARCH_MAX_RESULTS", SEARCH_MAX_RESULTS],
   ]
@@ -43,20 +39,9 @@ describe("config relationships", () => {
     expect(CACHE_TTL_MS).toBeGreaterThanOrEqual(ONE_HOUR_MS)
   })
 
-  it("COVER_FETCH_TIMEOUT_MS is less than API_RATE_WINDOW_MS", () => {
-    // A per-cover timeout should be shorter than the overall rate-limit window
-    expect(COVER_FETCH_TIMEOUT_MS).toBeLessThan(API_RATE_WINDOW_MS)
-  })
-
   it("SEARCH_MAX_RESULTS is a reasonable display count (1–200)", () => {
     expect(SEARCH_MAX_RESULTS).toBeGreaterThanOrEqual(1)
     expect(SEARCH_MAX_RESULTS).toBeLessThanOrEqual(200)
-  })
-
-  it("COVER_BATCH_CONCURRENCY is a small positive integer suitable for parallelism", () => {
-    expect(Number.isInteger(COVER_BATCH_CONCURRENCY)).toBe(true)
-    expect(COVER_BATCH_CONCURRENCY).toBeGreaterThanOrEqual(1)
-    expect(COVER_BATCH_CONCURRENCY).toBeLessThanOrEqual(20)
   })
 
   it("API_RATE_LIMIT is a whole number", () => {

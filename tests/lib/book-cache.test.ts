@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest"
-import { getCachedBooks, addBooksToCache, clearBookCache, queryCache } from "@/lib/book-cache"
+import { getCachedBooks, addBooksToCache, updateBooksInCache, clearBookCache, queryCache } from "@/lib/book-cache"
 import type { Book } from "@/lib/book-data"
 import { MAX_CACHE_SIZE } from "@/lib/config"
 
@@ -128,5 +128,29 @@ describe("book-cache", () => {
     addBooksToCache([])
     const after = getCachedBooks().length
     expect(after).toBe(before)
+  })
+
+  it("updateBooksInCache replaces an existing book's fields in place", () => {
+    addBooksToCache([makeBook({ id: "up-1", cover: "https://covers.openlibrary.org/old-L.jpg" })])
+    updateBooksInCache([makeBook({ id: "up-1", cover: "https://m.media-amazon.com/images/P/0525559477.01._SCLZZZZZZZ_.jpg", coverFallback: "https://covers.openlibrary.org/old-L.jpg" })])
+    const book = getCachedBooks().find((b) => b.id === "up-1")
+    expect(book?.cover).toContain("media-amazon")
+    expect(book?.coverFallback).toContain("openlibrary")
+  })
+
+  it("updateBooksInCache does not add books whose id is not already cached", () => {
+    addBooksToCache([makeBook({ id: "present" })])
+    const before = getCachedBooks().length
+    updateBooksInCache([makeBook({ id: "absent", title: "Should not be added" })])
+    const cached = getCachedBooks()
+    expect(cached.length).toBe(before)
+    expect(cached.some((b) => b.id === "absent")).toBe(false)
+  })
+
+  it("updateBooksInCache is a no-op when given an empty array", () => {
+    addBooksToCache([makeBook({ id: "base" })])
+    const before = getCachedBooks().length
+    updateBooksInCache([])
+    expect(getCachedBooks().length).toBe(before)
   })
 })

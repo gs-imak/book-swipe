@@ -136,7 +136,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
             fallbackSrc={book.coverFallback}
             alt={book.title}
             fill
-            className="object-contain"
+            className="object-cover"
             sizes="128px"
           />
         </div>

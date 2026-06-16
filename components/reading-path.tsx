@@ -62,13 +62,13 @@ export function ReadingPath({ onBookClick }: ReadingPathProps) {
                 onClick={() => onBookClick?.(chain.startBook)}
                 className="flex-shrink-0 group"
               >
-                <div className="relative w-14 h-20 sm:w-16 sm:h-24 rounded-lg overflow-hidden shadow-sm border border-stone-200/40 group-hover:shadow-md transition-shadow">
+                <div className="relative w-14 sm:w-16 aspect-[2/3] rounded-lg overflow-hidden shadow-sm border border-stone-200/40 group-hover:shadow-md transition-shadow">
                   <BookCover
                     src={chain.startBook.cover}
                     fallbackSrc={chain.startBook.coverFallback}
                     alt={chain.startBook.title}
                     fill
-                    className="object-contain"
+                    className="object-cover"
                     sizes="128px"
                   />
                 </div>
@@ -85,13 +85,13 @@ export function ReadingPath({ onBookClick }: ReadingPathProps) {
                     onClick={() => onBookClick?.(book)}
                     className="flex-shrink-0 group"
                   >
-                    <div className="relative w-14 h-20 sm:w-16 sm:h-24 rounded-lg overflow-hidden shadow-sm border border-stone-200/40 group-hover:shadow-md transition-shadow">
+                    <div className="relative w-14 sm:w-16 aspect-[2/3] rounded-lg overflow-hidden shadow-sm border border-stone-200/40 group-hover:shadow-md transition-shadow">
                       <BookCover
                         src={book.cover}
                         fallbackSrc={book.coverFallback}
                         alt={book.title}
                         fill
-                        className="object-contain"
+                        className="object-cover"
                         sizes="128px"
                       />
                     </div>

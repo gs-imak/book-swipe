@@ -33,7 +33,7 @@ export function BookCover({
   fill,
   sizes,
   priority,
-  className = "object-contain",
+  className = "object-cover",
 }: BookCoverProps) {
   const [currentSrc, setCurrentSrc] = useState(src)
   const [hasError, setHasError] = useState(false)
@@ -56,23 +56,27 @@ export function BookCover({
   }, [src, fallbackSrc, currentSrc])
 
   // Branded placeholder: shown when there's no cover URL or every source failed.
+  // A saturated, seed-tinted "cover" card with white text — theme-independent
+  // (reads on light and dark) and far more premium than a flat grey box.
   if (hasError || !src) {
     const hue = getSeedHue(alt || src || "book")
     return (
       <div
         className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 p-4 text-center"
         style={{
-          background: `linear-gradient(145deg, hsl(${hue}, 30%, 88%), hsl(${(hue + 40) % 360}, 24%, 78%))`,
+          background: `linear-gradient(150deg, hsl(${hue} 45% 35%), hsl(${(hue + 38) % 360} 50% 22%))`,
         }}
       >
-        <BookOpen className="h-7 w-7 flex-shrink-0 text-stone-500/70" />
+        {/* Subtle top sheen for depth */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/15 to-transparent" />
+        <BookOpen className="relative h-7 w-7 flex-shrink-0 text-white/80" />
         {alt && (
-          <span className="line-clamp-3 text-[11px] font-semibold leading-tight text-stone-700">
+          <span className="relative line-clamp-3 font-serif text-[12px] font-semibold leading-tight text-white drop-shadow-sm">
             {alt}
           </span>
         )}
         {author && (
-          <span className="line-clamp-1 text-[10px] font-medium leading-tight text-stone-500">
+          <span className="relative line-clamp-1 text-[10px] font-medium leading-tight text-white/75">
             {author}
           </span>
         )}
@@ -99,7 +103,16 @@ export function BookCover({
         style={{
           transition: "opacity 300ms ease-out",
         }}
-        onLoad={() => setIsLoaded(true)}
+        onLoad={(e) => {
+          // Amazon serves a 1×1 "no image" gif for ISBNs it has no cover for —
+          // that loads successfully (never fires onError), so detect the tiny
+          // image here and step down the fallback chain instead.
+          if (e.currentTarget.naturalWidth <= 1) {
+            handleError()
+            return
+          }
+          setIsLoaded(true)
+        }}
         onError={handleError}
       />
     </>

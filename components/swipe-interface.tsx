@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Book, UserPreferences } from "@/lib/book-data"
 import { addLikedBook, removeLikedBook, getLikedBooks, addPassedBookId, getPassedBookIds } from "@/lib/storage"
 import { scoreBooks } from "@/lib/scoring-engine"
-import { getBooksByCategory, bookSearchQueries, upgradeCoversBatchAsync } from "@/lib/books-api"
-import { getCachedBooks, addBooksToCache } from "@/lib/book-cache"
-import { searchOpenLibrary } from "@/lib/openlibrary-api"
+import { getBooksByCategory, bookSearchQueries } from "@/lib/books-api"
+import { getCachedBooks, addBooksToCache, updateBooksInCache } from "@/lib/book-cache"
+import { searchOpenLibrary, upgradeOpenLibraryCovers } from "@/lib/openlibrary-api"
 import { Heart, X, Undo2, RotateCcw, Settings, Library, BookOpen, Loader2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useGamification } from "./gamification-provider"
@@ -162,6 +162,20 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   const { triggerActivity } = useGamification()
   const { showToast } = useToast()
 
+  // Background OL cover upgrade: resolve correct-edition Amazon covers and patch
+  // both the live deck and the cache. Best-effort — failures keep the OL cover.
+  const upgradeDeckCovers = useCallback(async (deck: Book[]) => {
+    try {
+      const changed = await upgradeOpenLibraryCovers(deck)
+      if (changed.length === 0) return
+      updateBooksInCache(changed)
+      const patch = new Map(changed.map((b) => [b.id, b]))
+      setFilteredBooks((prev) => prev.map((b) => patch.get(b.id) ?? b))
+    } catch {
+      // best-effort
+    }
+  }, [])
+
   const loadBooks = async (excludeIds?: Set<string>) => {
     setIsLoading(true)
     try {
@@ -184,8 +198,6 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
 
       if (freshBooks.length > 0) {
         addBooksToCache(freshBooks)
-        // Upgrade covers in background — doesn't block UI
-        upgradeCoversBatchAsync(freshBooks)
       }
 
       let books = getCachedBooks()
@@ -196,13 +208,14 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
       }
       books = books.filter(b => !passedSet.has(b.id))
       const filtered = filterBooks(books, preferences)
-      if (filtered.length === 0 && books.length > 0) {
+      const deck = filtered.length === 0 && books.length > 0
         // If no matches even after targeted fetch, show best-rated from fetched books
-        const fallback = freshBooks.length > 0 ? freshBooks : books
-        setFilteredBooks(fallback.sort((a, b) => b.rating - a.rating).slice(0, MAX_DECK_SIZE))
-      } else {
-        setFilteredBooks(filtered.slice(0, MAX_DECK_SIZE))
-      }
+        ? (freshBooks.length > 0 ? freshBooks : books).sort((a, b) => b.rating - a.rating).slice(0, MAX_DECK_SIZE)
+        : filtered.slice(0, MAX_DECK_SIZE)
+      setFilteredBooks(deck)
+      // Background: swap OL books to their correct-edition Amazon cover (no
+      // perceived latency — the deck already renders with OL -L).
+      void upgradeDeckCovers(deck)
       setCurrentIndex(0)
       setPassedBooks([])
       setUndoStack([])

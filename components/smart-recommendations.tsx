@@ -346,7 +346,7 @@ function MiniBookCard({
           fallbackSrc={book.coverFallback}
           alt={book.title}
           fill
-          className="object-contain"
+          className="object-cover"
           sizes="(max-width: 640px) 260px, 300px"
         />
         <div className="absolute top-1.5 right-1.5 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-0.5">

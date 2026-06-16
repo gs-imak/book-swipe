@@ -112,7 +112,7 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
                 fallbackSrc={pick.book.coverFallback}
                 alt={pick.book.title}
                 fill
-                className="object-contain"
+                className="object-cover"
                 sizes="(max-width: 640px) 192px, 224px"
               />
             </motion.div>
