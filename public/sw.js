@@ -13,6 +13,15 @@ const API_CACHE_MAX_AGE = 5 * 60 * 1000
 // Max cached images (prevent unbounded growth)
 const MAX_CACHED_IMAGES = 500
 
+async function trimCache(cacheName, maxItems) {
+  const cache = await caches.open(cacheName)
+  const keys = await cache.keys()
+  if (keys.length <= maxItems) return
+  for (let i = 0; i < keys.length - maxItems; i++) {
+    await cache.delete(keys[i])
+  }
+}
+
 // Listen for skip-waiting message from the app
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
@@ -71,9 +80,10 @@ self.addEventListener('fetch', (event) => {
       caches.open(IMG_CACHE_NAME).then((cache) => {
         return cache.match(request).then((cached) => {
           if (cached) return cached
-          return fetch(request).then((response) => {
+          return fetch(request).then(async (response) => {
             if (response.ok) {
               cache.put(request, response.clone())
+              await trimCache(IMG_CACHE_NAME, MAX_CACHED_IMAGES)
             }
             return response
           }).catch(() => {
@@ -95,9 +105,10 @@ self.addEventListener('fetch', (event) => {
       caches.open(IMG_CACHE_NAME).then((cache) => {
         return cache.match(request).then((cached) => {
           if (cached) return cached
-          return fetch(request).then((response) => {
+          return fetch(request).then(async (response) => {
             if (response.ok) {
               cache.put(request, response.clone())
+              await trimCache(IMG_CACHE_NAME, MAX_CACHED_IMAGES)
             }
             return response
           }).catch(() => {
