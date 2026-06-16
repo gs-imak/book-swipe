@@ -23,8 +23,15 @@ export interface PriceWatchEntry {
 
 export function getPriceWatchList(): PriceWatchEntry[] {
   if (typeof window !== "undefined") {
-    const stored = localStorage.getItem(PRICE_WATCH_KEY)
-    return stored ? JSON.parse(stored) : []
+    try {
+      const stored = localStorage.getItem(PRICE_WATCH_KEY)
+      if (!stored) return []
+      const parsed = JSON.parse(stored)
+      // Guard against corrupted data: require an array.
+      return Array.isArray(parsed) ? (parsed as PriceWatchEntry[]) : []
+    } catch {
+      return []
+    }
   }
   return []
 }

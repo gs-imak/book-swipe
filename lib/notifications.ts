@@ -43,7 +43,12 @@ export function getNotificationSettings(): NotificationSettings {
     if (typeof window === "undefined") return DEFAULT_SETTINGS
     const stored = localStorage.getItem(NOTIFICATION_SETTINGS_KEY)
     if (!stored) return DEFAULT_SETTINGS
-    return JSON.parse(stored) as NotificationSettings
+    const parsed = JSON.parse(stored)
+    // Merge over defaults so missing/extra fields can't yield a malformed object.
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return DEFAULT_SETTINGS
+    }
+    return { ...DEFAULT_SETTINGS, ...(parsed as Partial<NotificationSettings>) }
   } catch {
     return DEFAULT_SETTINGS
   }
@@ -133,6 +138,10 @@ export function checkAndNotify(currentStreak: number, lastActivityDate: string):
   // Check if user has already been active today
   const today = new Date().toDateString()
   if (lastActivityDate) {
+    // A present-but-unparseable date is corrupt state, not "inactive today".
+    // Treating it as inactive would fire a reminder on every run (spam), so
+    // bail out instead of proceeding to notify.
+    if (isNaN(Date.parse(lastActivityDate))) return
     const lastDate = new Date(lastActivityDate).toDateString()
     if (lastDate === today) return // Already active today, no reminder needed
   }
