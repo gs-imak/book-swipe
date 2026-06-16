@@ -18,7 +18,13 @@ function getCacheMetadata(): CacheMetadata {
   if (typeof window === "undefined") return fallback
   try {
     const stored = localStorage.getItem(CACHE_METADATA_KEY)
-    return stored ? JSON.parse(stored) : fallback
+    if (!stored) return fallback
+    const parsed = JSON.parse(stored)
+    // Guard against corrupted/old shapes: require a plain object.
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return fallback
+    }
+    return parsed as CacheMetadata
   } catch {
     return fallback
   }
@@ -41,8 +47,10 @@ export function getCachedBooks(): Book[] {
       seedCache()
       return [...sampleBooks]
     }
-    const books: Book[] = JSON.parse(stored)
-    return books.length > 0 ? books : [...sampleBooks]
+    const books = JSON.parse(stored)
+    // Guard against corrupted/old shapes: require an array of books.
+    if (!Array.isArray(books)) return [...sampleBooks]
+    return books.length > 0 ? (books as Book[]) : [...sampleBooks]
   } catch {
     return [...sampleBooks]
   }

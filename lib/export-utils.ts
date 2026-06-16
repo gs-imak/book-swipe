@@ -16,10 +16,16 @@ import {
 // --- Goodreads CSV Export ---
 
 function escapeCSV(value: string): string {
-  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
-    return `"${value.replace(/"/g, '""')}"`
+  // Formula-injection guard: a leading =, +, -, or @ can be interpreted as a
+  // formula by spreadsheet apps (Excel, Sheets). Prefix with ' to neutralize.
+  let safe = value
+  if (/^[=+\-@]/.test(safe)) {
+    safe = `'${safe}`
   }
-  return value
+  if (safe.includes(",") || safe.includes('"') || safe.includes("\n")) {
+    return `"${safe.replace(/"/g, '""')}"`
+  }
+  return safe
 }
 
 export function exportToGoodreadsCSV(): string {
@@ -83,8 +89,8 @@ export function exportToGoodreadsCSV(): string {
       isbn10,
       isbn13,
       rating.toString(),
-      book.rating.toString(),
-      book.pages.toString(),
+      (book.rating ?? 0).toString(),
+      (book.pages ?? 0).toString(),
       exclusiveShelf,
       escapeCSV(customShelves),
       escapeCSV(reviewText),
@@ -162,16 +168,16 @@ export function exportToNotionCSV(): string {
     return [
       escapeCSV(book.title),
       escapeCSV(book.author),
-      escapeCSV(book.genre.join(", ")),
-      escapeCSV(book.mood.join(", ")),
+      escapeCSV((book.genre ?? []).join(", ")),
+      escapeCSV((book.mood ?? []).join(", ")),
       review?.rating?.toString() || "",
-      book.rating.toString(),
-      book.pages.toString(),
+      (book.rating ?? 0).toString(),
+      (book.pages ?? 0).toString(),
       status,
       escapeCSV(shelfNames),
       escapeCSV(review?.review || ""),
       escapeCSV(notesText),
-      book.publishedYear.toString(),
+      (book.publishedYear ?? "").toString(),
       book.isbn || "",
       review?.createdAt?.split("T")[0] || new Date().toISOString().split("T")[0],
       review?.dateFinished?.split("T")[0] || prog?.lastReadDate?.split("T")[0] || "",
@@ -210,41 +216,31 @@ export function downloadJSON(json: string, filename: string): void {
 
 // --- Full JSON Backup ---
 
-const BACKUP_KEYS = [
-  "bookswipe_liked_books",
-  "bookswipe_reading_progress",
-  "bookswipe_reading_goals",
-  "bookswipe_book_reviews",
-  "bookswipe_book_notes",
-  "bookswipe_achievements",
-  "bookswipe_user_stats",
-  "bookswipe_shelves",
-  "bookswipe_shelf_assignments",
-  "bookswipe_collections",
-  "bookswipe_daily_pick",
-  "bookswipe_user_preferences",
-  "bookswipe_vocabulary",
-  "bookswipe_challenges",
-  "bookswipe_hidden_books",
-  "bookswipe_reading_positions",
-  "bookswipe_theme",
-  "bookswipe_onboarded",
-  "bookswipe_reading_buddies",
-  "bookswipe_my_buddy_codes",
-  "bookswipe_price_watch",
-  "bookswipe_language",
-  "bookswipe_reading_speed",
-  "bookswipe_reader_theme",
-  "bookswipe_reader_font",
-  "bookswipe_bionic_mode",
-  "bookswipe_passed_books",
-  "bookswipe_goal_configured",
-] as const
+// Prefix every user-data key shares. The hand-maintained allow-list this
+// replaced silently dropped real keys (tags, book-tags, activity log, etc.)
+// from "full" backups, so we now export ALL bookswipe_-prefixed keys.
+const BACKUP_KEY_PREFIX = "bookswipe_"
+
+// Volatile, regenerable state that must NOT be backed up: the book cache (re-
+// fetched from the API), its metadata, and any one-shot cover-migration flag.
+function isVolatileCacheKey(key: string): boolean {
+  return (
+    key === "bookswipe_book_cache" ||
+    key === "bookswipe_cache_metadata" ||
+    key.includes("cover_migration")
+  )
+}
+
+function getBackupKeys(): string[] {
+  return Object.keys(localStorage).filter(
+    key => key.startsWith(BACKUP_KEY_PREFIX) && !isVolatileCacheKey(key)
+  )
+}
 
 export function exportFullBackupJSON(): string {
   const data: Record<string, unknown> = {}
 
-  BACKUP_KEYS.forEach(key => {
+  getBackupKeys().forEach(key => {
     try {
       const raw = localStorage.getItem(key)
       if (raw !== null) {
@@ -297,9 +293,13 @@ export function importFullBackupJSON(jsonString: string): ImportResult {
     let totalKeys = 0
 
     Object.entries(data).forEach(([key, value]) => {
-      if (!key.startsWith("bookswipe_")) return
+      // Only restore our own namespaced keys; ignore anything else in the file.
+      if (!key.startsWith(BACKUP_KEY_PREFIX)) return
       try {
         const serialized = typeof value === "string" ? value : JSON.stringify(value)
+        // JSON.stringify can return undefined (e.g. value === undefined / a
+        // function); never write a non-string into localStorage.
+        if (typeof serialized !== "string") return
         localStorage.setItem(key, serialized)
         totalKeys++
       } catch {
