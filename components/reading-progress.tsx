@@ -181,13 +181,13 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
               const progressPercent = book.totalPages > 0 ? (book.currentPage / book.totalPages) * 100 : 0
               return (
                 <div key={book.bookId} className="flex gap-3 p-3 bg-stone-50 dark:bg-stone-800/50 rounded-lg">
-                  <div className="relative w-12 h-16 flex-shrink-0">
+                  <div className="relative w-12 aspect-[2/3] flex-shrink-0">
                     <BookCover
                       src={book.book.cover}
                       fallbackSrc={book.book.coverFallback}
                       alt={book.book.title}
                       fill
-                      className="object-contain rounded"
+                      className="object-cover rounded"
                       sizes="96px"
                     />
                   </div>
@@ -306,13 +306,13 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
               const progressPercent = book.totalPages > 0 ? (book.currentPage / book.totalPages) * 100 : 0
               return (
                 <div key={book.bookId} className="flex items-center gap-3 p-2.5 bg-stone-50 dark:bg-stone-800/50 rounded-lg">
-                  <div className="relative w-8 h-11 flex-shrink-0">
+                  <div className="relative w-8 aspect-[2/3] flex-shrink-0">
                     <BookCover
                       src={book.book.cover}
                       fallbackSrc={book.book.coverFallback}
                       alt={book.book.title}
                       fill
-                      className="object-contain rounded"
+                      className="object-cover rounded"
                       sizes="64px"
                     />
                   </div>
@@ -362,7 +362,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                     fallbackSrc={book.book.coverFallback}
                     alt={book.book.title}
                     fill
-                    className="object-contain rounded grayscale"
+                    className="object-cover rounded grayscale"
                     sizes="64px"
                   />
                 </div>

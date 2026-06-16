@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Book, UserPreferences } from "@/lib/book-data"
 import { addLikedBook, removeLikedBook, getLikedBooks, addPassedBookId, getPassedBookIds } from "@/lib/storage"
 import { scoreBooks } from "@/lib/scoring-engine"
-import { getBooksByCategory, bookSearchQueries, upgradeCoversBatchAsync } from "@/lib/books-api"
+import { getBooksByCategory, bookSearchQueries } from "@/lib/books-api"
 import { getCachedBooks, addBooksToCache } from "@/lib/book-cache"
 import { searchOpenLibrary } from "@/lib/openlibrary-api"
 import { Heart, X, Undo2, RotateCcw, Settings, Library, BookOpen, Loader2 } from "lucide-react"
@@ -184,8 +184,6 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
 
       if (freshBooks.length > 0) {
         addBooksToCache(freshBooks)
-        // Upgrade covers in background — doesn't block UI
-        upgradeCoversBatchAsync(freshBooks)
       }
 
       let books = getCachedBooks()

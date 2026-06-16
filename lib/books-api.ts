@@ -2,7 +2,7 @@ import { Book } from "./book-data"
 import { getCachedBooks, addBooksToCache, isQueryCached, markQueryCompleted, queryCache } from "./book-cache"
 import { searchOpenLibrary, searchOpenLibraryByQuery } from "./openlibrary-api"
 import { getLanguagePreference } from "./language-preference"
-import { COVER_FETCH_TIMEOUT_MS, COVER_BATCH_CONCURRENCY } from "./config"
+import { resolveBestCover, upgradeGoogleBooksCoverUrl } from "./covers"
 
 // Deterministic pseudo-rating from a string (always returns the same value for the same input)
 function stableRating(seed: string, min = 3.5, max = 4.5): number {
@@ -62,97 +62,6 @@ export interface GoogleBook {
   }
 }
 
-// Upgrade a Google Books cover thumbnail URL to a sharper, secure variant.
-// Pure URL transform: forces https, strips the curl-edge effect, and bumps the
-// `zoom` parameter so we request a larger render. Leaves non-Google URLs (and
-// URLs that don't match the expected pattern) untouched.
-export function upgradeGoogleBooksCoverUrl(url: string): string {
-  if (!url) return url
-
-  // Force HTTPS and drop the page-curl edge effect on every cover form.
-  let upgraded = url
-    .replace(/^http:\/\//i, 'https://')
-    .replace(/&edge=curl/gi, '')
-
-  const isGoogleCover =
-    upgraded.includes('books.google.com') ||
-    upgraded.includes('books.googleusercontent.com')
-
-  if (isGoogleCover) {
-    // Bump small/default zoom levels (0 or 1) up to zoom=2 for a sharper image.
-    // Leave already-large zoom levels (2+) as-is so we don't request broken sizes.
-    upgraded = upgraded.replace(/([?&])zoom=(\d+)/gi, (match, sep, level) =>
-      parseInt(level, 10) <= 1 ? `${sep}zoom=2` : match
-    )
-  }
-
-  return upgraded
-}
-
-// Fetch a high-quality cover from the bookcover API (Goodreads source)
-// Track rate limit state to avoid flooding the API
-let _coverRateLimitedUntil = 0
-
-async function fetchGoodreadsCover(title: string, author: string): Promise<string | null> {
-  // Skip if we've been rate limited recently
-  if (Date.now() < _coverRateLimitedUntil) return null
-
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), COVER_FETCH_TIMEOUT_MS)
-  try {
-    const url = `https://bookcover.longitood.com/bookcover?book_title=${encodeURIComponent(title)}&author_name=${encodeURIComponent(author)}`
-    const res = await fetch(url, { signal: controller.signal })
-    if (res.status === 429) {
-      // Back off for 2 minutes on rate limit
-      _coverRateLimitedUntil = Date.now() + 120_000
-      return null
-    }
-    if (!res.ok) return null
-    const data = await res.json()
-    return data.url || null
-  } catch {
-    return null
-  } finally {
-    clearTimeout(timeout)
-  }
-}
-
-// Batch-upgrade book covers with Goodreads high-quality images
-async function upgradeCoversBatch(books: Book[]): Promise<Book[]> {
-  if (books.length === 0) return books
-  // Skip entirely if rate limited
-  if (Date.now() < _coverRateLimitedUntil) return books
-
-  const upgraded = [...books]
-  // Process 2 at a time with 500ms delay between batches to avoid rate limits
-  const batchSize = 2
-
-  for (let i = 0; i < upgraded.length; i += batchSize) {
-    if (Date.now() < _coverRateLimitedUntil) break // stop if rate limited mid-batch
-
-    const batch = upgraded.slice(i, i + batchSize)
-    const results = await Promise.allSettled(
-      batch.map(book => fetchGoodreadsCover(book.title, book.author))
-    )
-    results.forEach((result, j) => {
-      if (result.status === "fulfilled" && result.value) {
-        upgraded[i + j] = {
-          ...upgraded[i + j],
-          coverFallback: upgraded[i + j].cover,
-          cover: result.value,
-        }
-      }
-    })
-
-    // Delay between batches to respect rate limits
-    if (i + batchSize < upgraded.length) {
-      await new Promise(r => setTimeout(r, 500))
-    }
-  }
-
-  return upgraded
-}
-
 export async function searchGoogleBooks(query: string, maxResults = 20, lang?: string): Promise<Book[]> {
   try {
     // Call our own API route (keeps API key server-side)
@@ -182,30 +91,12 @@ export async function searchGoogleBooks(query: string, maxResults = 20, lang?: s
 
     const books = data.items.map(transformGoogleBookToBook).filter((b: Book | null): b is Book => b !== null)
 
-    // Return books immediately with Google covers — don't block on Goodreads upgrades
-    // Cover upgrades happen in the background via upgradeCoversBatchAsync
+    // Covers are resolved eagerly in transformGoogleBookToBook (Amazon-by-ISBN
+    // lead + Google fallback), so the books are ready to render as-is.
     return books
   } catch {
     return []
   }
-}
-
-// Fire-and-forget background cover upgrade — updates cache after fetching
-let _bgUpgradeQueued = false
-export function upgradeCoversBatchAsync(books: Book[]): void {
-  if (_bgUpgradeQueued || books.length === 0) return
-  _bgUpgradeQueued = true
-  // Small delay so it doesn't compete with initial render
-  setTimeout(async () => {
-    try {
-      const upgraded = await upgradeCoversBatch(books)
-      const changed = upgraded.filter((b, i) => b.cover !== books[i]?.cover)
-      if (changed.length > 0) {
-        addBooksToCache(changed)
-      }
-    } catch { /* ignore */ }
-    _bgUpgradeQueued = false
-  }, 2000)
 }
 
 // Combined search across Google Books + Open Library for better results.
@@ -334,9 +225,13 @@ function transformGoogleBookToBook(googleBook: unknown): Book | null {
   
   const isbn = volumeInfo.industryIdentifiers?.find(id => id.type === 'ISBN_13')?.identifier ||
                volumeInfo.industryIdentifiers?.find(id => id.type === 'ISBN_10')?.identifier
-  // Use ONLY Google Books covers for Google results — OL ISBN covers often return wrong editions
   const googleCover = getBestCoverImage(volumeInfo.imageLinks)
   if (!googleCover) return null // No usable cover — skip this book
+
+  // Prefer the Goodreads-grade Amazon cover (keyed on ISBN-10 → correct edition,
+  // ~500px) when we have an ISBN, falling back to the Google cover otherwise.
+  // <BookCover> steps down to coverFallback if Amazon has no image for the id.
+  const { cover, coverFallback } = resolveBestCover({ isbn, googleCover })
 
   // Detect formats
   const isEbook = googleBook.saleInfo?.isEbook ||
@@ -352,7 +247,8 @@ function transformGoogleBookToBook(googleBook: unknown): Book | null {
     id: googleBook.id,
     title: volumeInfo.title,
     author: volumeInfo.authors[0],
-    cover: googleCover,
+    cover,
+    coverFallback,
     rating: Math.round(rating * 10) / 10,
     pages,
     genre: volumeInfo.categories || ['General'],
