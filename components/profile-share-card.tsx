@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Download, Copy, Check, Share2 } from "lucide-react"
 import { getLikedBooks, getBookReviews, getReadingProgress, getUserStats, getReadingGoals } from "@/lib/storage"
+import { useFocusTrap } from "@/lib/use-focus-trap"
 
 interface ProfileShareCardProps {
   isOpen: boolean
@@ -16,6 +17,11 @@ export function ProfileShareCard({ isOpen, onClose }: ProfileShareCardProps) {
   const [copied, setCopied] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const blobRef = useRef<Blob | null>(null)
+  // Tracks the live preview object URL so cleanup revokes the CURRENT url
+  // (the `preview` state is stale inside the [isOpen]-only cleanup closure).
+  const previewUrlRef = useRef<string | null>(null)
+  const modalRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(modalRef, isOpen)
 
   const generate = useCallback(async () => {
     setGenerating(true)
@@ -37,7 +43,7 @@ export function ProfileShareCard({ isOpen, onClose }: ProfileShareCardProps) {
     const stats = getUserStats()
     const goals = getReadingGoals()
     const completed = progress.filter(p => p.status === "completed").length
-    const totalPages = books.reduce((s, b) => s + b.pages, 0)
+    const totalPages = books.reduce((s, b) => s + (typeof b.pages === "number" && !Number.isNaN(b.pages) ? b.pages : 0), 0)
     const avgRating = reviews.length > 0
       ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
       : "—"
@@ -168,7 +174,11 @@ export function ProfileShareCard({ isOpen, onClose }: ProfileShareCardProps) {
     canvas.toBlob(blob => {
       if (blob) {
         blobRef.current = blob
-        setPreview(URL.createObjectURL(blob))
+        // Revoke any previous preview before replacing it to avoid leaking.
+        if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current)
+        const url = URL.createObjectURL(blob)
+        previewUrlRef.current = url
+        setPreview(url)
       }
       setGenerating(false)
     }, "image/png")
@@ -181,7 +191,11 @@ export function ProfileShareCard({ isOpen, onClose }: ProfileShareCardProps) {
       setTimeout(generate, 100)
     }
     return () => {
-      if (preview) URL.revokeObjectURL(preview)
+      // Revoke the CURRENT preview url via the ref (skips null, no double-revoke).
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current)
+        previewUrlRef.current = null
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen])
@@ -192,6 +206,16 @@ export function ProfileShareCard({ isOpen, onClose }: ProfileShareCardProps) {
     window.addEventListener("keydown", handleKey)
     return () => window.removeEventListener("keydown", handleKey)
   }, [isOpen, onClose])
+
+  // Lock body scroll while the modal is open.
+  useEffect(() => {
+    if (!isOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [isOpen])
 
   const handleCopy = async () => {
     if (!blobRef.current) return
@@ -211,8 +235,10 @@ export function ProfileShareCard({ isOpen, onClose }: ProfileShareCardProps) {
     const a = document.createElement("a")
     a.href = url
     a.download = `bookswipe-profile-${new Date().getFullYear()}.png`
+    document.body.appendChild(a)
     a.click()
-    URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
 
   const handleShare = async () => {
@@ -241,6 +267,10 @@ export function ProfileShareCard({ isOpen, onClose }: ProfileShareCardProps) {
         onClick={onClose}
       >
         <motion.div
+          ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Share Your Profile"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
@@ -250,7 +280,7 @@ export function ProfileShareCard({ isOpen, onClose }: ProfileShareCardProps) {
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-stone-200/60 dark:border-stone-700/60">
             <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">Share Your Profile</h2>
-            <button onClick={onClose} className="p-2 -mr-2 rounded-lg hover:bg-stone-100 dark:bg-stone-800 transition-colors">
+            <button onClick={onClose} aria-label="Close share profile" className="p-2 -mr-2 rounded-lg hover:bg-stone-100 dark:bg-stone-800 transition-colors">
               <X className="w-5 h-5 text-stone-400" />
             </button>
           </div>

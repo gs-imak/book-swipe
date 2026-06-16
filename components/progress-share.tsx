@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Download, Copy, Check, Share2 } from "lucide-react"
+import { useFocusTrap } from "@/lib/use-focus-trap"
 
 interface ProgressShareProps {
   isOpen: boolean
@@ -42,6 +43,8 @@ export function ProgressShare({
   const [copied, setCopied] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const blobRef = useRef<Blob | null>(null)
+  const modalRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(modalRef, isOpen)
 
   const generate = useCallback(async () => {
     setGenerating(true)
@@ -137,8 +140,9 @@ export function ProgressShare({
     roundRect(ctx, barX, barY, barW, barH, barH / 2)
     ctx.fill()
 
-    // Fill
-    const fillW = Math.max(barH, (progress / 100) * barW)
+    // Fill — clamp progress to [0,100] so the bar never overflows the track.
+    const clampedProgress = Math.min(100, Math.max(0, progress))
+    const fillW = Math.max(barH, (clampedProgress / 100) * barW)
     const fillGrad = ctx.createLinearGradient(barX, 0, barX + fillW, 0)
     fillGrad.addColorStop(0, "#f59e0b")
     fillGrad.addColorStop(1, "#d97706")
@@ -189,6 +193,16 @@ export function ProgressShare({
     return () => window.removeEventListener("keydown", handleKey)
   }, [isOpen, onClose])
 
+  // Lock body scroll while the modal is open.
+  useEffect(() => {
+    if (!isOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [isOpen])
+
   const handleCopy = async () => {
     if (!blobRef.current) return
     try {
@@ -207,8 +221,10 @@ export function ProgressShare({
     a.href = url
     const safeTitle = bookTitle.replace(/[^a-z0-9]/gi, "-").slice(0, 30)
     a.download = `reading-progress-${safeTitle}.png`
+    document.body.appendChild(a)
     a.click()
-    URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
 
   const handleShare = async () => {
@@ -241,6 +257,10 @@ export function ProgressShare({
         onClick={onClose}
       >
         <motion.div
+          ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Share Progress"
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -253,6 +273,7 @@ export function ProgressShare({
             <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">Share Progress</h2>
             <button
               onClick={onClose}
+              aria-label="Close share progress"
               className="p-2 -mr-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
             >
               <X className="w-5 h-5 text-stone-400" />

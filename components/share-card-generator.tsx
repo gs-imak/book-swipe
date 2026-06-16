@@ -6,6 +6,7 @@ import { X, Copy, Download, Check } from "lucide-react"
 import { Book } from "@/lib/book-data"
 import { getBookReview, type BookReview } from "@/lib/storage"
 import { generateShareCard, copyImageToClipboard, downloadImage, type ShareTemplate } from "@/lib/share-card"
+import { useFocusTrap } from "@/lib/use-focus-trap"
 
 interface ShareCardGeneratorProps {
   book: Book
@@ -26,8 +27,11 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
   const [generating, setGenerating] = useState(false)
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [copyError, setCopyError] = useState<string | null>(null)
   const [review, setReview] = useState<BookReview | null>(null)
   const blobRef = useRef<Blob | null>(null)
+  const modalRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(modalRef, isOpen)
 
   useEffect(() => {
     if (isOpen) {
@@ -36,6 +40,7 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
       setQuote("")
       setPreview(null)
       setCopied(false)
+      setCopyError(null)
     }
   }, [isOpen, book.id])
 
@@ -43,6 +48,10 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
   useEffect(() => {
     if (!isOpen) return
     let cancelled = false
+    // Invalidate any previously-generated blob so a stale template image
+    // can't be copied/downloaded while the new one is regenerating.
+    blobRef.current = null
+    setGenerating(true)
     const timer = setTimeout(async () => {
       setGenerating(true)
       setError(null)
@@ -83,14 +92,28 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
     }
   }, [preview])
 
+  // Lock body scroll while the modal is open.
+  useEffect(() => {
+    if (!isOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [isOpen])
+
   if (!isOpen) return null
 
   const handleCopy = async () => {
     if (!blobRef.current) return
     const success = await copyImageToClipboard(blobRef.current)
     if (success) {
+      setCopyError(null)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
+    } else {
+      setCopyError("Couldn't copy to clipboard. Try Download instead.")
+      setTimeout(() => setCopyError(null), 4000)
     }
   }
 
@@ -110,6 +133,10 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
         onClick={onClose}
       >
         <motion.div
+          ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Share Card"
           initial={{ opacity: 0, y: 30, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 30, scale: 0.97 }}
@@ -214,6 +241,10 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
                 Download
               </button>
             </div>
+
+            {copyError && (
+              <p role="alert" className="text-xs text-rose-500 text-center -mt-1">{copyError}</p>
+            )}
           </div>
         </motion.div>
       </motion.div>
