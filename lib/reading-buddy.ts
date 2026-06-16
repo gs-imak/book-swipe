@@ -32,8 +32,31 @@ function safeSetJSON(key: string, value: unknown): void {
 }
 
 /**
+ * Base64-encode a UTF-8 string safely. `btoa` only accepts Latin1, so we
+ * percent-encode first to widen the byte range to arbitrary Unicode before
+ * mapping each escape sequence back to a raw byte.
+ */
+function utf8ToBase64(str: string): string {
+  const bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, hex: string) =>
+    String.fromCharCode(parseInt(hex, 16))
+  )
+  return btoa(bytes)
+}
+
+/** Inverse of `utf8ToBase64`. */
+function base64ToUtf8(b64: string): string {
+  const bytes = atob(b64)
+  let percentEncoded = ""
+  for (let i = 0; i < bytes.length; i++) {
+    percentEncoded += "%" + ("00" + bytes.charCodeAt(i).toString(16)).slice(-2)
+  }
+  return decodeURIComponent(percentEncoded)
+}
+
+/**
  * Encode a buddy code as base64 JSON.
  * Format: { bookId, progress, name, ts }
+ * Handles arbitrary Unicode in bookId/name (btoa alone throws on non-Latin1).
  */
 export function generateBuddyCode(bookId: string, progress: number, name: string): string {
   const payload = {
@@ -43,15 +66,22 @@ export function generateBuddyCode(bookId: string, progress: number, name: string
     ts: new Date().toISOString(),
   }
   try {
-    return btoa(JSON.stringify(payload))
+    return utf8ToBase64(JSON.stringify(payload))
   } catch {
     return ""
   }
 }
 
 export function decodeBuddyCode(code: string): { bookId: string; progress: number; name: string } | null {
+  const trimmed = code.trim()
   try {
-    const raw = atob(code.trim())
+    let raw: string
+    try {
+      raw = base64ToUtf8(trimmed)
+    } catch {
+      // Fall back to plain base64 for any codes produced before Unicode support.
+      raw = atob(trimmed)
+    }
     const parsed = JSON.parse(raw) as { bookId?: unknown; progress?: unknown; name?: unknown }
     if (
       typeof parsed.bookId !== "string" ||

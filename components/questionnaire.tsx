@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { UserPreferences } from "@/lib/book-data"
 import { motion, AnimatePresence } from "framer-motion"
 import { ArrowLeft, ChevronRight, Sparkles } from "lucide-react"
@@ -68,35 +68,49 @@ const questions = [
 export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string[]>>({})
+  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Clear any pending auto-advance timer on unmount.
+  useEffect(() => {
+    return () => {
+      if (advanceTimer.current !== null) clearTimeout(advanceTimer.current)
+    }
+  }, [])
 
   const handleAnswer = (questionId: string, answer: string, isMultiple: boolean) => {
-    setAnswers(prev => {
-      if (isMultiple) {
+    if (isMultiple) {
+      setAnswers(prev => {
         const currentAnswers = prev[questionId] || []
         const newAnswers = currentAnswers.includes(answer)
           ? currentAnswers.filter(a => a !== answer)
           : [...currentAnswers, answer]
         return { ...prev, [questionId]: newAnswers }
+      })
+      return
+    }
+
+    // Single-choice: record the answer, then auto-advance after a brief delay.
+    const updated = { ...answers, [questionId]: [answer] }
+    setAnswers(updated)
+
+    // Cancel any previously scheduled advance before scheduling a new one,
+    // so rapid taps don't double-advance or fire with stale state.
+    if (advanceTimer.current !== null) clearTimeout(advanceTimer.current)
+    advanceTimer.current = setTimeout(() => {
+      advanceTimer.current = null
+      if (currentQuestion < questions.length - 1) {
+        setCurrentQuestion(q => q + 1)
       } else {
-        const updated = { ...prev, [questionId]: [answer] }
-        // Auto-advance single-choice questions after a brief delay
-        setTimeout(() => {
-          if (currentQuestion < questions.length - 1) {
-            setCurrentQuestion(q => q + 1)
-          } else {
-            const preferences: UserPreferences = {
-              favoriteGenres: updated.genres || [],
-              currentMood: updated.mood || [],
-              readingTime: updated.readingTime?.[0] || "30-60 minutes",
-              preferredLength: updated.length?.[0] || "No preference",
-              contentPreferences: updated.content || []
-            }
-            onComplete(preferences)
-          }
-        }, 180)
-        return updated
+        const preferences: UserPreferences = {
+          favoriteGenres: updated.genres || [],
+          currentMood: updated.mood || [],
+          readingTime: updated.readingTime?.[0] || "30-60 minutes",
+          preferredLength: updated.length?.[0] || "No preference",
+          contentPreferences: updated.content || []
+        }
+        onComplete(preferences)
       }
-    })
+    }, 180)
   }
 
   const handleNext = () => {

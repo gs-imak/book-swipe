@@ -551,11 +551,14 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                     About this book
                   </h3>
                   <p className="text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
-                    {descExpanded || book.description.length <= 200
-                      ? book.description
-                      : book.description.slice(0, 200) + "..."}
+                    {(() => {
+                      const description = book.description ?? ""
+                      return descExpanded || description.length <= 200
+                        ? description
+                        : description.slice(0, 200) + "..."
+                    })()}
                   </p>
-                  {book.description.length > 200 && (
+                  {(book.description?.length ?? 0) > 200 && (
                     <button
                       onClick={() => setDescExpanded(!descExpanded)}
                       className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium mt-1.5 transition-colors"

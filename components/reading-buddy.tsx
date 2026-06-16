@@ -94,13 +94,18 @@ export function ReadingBuddyPanel({ bookId, bookTitle, progress, isOpen, onClose
       setErrorMsg("This code is for a different book.")
       return
     }
+    const trimmedCode = buddyInput.trim()
+    if (buddies.some(b => b.code === trimmedCode)) {
+      setErrorMsg("You've already added this buddy.")
+      return
+    }
     const name = buddyName.trim() || decoded.name || "Buddy"
     const buddy: ReadingBuddy = {
       bookId,
       name,
       progress: decoded.progress,
       lastUpdated: new Date().toISOString(),
-      code: buddyInput.trim(),
+      code: trimmedCode,
     }
     addBuddy(buddy)
     setBuddies(getBuddies(bookId))
