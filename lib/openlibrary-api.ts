@@ -1,5 +1,11 @@
 import { Book } from "./book-data"
 import { getOpenLibraryLanguageCodes } from "./language-preference"
+import { toIsbn10 } from "./isbn"
+import { amazonCoverUrl } from "./covers"
+
+// Background OL cover-upgrade tuning (single consumer: upgradeOpenLibraryCovers).
+const EDITION_FETCH_TIMEOUT_MS = 4000
+const EDITION_FETCH_CONCURRENCY = 6
 
 // Deterministic pseudo-rating from a string (always returns the same value for the same input)
 function stableRating(seed: string, min = 3.5, max = 4.5): number {
@@ -24,6 +30,7 @@ export interface OpenLibraryDoc {
   number_of_pages_median?: number
   first_publish_year?: number
   language?: string[]
+  cover_edition_key?: string
 }
 
 interface OpenLibrarySearchResponse {
@@ -172,6 +179,7 @@ export function transformToBook(doc: OpenLibraryDoc, searchedSubject: string): B
       wantToReadCount: doc.want_to_read_count,
       ratingsCount: doc.ratings_count,
       source: "openlibrary",
+      coverEditionKey: doc.cover_edition_key,
     },
   }
 }
@@ -187,6 +195,7 @@ export async function searchOpenLibrary(
       "author_name",
       "subject",
       "cover_i",
+      "cover_edition_key",
       "ratings_average",
       "readinglog_count",
       "want_to_read_count",
@@ -240,6 +249,7 @@ export async function searchOpenLibraryByQuery(
       "author_name",
       "subject",
       "cover_i",
+      "cover_edition_key",
       "ratings_average",
       "readinglog_count",
       "want_to_read_count",
@@ -353,4 +363,86 @@ export async function getRelatedSubjects(
   } catch {
     return []
   }
+}
+
+// ── Background cover upgrade: OL books → Goodreads-grade Amazon covers ────────
+// OL search is work-level and aggregates ~hundreds of edition ISBNs, so picking
+// an arbitrary one shows the wrong edition's cover (e.g. a foreign translation).
+// We instead resolve the ISBN of the *cover edition* (cover_edition_key) — the
+// edition the displayed OL cover belongs to — so the Amazon cover matches.
+
+/**
+ * Pure: build the Amazon cover URL for an OL edition record from its correct
+ * ISBN-10, or null when none is derivable. Exported for testing.
+ */
+export function amazonCoverFromEdition(edition: {
+  isbn_13?: string[]
+  isbn_10?: string[]
+}): string | null {
+  const raw = edition.isbn_13?.[0] ?? edition.isbn_10?.[0]
+  const isbn10 = toIsbn10(raw)
+  return isbn10 ? amazonCoverUrl(isbn10) : null
+}
+
+// Resolved OLID -> Amazon cover (or null). Persists for the session so we never
+// re-fetch the same edition across deck batches.
+const _editionCoverCache = new Map<string, string | null>()
+
+/** Fetch one OL edition and resolve its correct-edition Amazon cover URL. */
+async function resolveEditionCover(coverEditionKey: string): Promise<string | null> {
+  const cached = _editionCoverCache.get(coverEditionKey)
+  if (cached !== undefined) return cached
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), EDITION_FETCH_TIMEOUT_MS)
+  try {
+    const res = await fetch(`https://openlibrary.org/books/${coverEditionKey}.json`, {
+      signal: controller.signal,
+    })
+    if (!res.ok) {
+      _editionCoverCache.set(coverEditionKey, null)
+      return null
+    }
+    const data = await res.json()
+    const cover = amazonCoverFromEdition(data)
+    _editionCoverCache.set(coverEditionKey, cover)
+    return cover
+  } catch {
+    // Transient (timeout/network) — don't cache so a later batch can retry.
+    return null
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+/**
+ * Background pass: upgrade OL-sourced books to the Goodreads-grade Amazon cover
+ * of their cover edition, keeping the OL -L image as the fallback. Returns only
+ * the books whose cover changed. Reliable + bounded + cached (OL's own edition
+ * API, a small concurrency cap, an OLID->cover cache) — and if Amazon has no
+ * image for an edition, <BookCover> detects the 1x1 gif and falls back to OL -L.
+ */
+export async function upgradeOpenLibraryCovers(books: Book[]): Promise<Book[]> {
+  const pending = books.filter(
+    (b) =>
+      b.metadata?.source === "openlibrary" &&
+      b.metadata.coverEditionKey &&
+      !b.cover.includes("media-amazon")
+  )
+  if (pending.length === 0) return []
+
+  const changed: Book[] = []
+  for (let i = 0; i < pending.length; i += EDITION_FETCH_CONCURRENCY) {
+    const batch = pending.slice(i, i + EDITION_FETCH_CONCURRENCY)
+    const covers = await Promise.allSettled(
+      batch.map((b) => resolveEditionCover(b.metadata!.coverEditionKey!))
+    )
+    covers.forEach((r, j) => {
+      if (r.status === "fulfilled" && r.value) {
+        const book = batch[j]
+        changed.push({ ...book, cover: r.value, coverFallback: book.cover })
+      }
+    })
+  }
+  return changed
 }

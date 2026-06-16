@@ -107,6 +107,31 @@ export function addBooksToCache(books: Book[]): void {
   saveCacheMetadata(meta)
 }
 
+/**
+ * Replace existing cached books in place (matched by id). Unlike
+ * addBooksToCache, which only appends new ids, this patches books already in
+ * the cache — used by the background OL cover upgrade to persist resolved
+ * Amazon covers so they survive reloads.
+ */
+export function updateBooksInCache(books: Book[]): void {
+  if (typeof window === "undefined" || books.length === 0) return
+  const patches = new Map(books.map((b) => [b.id, b]))
+  const existing = getCachedBooks()
+  let touched = false
+  const merged = existing.map((b) => {
+    const patch = patches.get(b.id)
+    if (!patch) return b
+    touched = true
+    return patch
+  })
+  if (!touched) return
+  try {
+    localStorage.setItem(BOOK_CACHE_KEY, JSON.stringify(merged))
+  } catch {
+    // Storage full — the upgrade is best-effort; covers still render this session.
+  }
+}
+
 export function isQueryCached(query: string): boolean {
   const meta = getCacheMetadata()
   const timestamp = meta.queriesCompleted[query]
