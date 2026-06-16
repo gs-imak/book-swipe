@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { Book } from "@/lib/book-data"
 import {
   getTrendingBooks,
@@ -232,7 +232,18 @@ export function DiscoverHub({
     }
   }, [])
 
-  // Load author spotlight when liked books change
+  // Stable content keys so effects re-run on actual content changes (not just
+  // length) without re-running on every parent re-render of these props.
+  const likedBooksKey = useMemo(
+    () => likedBooks.map((b) => b.id).join(","),
+    [likedBooks]
+  )
+  const savedBookIdsKey = useMemo(
+    () => Array.from(savedBookIds).sort().join(","),
+    [savedBookIds]
+  )
+
+  // Load author spotlight when liked books / saved books change
   useEffect(() => {
     if (likedBooks.length === 0) return
     let cancelled = false
@@ -254,28 +265,36 @@ export function DiscoverHub({
 
       const [topAuthor, { bookTitle }] = sorted[0]
       setAuthorLoading(true)
-      const books = await getAuthorBooks(topAuthor, savedBookIds)
-      if (!cancelled) {
-        if (books.length > 0) {
+      try {
+        const books = await getAuthorBooks(topAuthor, savedBookIds)
+        if (!cancelled && books.length > 0) {
           setAuthorData({ author: topAuthor, bookTitle, books })
         }
-        setAuthorLoading(false)
+      } catch {
+        // Leave authorData as-is (empty pattern); just clear the spinner below.
+      } finally {
+        if (!cancelled) setAuthorLoading(false)
       }
     }
     load()
     return () => {
       cancelled = true
     }
-    // Only re-run when the number of liked books changes, not on every render
+    // Re-run on liked/saved content changes (keys), not on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [likedBooks.length])
+  }, [likedBooksKey, savedBookIdsKey])
 
   // Surprise me handler
   const handleSurprise = useCallback(async () => {
     setSurpriseLoading(true)
-    const result = await getSurpriseBook(likedBooks)
-    setSurprise(result)
-    setSurpriseLoading(false)
+    try {
+      const result = await getSurpriseBook(likedBooks)
+      setSurprise(result)
+    } catch {
+      // Leave the previous surprise as-is; just clear the spinner below.
+    } finally {
+      setSurpriseLoading(false)
+    }
   }, [likedBooks])
 
   // Curated list expand
@@ -301,15 +320,20 @@ export function DiscoverHub({
       })
 
       setListLoading(listId)
-      const books = await getListBooks(list.searchQuery, 12, {
-        olSlug: list.olSlug,
-        olQuery: list.olQuery,
-        yearMin: list.yearMin,
-        yearMax: list.yearMax,
-        excludeIds,
-      })
-      setListBooksMap((prev) => ({ ...prev, [listId]: books }))
-      setListLoading(null)
+      try {
+        const books = await getListBooks(list.searchQuery, 12, {
+          olSlug: list.olSlug,
+          olQuery: list.olQuery,
+          yearMin: list.yearMin,
+          yearMax: list.yearMax,
+          excludeIds,
+        })
+        setListBooksMap((prev) => ({ ...prev, [listId]: books }))
+      } catch {
+        // Leave the list unloaded (empty pattern); clear the spinner below.
+      } finally {
+        setListLoading(null)
+      }
     },
     [expandedList, listBooksMap]
   )
@@ -329,9 +353,14 @@ export function DiscoverHub({
       if (!genre) return
 
       setGenreLoading(genreId)
-      const books = await getListBooks(genre.searchQuery, 10)
-      setGenreBooksMap((prev) => ({ ...prev, [genreId]: books }))
-      setGenreLoading(null)
+      try {
+        const books = await getListBooks(genre.searchQuery, 10)
+        setGenreBooksMap((prev) => ({ ...prev, [genreId]: books }))
+      } catch {
+        // Leave the genre unloaded (empty pattern); clear the spinner below.
+      } finally {
+        setGenreLoading(null)
+      }
     },
     [expandedGenre, genreBooksMap]
   )

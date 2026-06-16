@@ -124,8 +124,7 @@ export function FreeBooksBrowser() {
     }, 2000)
 
     return () => { cancelled = true; clearTimeout(timer) }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, books.length])
+  }, [loading, books.length, selectedCategory])
 
   // Debounced search — cancelled flag hoisted outside setTimeout
   useEffect(() => {

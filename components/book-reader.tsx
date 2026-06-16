@@ -20,7 +20,6 @@ interface BookReaderProps {
 
 const THEME_KEY = "bookswipe_reader_theme"
 const FONT_KEY = "bookswipe_reader_font"
-const BIONIC_KEY = "bookswipe_bionic_mode"
 
 type ReaderFont = "georgia" | "merriweather" | "lora" | "system" | "literata" | "opendyslexic"
 
@@ -87,14 +86,6 @@ function getStoredFont(): ReaderFont {
     if (stored && FONT_OPTIONS.some(f => f.id === stored)) return stored as ReaderFont
   } catch { /* ignore */ }
   return "georgia"
-}
-
-function getStoredBionic(): boolean {
-  if (typeof window === "undefined") return false
-  try {
-    return localStorage.getItem(BIONIC_KEY) === "true"
-  } catch { /* ignore */ }
-  return false
 }
 
 function getFontFamily(font: ReaderFont): string {
@@ -306,16 +297,10 @@ function RenderInlineText({ text, skipTypography }: { text: string; skipTypograp
   return <>{parts}</>
 }
 
-function makeBionicNode(text: string): React.ReactNode {
-  return text.split(/(\s+)/).map((word, i) => {
-    if (/^\s+$/.test(word) || word.length === 0) return word
-    const boldLen = Math.ceil(word.length * 0.45)
-    return <span key={i}><strong>{word.slice(0, boldLen)}</strong>{word.slice(boldLen)}</span>
-  })
-}
-
 export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, onClose }: BookReaderProps) {
-  const [theme, setTheme] = useState<ReaderTheme>(getStoredTheme)
+  // Initialize to a stable SSR default; hydrate the stored theme after mount
+  // (reading localStorage in the useState initializer risks a hydration mismatch).
+  const [theme, setTheme] = useState<ReaderTheme>("sepia")
   const [fontSize, setFontSize] = useState(17)
   const [readerFont, setReaderFont] = useState<ReaderFont>(getStoredFont)
   const [showFontMenu, setShowFontMenu] = useState(false)
@@ -333,9 +318,6 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const [noteInputFor, setNoteInputFor] = useState<{ text: string; blockIndex: number } | null>(null)
   const [noteInputValue, setNoteInputValue] = useState("")
   const [isBookmarked, setIsBookmarked] = useState(false)
-
-  // Feature: Bionic Reading
-  const [bionicMode, setBionicMode] = useState<boolean>(getStoredBionic)
 
   // Feature: Focus Mode + Pomodoro
   const [focusMode, setFocusMode] = useState(false)
@@ -363,34 +345,37 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   const sessionStartRef = useRef(Date.now())
   const sessionStartProgressRef = useRef(0)
   const sessionStartRecordedRef = useRef(false)
-  const [showSessionSummary, setShowSessionSummary] = useState(false)
-  const [sessionStats, setSessionStats] = useState<{
-    pagesRead: number
-    minutesSpent: number
-    progressPct: number
-    totalPages: number
-    pagesLeft: number
-  } | null>(null)
 
   // CSS column pagination state
   const [paginatedPage, setPaginatedPage] = useState(0)
   const [columnTotal, setColumnTotal] = useState(1)
   const [colWidth, setColWidth] = useState(0)
+  // Bumped each time an illustration finishes loading so pagination re-measures
+  // (images change scrollWidth only once their pixels load).
+  const [imagesLoadedTick, setImagesLoadedTick] = useState(0)
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const pagesRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Latest position pending a debounced save — flushed on close/unmount so the
+  // last page isn't lost if the reader closes before the debounce fires.
+  const pendingSaveRef = useRef<number | null>(null)
   const measureTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hasRestoredRef = useRef(false)
   const noteInputRef = useRef<HTMLTextAreaElement>(null)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
 
-  // Bionic-aware text renderer: wraps RenderInlineText output with bold-prefix styling
-  const BionicInline = useCallback(({ text, skipTypography }: { text: string; skipTypography?: boolean }) => {
-    if (!bionicMode) return <RenderInlineText text={text} skipTypography={skipTypography} />
-    // Split text into words and apply bionic bolding
-    return <>{makeBionicNode(text)}</>
-  }, [bionicMode])
+  // Flush any pending (debounced) reading-position save immediately.
+  const flushSave = useCallback(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+      debounceRef.current = null
+    }
+    if (pendingSaveRef.current !== null) {
+      saveReadingPosition(bookId, pendingSaveRef.current)
+      pendingSaveRef.current = null
+    }
+  }, [bookId])
 
   // Load notes for this book
   const loadNotes = useCallback(() => {
@@ -408,10 +393,10 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     if (isOpen) loadReaderFonts()
   }, [isOpen])
 
-  // Bionic mode persistence
+  // Hydrate the persisted theme after mount (SSR-safe — see useState above)
   useEffect(() => {
-    try { localStorage.setItem(BIONIC_KEY, bionicMode ? "true" : "false") } catch { /* ignore */ }
-  }, [bionicMode])
+    setTheme(getStoredTheme())
+  }, [])
 
   // One-time hints on first open
   useEffect(() => {
@@ -441,9 +426,12 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       }
       return
     }
-    // Timer is running — start sound if one is selected
-    if (ambientSound && !ambientRef.current) {
-      const player = createAmbientPlayer(ambientSound, ambientVolume)
+    // Timer is running — start sound if one is selected.
+    // Read the latest selection/volume from refs (not deps) so changing them
+    // doesn't restart the interval.
+    const currentSound = ambientSoundRef.current
+    if (currentSound && !ambientRef.current) {
+      const player = createAmbientPlayer(currentSound, ambientVolumeRef.current)
       if (player) {
         player.start()
         ambientRef.current = player
@@ -472,12 +460,19 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
         pomodoroIntervalRef.current = null
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusMode, pomodoroRunning])
 
   // Focus Mode: manage ambient audio via Web Audio API
   const ambientRef = useRef<{ stop: () => void; setVolume: (v: number) => void } | null>(null)
   const [ambientVolume, setAmbientVolume] = useState(0.4)
+
+  // Mirror the current ambient selection/volume into refs so the pomodoro timer
+  // effect can read the latest values without taking them as dependencies
+  // (which would otherwise tear down and restart the interval on every change).
+  const ambientSoundRef = useRef(ambientSound)
+  const ambientVolumeRef = useRef(ambientVolume)
+  useEffect(() => { ambientSoundRef.current = ambientSound }, [ambientSound])
+  useEffect(() => { ambientVolumeRef.current = ambientVolume }, [ambientVolume])
 
   // Start ambient sound — called directly from click handlers
   const startAmbientSound = useCallback((soundId: AmbientSound) => {
@@ -551,11 +546,15 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       // Update progress based on page position
       const pct = columnTotal > 1 ? Math.round((next / (columnTotal - 1)) * 100) : (next === 0 ? 0 : 100)
       setProgress(pct)
-      // Save reading position
+      // Save reading position (debounced; tracked in pendingSaveRef so it can be
+      // flushed on close/unmount before the timer fires).
       const charOffset = Math.round((next / Math.max(1, columnTotal - 1)) * text.length)
+      pendingSaveRef.current = charOffset
       if (debounceRef.current) clearTimeout(debounceRef.current)
       debounceRef.current = setTimeout(() => {
         saveReadingPosition(bookId, charOffset)
+        debounceRef.current = null
+        pendingSaveRef.current = null
       }, 300)
       return next
     })
@@ -680,7 +679,9 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       window.removeEventListener("orientationchange", scheduleRemeasure)
       ro?.disconnect()
     }
-  }, [text, fontSize, readerFont, bookId])
+    // images / imagesLoadedTick: re-measure once illustration blocks render and
+    // their pixels load, since they change scrollWidth after the initial measure.
+  }, [text, fontSize, readerFont, bookId, images, imagesLoadedTick])
 
   // Track if user is dragging (selecting text) vs tapping
   const mouseDownRef = useRef<{ x: number; y: number; time: number } | null>(null)
@@ -980,7 +981,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     }
 
     return result
-  }, [text, images])
+  }, [text, images, bookTitle])
 
   // Page & time calculations
   const CHARS_PER_PAGE = 1500
@@ -1061,12 +1062,13 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   // Search within book
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  // Lowercase the full book text once per book, not on every keystroke.
+  const lowerText = useMemo(() => (text ? text.toLowerCase() : ""), [text])
   const searchResults = useMemo(() => {
     if (!searchQuery || searchQuery.length < 2 || !text) return []
     const query = searchQuery.toLowerCase()
     const results: { text: string; charOffset: number; page: number }[] = []
     let startIdx = 0
-    const lowerText = text.toLowerCase()
     while (results.length < 50) {
       const idx = lowerText.indexOf(query, startIdx)
       if (idx === -1) break
@@ -1080,7 +1082,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       startIdx = idx + query.length
     }
     return results
-  }, [searchQuery, text])
+  }, [searchQuery, text, lowerText])
 
   const jumpToSearchResult = useCallback((charOffset: number) => {
     if (!text) return
@@ -1109,7 +1111,8 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     if (!isOpen) {
       hasRestoredRef.current = false
       sessionStartRecordedRef.current = false
-      if (debounceRef.current) clearTimeout(debounceRef.current)
+      // Persist the last page before tearing down — don't drop the pending save.
+      flushSave()
       return
     }
 
@@ -1147,9 +1150,6 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   }, [isOpen, gutenbergBook.id])
 
   // Position restore happens inside the measure effect after columnTotal is known
-
-  // handleScroll kept as stub — paged mode uses overflow:hidden so this won't fire
-  const handleScroll = useCallback(() => {}, [])
 
   useEffect(() => {
     if (isOpen) {
@@ -1206,9 +1206,10 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
   useEffect(() => {
     return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
+      // Persist the last page on unmount instead of discarding the pending save.
+      flushSave()
     }
-  }, [])
+  }, [flushSave])
 
   // Text selection handler — show floating bar when user selects text in reader
   useEffect(() => {
@@ -1676,6 +1677,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                             className="max-w-full rounded-lg shadow-sm"
                             style={{ maxHeight: "50vh" }}
                             loading="lazy"
+                            onLoad={() => setImagesLoadedTick(t => t + 1)}
                           />
                           {block.caption && (
                             <p
