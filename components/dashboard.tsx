@@ -487,9 +487,21 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                                 const pagesPerMinute = primary.currentPage / primary.timeSpentMinutes
                                 const pagesLeft = primary.totalPages - primary.currentPage
                                 const minutesLeft = Math.round(pagesLeft / pagesPerMinute)
+                                if (!Number.isFinite(minutesLeft) || minutesLeft <= 0) return null
                                 const hoursLeft = Math.round(minutesLeft / 60)
-                                const daysLeft = Math.ceil(minutesLeft / (primary.timeSpentMinutes / Math.max(1, Math.ceil((Date.now() - new Date(primary.startedDate).getTime()) / 86400000))))
-                                const estimate = hoursLeft < 2 ? `~${minutesLeft}m left` : hoursLeft < 24 ? `~${hoursLeft}h left` : `~${daysLeft} day${daysLeft !== 1 ? "s" : ""} left`
+                                const startedMs = new Date(primary.startedDate).getTime()
+                                const daysElapsed = Number.isFinite(startedMs)
+                                  ? Math.max(1, Math.ceil((Date.now() - startedMs) / 86400000))
+                                  : 1
+                                const minutesPerDay = primary.timeSpentMinutes / daysElapsed
+                                const daysLeft = minutesPerDay > 0 ? Math.ceil(minutesLeft / minutesPerDay) : 0
+                                const estimate = hoursLeft < 2
+                                  ? `~${minutesLeft}m left`
+                                  : hoursLeft < 24
+                                    ? `~${hoursLeft}h left`
+                                    : daysLeft > 0
+                                      ? `~${daysLeft} day${daysLeft !== 1 ? "s" : ""} left`
+                                      : `~${hoursLeft}h left`
                                 return (
                                   <span className="text-amber-600 dark:text-amber-500 font-medium ml-1.5">· {estimate}</span>
                                 )
@@ -706,8 +718,10 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                   }
                 }
 
-                getReadingProgress().forEach(p => countDay(p.lastReadDate))
-                getBookReviews().forEach(r => { countDay(r.createdAt); countDay(r.updatedAt) })
+                getReadingProgress()
+                  .filter(p => p.status !== "dnf")
+                  .forEach(p => countDay(p.lastReadDate))
+                getBookReviews().forEach(r => countDay(r.updatedAt || r.createdAt))
                 getBookNotes().forEach(n => countDay(n.createdAt))
 
                 const todayDate = now.getDate()
@@ -784,7 +798,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                               const isToday = day === todayDate
                               return (
                                 <div
-                                  key={di}
+                                  key={day !== null ? `${year}-${month}-${day}` : `pad-${wi}-${di}`}
                                   className={`h-3 w-full rounded-sm transition-colors ${
                                     day === null
                                       ? "bg-transparent"

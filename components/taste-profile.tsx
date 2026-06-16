@@ -218,11 +218,13 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
   const donutRadius = 60
   const donutCircumference = 2 * Math.PI * donutRadius
   const gap = 3
-  const donutSegments = genreData.map((genre, i) => {
+  const donutSegments = genreData.map((genre) => {
     const segmentLength = (genre.percentage / 100) * donutCircumference
     return { ...genre, segmentLength }
   })
-  let runningOffset = 0
+  // Start half a gap in so the leading gap is applied to the first slice too,
+  // centering every gap between slices instead of letting the first slice sit flush.
+  let runningOffset = gap / 2
   const donutOffsets = donutSegments.map(seg => {
     const offset = runningOffset
     runningOffset += seg.segmentLength + gap
