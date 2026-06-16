@@ -46,22 +46,30 @@ export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManager
 
   const handleCreate = () => {
     if (!name.trim()) return
-    createShelf(name.trim(), emoji)
-    setShelves(getShelves())
-    setIsAdding(false)
-    setName("")
-    setEmoji("\u{1F4DA}")
-    onShelvesChanged?.()
+    try {
+      createShelf(name.trim(), emoji)
+      setShelves(getShelves())
+      setIsAdding(false)
+      setName("")
+      setEmoji("\u{1F4DA}")
+      onShelvesChanged?.()
+    } catch (err) {
+      console.warn("[shelf-manager] Failed to create shelf:", err)
+    }
   }
 
   const handleRename = (shelfId: string) => {
     if (!name.trim()) return
-    renameShelf(shelfId, name.trim(), emoji)
-    setShelves(getShelves())
-    setEditingId(null)
-    setName("")
-    setEmoji("\u{1F4DA}")
-    onShelvesChanged?.()
+    try {
+      renameShelf(shelfId, name.trim(), emoji)
+      setShelves(getShelves())
+      setEditingId(null)
+      setName("")
+      setEmoji("\u{1F4DA}")
+      onShelvesChanged?.()
+    } catch (err) {
+      console.warn("[shelf-manager] Failed to rename shelf:", err)
+    }
   }
 
   const handleDelete = (shelfId: string) => {
@@ -71,9 +79,13 @@ export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManager
       ? `Delete "${shelf?.name}"? ${count} book${count > 1 ? "s" : ""} will be unassigned.`
       : `Delete "${shelf?.name}"?`
     if (confirm(msg)) {
-      deleteShelf(shelfId)
-      setShelves(getShelves())
-      onShelvesChanged?.()
+      try {
+        deleteShelf(shelfId)
+        setShelves(getShelves())
+        onShelvesChanged?.()
+      } catch (err) {
+        console.warn("[shelf-manager] Failed to delete shelf:", err)
+      }
     }
   }
 
