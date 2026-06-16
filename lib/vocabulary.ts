@@ -25,10 +25,10 @@ export function getVocabulary(): VocabWord[] {
   }
 }
 
-export function addVocabWord(entry: Omit<VocabWord, "addedAt" | "nextReview" | "interval" | "ease">): void {
+export function addVocabWord(entry: Omit<VocabWord, "addedAt" | "nextReview" | "interval" | "ease">): boolean {
   const vocab = getVocabulary()
   // Skip duplicates (same word + same book)
-  if (vocab.some(v => v.word.toLowerCase() === entry.word.toLowerCase() && v.bookId === entry.bookId)) return
+  if (vocab.some(v => v.word.toLowerCase() === entry.word.toLowerCase() && v.bookId === entry.bookId)) return false
 
   const now = new Date()
   const tomorrow = new Date(now)
@@ -45,7 +45,11 @@ export function addVocabWord(entry: Omit<VocabWord, "addedAt" | "nextReview" | "
 
   try {
     localStorage.setItem(VOCAB_KEY, JSON.stringify(vocab))
-  } catch { /* ignore */ }
+    return true
+  } catch (err) {
+    console.warn("[vocabulary] Failed to save word — storage may be full:", err)
+    return false
+  }
 }
 
 export function deleteVocabWord(word: string, bookId: string): void {

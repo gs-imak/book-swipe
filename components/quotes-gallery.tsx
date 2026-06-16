@@ -16,6 +16,7 @@ interface QuoteEntry {
 
 export function QuotesGallery() {
   const [quotes, setQuotes] = useState<QuoteEntry[]>([])
+  const [copyFailedId, setCopyFailedId] = useState<string | null>(null)
 
   useEffect(() => {
     const allNotes = getBookNotes()
@@ -76,20 +77,37 @@ export function QuotesGallery() {
                     </p>
                   )}
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       const formatted = `"${q.content}"${q.book ? ` — ${q.book.title} by ${q.book.author}` : ""}`
-                      if (navigator.share) {
-                        navigator.share({ text: formatted }).catch(() => {
-                          navigator.clipboard?.writeText(formatted)
-                        })
+                      const copyToClipboard = async () => {
+                        if (typeof navigator === "undefined" || !navigator.clipboard) {
+                          console.warn("[quotes-gallery] Clipboard API unavailable")
+                          setCopyFailedId(q.id)
+                          setTimeout(() => setCopyFailedId(null), 2000)
+                          return
+                        }
+                        try {
+                          await navigator.clipboard.writeText(formatted)
+                        } catch (err) {
+                          console.warn("[quotes-gallery] Clipboard write failed:", err)
+                          setCopyFailedId(q.id)
+                          setTimeout(() => setCopyFailedId(null), 2000)
+                        }
+                      }
+                      if (typeof navigator !== "undefined" && navigator.share) {
+                        try {
+                          await navigator.share({ text: formatted })
+                        } catch {
+                          await copyToClipboard()
+                        }
                       } else {
-                        navigator.clipboard?.writeText(formatted)
+                        await copyToClipboard()
                       }
                     }}
                     aria-label="Share quote"
                     className="flex-shrink-0 p-1.5 rounded-md text-teal-400 hover:text-teal-600 hover:bg-teal-100 transition-colors"
                   >
-                    <Share2 className="w-3 h-3" />
+                    {copyFailedId === q.id ? <Copy className="w-3 h-3 text-red-400" /> : <Share2 className="w-3 h-3" />}
                   </button>
                 </div>
               </div>
