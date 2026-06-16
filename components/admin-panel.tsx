@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Book } from "@/lib/book-data"
 import {
@@ -66,7 +66,10 @@ interface ExportData {
 export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
   const [importing, setImporting] = useState(false)
   const [showGoodreadsImport, setShowGoodreadsImport] = useState(false)
-  const [language, setLanguage] = useState<BookLanguage>(getLanguagePreference)
+  // SSR-safe default ("en" matches getLanguagePreference's server fallback);
+  // the real stored value is read client-side after mount in the effect below.
+  const [language, setLanguage] = useState<BookLanguage>("en")
+  const [counts, setCounts] = useState({ liked: 0, reviews: 0, notes: 0, progress: 0 })
   const [fullBackupPreview, setFullBackupPreview] = useState<{
     json: string
     stats: { books: number; reviews: number; notes: number; totalKeys: number }
@@ -75,6 +78,22 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const fullBackupInputRef = useRef<HTMLInputElement>(null)
   const { showToast } = useToast()
+
+  // Read localStorage-backed data only after mount to avoid SSR/hydration
+  // mismatch and stale counts. Behaviour post-mount is identical to before.
+  const refreshCounts = () => {
+    setCounts({
+      liked: getLikedBooks().length,
+      reviews: getBookReviews().length,
+      notes: getBookNotes().length,
+      progress: getReadingProgress().length,
+    })
+  }
+
+  useEffect(() => {
+    setLanguage(getLanguagePreference())
+    refreshCounts()
+  }, [])
 
   const handleLanguageChange = (lang: BookLanguage) => {
     setLanguage(lang)
@@ -228,6 +247,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
 
       // Trigger a reload
       onBooksLoaded(getLikedBooks())
+      refreshCounts()
     } catch {
       showToast("Failed to read backup file", "error")
     } finally {
@@ -281,10 +301,10 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
     }
   }
 
-  const likedCount = getLikedBooks().length
-  const reviewCount = getBookReviews().length
-  const noteCount = getBookNotes().length
-  const progressCount = getReadingProgress().length
+  const likedCount = counts.liked
+  const reviewCount = counts.reviews
+  const noteCount = counts.notes
+  const progressCount = counts.progress
 
   return (
     <div className="bg-white dark:bg-stone-900 rounded-xl p-5 border border-stone-200/60 dark:border-stone-700/60 shadow-sm space-y-5">

@@ -134,8 +134,10 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   // ---------------------------------------------------------------------------
   useEffect(() => {
     const onPopstate = () => {
-      if (!isLoggedIn) return
-
+      // Back/forward must work regardless of login state. Restoring nav state
+      // while logged out is harmless: the login screen renders whenever
+      // !isLoggedIn, but the hash/view stays in sync so a later sign-in lands
+      // on the right place and the Back button isn't dead in the pre-login window.
       const resolved = hashToState(window.location.hash)
 
       // Guard against navigating back to a discover/swipe state without prefs.
@@ -152,7 +154,7 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
 
     window.addEventListener("popstate", onPopstate)
     return () => window.removeEventListener("popstate", onPopstate)
-  }, [isLoggedIn, userPreferences, navigateTo])
+  }, [userPreferences, navigateTo])
 
   // ---------------------------------------------------------------------------
   // Supabase auth listener — track sign-in state and auto-sync
@@ -450,7 +452,11 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
         isOpen={!!globalSearchBook}
         onClose={() => setGlobalSearchBook(null)}
         onBookClick={(book) => {
-          setGlobalSearchBook(book)
+          // Nested navigation: clicking a related/series/linked book swaps the
+          // detail view to it. isOpen is derived from globalSearchBook, so as
+          // long as we set a real book the modal stays open and the
+          // [book]-keyed effect inside BookDetailModal reloads its data.
+          if (book) setGlobalSearchBook(book)
         }}
       />
 
@@ -500,8 +506,15 @@ export default function App() {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return
 
+    // Whether a SW already controls this page. On a user's FIRST visit there is
+    // no controller yet, and skipWaiting()+clients.claim() fires controllerchange
+    // as the SW takes control — that is NOT an update, so we must not reload then.
+    const hadController = !!navigator.serviceWorker.controller
+
     let refreshing = false
     const onControllerChange = () => {
+      // First-ever control of the page is not an update — don't hard-reload.
+      if (!hadController) return
       if (!refreshing) {
         refreshing = true
         window.location.reload()
@@ -548,10 +561,12 @@ export default function App() {
               isAchievementsOpen={showAchievements}
             />
           </ErrorBoundary>
-          <AchievementsPanel
-            isOpen={showAchievements}
-            onClose={handleCloseAchievements}
-          />
+          <ErrorBoundary>
+            <AchievementsPanel
+              isOpen={showAchievements}
+              onClose={handleCloseAchievements}
+            />
+          </ErrorBoundary>
           <InstallPrompt />
           <WhatsNewModal />
         </GamificationProvider>
