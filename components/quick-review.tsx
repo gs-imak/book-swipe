@@ -52,6 +52,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
   const [dimensions, setDimensions] = useState<Record<string, number>>(existingReview?.dimensions || {})
   const [dimensionsOpen, setDimensionsOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const { triggerActivity } = useGamification()
 
@@ -75,7 +76,8 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
     if (rating === 0) return
 
     setIsSubmitting(true)
-    
+    setSubmitError(null)
+
     const reviewData: BookReview = {
       bookId: book.id,
       rating,
@@ -91,29 +93,33 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
       updatedAt: new Date().toISOString()
     }
 
-    saveBookReview(reviewData)
-    onReviewSaved?.(reviewData)
-    
-    // Trigger gamification events
-    if (!existingReview) {
-      // First time writing review
-      triggerActivity('write_review', { 
-        rating, 
-        review, 
-        favorite,
-        isLongReview: review.length > 100 
-      })
-      
-      if (favorite) {
-        triggerActivity('favorite_book')
+    try {
+      saveBookReview(reviewData)
+      onReviewSaved?.(reviewData)
+
+      // Trigger gamification events
+      if (!existingReview) {
+        // First time writing review
+        triggerActivity('write_review', {
+          rating,
+          review,
+          favorite,
+          isLongReview: review.length > 100
+        })
+
+        if (favorite) {
+          triggerActivity('favorite_book')
+        }
+
+        if (review.length > 100) {
+          triggerActivity('long_review')
+        }
       }
-      
-      if (review.length > 100) {
-        triggerActivity('long_review')
-      }
+    } catch {
+      setSubmitError("Couldn't save your review. Please try again.")
+    } finally {
+      setIsSubmitting(false)
     }
-    
-    setIsSubmitting(false)
   }
 
   return (
@@ -342,6 +348,9 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
       {/* Submit Button */}
       {rating === 0 && (
         <p className="text-xs text-stone-400 dark:text-stone-500">Tap the stars above to rate this book</p>
+      )}
+      {submitError && (
+        <p role="alert" className="text-xs text-red-500">{submitError}</p>
       )}
       <div className="flex justify-end pt-4 border-t">
         <Button

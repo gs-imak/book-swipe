@@ -24,16 +24,19 @@ export function ReadingGoalSetter({ onGoalSet }: ReadingGoalSetterProps) {
   const [confirmed, setConfirmed] = useState(false)
 
   useEffect(() => {
-    const alreadySet = typeof window !== "undefined"
-      ? localStorage.getItem(GOAL_CONFIGURED_KEY)
-      : "1"
+    // Runs only on the client. Show the setter unless a goal was already
+    // configured; never treat the server/no-window case as "already set".
+    if (typeof window === "undefined") return
+    const alreadySet = localStorage.getItem(GOAL_CONFIGURED_KEY)
     if (!alreadySet) setVisible(true)
   }, [])
 
   const handleSet = () => {
     if (!selected) return
     updateReadingGoals({ yearlyTarget: selected })
-    localStorage.setItem(GOAL_CONFIGURED_KEY, "1")
+    if (typeof window !== "undefined") {
+      localStorage.setItem(GOAL_CONFIGURED_KEY, "1")
+    }
     setConfirmed(true)
     setTimeout(() => {
       setVisible(false)
