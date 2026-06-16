@@ -11,6 +11,7 @@ interface ConfettiPiece {
   color: string
   size: number
   velocity: { x: number; y: number }
+  borderRadius: string
 }
 
 interface FireworkParticle {
@@ -58,7 +59,9 @@ export function ConfettiCelebration({
         velocity: {
           x: (Math.random() - 0.5) * 10,
           y: (Math.random() - 0.5) * 10 - 5
-        }
+        },
+        // Compute shape once at creation so it stays stable across re-renders
+        borderRadius: Math.random() > 0.5 ? "50%" : "0%"
       })
     }
 
@@ -108,7 +111,7 @@ export function ConfettiCelebration({
               width: piece.size,
               height: piece.size,
               backgroundColor: piece.color,
-              borderRadius: Math.random() > 0.5 ? "50%" : "0%"
+              borderRadius: piece.borderRadius
             }}
           />
         ))}
@@ -133,9 +136,13 @@ export function FireworksCelebration({
     const width = window.innerWidth
     const height = window.innerHeight
 
+    // Track every scheduled timeout so cleanup can clear them all and
+    // avoid setState-after-unmount when the component unmounts mid-burst.
+    const timeouts: ReturnType<typeof setTimeout>[] = []
+
     // Create multiple firework bursts
     for (let i = 0; i < 3; i++) {
-      setTimeout(() => {
+      timeouts.push(setTimeout(() => {
         const x = Math.random() * width
         const y = Math.random() * (height / 2) + height / 4
 
@@ -152,16 +159,16 @@ export function FireworksCelebration({
         }
 
         setFireworks(prev => [...prev, ...particles])
-      }, i * 500)
+      }, i * 500))
     }
 
     // Clear after animation
-    const timer = setTimeout(() => {
+    timeouts.push(setTimeout(() => {
       setFireworks([])
       onComplete?.()
-    }, 4000)
+    }, 4000))
 
-    return () => clearTimeout(timer)
+    return () => timeouts.forEach(clearTimeout)
   }, [isActive, onComplete])
 
   if (!isActive || fireworks.length === 0) return null

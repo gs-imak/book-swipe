@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Mail, Loader2, Check, Cloud, CloudOff } from "lucide-react"
 import { signInWithEmail, signUpWithEmail, signInWithGoogle } from "@/lib/supabase-sync"
@@ -19,8 +19,17 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  // Guard against setState after the modal unmounts mid-request.
+  const mountedRef = useRef(true)
 
-  if (!isOpen || !isSupabaseConfigured()) return null
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
+
+  const shouldRender = isOpen && isSupabaseConfigured()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,16 +40,20 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
       if (mode === "signup") {
         const { error: err } = await signUpWithEmail(email, password)
         if (err) throw err
+        if (!mountedRef.current) return
         setSuccess(true)
       } else {
         const { error: err } = await signInWithEmail(email, password)
         if (err) throw err
+        if (!mountedRef.current) return
         onAuthSuccess()
         onClose()
       }
     } catch (err: any) {
+      if (!mountedRef.current) return
       setError(err.message || "Something went wrong")
     }
+    if (!mountedRef.current) return
     setLoading(false)
   }
 
@@ -50,6 +63,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
     try {
       await signInWithGoogle()
     } catch (err: any) {
+      if (!mountedRef.current) return
       setError(err.message || "Google sign-in failed")
       setLoading(false)
     }
@@ -57,6 +71,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
 
   return (
     <AnimatePresence>
+      {shouldRender && (
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -178,6 +193,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
           </div>
         </motion.div>
       </motion.div>
+      )}
     </AnimatePresence>
   )
 }

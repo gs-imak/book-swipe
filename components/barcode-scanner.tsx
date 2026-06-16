@@ -20,6 +20,9 @@ export function BarcodeScanner({ isOpen, onClose }: BarcodeScannerProps) {
   const [lookingUp, setLookingUp] = useState(false)
   const [added, setAdded] = useState(false)
   const streamRef = useRef<MediaStream | null>(null)
+  // Tracks whether the component is still mounted, so async callbacks can
+  // bail before calling setState / leaving a live MediaStream behind.
+  const mountedRef = useRef(true)
 
   // BarcodeDetector is not in TypeScript's lib types — check at runtime
   const isSupported = typeof window !== "undefined" && "BarcodeDetector" in window
@@ -37,6 +40,8 @@ export function BarcodeScanner({ isOpen, onClose }: BarcodeScannerProps) {
     try {
       const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`)
       const data = await res.json()
+      // Bail if unmounted while the request was in flight
+      if (!mountedRef.current) return
       if (data.items && data.items.length > 0) {
         const item = data.items[0]
         const vol = item.volumeInfo
@@ -60,8 +65,10 @@ export function BarcodeScanner({ isOpen, onClose }: BarcodeScannerProps) {
         setError(`No book found for ISBN ${isbn}`)
       }
     } catch {
+      if (!mountedRef.current) return
       setError("Failed to look up book. Check your connection.")
     }
+    if (!mountedRef.current) return
     setLookingUp(false)
   }, [])
 
@@ -79,6 +86,13 @@ export function BarcodeScanner({ isOpen, onClose }: BarcodeScannerProps) {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
       })
+      // Race guard: if we unmounted/closed while awaiting permission, the
+      // cleanup's stopCamera() already ran (and found no stream). Stop the
+      // just-acquired stream now so we don't leave a live MediaStream behind.
+      if (!mountedRef.current) {
+        stream.getTracks().forEach(t => t.stop())
+        return
+      }
       streamRef.current = stream
       if (videoRef.current) {
         videoRef.current.srcObject = stream
@@ -106,6 +120,7 @@ export function BarcodeScanner({ isOpen, onClose }: BarcodeScannerProps) {
       }
       detect()
     } catch (err: any) {
+      if (!mountedRef.current) return
       if (err.name === "NotAllowedError") {
         setError("Camera access denied. Please allow camera access and try again.")
       } else {
@@ -114,7 +129,16 @@ export function BarcodeScanner({ isOpen, onClose }: BarcodeScannerProps) {
     }
   }, [isSupported, stopCamera, lookupISBN])
 
-  // Auto-start when opened; clean up on close
+  // Track mount status across the component's whole lifetime (not per open/close).
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      stopCamera()
+    }
+  }, [stopCamera])
+
+  // Auto-start when opened; stop the camera when closed
   useEffect(() => {
     if (isOpen && isSupported) {
       startCamera()
