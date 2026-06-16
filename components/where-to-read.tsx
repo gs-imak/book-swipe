@@ -50,6 +50,8 @@ export function WhereToRead({ book }: WhereToReadProps) {
         priceCache.set(book.id, { info, ts: Date.now() })
         setPriceInfo(info)
         setLoadingPrice(false)
+      }).catch(() => {
+        if (!cancelled) setLoadingPrice(false)
       })
     }
     return () => { cancelled = true }
