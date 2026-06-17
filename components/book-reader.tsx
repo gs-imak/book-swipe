@@ -1592,6 +1592,11 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 style={{
                   position: "relative",
                   flex: 1,
+                  // A flex-1 child defaults to min-height:auto, which refuses to
+                  // shrink below its content — so the column-paginated text grew
+                  // to full height and pushed the bottom controls off-screen.
+                  // min-height:0 lets it bound to the available flex space.
+                  minHeight: 0,
                   padding: "0 clamp(20px, 6vw, 80px)",
                 }}
                 onMouseDown={handleMouseDown}
