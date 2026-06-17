@@ -132,9 +132,9 @@ describe("book-cache", () => {
 
   it("updateBooksInCache replaces an existing book's fields in place", () => {
     addBooksToCache([makeBook({ id: "up-1", cover: "https://covers.openlibrary.org/old-L.jpg" })])
-    updateBooksInCache([makeBook({ id: "up-1", cover: "https://m.media-amazon.com/images/P/0525559477.01._SCLZZZZZZZ_.jpg", coverFallback: "https://covers.openlibrary.org/old-L.jpg" })])
+    updateBooksInCache([makeBook({ id: "up-1", cover: "https://is1-ssl.mzstatic.com/image/thumb/x/1000x1000bb.jpg", coverFallback: "https://covers.openlibrary.org/old-L.jpg" })])
     const book = getCachedBooks().find((b) => b.id === "up-1")
-    expect(book?.cover).toContain("media-amazon")
+    expect(book?.cover).toContain("mzstatic")
     expect(book?.coverFallback).toContain("openlibrary")
   })
 
