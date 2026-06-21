@@ -123,3 +123,44 @@ Data flows client → app `/api/*` route → external API. Server-only secrets
 (`GOOGLE_BOOKS_API_KEY`) stay on the server; the browser only talks to the app's own
 API routes. Without Supabase env vars the app degrades gracefully to a fully local,
 anonymous experience.
+
+## Deployment & launch checklist
+
+See `.env.example` for every environment variable. The app builds and runs with
+only `GOOGLE_BOOKS_API_KEY`; everything else is optional and degrades gracefully.
+
+### Deploy
+
+1. Push to a Git repo and import it in your host (Vercel recommended for Next.js).
+2. Set environment variables from `.env.example` in the host's project settings.
+3. Point a custom domain at the deployment and enable HTTPS.
+
+### Cloud accounts & sync (optional but needed for multi-device)
+
+1. Create a Supabase project; copy URL + anon key into env.
+2. Apply the schema: run `lib/supabase-schema.sql` in the Supabase SQL editor,
+   then verify with `node scripts/setup-db.mjs`. This sets up RLS, the co-likes
+   RPC, and `delete_my_account` (used by Settings → Delete account).
+3. **Email is required for real signups/resets.** Supabase's built-in email is
+   rate-limited and not for production — configure a custom SMTP provider
+   (Resend / Postmark) in Supabase → Auth → SMTP.
+4. For Google sign-in: create OAuth credentials, add the Supabase callback URL,
+   and set your deployed `/privacy` URL on the OAuth consent screen (required).
+
+### Before you launch (checklist)
+
+- [ ] **Legal:** fill in the placeholders in `app/privacy/page.tsx` and
+      `app/terms/page.tsx` (entity, contact email, governing law) and have the
+      copy reviewed. Linked from Settings → About and the sign-up screen.
+- [ ] **Email:** custom SMTP configured in Supabase (see above).
+- [ ] **Error monitoring:** set `NEXT_PUBLIC_SENTRY_DSN` (client errors report to
+      Sentry; inert when unset).
+- [ ] **Analytics:** set `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` for cookieless analytics
+      (no consent banner needed).
+- [ ] **Support:** update `SUPPORT_EMAIL` in `components/settings-page.tsx` and
+      the contact addresses in the legal pages.
+- [ ] **Rate limiting:** the API route limiter is per-instance/best-effort. For
+      real protection against quota abuse, move it to a shared store (Upstash).
+- [ ] Run `npm run lint && npm run typecheck && npm test && npm run build`.
+
+Architecture decisions live in `docs/adr/`; the domain glossary is `CONTEXT.md`.
