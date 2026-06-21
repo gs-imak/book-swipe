@@ -2,6 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Readable typography for the static legal pages (privacy / terms). */
+.prose-legal {
+  color: hsl(var(--foreground));
+  line-height: 1.7;
+}
+.prose-legal h2 {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+}
+.prose-legal p,
+.prose-legal ul {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+}
+.prose-legal ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+}
+.prose-legal li {
+  margin-top: 0.25rem;
+}
+.prose-legal a {
+  color: #d97706;
+  text-decoration: underline;
+}
+.prose-legal code {
+  font-size: 0.85em;
+  background: hsl(var(--muted));
+  padding: 0.1em 0.35em;
+  border-radius: 0.25rem;
+}
+
 /* Mobile touch optimizations */
 @layer utilities {
   .touch-pan-y {

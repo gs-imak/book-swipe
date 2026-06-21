@@ -1,6 +1,15 @@
 import type { Metadata, Viewport } from 'next'
 import { Source_Serif_4, DM_Sans } from 'next/font/google'
+import Script from 'next/script'
 import './globals.css'
+
+// Cookieless, privacy-friendly analytics (Plausible-compatible). Inert unless
+// NEXT_PUBLIC_PLAUSIBLE_DOMAIN is set — so no tracker loads, and because it sets
+// no cookies and stores no personal identifiers, no cookie-consent banner is
+// required. Point _SRC at your Plausible/self-hosted script.
+const PLAUSIBLE_DOMAIN = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN
+const PLAUSIBLE_SRC =
+  process.env.NEXT_PUBLIC_PLAUSIBLE_SRC || 'https://plausible.io/js/script.js'
 
 const sourceSerif = Source_Serif_4({
   subsets: ['latin'],
@@ -67,11 +76,22 @@ export default function RootLayout({
             __html: `(function(){try{if(localStorage.getItem("bookswipe_theme")==="dark"){document.documentElement.classList.add("dark");var m=document.querySelector('meta[name="theme-color"]');if(m){m.setAttribute("content","#0a0a0a");}}}catch(e){}})();`,
           }}
         />
+        {PLAUSIBLE_DOMAIN && (
+          <Script defer data-domain={PLAUSIBLE_DOMAIN} src={PLAUSIBLE_SRC} strategy="afterInteractive" />
+        )}
       </head>
       <body className={`${dmSans.variable} ${sourceSerif.variable} font-sans`}>
-        <div className="min-h-screen bg-background">
+        {/* Skip link: first focusable element, visually hidden until focused, so
+            keyboard users can jump past nav straight to content (WCAG 2.4.1). */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-lg focus:bg-background focus:px-4 focus:py-2 focus:text-foreground focus:shadow-lg focus:ring-2 focus:ring-ring"
+        >
+          Skip to content
+        </a>
+        <main id="main-content" className="min-h-screen bg-background">
           {children}
-        </div>
+        </main>
       </body>
     </html>
   )

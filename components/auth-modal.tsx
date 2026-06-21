@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Mail, Loader2, Check, Cloud, CloudOff } from "lucide-react"
-import { signInWithEmail, signUpWithEmail, signInWithGoogle } from "@/lib/supabase-sync"
+import { signInWithEmail, signUpWithEmail, signInWithGoogle, sendPasswordReset } from "@/lib/supabase-sync"
 import { isSupabaseConfigured } from "@/lib/supabase"
 
 interface AuthModalProps {
@@ -13,12 +13,13 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
-  const [mode, setMode] = useState<"signin" | "signup">("signin")
+  const [mode, setMode] = useState<"signin" | "signup" | "reset">("signin")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
   // Guard against setState after the modal unmounts mid-request.
   const mountedRef = useRef(true)
 
@@ -37,7 +38,12 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
     setError(null)
 
     try {
-      if (mode === "signup") {
+      if (mode === "reset") {
+        const { error: err } = await sendPasswordReset(email)
+        if (err) throw err
+        if (!mountedRef.current) return
+        setResetSent(true)
+      } else if (mode === "signup") {
         const { error: err } = await signUpWithEmail(email, password)
         if (err) throw err
         if (!mountedRef.current) return
@@ -91,7 +97,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
             <div className="flex items-center gap-2">
               <Cloud className="w-5 h-5 text-amber-600" />
               <h3 className="font-bold text-stone-900 dark:text-stone-100 font-serif">
-                {mode === "signin" ? "Sign In" : "Create Account"}
+                {mode === "signin" ? "Sign In" : mode === "signup" ? "Create Account" : "Reset Password"}
               </h3>
             </div>
             <button
@@ -106,16 +112,48 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
             <p className="text-xs text-stone-500">
               {mode === "signin"
                 ? "Sign in to sync your library across devices."
-                : "Create an account to backup and sync your data."}
+                : mode === "signup"
+                ? "Create an account to backup and sync your data."
+                : "Enter your email and we'll send a password reset link."}
             </p>
 
-            {success ? (
+            {success || resetSent ? (
               <div className="flex flex-col items-center gap-3 py-6">
                 <Check className="w-10 h-10 text-emerald-500" />
                 <p className="text-sm text-stone-600 dark:text-stone-400 text-center">
-                  Check your email for a confirmation link.
+                  {resetSent
+                    ? "If that email has an account, a reset link is on its way."
+                    : "Check your email for a confirmation link."}
                 </p>
               </div>
+            ) : mode === "reset" ? (
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <label htmlFor="reset-email" className="sr-only">Email</label>
+                <input
+                  id="reset-email"
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                  className="w-full h-10 px-3 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-sm text-stone-900 dark:text-stone-100 placeholder-stone-400 outline-none focus:ring-2 focus:ring-amber-500/50"
+                />
+                {error && <p className="text-xs text-red-500">{error}</p>}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-10 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 rounded-xl text-sm font-medium hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Send reset link
+                </button>
+                <p className="text-xs text-center text-stone-400">
+                  <button type="button" onClick={() => { setMode("signin"); setError(null) }} className="text-amber-600 font-medium">
+                    Back to sign in
+                  </button>
+                </p>
+              </form>
             ) : (
               <>
                 {/* Google */}
@@ -173,6 +211,14 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                   </button>
                 </form>
 
+                {mode === "signin" && (
+                  <p className="text-xs text-center">
+                    <button onClick={() => { setMode("reset"); setError(null) }} className="text-stone-400 hover:text-amber-600">
+                      Forgot password?
+                    </button>
+                  </p>
+                )}
+
                 <p className="text-xs text-center text-stone-400">
                   {mode === "signin" ? (
                     <>Don&apos;t have an account?{" "}
@@ -188,6 +234,15 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                     </>
                   )}
                 </p>
+
+                {mode === "signup" && (
+                  <p className="text-[10px] text-center text-stone-400 leading-relaxed">
+                    By creating an account you agree to our{" "}
+                    <a href="/terms" target="_blank" className="underline hover:text-amber-600">Terms</a>{" "}
+                    and{" "}
+                    <a href="/privacy" target="_blank" className="underline hover:text-amber-600">Privacy Policy</a>.
+                  </p>
+                )}
               </>
             )}
           </div>

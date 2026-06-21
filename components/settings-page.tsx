@@ -19,6 +19,11 @@ import {
   AlertTriangle,
   HardDrive,
   Shield,
+  LogOut,
+  UserX,
+  Mail,
+  FileText,
+  Loader2,
 } from "lucide-react"
 import { getTheme, setTheme, applyTheme } from "@/lib/theme"
 import {
@@ -43,7 +48,12 @@ import {
   downloadJSON,
 } from "@/lib/export-utils"
 import { markBackupExported } from "@/lib/storage"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { getUser, signOut, deleteAccount } from "@/lib/supabase-sync"
 import { useToast } from "./toast-provider"
+
+// Update to your real support address before launch.
+const SUPPORT_EMAIL = "hello@bookswipe.app"
 
 interface SettingsPageProps {
   onBack: () => void
@@ -68,6 +78,9 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
     stats: { books: number; reviews: number; notes: number; totalKeys: number }
   } | null>(null)
   const [importingFull, setImportingFull] = useState(false)
+  const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deletingAccount, setDeletingAccount] = useState(false)
 
   const fullBackupInputRef = useRef<HTMLInputElement>(null)
   const { showToast } = useToast()
@@ -76,7 +89,36 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
     setCurrentTheme(getTheme())
     setSpeed(getReadingSpeed())
     setLanguage(getLanguagePreference())
+    if (isSupabaseConfigured()) {
+      getUser().then((u) => setUserEmail(u?.email ?? null))
+    }
   }, [])
+
+  const handleSignOut = async () => {
+    await signOut()
+    showToast("Signed out")
+    setUserEmail(null)
+  }
+
+  const handleDeleteAccount = async () => {
+    setDeletingAccount(true)
+    const result = await deleteAccount()
+    if (result.ok) {
+      // Account + cloud data gone; also wipe this device's local copy.
+      const keys: string[] = []
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && key.startsWith("bookswipe_")) keys.push(key)
+      }
+      keys.forEach((key) => localStorage.removeItem(key))
+      showToast("Account deleted")
+      setTimeout(() => window.location.reload(), 800)
+    } else {
+      showToast(result.reason || "Could not delete account", "error")
+      setDeletingAccount(false)
+      setShowDeleteConfirm(false)
+    }
+  }
 
   const handleThemeToggle = () => {
     const next = currentTheme === "dark" ? "light" : "dark"
@@ -496,14 +538,137 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
               <p className="text-sm font-medium text-stone-800 dark:text-stone-200">1.0.0</p>
             </div>
             <div className="border-t border-stone-100 dark:border-stone-800" />
+
+            {/* Legal + support links */}
+            <a
+              href="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center gap-3 py-2.5 px-3.5 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors group"
+            >
+              <Shield className="w-4 h-4 text-stone-400 flex-shrink-0" />
+              <span className="text-sm text-stone-700 dark:text-stone-300 flex-1 text-left">Privacy Policy</span>
+              <ChevronRight className="w-4 h-4 text-stone-300 dark:text-stone-600" />
+            </a>
+            <a
+              href="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center gap-3 py-2.5 px-3.5 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors group"
+            >
+              <FileText className="w-4 h-4 text-stone-400 flex-shrink-0" />
+              <span className="text-sm text-stone-700 dark:text-stone-300 flex-1 text-left">Terms of Service</span>
+              <ChevronRight className="w-4 h-4 text-stone-300 dark:text-stone-600" />
+            </a>
+            <a
+              href={`mailto:${SUPPORT_EMAIL}?subject=BookSwipe%20feedback`}
+              className="w-full flex items-center gap-3 py-2.5 px-3.5 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors group"
+            >
+              <Mail className="w-4 h-4 text-stone-400 flex-shrink-0" />
+              <span className="text-sm text-stone-700 dark:text-stone-300 flex-1 text-left">Send feedback</span>
+              <ChevronRight className="w-4 h-4 text-stone-300 dark:text-stone-600" />
+            </a>
+
+            <div className="border-t border-stone-100 dark:border-stone-800" />
             <div className="flex gap-2.5 p-3 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/40">
               <Shield className="w-4 h-4 text-amber-600 dark:text-amber-500 flex-shrink-0 mt-0.5" />
               <p className="text-xs text-amber-800 dark:text-amber-300/90 leading-relaxed">
-                All your data is stored locally in your browser. Nothing is sent to any server. Export backups regularly to avoid data loss.
+                Your reading data is stored on this device. When you sign in, it also syncs to your account so you can use it on other devices. Export backups regularly to avoid data loss.
               </p>
             </div>
           </div>
         </motion.section>
+
+        {/* ─── Account (only when signed in) ─── */}
+        {userEmail && (
+          <motion.section
+            custom={4}
+            initial="hidden"
+            animate="visible"
+            variants={sectionVariants}
+            className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200/60 dark:border-stone-700/60 shadow-sm overflow-hidden"
+          >
+            <div className="px-5 pt-4 pb-2">
+              <h2 className="text-base font-serif font-semibold text-stone-900 dark:text-stone-100 flex items-center gap-2.5">
+                <UserX className="w-[18px] h-[18px] text-amber-600 dark:text-amber-500" />
+                Account
+              </h2>
+            </div>
+
+            <div className="px-5 pb-4 space-y-3">
+              <p className="text-xs text-stone-500 dark:text-stone-400">
+                Signed in as <span className="font-medium text-stone-700 dark:text-stone-300">{userEmail}</span>
+              </p>
+
+              <button
+                onClick={handleSignOut}
+                className="w-full flex items-center gap-3 py-3 px-3.5 rounded-xl bg-stone-50 dark:bg-stone-800/50 hover:bg-stone-100 dark:hover:bg-stone-800 border border-stone-200/60 dark:border-stone-700/60 transition-colors"
+              >
+                <div className="w-9 h-9 rounded-lg bg-stone-100 dark:bg-stone-700/50 flex items-center justify-center flex-shrink-0">
+                  <LogOut className="w-4.5 h-4.5 text-stone-600 dark:text-stone-300" />
+                </div>
+                <span className="text-sm font-medium text-stone-800 dark:text-stone-200 text-left flex-1">Sign out</span>
+              </button>
+
+              {/* Delete account */}
+              <AnimatePresence mode="wait">
+                {!showDeleteConfirm ? (
+                  <motion.button
+                    key="del-btn"
+                    initial={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="w-full flex items-center gap-3 py-3 px-3.5 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/30 border border-transparent hover:border-red-200 dark:hover:border-red-900/60 transition-all"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-red-50 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                      <UserX className="w-4.5 h-4.5 text-red-600 dark:text-red-400" />
+                    </div>
+                    <div className="text-left flex-1 min-w-0">
+                      <p className="text-sm font-medium text-red-700 dark:text-red-400">Delete account</p>
+                      <p className="text-[11px] text-stone-500 dark:text-stone-400">Permanently delete your account and all cloud data</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-stone-300 dark:text-stone-600 flex-shrink-0" />
+                  </motion.button>
+                ) : (
+                  <motion.div
+                    key="del-confirm"
+                    initial={{ opacity: 0, scale: 0.97 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.97 }}
+                    className="p-4 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 space-y-3"
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-red-800 dark:text-red-200">Delete your account?</p>
+                        <p className="text-xs text-red-700/80 dark:text-red-300/80 mt-1 leading-relaxed">
+                          This permanently deletes your account and all synced data (library, reviews, progress, swipes) from the cloud, and clears this device. This cannot be undone.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleDeleteAccount}
+                        disabled={deletingAccount}
+                        className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        {deletingAccount && <Loader2 className="w-4 h-4 animate-spin" />}
+                        {deletingAccount ? "Deleting…" : "Yes, delete my account"}
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteConfirm(false)}
+                        disabled={deletingAccount}
+                        className="py-2.5 px-4 rounded-xl bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300 text-sm font-medium border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.section>
+        )}
 
       </div>
     </div>
