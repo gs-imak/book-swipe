@@ -280,3 +280,67 @@ $$;
 -- the underlying swipe_history rows remain unreadable to them via the table policies.
 revoke all on function public.get_co_like_counts(text[]) from public;
 grant execute on function public.get_co_like_counts(text[]) to authenticated;
+
+-- ─── Account self-deletion (GDPR right-to-erasure) ──────────────────────────
+-- A logged-in user can permanently delete THEIR OWN account. Deleting the
+-- auth.users row cascades to every public table (all reference auth.users with
+-- `on delete cascade`: profiles, user_books, reviews, reading_progress,
+-- swipe_history), so this single delete removes all of the user's data.
+--
+-- The client SDK cannot touch auth.users, so this runs as a `security definer`
+-- function owned by a privileged role. It only ever deletes auth.uid() — a user
+-- can never delete another account. search_path is pinned to prevent hijacking.
+create or replace function public.delete_my_account()
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'not authenticated';
+  end if;
+  delete from auth.users where id = auth.uid();
+end;
+$$;
+
+revoke all on function public.delete_my_account() from public;
+grant execute on function public.delete_my_account() to authenticated;
+
+-- ─── Shelves (custom shelf definitions + book↔shelf assignments) ─────────────
+-- The local model is many-shelves-per-book (a separate assignments store), which
+-- the single user_books.shelf column could not represent. These two tables mirror
+-- the local model so shelves sync across devices (see ADR-0002). Default shelves
+-- are constant (same ids everywhere) and are never synced — only custom ones.
+--
+-- user_book_shelves.book_id is plain text (NOT an FK to books): a shelf
+-- assignment is user metadata that must sync regardless of whether the book has
+-- been written to the shared catalog yet.
+create table if not exists public.user_shelves (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  shelf_id text not null,
+  name text not null,
+  emoji text default '',
+  is_default boolean default false,
+  created_at timestamptz default now(),
+  primary key (user_id, shelf_id)
+);
+
+create table if not exists public.user_book_shelves (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  book_id text not null,
+  shelf_id text not null,
+  added_at timestamptz default now(),
+  primary key (user_id, book_id, shelf_id)
+);
+
+create index if not exists idx_user_shelves_user on public.user_shelves(user_id);
+create index if not exists idx_user_book_shelves_user on public.user_book_shelves(user_id);
+
+alter table public.user_shelves enable row level security;
+alter table public.user_book_shelves enable row level security;
+
+drop policy if exists "Users manage own shelves" on public.user_shelves;
+drop policy if exists "Users manage own shelf assignments" on public.user_book_shelves;
+create policy "Users manage own shelves" on public.user_shelves for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "Users manage own shelf assignments" on public.user_book_shelves for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
