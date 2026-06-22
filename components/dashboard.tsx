@@ -5,7 +5,6 @@ import dynamic from "next/dynamic"
 import { Book } from "@/lib/book-data"
 import { getLikedBooks, clearLikedBooks, addBookToReading, getReadingProgress, addLikedBook, removeLikedBook, getBookReviews, getBookNotes, getShelfAssignments, getReadingTimeToday } from "@/lib/storage"
 import { Button } from "@/components/ui/button"
-import { AdminPanel } from "./admin-panel"
 import { ReadingProgressTracker } from "./reading-progress"
 import { BookDetailModal } from "./book-detail-modal"
 import { StarRating } from "./star-rating"
@@ -23,7 +22,8 @@ import { ConfirmDialog } from "./confirm-dialog"
 import { ReadingGoalSetter } from "./reading-goal-setter"
 import { SmartNextRead } from "./smart-next-read"
 
-// Lazy-load below-the-fold discovery components
+// Lazy-load below-the-fold discovery components + the admin-only panel
+const AdminPanel = dynamic(() => import("./admin-panel").then(m => ({ default: m.AdminPanel })), { ssr: false })
 const SmartRecommendations = dynamic(() => import("./smart-recommendations").then(m => ({ default: m.SmartRecommendations })), { ssr: false })
 const DiscoverHub = dynamic(() => import("./discover-hub").then(m => ({ default: m.DiscoverHub })), { ssr: false })
 const ReadingPath = dynamic(() => import("./reading-path").then(m => ({ default: m.ReadingPath })), { ssr: false })
