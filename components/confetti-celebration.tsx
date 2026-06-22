@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 
 interface ConfettiPiece {
   id: number
@@ -39,9 +39,17 @@ export function ConfettiCelebration({
   onComplete 
 }: ConfettiCelebrationProps) {
   const [confetti, setConfetti] = useState<ConfettiPiece[]>([])
+  const prefersReducedMotion = useReducedMotion()
 
   useEffect(() => {
     if (!isActive) return
+
+    // Respect prefers-reduced-motion (WCAG 2.3.3): skip the particle storm
+    // entirely, but still fire onComplete so any gating logic proceeds.
+    if (prefersReducedMotion) {
+      const t = setTimeout(() => onComplete?.(), duration)
+      return () => clearTimeout(t)
+    }
 
     // Create confetti pieces
     const pieces: ConfettiPiece[] = []
@@ -74,7 +82,7 @@ export function ConfettiCelebration({
     }, duration)
 
     return () => clearTimeout(timer)
-  }, [isActive, duration, onComplete])
+  }, [isActive, duration, onComplete, prefersReducedMotion])
 
   if (!isActive || confetti.length === 0) return null
 
@@ -129,9 +137,15 @@ export function FireworksCelebration({
   onComplete?: () => void 
 }) {
   const [fireworks, setFireworks] = useState<FireworkParticle[]>([])
+  const prefersReducedMotion = useReducedMotion()
 
   useEffect(() => {
     if (!isActive) return
+
+    if (prefersReducedMotion) {
+      const t = setTimeout(() => onComplete?.(), 4000)
+      return () => clearTimeout(t)
+    }
 
     const width = window.innerWidth
     const height = window.innerHeight
@@ -169,7 +183,7 @@ export function FireworksCelebration({
     }, 4000))
 
     return () => timeouts.forEach(clearTimeout)
-  }, [isActive, onComplete])
+  }, [isActive, onComplete, prefersReducedMotion])
 
   if (!isActive || fireworks.length === 0) return null
 

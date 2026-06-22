@@ -1,6 +1,7 @@
 "use client"
 
 import { Component, type ReactNode } from "react"
+import { captureError } from "@/lib/monitoring"
 
 interface Props {
   children: ReactNode
@@ -20,6 +21,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('[BookSwipe] Uncaught error:', error, errorInfo.componentStack)
+    captureError(error, { componentStack: errorInfo.componentStack })
   }
 
   render() {

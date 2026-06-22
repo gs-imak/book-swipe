@@ -2,7 +2,22 @@
 
 import { supabase, isSupabaseConfigured } from "./supabase"
 import { Book } from "./book-data"
-import { getLikedBooks, getBookReviews, getReadingProgress, type BookReview, type ReadingProgress } from "./storage"
+import {
+  getLikedBooks,
+  saveLikedBooks,
+  getBookReviews,
+  saveBookReviews,
+  getReadingProgress,
+  saveReadingProgress,
+  getShelves,
+  saveShelves,
+  getShelfAssignments,
+  saveShelfAssignments,
+  type BookReview,
+  type ReadingProgress,
+  type Shelf,
+  type BookShelfAssignment,
+} from "./storage"
 
 // ─── Auth helpers ───────────────────────────────────────────────────────────
 
@@ -60,6 +75,52 @@ export async function signInWithGoogle() {
 export async function signOut() {
   if (!supabase) return
   return supabase.auth.signOut()
+}
+
+/**
+ * Send a password-reset email. The link returns the user to /reset-password,
+ * where updatePassword() sets the new password using the recovery session
+ * Supabase establishes from the link.
+ */
+export async function sendPasswordReset(email: string) {
+  if (!supabase) throw new Error("Supabase not configured")
+  const redirectTo =
+    typeof window !== "undefined" ? `${window.location.origin}/reset-password` : undefined
+  return supabase.auth.resetPasswordForEmail(email, { redirectTo })
+}
+
+/** Set a new password for the currently-authenticated (recovery) session. */
+export async function updatePassword(newPassword: string) {
+  if (!supabase) throw new Error("Supabase not configured")
+  return supabase.auth.updateUser({ password: newPassword })
+}
+
+/** Resend the signup confirmation email. */
+export async function resendConfirmation(email: string) {
+  if (!supabase) throw new Error("Supabase not configured")
+  return supabase.auth.resend({ type: "signup", email })
+}
+
+/**
+ * Permanently delete the signed-in user's account and ALL their cloud data, then
+ * sign out. Deletion runs in the `delete_my_account` security-definer RPC (see
+ * lib/supabase-schema.sql), which removes the auth.users row; every public table
+ * FK is `on delete cascade`, so reviews/progress/swipes/library/profile go with
+ * it. Local on-device data is the caller's responsibility to clear afterwards.
+ */
+export async function deleteAccount(): Promise<{ ok: boolean; reason?: string }> {
+  if (!supabase) return { ok: false, reason: "not configured" }
+  const user = await getUser()
+  if (!user) return { ok: false, reason: "not signed in" }
+
+  const { error } = await supabase.rpc("delete_my_account")
+  if (error) {
+    console.warn("[BookSwipe] deleteAccount failed:", stringifyError(error))
+    return { ok: false, reason: stringifyError(error) }
+  }
+  clearUserCache()
+  await supabase.auth.signOut()
+  return { ok: true }
 }
 
 export function onAuthChange(callback: (user: any) => void) {
@@ -222,6 +283,39 @@ export async function syncToCloud(): Promise<{
     }
   }
 
+  // 5. Sync shelves. Custom (non-default) shelf DEFINITIONS go to user_shelves;
+  // the book↔shelf links go to user_book_shelves. Default shelves are constant
+  // across devices (same ids), so we never push them. Additive union — see ADR-0002.
+  const customShelves = getShelves().filter((s) => !s.isDefault)
+  if (customShelves.length > 0) {
+    const { error } = await supabase.from("user_shelves").upsert(
+      customShelves.map((s) => ({
+        user_id: user.id,
+        shelf_id: s.id,
+        name: s.name,
+        emoji: s.emoji,
+        is_default: false,
+        created_at: s.createdAt,
+      })),
+      { onConflict: "user_id,shelf_id" },
+    )
+    if (error) errors.push(`user_shelves: ${stringifyError(error)}`)
+  }
+
+  const assignments = getShelfAssignments()
+  if (assignments.length > 0) {
+    const { error } = await supabase.from("user_book_shelves").upsert(
+      assignments.map((a) => ({
+        user_id: user.id,
+        book_id: a.bookId,
+        shelf_id: a.shelfId,
+        added_at: a.addedAt,
+      })),
+      { onConflict: "user_id,book_id,shelf_id" },
+    )
+    if (error) errors.push(`user_book_shelves: ${stringifyError(error)}`)
+  }
+
   if (errors.length > 0) {
     return { synced: false, reason: errors.join("; ") }
   }
@@ -266,7 +360,7 @@ async function fetchUpdatedAtMap(
  * local timestamp is strictly newer. Unparseable/missing local time => treat as not
  * newer (don't risk clobbering cloud with an undated local record).
  */
-function isLocalNewer(localTime: string | undefined, cloudTime: string | undefined): boolean {
+export function isLocalNewer(localTime: string | undefined, cloudTime: string | undefined): boolean {
   if (!cloudTime) return true // not in cloud yet → push it
   if (!localTime) return false // no local timestamp → don't overwrite newer-or-equal cloud
   const local = Date.parse(localTime)
@@ -276,9 +370,64 @@ function isLocalNewer(localTime: string | undefined, cloudTime: string | undefin
   return local > cloud
 }
 
+// ─── Pure merge helpers (cloud → local) ─────────────────────────────────────
+// Extracted as pure functions so the conflict-resolution logic is unit-testable
+// without mocking Supabase. pullFromCloudToLocal() is the thin IO wrapper.
+
+/** Union liked books by id; local entries win on duplicate (richer client fields). */
+export function mergeLikedBooks(local: Book[], cloud: Book[]): Book[] {
+  const localIds = new Set(local.map((b) => b.id))
+  return [...local, ...cloud.filter((b) => !localIds.has(b.id))]
+}
+
+/** Per bookId, keep whichever review has the newer updatedAt (cloud wins ties only when strictly newer). */
+export function mergeReviewsByNewer(local: BookReview[], cloud: BookReview[]): BookReview[] {
+  const byBook = new Map<string, BookReview>(local.map((r) => [r.bookId, r]))
+  for (const c of cloud) {
+    const existing = byBook.get(c.bookId)
+    if (!existing || isLocalNewer(c.updatedAt, existing.updatedAt)) byBook.set(c.bookId, c)
+  }
+  return Array.from(byBook.values())
+}
+
+/** Per bookId, keep whichever progress row has the newer lastReadDate. */
+export function mergeProgressByNewer(local: ReadingProgress[], cloud: ReadingProgress[]): ReadingProgress[] {
+  const byBook = new Map<string, ReadingProgress>(local.map((p) => [p.bookId, p]))
+  for (const c of cloud) {
+    const existing = byBook.get(c.bookId)
+    if (!existing || isLocalNewer(c.lastReadDate, existing.lastReadDate)) byBook.set(c.bookId, c)
+  }
+  return Array.from(byBook.values())
+}
+
+/** Union shelves by id; local definition wins on duplicate. */
+export function mergeShelves(local: Shelf[], cloud: Shelf[]): Shelf[] {
+  const byId = new Map<string, Shelf>(local.map((s) => [s.id, s]))
+  for (const c of cloud) if (!byId.has(c.id)) byId.set(c.id, c)
+  return Array.from(byId.values())
+}
+
+/** Union book↔shelf assignments by (bookId, shelfId). Additive: a removal on one
+ *  device does not propagate (documented limitation in ADR-0002). */
+export function mergeShelfAssignments(
+  local: BookShelfAssignment[],
+  cloud: BookShelfAssignment[],
+): BookShelfAssignment[] {
+  const key = (a: BookShelfAssignment) => `${a.bookId}::${a.shelfId}`
+  const byKey = new Map<string, BookShelfAssignment>(local.map((a) => [key(a), a]))
+  for (const c of cloud) if (!byKey.has(key(c))) byKey.set(key(c), c)
+  return Array.from(byKey.values())
+}
+
 // ─── Sync: Supabase → localStorage ─────────────────────────────────────────
 
-export async function syncFromCloud(): Promise<{ books: Book[]; reviews: BookReview[] } | null> {
+export async function syncFromCloud(): Promise<{
+  books: Book[]
+  reviews: BookReview[]
+  progress: ReadingProgress[]
+  shelves: Shelf[]
+  assignments: BookShelfAssignment[]
+} | null> {
   if (!supabase) return null
 
   const user = await getUser()
@@ -310,6 +459,10 @@ export async function syncFromCloud(): Promise<{ books: Book[]; reviews: BookRev
       isbn: ub.books.isbn,
     }))
 
+  // Build a book lookup so reading-progress rows can carry their full Book
+  // (the local ReadingProgress shape embeds the Book, not just its id).
+  const bookById = new Map<string, Book>(books.map((b) => [b.id, b]))
+
   // Fetch reviews
   const { data: cloudReviews } = await supabase
     .from("reviews")
@@ -336,7 +489,152 @@ export async function syncFromCloud(): Promise<{ books: Book[]; reviews: BookRev
     updatedAt: r.updated_at,
   }))
 
-  return { books, reviews }
+  // Fetch reading progress. syncToCloud has always pushed this, but nothing ever
+  // pulled it back, so a new device started a re-read from page 0. Pull it here
+  // and only keep rows whose book we also have locally/in the catalog (the local
+  // ReadingProgress.book field must be a real Book).
+  const { data: cloudProgress } = await supabase
+    .from("reading_progress")
+    .select("*")
+    .eq("user_id", user.id)
+
+  const progress: ReadingProgress[] = (cloudProgress || [])
+    .map((p: any): ReadingProgress | null => {
+      const book = bookById.get(p.book_id)
+      if (!book) return null
+      return {
+        bookId: p.book_id,
+        book,
+        currentPage: p.current_page || 0,
+        totalPages: p.total_pages || 0,
+        timeSpentMinutes: p.time_spent_minutes || 0,
+        status: p.status || "reading",
+        startedDate: p.started_date,
+        lastReadDate: p.last_read_date,
+      }
+    })
+    .filter((p: ReadingProgress | null): p is ReadingProgress => p !== null)
+
+  // Fetch custom shelves + book↔shelf assignments.
+  const { data: cloudShelves } = await supabase
+    .from("user_shelves")
+    .select("*")
+    .eq("user_id", user.id)
+
+  const shelves: Shelf[] = (cloudShelves || []).map((s: any) => ({
+    id: s.shelf_id,
+    name: s.name,
+    emoji: s.emoji || "",
+    isDefault: !!s.is_default,
+    createdAt: s.created_at,
+  }))
+
+  const { data: cloudAssignments } = await supabase
+    .from("user_book_shelves")
+    .select("*")
+    .eq("user_id", user.id)
+
+  const assignments: BookShelfAssignment[] = (cloudAssignments || []).map((a: any) => ({
+    bookId: a.book_id,
+    shelfId: a.shelf_id,
+    addedAt: a.added_at,
+  }))
+
+  return { books, reviews, progress, shelves, assignments }
+}
+
+// ─── Sync: Supabase → localStorage (the missing pull side) ──────────────────
+
+/**
+ * Pulls the signed-in user's cloud data and MERGES it into localStorage so a
+ * second device actually receives the library/reviews/progress. Previously
+ * `syncFromCloud` was exported but never called, making sync push-only.
+ *
+ * Merge strategy (matches the push side's last-writer-wins, never blind-clobber):
+ *  - liked books: UNION by id (a book saved on either device stays saved).
+ *  - reviews: per bookId keep the row with the newer `updatedAt`.
+ *  - reading progress: per bookId keep the row with the newer `lastReadDate`.
+ *
+ * Returns counts of what was applied, or null if there was nothing to pull.
+ */
+export async function pullFromCloudToLocal(): Promise<{
+  books: number
+  reviews: number
+  progress: number
+} | null> {
+  const cloud = await syncFromCloud()
+  if (!cloud) return null
+
+  const localBooks = getLikedBooks()
+  const localReviews = getBookReviews()
+  const localProgress = getReadingProgress()
+
+  const mergedBooks = mergeLikedBooks(localBooks, cloud.books)
+  const mergedReviews = mergeReviewsByNewer(localReviews, cloud.reviews)
+  const mergedProgress = mergeProgressByNewer(localProgress, cloud.progress)
+
+  // Only write back when the merge actually changed something (avoids spurious
+  // storage writes + change events on a no-op sync).
+  const booksAdded = mergedBooks.length - localBooks.length
+  if (booksAdded > 0) saveLikedBooks(mergedBooks)
+
+  const reviewsChanged = !sameReviewSet(localReviews, mergedReviews)
+  if (reviewsChanged) saveBookReviews(mergedReviews)
+
+  const progressChanged = !sameProgressSet(localProgress, mergedProgress)
+  if (progressChanged) saveReadingProgress(mergedProgress)
+
+  // Shelves + assignments — additive union merge.
+  const localShelves = getShelves()
+  const mergedShelves = mergeShelves(localShelves, cloud.shelves)
+  if (mergedShelves.length !== localShelves.length) saveShelves(mergedShelves)
+
+  const localAssignments = getShelfAssignments()
+  const mergedAssignments = mergeShelfAssignments(localAssignments, cloud.assignments)
+  if (mergedAssignments.length !== localAssignments.length) saveShelfAssignments(mergedAssignments)
+
+  return {
+    books: booksAdded,
+    reviews: reviewsChanged ? mergedReviews.length : 0,
+    progress: progressChanged ? mergedProgress.length : 0,
+  }
+}
+
+/** Cheap structural equality for the review set (count + per-book updatedAt). */
+function sameReviewSet(a: BookReview[], b: BookReview[]): boolean {
+  if (a.length !== b.length) return false
+  const byBook = new Map(a.map((r) => [r.bookId, r.updatedAt]))
+  return b.every((r) => byBook.get(r.bookId) === r.updatedAt)
+}
+
+/** Cheap structural equality for the progress set (count + per-book lastReadDate). */
+function sameProgressSet(a: ReadingProgress[], b: ReadingProgress[]): boolean {
+  if (a.length !== b.length) return false
+  const byBook = new Map(a.map((p) => [p.bookId, p.lastReadDate]))
+  return b.every((p) => byBook.get(p.bookId) === p.lastReadDate)
+}
+
+/**
+ * Full two-way sync used on sign-in: PULL cloud → local first (so this device
+ * gains anything saved elsewhere), then PUSH local → cloud (so the cloud gains
+ * this device's local-only data). Both halves use last-writer-wins, so neither
+ * direction clobbers fresher data. After the pull, the liked-changed event fires
+ * so the UI reflects newly-arrived books immediately.
+ */
+export async function syncBidirectional(): Promise<{
+  pulled: { books: number; reviews: number; progress: number } | null
+  pushed: Awaited<ReturnType<typeof syncToCloud>>
+}> {
+  const pulled = await pullFromCloudToLocal()
+  if (pulled && (pulled.books > 0 || pulled.reviews > 0 || pulled.progress > 0)) {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("bookswipe:liked-changed", { detail: getLikedBooks().length })
+      )
+    }
+  }
+  const pushed = await syncToCloud()
+  return { pulled, pushed }
 }
 
 // ─── Record swipe for collaborative filtering ───────────────────────────────

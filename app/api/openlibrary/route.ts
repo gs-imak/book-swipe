@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from "next/server"
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit"
 
 const ALLOWED_PATHS = ["/trending/daily.json", "/trending/weekly.json", "/trending/monthly.json"]
 
 export async function GET(request: NextRequest) {
+  const ip = getClientIp(request)
+  const allowed = await checkRateLimit(ip, { limit: 60, windowMs: 60_000, prefix: "openlibrary" })
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": "60" } }
+    )
+  }
+
   const path = request.nextUrl.searchParams.get("path")
   const limit = request.nextUrl.searchParams.get("limit") || "24"
 

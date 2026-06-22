@@ -1,6 +1,7 @@
 "use client"
 
 import { Book, UserPreferences } from "./book-data"
+import { STORAGE_KEYS, STORAGE_SCHEMA_VERSION } from "./storage-keys"
 
 // Safe localStorage helpers to prevent crashes from QuotaExceeded or corrupted data
 function safeGetJSON<T>(key: string, fallback: T): T {
@@ -40,21 +41,21 @@ function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 6)
 }
 
-const ACTIVITY_LOG_KEY = "bookswipe_activity_log"
-const LIKED_BOOKS_KEY = "bookswipe_liked_books"
-const READING_PROGRESS_KEY = "bookswipe_reading_progress"
-const READING_GOALS_KEY = "bookswipe_reading_goals"
-const BOOK_REVIEWS_KEY = "bookswipe_book_reviews"
-const BOOK_NOTES_KEY = "bookswipe_book_notes"
-const USER_ACHIEVEMENTS_KEY = "bookswipe_achievements"
-const USER_STATS_KEY = "bookswipe_user_stats"
-const SHELVES_KEY = "bookswipe_shelves"
-const SHELF_ASSIGNMENTS_KEY = "bookswipe_shelf_assignments"
-const DAILY_PICK_KEY = "bookswipe_daily_pick"
-const LAST_EXPORT_KEY = "bookswipe_last_export"
-const BACKUP_DISMISSED_KEY = "bookswipe_backup_dismissed"
-const ONBOARDED_KEY = "bookswipe_onboarded"
-const USER_PREFERENCES_KEY = "bookswipe_user_preferences"
+const ACTIVITY_LOG_KEY = STORAGE_KEYS.ACTIVITY_LOG
+const LIKED_BOOKS_KEY = STORAGE_KEYS.LIKED_BOOKS
+const READING_PROGRESS_KEY = STORAGE_KEYS.READING_PROGRESS
+const READING_GOALS_KEY = STORAGE_KEYS.READING_GOALS
+const BOOK_REVIEWS_KEY = STORAGE_KEYS.BOOK_REVIEWS
+const BOOK_NOTES_KEY = STORAGE_KEYS.BOOK_NOTES
+const USER_ACHIEVEMENTS_KEY = STORAGE_KEYS.USER_ACHIEVEMENTS
+const USER_STATS_KEY = STORAGE_KEYS.USER_STATS
+const SHELVES_KEY = STORAGE_KEYS.SHELVES
+const SHELF_ASSIGNMENTS_KEY = STORAGE_KEYS.SHELF_ASSIGNMENTS
+const DAILY_PICK_KEY = STORAGE_KEYS.DAILY_PICK
+const LAST_EXPORT_KEY = STORAGE_KEYS.LAST_EXPORT
+const BACKUP_DISMISSED_KEY = STORAGE_KEYS.BACKUP_DISMISSED
+const ONBOARDED_KEY = STORAGE_KEYS.ONBOARDED
+const USER_PREFERENCES_KEY = STORAGE_KEYS.USER_PREFERENCES
 
 export interface ActivityEntry {
   id: string
@@ -586,7 +587,7 @@ export function saveDailyPick(pick: DailyPick): void {
 }
 
 // Cover URL migration
-const COVER_MIGRATION_KEY = "bookswipe_cover_migration_v10"
+const COVER_MIGRATION_KEY = STORAGE_KEYS.COVER_MIGRATION
 
 // Backup Tracking Functions
 export function markBackupExported(): void {
@@ -656,14 +657,62 @@ export function migrateCoverUrls(): void {
 
 // Inline cache clear to avoid circular dependency with book-cache.ts
 function clearBookCacheForMigration(): void {
-  localStorage.removeItem("bookswipe_book_cache")
-  localStorage.removeItem("bookswipe_cache_metadata")
+  localStorage.removeItem(STORAGE_KEYS.BOOK_CACHE)
+  localStorage.removeItem(STORAGE_KEYS.CACHE_METADATA)
+}
+
+// ── localStorage schema versioning + cross-tab sync ─────────────────────────
+
+/**
+ * Run forward-only migrations when the persisted schema version is older than
+ * the current one. Without this, a backward-incompatible shape change shipped
+ * in a deploy can break (or silently drop) a returning user's data. Each case
+ * upgrades from version N → N+1; add a new case when you bump
+ * STORAGE_SCHEMA_VERSION. Safe to call on every mount — it's a no-op once the
+ * stored version is current.
+ */
+export function runStorageMigrations(): void {
+  if (typeof window === "undefined") return
+  try {
+    const stored = Number(localStorage.getItem(STORAGE_KEYS.SCHEMA_VERSION) || "0")
+    if (stored >= STORAGE_SCHEMA_VERSION) return
+
+    let version = stored
+    // Future migrations go here, e.g.:
+    // if (version < 2) { /* migrate shape … */ version = 2 }
+
+    // Stamp the current version so migrations don't re-run.
+    version = STORAGE_SCHEMA_VERSION
+    localStorage.setItem(STORAGE_KEYS.SCHEMA_VERSION, String(version))
+  } catch {
+    // Migration is best-effort; never block app start on it.
+  }
+}
+
+/**
+ * Keys whose cross-tab change should refresh the current tab's UI. localStorage
+ * writes in one tab fire a `storage` event in OTHER tabs (never the writer), so
+ * this bridges those into the same in-app CustomEvents the writers dispatch
+ * locally — keeping a second open tab from showing a stale library and reducing
+ * the window for last-write-wins data loss between tabs.
+ */
+export function initCrossTabSync(): () => void {
+  if (typeof window === "undefined") return () => {}
+  const handler = (e: StorageEvent) => {
+    if (e.key === STORAGE_KEYS.LIKED_BOOKS) {
+      window.dispatchEvent(
+        new CustomEvent("bookswipe:liked-changed", { detail: getLikedBooks().length })
+      )
+    }
+  }
+  window.addEventListener("storage", handler)
+  return () => window.removeEventListener("storage", handler)
 }
 
 // ── Passed / swiped-left books (negative signal) ────────────────────────────
 
-const PASSED_BOOKS_KEY = "bookswipe_passed_books"
-const PASSED_FEATURES_KEY = "bookswipe_passed_features"
+const PASSED_BOOKS_KEY = STORAGE_KEYS.PASSED_BOOKS
+const PASSED_FEATURES_KEY = STORAGE_KEYS.PASSED_FEATURES
 
 /** Record a book the user swiped left on (negative signal for recommendations) */
 export function addPassedBookId(bookId: string, genres?: string[], moods?: string[]): void {
@@ -697,7 +746,7 @@ export function getPassedFeatures(): { genres: string[]; moods: string[] } {
 
 // ── Hidden / Archived books ──────────────────────────────────────────────────
 
-const HIDDEN_BOOKS_KEY = "bookswipe_hidden_books"
+const HIDDEN_BOOKS_KEY = STORAGE_KEYS.HIDDEN_BOOKS
 
 /** Get list of hidden book IDs */
 export function getHiddenBookIds(): string[] {
@@ -721,7 +770,7 @@ export function unhideBook(bookId: string): void {
 
 // ── Book Collections ────────────────────────────────────────────────────────
 
-const COLLECTIONS_KEY = "bookswipe_collections"
+const COLLECTIONS_KEY = STORAGE_KEYS.COLLECTIONS
 
 export interface BookCollection {
   id: string
@@ -772,7 +821,7 @@ export function removeBookFromCollection(collectionId: string, bookId: string): 
 
 // ── Gutenberg reading positions ──────────────────────────────────────────────
 
-const READING_POSITION_KEY = "bookswipe_reading_positions"
+const READING_POSITION_KEY = STORAGE_KEYS.READING_POSITIONS
 
 export function saveReadingPosition(bookId: string, charOffset: number): void {
   const positions = safeGetJSON<Record<string, number>>(READING_POSITION_KEY, {})
@@ -800,8 +849,8 @@ export function getTotalReadingTime(): number {
 
 // ── Tags / Labels ───────────────────────────────────────────────────────────
 
-const TAG_DEFINITIONS_KEY = "bookswipe_tag_definitions"
-const BOOK_TAGS_KEY = "bookswipe_book_tags"
+const TAG_DEFINITIONS_KEY = STORAGE_KEYS.TAG_DEFINITIONS
+const BOOK_TAGS_KEY = STORAGE_KEYS.BOOK_TAGS
 
 export const TAG_COLORS = [
   "#ef4444", "#f97316", "#f59e0b", "#22c55e",
@@ -870,8 +919,8 @@ export function getBooksWithTag(tagId: string): string[] {
 
 // ── Feature discovery / What's New ──────────────────────────────────────────
 
-const FEATURE_VERSION_KEY = "bookswipe_feature_version"
-const SEEN_FEATURES_KEY = "bookswipe_seen_features"
+const FEATURE_VERSION_KEY = STORAGE_KEYS.FEATURE_VERSION
+const SEEN_FEATURES_KEY = STORAGE_KEYS.SEEN_FEATURES
 
 export const CURRENT_FEATURE_VERSION = 2
 
@@ -993,8 +1042,8 @@ export function getReadingPaceInsights(): ReadingPaceInsights {
 
 // ── Smart shelf suggestions ──────────────────────────────────────────────────
 
-const BOOK_VIEW_COUNT_KEY = "bookswipe_book_views"
-const DISMISSED_SUGGESTIONS_KEY = "bookswipe_dismissed_suggestions"
+const BOOK_VIEW_COUNT_KEY = STORAGE_KEYS.BOOK_VIEW_COUNT
+const DISMISSED_SUGGESTIONS_KEY = STORAGE_KEYS.DISMISSED_SUGGESTIONS
 
 export function recordBookView(bookId: string): number {
   const views = safeGetJSON<Record<string, number>>(BOOK_VIEW_COUNT_KEY, {})

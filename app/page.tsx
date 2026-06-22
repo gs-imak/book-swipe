@@ -12,7 +12,7 @@ import { ToastProvider, useToast } from "@/components/toast-provider"
 import { MobileNav } from "@/components/mobile-nav"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { UserPreferences } from "@/lib/book-data"
-import { getLikedBooks, migrateCoverUrls, isOnboarded, setOnboarded, getSavedPreferences, savePreferences } from "@/lib/storage"
+import { getLikedBooks, migrateCoverUrls, isOnboarded, setOnboarded, getSavedPreferences, savePreferences, runStorageMigrations, initCrossTabSync } from "@/lib/storage"
 import { TasteProfile } from "@/components/taste-profile"
 import { GlobalSearch } from "@/components/global-search"
 import { BookDetailModal } from "@/components/book-detail-modal"
@@ -21,14 +21,20 @@ import { InstallPrompt } from "@/components/install-prompt"
 import { OnboardingGuide } from "@/components/onboarding-guide"
 import { motion, AnimatePresence, MotionConfig } from "framer-motion"
 import { getTheme, applyTheme } from "@/lib/theme"
+import { initMonitoring } from "@/lib/monitoring"
 import { WhatsNewModal } from "@/components/whats-new-modal"
 import { Skeleton, BookGridSkeleton } from "@/components/ui/skeleton"
 import { AuthModal } from "@/components/auth-modal"
-import { onAuthChange, syncToCloud, getUser } from "@/lib/supabase-sync"
+import { onAuthChange, syncBidirectional, getUser } from "@/lib/supabase-sync"
 import { isSupabaseConfigured } from "@/lib/supabase"
-import { BarcodeScanner } from "@/components/barcode-scanner"
 
-// Code-split heavy components that aren't needed on initial load
+// Code-split heavy components that aren't needed on initial load.
+// BarcodeScanner pulls in camera/barcode-decoding code only used on demand, so
+// keep it out of the initial bundle (ssr:false — it's a browser-only feature).
+const BarcodeScanner = dynamic(() => import("@/components/barcode-scanner").then(m => ({ default: m.BarcodeScanner })), {
+  ssr: false,
+})
+
 const FreeBooksBrowser = dynamic(() => import("@/components/free-books-browser").then(m => ({ default: m.FreeBooksBrowser })), {
   loading: () => (
     <div className="min-h-screen bg-background">
@@ -167,9 +173,11 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
     const { data } = onAuthChange((user) => {
       setCloudUser(user)
       if (user) {
-        // Auto-sync to cloud on sign-in
-        syncToCloud().then(result => {
-          if (result.synced) showToast("Library synced to cloud")
+        // Two-way sync on sign-in: PULL cloud → local (so this device gains a
+        // library saved on another device) THEN push local → cloud. Previously
+        // only the push ran, so a new device never received any cloud data.
+        syncBidirectional().then(({ pushed }) => {
+          if (pushed.synced) showToast("Library synced")
         })
       }
     })
@@ -460,11 +468,13 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
         }}
       />
 
-      {/* Barcode Scanner */}
-      <BarcodeScanner
-        isOpen={showBarcodeScanner}
-        onClose={() => setShowBarcodeScanner(false)}
-      />
+      {/* Barcode Scanner — only mounted (and its chunk only fetched) once opened. */}
+      {showBarcodeScanner && (
+        <BarcodeScanner
+          isOpen={showBarcodeScanner}
+          onClose={() => setShowBarcodeScanner(false)}
+        />
+      )}
 
       {/* Auth Modal */}
       <AuthModal
@@ -498,8 +508,12 @@ export default function App() {
 
   // Apply theme + one-time migration on mount
   useEffect(() => {
+    initMonitoring() // no-op unless NEXT_PUBLIC_SENTRY_DSN is set
     applyTheme(getTheme())
+    runStorageMigrations()
     migrateCoverUrls()
+    // Keep a second open tab's UI in sync with localStorage writes from this one.
+    return initCrossTabSync()
   }, [])
 
   // Register service worker for offline support + force update stale caches

@@ -1,68 +1,22 @@
 import { NextRequest, NextResponse } from "next/server"
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit"
 
 const API_KEY = process.env.GOOGLE_BOOKS_API_KEY
 const GOOGLE_BOOKS_BASE = "https://www.googleapis.com/books/v1/volumes"
 
-// Inline constants to avoid importing client-tainted config module into server route
+// 60 requests / minute / IP. Backed by Upstash (shared across instances) when
+// configured, else a per-instance in-memory fallback — see lib/rate-limit.ts.
 const API_RATE_LIMIT = 60
 const API_RATE_WINDOW_MS = 60_000
 
-// Rate limiting: simple in-memory counter per IP.
-//
-// BEST-EFFORT ONLY — NOT a real rate limiter. Two known limitations:
-//  1. State lives in module memory, so it is per-instance. On serverless each
-//     cold/warm instance has its own Map, and the limit is not shared across
-//     instances or regions. A client hitting different instances can exceed
-//     the nominal limit, and the counters vanish on instance recycle.
-//  2. The client IP is derived from proxy headers, which are spoofable unless
-//     a trusted proxy overwrites them (see getClientIp below).
-// For real protection, move this to a shared store (e.g. Upstash Redis /
-// @upstash/ratelimit) keyed on a trustworthy IP. This local map only blunts
-// accidental hammering from a single warm instance.
-const rateLimiter = new Map<string, { count: number; resetAt: number }>()
-
-// Prefer the most trustworthy IP source available. On Vercel, `x-real-ip` is
-// set by the platform edge and is harder to spoof than the client-supplied
-// `x-forwarded-for`, whose left-most entry is attacker-controlled. We still
-// fall back to the first XFF hop, then "unknown", so the limiter degrades
-// rather than failing open per-request. NOTE: none of these are fully
-// trustworthy without a verified trusted-proxy chain — see the caveat above.
-function getClientIp(request: NextRequest): string {
-  const realIp = request.headers.get("x-real-ip")?.trim()
-  if (realIp) return realIp
-  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-  if (forwarded) return forwarded
-  return "unknown"
-}
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now()
-  const entry = rateLimiter.get(ip)
-
-  if (!entry || now > entry.resetAt) {
-    rateLimiter.set(ip, { count: 1, resetAt: now + API_RATE_WINDOW_MS })
-    return true
-  }
-
-  if (entry.count >= API_RATE_LIMIT) return false
-  entry.count++
-  return true
-}
-
-// Lazy cleanup: clear stale entries on each request (no setInterval in serverless)
-function cleanupRateLimiter() {
-  const now = Date.now()
-  rateLimiter.forEach((v, k) => {
-    if (now > v.resetAt) rateLimiter.delete(k)
-  })
-}
-
 export async function GET(request: NextRequest) {
-  cleanupRateLimiter()
-
-  // Rate limit check (best-effort, per-instance — see rateLimiter comment)
   const ip = getClientIp(request)
-  if (!checkRateLimit(ip)) {
+  const allowed = await checkRateLimit(ip, {
+    limit: API_RATE_LIMIT,
+    windowMs: API_RATE_WINDOW_MS,
+    prefix: "books",
+  })
+  if (!allowed) {
     return NextResponse.json(
       { error: "Too many requests" },
       { status: 429, headers: { "Retry-After": "60" } }
