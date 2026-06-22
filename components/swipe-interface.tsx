@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Book, UserPreferences } from "@/lib/book-data"
 import { addLikedBook, removeLikedBook, getLikedBooks, addPassedBookId, getPassedBookIds } from "@/lib/storage"
 import { scoreBooks } from "@/lib/scoring-engine"
+import { getRecommendedBooks } from "@/lib/recommend-client"
 import { getBooksByCategory, bookSearchQueries } from "@/lib/books-api"
 import { getCachedBooks, addBooksToCache, updateBooksInCache } from "@/lib/book-cache"
 import { searchOpenLibrary } from "@/lib/openlibrary-api"
@@ -161,6 +162,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   const [batchCount, setBatchCount] = useState(1)
   const [sessionLikedBooks, setSessionLikedBooks] = useState<Book[]>([])
   const [bookReasons, setBookReasons] = useState<Record<string, string>>({})
+  const [llmReasons, setLlmReasons] = useState<Record<string, string>>({})
   const [coLikeCounts, setCoLikeCounts] = useState<Record<string, number>>({})
   const { triggerActivity } = useGamification()
   const { showToast } = useToast()
@@ -212,10 +214,41 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
       }
       books = books.filter(b => !passedSet.has(b.id))
       const filtered = filterBooks(books, preferences)
-      const deck = filtered.length === 0 && books.length > 0
+      let deck = filtered.length === 0 && books.length > 0
         // If no matches even after targeted fetch, show best-rated from fetched books
         ? (freshBooks.length > 0 ? freshBooks : books).sort((a, b) => b.rating - a.rating).slice(0, MAX_DECK_SIZE)
         : filtered.slice(0, MAX_DECK_SIZE)
+
+      // LLM-direct recommendations (ADR-0003): once there's taste signal, lead the
+      // deck with personalized picks + their "why this book" reasons. No-ops
+      // (returns []) when the recommender isn't configured, so this gracefully
+      // falls back to the genre/TF-IDF deck above.
+      let llmReasonMap: Record<string, string> = {}
+      const likedForRecs = getLikedBooks()
+      if (likedForRecs.length >= 3) {
+        try {
+          const seenIds = new Set<string>([
+            ...likedForRecs.map(b => b.id),
+            ...Array.from(passedSet),
+            ...(excludeIds ? Array.from(excludeIds) : []),
+          ])
+          const { books: recBooks, reasons } = await getRecommendedBooks(
+            likedForRecs,
+            seenIds,
+            likedForRecs.map(b => b.title),
+            12,
+          )
+          if (recBooks.length > 0) {
+            const deckIds = new Set(deck.map(b => b.id))
+            const recUnseen = recBooks.filter(b => !deckIds.has(b.id))
+            deck = [...recUnseen, ...deck].slice(0, MAX_DECK_SIZE)
+            llmReasonMap = reasons
+          }
+        } catch {
+          // best-effort — keep the local deck
+        }
+      }
+      setLlmReasons(llmReasonMap)
       setFilteredBooks(deck)
       // Background: swap OL books to their correct-edition Amazon cover (no
       // perceived latency — the deck already renders with OL -L).
@@ -256,10 +289,12 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
         reasons[s.book.id] = s.reasons[0].description
       }
     })
-    setBookReasons(reasons)
+    // LLM reasons (for recommended books) take precedence over the local
+    // TF-IDF reason for the same book.
+    setBookReasons({ ...reasons, ...llmReasons })
     // Re-run when the deck changes or the user's liked books change (the
     // likedBooks state mirrors getLikedBooks() and updates on every swipe/undo).
-  }, [filteredBooks, likedBooks])
+  }, [filteredBooks, likedBooks, llmReasons])
 
   // Fetch collaborative-filtering co-like counts (social proof) for signed-in
   // users. Keyed on the user's liked books; the RPC returns counts for books
