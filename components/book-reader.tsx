@@ -5,6 +5,7 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import { ArrowLeft, ChevronLeft, ChevronRight, ChevronDown, Sun, Coffee, Moon, Loader2, AlertCircle, BookOpen, Minus, Plus, List, X, Search, Bookmark, BookmarkCheck, Highlighter, StickyNote, Copy, Trash2, MessageSquare, Quote, Globe, BookText, Share2, Type, Timer, Play, Pause, Brain } from "lucide-react"
 import { GutenbergBook, fetchBookText, fetchBookImages } from "@/lib/gutenberg-api"
 import { saveReadingPosition, getReadingPosition, getBookNotesForBook, saveBookNote, deleteBookNote, type BookNote } from "@/lib/storage"
+import { useFocusTrap } from "@/lib/use-focus-trap"
 import { addVocabWord } from "@/lib/vocabulary"
 import { VocabFlashcards } from "./vocab-flashcards"
 
@@ -302,6 +303,9 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   // (reading localStorage in the useState initializer risks a hydration mismatch).
   const [theme, setTheme] = useState<ReaderTheme>("sepia")
   const prefersReducedMotion = useReducedMotion()
+  // Trap focus inside the full-screen reader + restore it to the trigger on close.
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(dialogRef, isOpen)
   const [fontSize, setFontSize] = useState(17)
   const [readerFont, setReaderFont] = useState<ReaderFont>(getStoredFont)
   const [showFontMenu, setShowFontMenu] = useState(false)
@@ -1415,6 +1419,8 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     <AnimatePresence>
       {isOpen && (
         <motion.div
+          ref={dialogRef}
+          tabIndex={-1}
           initial={{ y: "100%" }}
           animate={{ y: 0 }}
           exit={{ y: "100%" }}
