@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { motion } from "framer-motion"
 import { Search, BookOpen, AlertCircle, Loader2, Heart, Check } from "lucide-react"
 import { BookCardSkeleton } from "@/components/ui/skeleton"
@@ -18,11 +18,64 @@ import {
 import BookReader from "@/components/book-reader"
 import Image from "next/image"
 
+// Map the app's genre labels → a Gutenberg browse topic, so free-book discovery
+// reflects the user's swipe taste instead of being a disconnected side tab.
+const GENRE_TO_TOPIC: Record<string, string> = {
+  "fantasy": "fantasy",
+  "science fiction": "science fiction",
+  "sci-fi": "science fiction",
+  "mystery": "mystery",
+  "thriller": "mystery",
+  "crime": "detective",
+  "romance": "love stories",
+  "horror": "horror",
+  "historical fiction": "historical fiction",
+  "history": "history",
+  "biography": "biography",
+  "memoir": "biography",
+  "philosophy": "philosophy",
+  "poetry": "poetry",
+  "adventure": "adventure stories",
+  "humor": "humor",
+  "comedy": "humor",
+  "drama": "drama",
+  "contemporary fiction": "fiction",
+  "literary fiction": "fiction",
+  "fiction": "fiction",
+  "young adult": "juvenile fiction",
+  "children": "children",
+}
+
+/** Top liked genre → a non-empty Gutenberg topic, or null if none maps. */
+function deriveTasteTopic(liked: Book[]): string | null {
+  if (liked.length === 0) return null
+  const counts: Record<string, number> = {}
+  for (const b of liked) {
+    for (const g of b.genre || []) {
+      const topic = GENRE_TO_TOPIC[g.toLowerCase().trim()]
+      if (topic) counts[topic] = (counts[topic] || 0) + 1
+    }
+  }
+  const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]
+  return top ? top[0] : null
+}
+
 export function FreeBooksBrowser() {
   const [books, setBooks] = useState<GutenbergBook[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState("popular")
+  const [tasteTopic] = useState<string | null>(() => deriveTasteTopic(getLikedBooks()))
+  const [selectedCategory, setSelectedCategory] = useState(() =>
+    deriveTasteTopic(getLikedBooks()) ? "for-you" : "popular",
+  )
+  // "For You" (taste-matched classics) leads the category list when we have signal.
+  const categories = useMemo(
+    () =>
+      tasteTopic
+        ? [{ id: "for-you", label: "✨ For You", emoji: "✨", topic: tasteTopic } as const, ...BROWSE_CATEGORIES]
+        : [...BROWSE_CATEGORIES],
+    [tasteTopic],
+  )
   const [searchInput, setSearchInput] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
   const [readerBook, setReaderBook] = useState<GutenbergBook | null>(null)
@@ -73,7 +126,7 @@ export function FreeBooksBrowser() {
   // Load by category — show cached data instantly, fetch fresh in background
   useEffect(() => {
     if (searchQuery) return
-    const cat = BROWSE_CATEGORIES.find(c => c.id === selectedCategory)
+    const cat = categories.find(c => c.id === selectedCategory)
     if (!cat) return
     let cancelled = false
 
@@ -109,7 +162,7 @@ export function FreeBooksBrowser() {
       })
 
     return () => { cancelled = true }
-  }, [selectedCategory, searchQuery])
+  }, [selectedCategory, searchQuery, categories])
 
   // Prefetch all other categories in the background after first load completes
   const hasPrefetchedRef = useRef(false)
@@ -216,7 +269,7 @@ export function FreeBooksBrowser() {
       {!searchQuery && (
         <div className="flex-shrink-0 bg-background/90 backdrop-blur-md border-b border-stone-200/60 dark:border-stone-700/60 overflow-x-auto hide-scrollbar">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 flex flex-nowrap overflow-x-auto hide-scrollbar gap-1.5">
-            {BROWSE_CATEGORIES.map(cat => (
+            {categories.map(cat => (
               <button
                 key={cat.id}
                 onClick={() => handleCategorySelect(cat.id)}
