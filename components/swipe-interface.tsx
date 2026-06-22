@@ -5,9 +5,9 @@ import { BookCard } from "./book-card"
 import { Button } from "@/components/ui/button"
 import { Book, UserPreferences } from "@/lib/book-data"
 import { addLikedBook, removeLikedBook, getLikedBooks, addPassedBookId, getPassedBookIds } from "@/lib/storage"
-import { scoreBooks } from "@/lib/scoring-engine"
+import { scoreBooks, applyMMR } from "@/lib/scoring-engine"
 import { getRecommendedBooks } from "@/lib/recommend-client"
-import { getBooksByCategory, bookSearchQueries } from "@/lib/books-api"
+import { getBooksByCategory, bookSearchQueries, fetchPersonalizedBooks } from "@/lib/books-api"
 import { getCachedBooks, addBooksToCache, updateBooksInCache } from "@/lib/book-cache"
 import { searchOpenLibrary } from "@/lib/openlibrary-api"
 import { upgradeCoversWithItunes } from "@/lib/itunes-covers"
@@ -191,11 +191,18 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
         : Object.keys(bookSearchQueries) // fallback to all if none selected
       const booksPerGenre = Math.ceil(50 / userGenres.length)
 
-      // Fetch from Google Books + Open Library in parallel, only for user's genres
-      const fetchPromises = userGenres.flatMap(genre => [
-        getBooksByCategory(genre, booksPerGenre),
-        searchOpenLibrary(genre, Math.min(booksPerGenre, 8)),
-      ])
+      // Fetch from Google Books + Open Library in parallel, only for user's genres.
+      // Once there's taste signal, also pull books aligned to the user's actual
+      // likes (same authors / top genres) in the same parallel batch — broadens
+      // the candidate pool the ranker draws from, no extra latency.
+      const likedForFetch = getLikedBooks()
+      const fetchPromises: Promise<Book[]>[] = [
+        ...userGenres.flatMap(genre => [
+          getBooksByCategory(genre, booksPerGenre),
+          searchOpenLibrary(genre, Math.min(booksPerGenre, 8)),
+        ]),
+        ...(likedForFetch.length >= 3 ? [fetchPersonalizedBooks(likedForFetch)] : []),
+      ]
 
       const results = await Promise.allSettled(fetchPromises)
       const freshBooks = results
@@ -214,28 +221,39 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
       }
       books = books.filter(b => !passedSet.has(b.id))
       const filtered = filterBooks(books, preferences)
-      let deck = filtered.length === 0 && books.length > 0
-        // If no matches even after targeted fetch, show best-rated from fetched books
-        ? (freshBooks.length > 0 ? freshBooks : books).sort((a, b) => b.rating - a.rating).slice(0, MAX_DECK_SIZE)
-        : filtered.slice(0, MAX_DECK_SIZE)
 
-      // LLM-direct recommendations (ADR-0003): once there's taste signal, lead the
-      // deck with personalized picks + their "why this book" reasons. No-ops
-      // (returns []) when the recommender isn't configured, so this gracefully
-      // falls back to the genre/TF-IDF deck above.
+      // Rank the deck. With taste signal, order by the TF-IDF engine + MMR
+      // diversity (the real personalization — previously the deck used only the
+      // genre-match heuristic and the engine just generated reason text). Cold
+      // start keeps the genre-match / rating order.
+      const liked = getLikedBooks()
+      const candidatePool = filtered.length > 0 ? filtered : (freshBooks.length > 0 ? freshBooks : books)
+      let deck: Book[]
+      if (liked.length >= 1 && candidatePool.length > 0) {
+        const likedIds = new Set(liked.map(b => b.id))
+        const scored = scoreBooks(candidatePool, liked, { communityBoost: true, excludeIds: likedIds })
+        deck = scored.length > 0
+          ? applyMMR(scored, MAX_DECK_SIZE, 0.7).map(s => s.book)
+          : [...candidatePool].sort((a, b) => b.rating - a.rating).slice(0, MAX_DECK_SIZE)
+      } else {
+        deck = (filtered.length > 0 ? filtered : [...candidatePool].sort((a, b) => b.rating - a.rating)).slice(0, MAX_DECK_SIZE)
+      }
+
+      // LLM-direct recommendations (ADR-0003): when configured, lead the deck with
+      // personalized picks + their "why this book" reasons. No-ops (returns [])
+      // without a key, so this gracefully falls back to the TF-IDF-ranked deck above.
       let llmReasonMap: Record<string, string> = {}
-      const likedForRecs = getLikedBooks()
-      if (likedForRecs.length >= 3) {
+      if (liked.length >= 3) {
         try {
           const seenIds = new Set<string>([
-            ...likedForRecs.map(b => b.id),
+            ...liked.map(b => b.id),
             ...Array.from(passedSet),
             ...(excludeIds ? Array.from(excludeIds) : []),
           ])
           const { books: recBooks, reasons } = await getRecommendedBooks(
-            likedForRecs,
+            liked,
             seenIds,
-            likedForRecs.map(b => b.title),
+            liked.map(b => b.title),
             12,
           )
           if (recBooks.length > 0) {
