@@ -62,11 +62,12 @@ export interface GoogleBook {
   }
 }
 
-export async function searchGoogleBooks(query: string, maxResults = 20, lang?: string): Promise<Book[]> {
+export async function searchGoogleBooks(query: string, maxResults = 20, lang?: string, startIndex = 0): Promise<Book[]> {
   try {
     // Call our own API route (keeps API key server-side)
     const resolvedLang = lang ?? getLanguagePreference()
-    const url = `/api/books?q=${encodeURIComponent(query)}&maxResults=${maxResults}&lang=${encodeURIComponent(resolvedLang)}`
+    const idxParam = startIndex > 0 ? `&startIndex=${startIndex}` : ""
+    const url = `/api/books?q=${encodeURIComponent(query)}&maxResults=${maxResults}${idxParam}&lang=${encodeURIComponent(resolvedLang)}`
 
     const response = await fetch(url)
 
@@ -283,10 +284,10 @@ export const bookSearchQueries = {
 }
 
 // Function to get books by category - merges searched genre with Google's categories
-export async function getBooksByCategory(category: string, count = 10): Promise<Book[]> {
+export async function getBooksByCategory(category: string, count = 10, startIndex = 0): Promise<Book[]> {
   const query = bookSearchQueries[category as keyof typeof bookSearchQueries] || category
   // Request more books than needed since we filter out books without covers
-  const books = await searchGoogleBooks(query, Math.min(count * 2, 40))
+  const books = await searchGoogleBooks(query, Math.min(count * 2, 40), undefined, startIndex)
 
   // Merge searched genre with Google's existing categories (don't overwrite)
   const taggedBooks = books.map(book => ({

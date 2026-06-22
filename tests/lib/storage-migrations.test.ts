@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest"
-import { runStorageMigrations, saveReadingPosition, getReadingPosition, mergeReadingPositions } from "@/lib/storage"
+import { runStorageMigrations, saveReadingPosition, getReadingPosition, mergeReadingPositions, getGenreOffset, advanceGenreOffset } from "@/lib/storage"
 import { STORAGE_KEYS, STORAGE_SCHEMA_VERSION } from "@/lib/storage-keys"
 
 const store: Record<string, string> = {}
@@ -64,5 +64,33 @@ describe("mergeReadingPositions (furthest-wins cross-device sync)", () => {
     saveReadingPosition("book-c", 1000)
     expect(mergeReadingPositions({ "book-c": 500 })).toBe(false)
     expect(mergeReadingPositions({ "book-c": 1500 })).toBe(true)
+  })
+})
+
+describe("genre pagination offsets (deeper-each-session book supply)", () => {
+  it("starts at 0 and advances by the step", () => {
+    expect(getGenreOffset("fantasy")).toBe(0)
+    advanceGenreOffset("fantasy", 40)
+    advanceGenreOffset("fantasy", 40)
+    expect(getGenreOffset("fantasy")).toBe(80)
+  })
+
+  it("is case-insensitive", () => {
+    advanceGenreOffset("Mystery", 24)
+    expect(getGenreOffset("mystery")).toBe(24)
+  })
+
+  it("wraps below the max so it cycles the catalog instead of overflowing", () => {
+    for (let i = 0; i < 20; i++) advanceGenreOffset("scifi", 40) // 800 → wraps
+    const off = getGenreOffset("scifi")
+    expect(off).toBeGreaterThanOrEqual(0)
+    expect(off).toBeLessThan(560)
+  })
+
+  it("ignores non-positive steps", () => {
+    advanceGenreOffset("horror", 40)
+    advanceGenreOffset("horror", 0)
+    advanceGenreOffset("horror", -10)
+    expect(getGenreOffset("horror")).toBe(40)
   })
 })

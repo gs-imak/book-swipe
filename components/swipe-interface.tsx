@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { BookCard } from "./book-card"
 import { Button } from "@/components/ui/button"
 import { Book, UserPreferences } from "@/lib/book-data"
-import { addLikedBook, removeLikedBook, getLikedBooks, addPassedBookId, getPassedBookIds } from "@/lib/storage"
+import { addLikedBook, removeLikedBook, getLikedBooks, addPassedBookId, getPassedBookIds, getGenreOffset, advanceGenreOffset } from "@/lib/storage"
 import { scoreBooks, applyMMR } from "@/lib/scoring-engine"
 import { getRecommendedBooks } from "@/lib/recommend-client"
 import { getBooksByCategory, bookSearchQueries, fetchPersonalizedBooks } from "@/lib/books-api"
@@ -198,13 +198,18 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
       const likedForFetch = getLikedBooks()
       const fetchPromises: Promise<Book[]>[] = [
         ...userGenres.flatMap(genre => [
-          getBooksByCategory(genre, booksPerGenre),
+          // Page deeper each session via the per-genre cursor — surfaces fresh
+          // books instead of re-querying the same top results.
+          getBooksByCategory(genre, booksPerGenre, getGenreOffset(genre)),
           searchOpenLibrary(genre, Math.min(booksPerGenre, 8)),
         ]),
         ...(likedForFetch.length >= 3 ? [fetchPersonalizedBooks(likedForFetch)] : []),
       ]
 
       const results = await Promise.allSettled(fetchPromises)
+      // Advance each genre's cursor so the NEXT load pulls a deeper page.
+      const fetchStep = Math.min(booksPerGenre * 2, 40)
+      userGenres.forEach(g => advanceGenreOffset(g, fetchStep))
       const freshBooks = results
         .filter((r): r is PromiseFulfilledResult<Book[]> => r.status === 'fulfilled')
         .flatMap(r => r.value)
