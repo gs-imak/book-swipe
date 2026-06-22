@@ -1071,6 +1071,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                       <span className="text-[11px] text-stone-400 dark:text-stone-500">Speed:</span>
                       <select
                         value={readingSpd}
+                        aria-label="Reading speed"
                         onChange={(e) => {
                           const speed = e.target.value as ReadingSpeed
                           setReadingSpd(speed)
