@@ -2,9 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import dynamic from "next/dynamic"
+import { Loader2 } from "lucide-react"
 import { LoginScreen } from "@/components/login-screen"
-import { Questionnaire } from "@/components/questionnaire"
-import { SwipeInterface } from "@/components/swipe-interface"
 import { Dashboard } from "@/components/dashboard"
 import { GamificationProvider } from "@/components/gamification-provider"
 import { AchievementsPanel } from "@/components/achievements-panel"
@@ -33,6 +32,24 @@ import { isSupabaseConfigured } from "@/lib/supabase"
 // keep it out of the initial bundle (ssr:false — it's a browser-only feature).
 const BarcodeScanner = dynamic(() => import("@/components/barcode-scanner").then(m => ({ default: m.BarcodeScanner })), {
   ssr: false,
+})
+
+// SwipeInterface pulls in the scoring engine + book API clients + book-cache —
+// none of which the dashboard landing view needs. Lazy-load it so it's a
+// separate chunk fetched only when the user enters discovery.
+const SwipeInterface = dynamic(() => import("@/components/swipe-interface").then(m => ({ default: m.SwipeInterface })), {
+  loading: () => (
+    <div className="bg-background flex items-center justify-center" style={{ minHeight: "100dvh" }}>
+      <Loader2 className="w-8 h-8 text-amber-600 animate-spin" />
+    </div>
+  ),
+})
+
+// Questionnaire is only shown on the questionnaire route, never on landing.
+const Questionnaire = dynamic(() => import("@/components/questionnaire").then(m => ({ default: m.Questionnaire })), {
+  loading: () => (
+    <div className="min-h-screen bg-background" />
+  ),
 })
 
 const FreeBooksBrowser = dynamic(() => import("@/components/free-books-browser").then(m => ({ default: m.FreeBooksBrowser })), {
