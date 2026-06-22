@@ -2,7 +2,7 @@
 
 import { motion, PanInfo, useMotionValue, useTransform, useAnimation } from "framer-motion"
 import { Book } from "@/lib/book-data"
-import { Star, Clock, BookOpen, Info, Plus, ChevronDown } from "lucide-react"
+import { Star, Clock, BookOpen, Info, Plus, ChevronDown, Users } from "lucide-react"
 import { addBookToReading, getReadingProgress } from "@/lib/storage"
 import { hapticLight } from "@/lib/haptics"
 import { Button } from "@/components/ui/button"
@@ -16,9 +16,11 @@ interface BookCardProps {
   isTop?: boolean
   showActions?: boolean
   reason?: string
+  /** How many readers with similar taste also saved this book (social proof). */
+  coLikeCount?: number
 }
 
-export function BookCard({ book, onSwipe, isTop = false, showActions = true, reason }: BookCardProps) {
+export function BookCard({ book, onSwipe, isTop = false, showActions = true, reason, coLikeCount }: BookCardProps) {
   const [infoExpanded, setInfoExpanded] = useState(false)
   const [descExpanded, setDescExpanded] = useState(false)
   const sheetY = useMotionValue(0)
@@ -173,6 +175,16 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
               <span>{book.rating}</span>
             </div>
           </div>
+
+          {/* Social proof — readers with similar taste who also saved this */}
+          {isTop && typeof coLikeCount === "number" && coLikeCount > 0 && (
+            <div className="flex items-center gap-1.5 mb-2.5 text-emerald-300 text-xs font-semibold drop-shadow">
+              <Users className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>
+                {coLikeCount} {coLikeCount === 1 ? "reader" : "readers"} like you saved this
+              </span>
+            </div>
+          )}
 
           {/* Genre tags */}
           <div className="flex flex-wrap gap-1.5 mb-1.5">

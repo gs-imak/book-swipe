@@ -15,7 +15,8 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useGamification } from "./gamification-provider"
 import { useToast } from "./toast-provider"
 import { hapticLight, hapticMedium, hapticSuccess } from "@/lib/haptics"
-import { recordSwipe } from "@/lib/supabase-sync"
+import { recordSwipe, getCoLikeCounts } from "@/lib/supabase-sync"
+import { isSupabaseConfigured } from "@/lib/supabase"
 
 interface SwipeInterfaceProps {
   preferences: UserPreferences
@@ -160,6 +161,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   const [batchCount, setBatchCount] = useState(1)
   const [sessionLikedBooks, setSessionLikedBooks] = useState<Book[]>([])
   const [bookReasons, setBookReasons] = useState<Record<string, string>>({})
+  const [coLikeCounts, setCoLikeCounts] = useState<Record<string, number>>({})
   const { triggerActivity } = useGamification()
   const { showToast } = useToast()
 
@@ -257,6 +259,26 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
     setBookReasons(reasons)
     // Re-run when the deck changes or the user's liked books change (the
     // likedBooks state mirrors getLikedBooks() and updates on every swipe/undo).
+  }, [filteredBooks, likedBooks])
+
+  // Fetch collaborative-filtering co-like counts (social proof) for signed-in
+  // users. Keyed on the user's liked books; the RPC returns counts for books
+  // that similar readers also liked. No-ops when Supabase isn't configured or
+  // the user isn't signed in. Best-effort — failures just mean no badge.
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return
+    const liked = getLikedBooks()
+    if (liked.length === 0) {
+      setCoLikeCounts({})
+      return
+    }
+    let cancelled = false
+    getCoLikeCounts(liked.map((b) => b.id)).then((map) => {
+      if (!cancelled) setCoLikeCounts(Object.fromEntries(map))
+    })
+    return () => {
+      cancelled = true
+    }
   }, [filteredBooks, likedBooks])
 
   const handleSwipe = (direction: "left" | "right") => {
@@ -538,6 +560,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
                     onSwipe={handleSwipe}
                     isTop={true}
                     reason={bookReasons[currentBook.id]}
+                    coLikeCount={coLikeCounts[currentBook.id]}
                   />
                 )}
               </AnimatePresence>
