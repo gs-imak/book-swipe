@@ -834,6 +834,30 @@ export function getReadingPosition(bookId: string): number {
   return positions[bookId] ?? 0
 }
 
+/** The full bookId → char-offset map (used for cloud sync). */
+export function getReadingPositions(): Record<string, number> {
+  return safeGetJSON<Record<string, number>>(READING_POSITION_KEY, {})
+}
+
+/**
+ * Merge cloud reading positions into local with FURTHEST-WINS (keep the larger
+ * char offset per book) — the right "resume where I got to" behavior for reading
+ * across devices, and avoids needing per-position timestamps. Returns true if
+ * anything changed.
+ */
+export function mergeReadingPositions(incoming: Record<string, number>): boolean {
+  const current = getReadingPositions()
+  let changed = false
+  for (const [bookId, offset] of Object.entries(incoming)) {
+    if (typeof offset === "number" && offset > (current[bookId] ?? 0)) {
+      current[bookId] = offset
+      changed = true
+    }
+  }
+  if (changed) safeSetJSON(READING_POSITION_KEY, current)
+  return changed
+}
+
 // ── Reading time helpers ─────────────────────────────────────────────────────
 
 export function getReadingTimeToday(): number {

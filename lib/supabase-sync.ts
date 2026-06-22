@@ -13,6 +13,8 @@ import {
   saveShelves,
   getShelfAssignments,
   saveShelfAssignments,
+  getReadingPositions,
+  mergeReadingPositions,
   type BookReview,
   type ReadingProgress,
   type Shelf,
@@ -316,6 +318,20 @@ export async function syncToCloud(): Promise<{
     if (error) errors.push(`user_book_shelves: ${stringifyError(error)}`)
   }
 
+  // 6. Reading positions (cross-device continue-reading). Furthest-wins is
+  // achieved by the bidirectional flow: pull merges the larger offset into local
+  // first, then this push sends the (now-furthest) local offsets up.
+  const positions = getReadingPositions()
+  const positionRows = Object.entries(positions)
+    .filter(([, offset]) => typeof offset === "number" && offset > 0)
+    .map(([book_id, char_offset]) => ({ user_id: user.id, book_id, char_offset, updated_at: now }))
+  if (positionRows.length > 0) {
+    const { error } = await supabase.from("reading_positions").upsert(positionRows, {
+      onConflict: "user_id,book_id",
+    })
+    if (error) errors.push(`reading_positions: ${stringifyError(error)}`)
+  }
+
   if (errors.length > 0) {
     return { synced: false, reason: errors.join("; ") }
   }
@@ -427,6 +443,7 @@ export async function syncFromCloud(): Promise<{
   progress: ReadingProgress[]
   shelves: Shelf[]
   assignments: BookShelfAssignment[]
+  positions: Record<string, number>
 } | null> {
   if (!supabase) return null
 
@@ -540,7 +557,17 @@ export async function syncFromCloud(): Promise<{
     addedAt: a.added_at,
   }))
 
-  return { books, reviews, progress, shelves, assignments }
+  // Reading positions (cross-device continue-reading)
+  const { data: cloudPositions } = await supabase
+    .from("reading_positions")
+    .select("book_id, char_offset")
+    .eq("user_id", user.id)
+  const positions: Record<string, number> = {}
+  for (const row of (cloudPositions || []) as Array<{ book_id: string; char_offset: number }>) {
+    if (row.book_id && typeof row.char_offset === "number") positions[row.book_id] = row.char_offset
+  }
+
+  return { books, reviews, progress, shelves, assignments, positions }
 }
 
 // ─── Sync: Supabase → localStorage (the missing pull side) ──────────────────
@@ -592,6 +619,9 @@ export async function pullFromCloudToLocal(): Promise<{
   const localAssignments = getShelfAssignments()
   const mergedAssignments = mergeShelfAssignments(localAssignments, cloud.assignments)
   if (mergedAssignments.length !== localAssignments.length) saveShelfAssignments(mergedAssignments)
+
+  // Reading positions — furthest-wins merge (resume at the furthest point read).
+  if (cloud.positions) mergeReadingPositions(cloud.positions)
 
   return {
     books: booksAdded,

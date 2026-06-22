@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest"
-import { runStorageMigrations } from "@/lib/storage"
+import { runStorageMigrations, saveReadingPosition, getReadingPosition, mergeReadingPositions } from "@/lib/storage"
 import { STORAGE_KEYS, STORAGE_SCHEMA_VERSION } from "@/lib/storage-keys"
 
 const store: Record<string, string> = {}
@@ -43,5 +43,26 @@ describe("runStorageMigrations", () => {
     store[STORAGE_KEYS.SCHEMA_VERSION] = String(STORAGE_SCHEMA_VERSION + 5)
     runStorageMigrations()
     expect(store[STORAGE_KEYS.SCHEMA_VERSION]).toBe(String(STORAGE_SCHEMA_VERSION + 5))
+  })
+})
+
+describe("mergeReadingPositions (furthest-wins cross-device sync)", () => {
+  it("adopts a cloud position when local has none", () => {
+    mergeReadingPositions({ "book-a": 500 })
+    expect(getReadingPosition("book-a")).toBe(500)
+  })
+
+  it("keeps the furthest (larger) offset per book", () => {
+    saveReadingPosition("book-b", 800)
+    mergeReadingPositions({ "book-b": 300 }) // cloud is behind local
+    expect(getReadingPosition("book-b")).toBe(800)
+    mergeReadingPositions({ "book-b": 1200 }) // cloud is ahead
+    expect(getReadingPosition("book-b")).toBe(1200)
+  })
+
+  it("returns whether anything changed", () => {
+    saveReadingPosition("book-c", 1000)
+    expect(mergeReadingPositions({ "book-c": 500 })).toBe(false)
+    expect(mergeReadingPositions({ "book-c": 1500 })).toBe(true)
   })
 })

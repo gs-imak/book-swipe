@@ -1,6 +1,10 @@
-const CACHE_NAME = 'bookswipe-v5'
+const CACHE_NAME = 'bookswipe-v6'
 const API_CACHE_NAME = 'bookswipe-api-v1'
 const IMG_CACHE_NAME = 'bookswipe-images-v1'
+// Gutenberg book text is immutable, so cache it cache-first → instant reopen +
+// offline reading once a book has been opened.
+const TEXT_CACHE_NAME = 'bookswipe-text-v1'
+const MAX_CACHED_TEXTS = 30
 
 const PRECACHE_URLS = [
   '/',
@@ -45,7 +49,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys
-          .filter((key) => key !== CACHE_NAME && key !== API_CACHE_NAME && key !== IMG_CACHE_NAME)
+          .filter((key) => key !== CACHE_NAME && key !== API_CACHE_NAME && key !== IMG_CACHE_NAME && key !== TEXT_CACHE_NAME)
           .map((key) => caches.delete(key))
       )
     })
@@ -117,6 +121,27 @@ self.addEventListener('fetch', (event) => {
           })
         })
       })
+    )
+    return
+  }
+
+  // === Gutenberg book text: cache-first (immutable) → offline reading ===
+  if (url.pathname.startsWith('/api/gutenberg-text')) {
+    event.respondWith(
+      caches.open(TEXT_CACHE_NAME).then((cache) =>
+        cache.match(request).then((cached) => {
+          if (cached) return cached
+          return fetch(request)
+            .then(async (response) => {
+              if (response.ok) {
+                cache.put(request, response.clone())
+                await trimCache(TEXT_CACHE_NAME, MAX_CACHED_TEXTS)
+              }
+              return response
+            })
+            .catch(() => cached || new Response('', { status: 503 }))
+        })
+      )
     )
     return
   }

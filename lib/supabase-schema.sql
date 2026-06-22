@@ -344,3 +344,18 @@ drop policy if exists "Users manage own shelves" on public.user_shelves;
 drop policy if exists "Users manage own shelf assignments" on public.user_book_shelves;
 create policy "Users manage own shelves" on public.user_shelves for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "Users manage own shelf assignments" on public.user_book_shelves for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- ─── Reading positions (cross-device "continue where you left off") ─────────
+-- char_offset into the book text. Synced furthest-wins (the client keeps the
+-- larger offset), so resuming lands at the furthest point read on any device.
+create table if not exists public.reading_positions (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  book_id text not null,
+  char_offset integer not null default 0,
+  updated_at timestamptz default now(),
+  primary key (user_id, book_id)
+);
+create index if not exists idx_reading_positions_user on public.reading_positions(user_id);
+alter table public.reading_positions enable row level security;
+drop policy if exists "Users manage own reading positions" on public.reading_positions;
+create policy "Users manage own reading positions" on public.reading_positions for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
