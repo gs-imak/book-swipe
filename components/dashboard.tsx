@@ -6,12 +6,15 @@ import { Book } from "@/lib/book-data"
 import { getLikedBooks, clearLikedBooks, addBookToReading, getReadingProgress, addLikedBook, removeLikedBook, getBookReviews, getBookNotes, getShelfAssignments, getReadingTimeToday } from "@/lib/storage"
 import { Button } from "@/components/ui/button"
 import { ReadingProgressTracker } from "./reading-progress"
+import { DashboardHeader } from "./dashboard-header"
+import { DashboardEmpty } from "./dashboard-empty"
+import { ActivityHeatmap } from "./activity-heatmap"
 import { BookDetailModal } from "./book-detail-modal"
 import { StarRating } from "./star-rating"
 import { getUserStats } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
-import { ArrowLeft, BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Trophy, Search, Library, SlidersHorizontal, Download, X as XIcon, Target, FolderOpen, ChevronRight, Flame, Camera } from "lucide-react"
-import { SittingReadingDoodle, ReadingSideDoodle, ReadingDoodle, FloatDoodle, GroovyDoodle, LovingDoodle } from "./illustrations"
+import { BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Search, Library, SlidersHorizontal, Download, X as XIcon, FolderOpen, ChevronRight } from "lucide-react"
+import { ReadingSideDoodle, ReadingDoodle, FloatDoodle, GroovyDoodle, LovingDoodle } from "./illustrations"
 import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
 import { useToast } from "./toast-provider"
@@ -282,63 +285,15 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
   return (
     <div className="bg-background smooth-scroll pb-20" style={{ minHeight: "100dvh" }}>
       {/* Header */}
-      <div className="bg-background/90 backdrop-blur-md border-b border-stone-200/60 dark:border-stone-700/60 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 min-w-0">
-              {showBackButton && onBack && (
-                <button
-                  onClick={onBack}
-                  aria-label="Go back"
-                  className="p-2 -ml-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors tap-target touch-manipulation"
-                >
-                  <ArrowLeft className="w-5 h-5 text-stone-600 dark:text-stone-300" />
-                </button>
-              )}
-              <div className="min-w-0">
-                <h1 className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100 tracking-tight font-serif">
-                  My Library
-                </h1>
-              </div>
-            </div>
-            <div className="flex items-center gap-1 sm:gap-2">
-              <button
-                onClick={() => setShowSearch(true)}
-                aria-label="Search books"
-                className="flex items-center justify-center p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors tap-target touch-manipulation"
-              >
-                <Search className="w-5 h-5 text-stone-500 dark:text-stone-400" />
-              </button>
-              {onScan && (
-                <button
-                  onClick={onScan}
-                  aria-label="Scan a book barcode"
-                  className="flex items-center justify-center p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors tap-target touch-manipulation"
-                >
-                  <Camera className="w-5 h-5 text-amber-600 dark:text-amber-500" />
-                </button>
-              )}
-              <button
-                onClick={() => setShowChallenges(true)}
-                aria-label="Reading challenges"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-600 dark:text-stone-300 text-sm font-medium transition-colors tap-target touch-manipulation"
-              >
-                <Target className="w-4 h-4" />
-                <span className="hidden sm:inline">Challenges</span>
-              </button>
-              <button
-                onClick={showAchievementsPanel}
-                aria-label="Achievements"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-400 text-sm font-medium transition-colors tap-target touch-manipulation"
-              >
-                <Trophy className="w-4 h-4" />
-                <span className="hidden sm:inline">Lv.{userStats.level}</span>
-                <span className="sm:hidden">{userStats.level}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <DashboardHeader
+        showBackButton={showBackButton}
+        onBack={onBack}
+        onScan={onScan}
+        level={userStats.level}
+        onSearch={() => setShowSearch(true)}
+        onChallenges={() => setShowChallenges(true)}
+        onAchievements={showAchievementsPanel}
+      />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         {/* Admin Panel */}
@@ -357,35 +312,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
         </AnimatePresence>
 
         {likedBooks.length === 0 ? (
-          /* Empty State */
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center py-12 sm:py-20 px-4"
-          >
-            <motion.div
-              initial={{ scale: 0.85, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.1, type: "spring", stiffness: 150 }}
-              className="w-48 h-36 sm:w-56 sm:h-44 mx-auto mb-4 opacity-80"
-            >
-              <SittingReadingDoodle />
-            </motion.div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-100 mb-3 font-serif">
-              Your shelf is waiting
-            </h2>
-            <p className="text-stone-500 dark:text-stone-400 mb-8 max-w-md mx-auto text-base sm:text-lg leading-relaxed">
-              Start swiping to discover books you&apos;ll love.
-              We&apos;ll learn your taste and suggest better matches over time.
-            </p>
-            <Button
-              onClick={onStartDiscovery}
-              className="h-12 px-8 text-base bg-stone-900 dark:bg-stone-100 hover:bg-stone-800 dark:hover:bg-stone-200 text-white dark:text-stone-900 font-medium rounded-xl transition-all shadow-sm hover:shadow-md tap-target touch-manipulation"
-            >
-              <Sparkles className="w-5 h-5 mr-2" />
-              Start Discovering
-            </Button>
-          </motion.div>
+          <DashboardEmpty onStartDiscovery={onStartDiscovery} />
         ) : (
           <div className="space-y-10 py-6 sm:py-8">
 
@@ -700,130 +627,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
             {/* ━━━ Reading Streaks Calendar + Mood Browse ━━━ */}
             <motion.div {...fadeInUp(0.02)} className="space-y-4">
               {/* Calendar Heatmap */}
-              {(() => {
-                const now = new Date()
-                const year = now.getFullYear()
-                const month = now.getMonth()
-                const monthName = now.toLocaleString("default", { month: "long" })
-                const daysInMonth = new Date(year, month + 1, 0).getDate()
-                const firstDayOfWeek = new Date(year, month, 1).getDay()
-
-                const activityCounts: Record<string, number> = {}
-                const countDay = (dateStr: string | undefined) => {
-                  if (!dateStr) return
-                  const d = new Date(dateStr)
-                  if (d.getFullYear() === year && d.getMonth() === month) {
-                    const key = d.getDate().toString()
-                    activityCounts[key] = (activityCounts[key] || 0) + 1
-                  }
-                }
-
-                getReadingProgress()
-                  .filter(p => p.status !== "dnf")
-                  .forEach(p => countDay(p.lastReadDate))
-                getBookReviews().forEach(r => countDay(r.updatedAt || r.createdAt))
-                getBookNotes().forEach(n => countDay(n.createdAt))
-
-                const todayDate = now.getDate()
-                let streak = 0
-                for (let d = todayDate; d >= 1; d--) {
-                  if (activityCounts[d.toString()]) {
-                    streak++
-                  } else {
-                    break
-                  }
-                }
-
-                const weeks: (number | null)[][] = []
-                let currentWeek: (number | null)[] = []
-                const startOffset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1
-                for (let i = 0; i < startOffset; i++) currentWeek.push(null)
-                for (let day = 1; day <= daysInMonth; day++) {
-                  currentWeek.push(day)
-                  if (currentWeek.length === 7) {
-                    weeks.push(currentWeek)
-                    currentWeek = []
-                  }
-                }
-                if (currentWeek.length > 0) {
-                  while (currentWeek.length < 7) currentWeek.push(null)
-                  weeks.push(currentWeek)
-                }
-
-                const dayLabels = ["M", "T", "W", "T", "F", "S", "S"]
-
-                const getCellColor = (count: number) => {
-                  if (count === 0) return "bg-stone-100 dark:bg-stone-800"
-                  if (count === 1) return "bg-amber-200 dark:bg-amber-800/60"
-                  if (count === 2) return "bg-amber-400 dark:bg-amber-600/80"
-                  return "bg-amber-600 dark:bg-amber-500"
-                }
-
-                return (
-                  <div className="rounded-xl border border-stone-200/70 dark:border-stone-700/60 bg-stone-50/80 dark:bg-stone-800/40 p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400">
-                          {monthName} {year}
-                        </p>
-                      </div>
-                      {streak > 0 && (
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-900/30">
-                          <Flame className="w-3.5 h-3.5 text-amber-500" />
-                          <span className="text-xs font-bold text-amber-700 dark:text-amber-400">{streak} day streak</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex gap-1">
-                      <div className="flex flex-col gap-1 mr-1.5 pt-0">
-                        {dayLabels.map((label, i) => (
-                          <div
-                            key={i}
-                            className="h-3 flex items-center"
-                            style={{ fontSize: "9px", lineHeight: "12px" }}
-                          >
-                            <span className={`text-stone-400 dark:text-stone-500 font-medium ${i % 2 === 0 ? "opacity-100" : "opacity-0"}`}>
-                              {label}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="flex gap-1 flex-1">
-                        {weeks.map((week, wi) => (
-                          <div key={wi} className="flex flex-col gap-1 flex-1">
-                            {week.map((day, di) => {
-                              const count = day ? (activityCounts[day.toString()] || 0) : 0
-                              const isToday = day === todayDate
-                              return (
-                                <div
-                                  key={day !== null ? `${year}-${month}-${day}` : `pad-${wi}-${di}`}
-                                  className={`h-3 w-full rounded-sm transition-colors ${
-                                    day === null
-                                      ? "bg-transparent"
-                                      : getCellColor(count)
-                                  } ${isToday ? "ring-1 ring-stone-400 dark:ring-stone-500" : ""}`}
-                                  title={day ? `${monthName} ${day}: ${count} ${count === 1 ? "activity" : "activities"}` : ""}
-                                />
-                              )
-                            })}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 mt-2.5 justify-end">
-                      <span className="text-[9px] text-stone-400 dark:text-stone-500">Less</span>
-                      <div className="h-2.5 w-2.5 rounded-sm bg-stone-100 dark:bg-stone-800" />
-                      <div className="h-2.5 w-2.5 rounded-sm bg-amber-200 dark:bg-amber-800/60" />
-                      <div className="h-2.5 w-2.5 rounded-sm bg-amber-400 dark:bg-amber-600/80" />
-                      <div className="h-2.5 w-2.5 rounded-sm bg-amber-600 dark:bg-amber-500" />
-                      <span className="text-[9px] text-stone-400 dark:text-stone-500">More</span>
-                    </div>
-                  </div>
-                )
-              })()}
+              <ActivityHeatmap />
 
               {/* Mood-Based Quick Browse */}
               <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-0.5 lg:flex-wrap">
