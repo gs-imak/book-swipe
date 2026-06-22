@@ -6,6 +6,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, ChevronDown, Sun, Coffee, Moon, L
 import { GutenbergBook, fetchBookText, fetchBookImages } from "@/lib/gutenberg-api"
 import { saveReadingPosition, getReadingPosition, getBookNotesForBook, saveBookNote, deleteBookNote, type BookNote } from "@/lib/storage"
 import { useFocusTrap } from "@/lib/use-focus-trap"
+import { generateRecap, type RecapSection } from "@/lib/story-recap"
 import { addVocabWord } from "@/lib/vocabulary"
 import { VocabFlashcards } from "./vocab-flashcards"
 
@@ -342,6 +343,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
   // Feature: Vocabulary Builder
   const [showVocab, setShowVocab] = useState(false)
+  const [showEndOfBook, setShowEndOfBook] = useState(false)
 
   // Feature: One-time reader hints
   const [showHints, setShowHints] = useState(false)
@@ -540,7 +542,13 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   // Turn page by delta (-1 or +1), updating transform and progress
   const turnPage = useCallback((delta: number) => {
     if (!text || colWidth <= 0) return
+    let hitEnd = false
     setPaginatedPage(prev => {
+      // Turning forward from the last page → "you finished the book" moment.
+      if (delta > 0 && columnTotal > 1 && prev >= columnTotal - 1) {
+        hitEnd = true
+        return prev
+      }
       const next = Math.max(0, Math.min(prev + delta, columnTotal - 1))
       const el = pagesRef.current
       if (el) {
@@ -563,7 +571,19 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       }, 300)
       return next
     })
+    if (hitEnd) setShowEndOfBook(true)
   }, [columnTotal, colWidth, text, bookId])
+
+  // Reset the end-of-book celebration when (re)opening or switching books.
+  useEffect(() => {
+    if (isOpen) setShowEndOfBook(false)
+  }, [isOpen, bookId])
+
+  // "Story so far" recap, computed only when the end-of-book panel is shown.
+  const endRecap = useMemo<RecapSection[]>(
+    () => (showEndOfBook && text ? generateRecap(text, 1, 6) : []),
+    [showEndOfBook, text],
+  )
 
   // Auto-scroll: turn pages at configured interval (placed after turnPage definition)
   useEffect(() => {
@@ -2802,6 +2822,85 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
           {/* Vocabulary Flashcards */}
           <VocabFlashcards isOpen={showVocab} onClose={() => setShowVocab(false)} />
+
+          {/* End-of-book celebration: recap + review words + what's next */}
+          <AnimatePresence>
+            {showEndOfBook && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 z-[80] flex items-center justify-center p-5"
+                style={{ background: "rgba(0,0,0,0.55)" }}
+                role="dialog"
+                aria-modal="true"
+                aria-label={`You finished ${bookTitle}`}
+                onClick={() => setShowEndOfBook(false)}
+              >
+                <motion.div
+                  initial={{ scale: 0.95, y: 12 }}
+                  animate={{ scale: 1, y: 0 }}
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  className="w-full max-w-md max-h-[88%] overflow-y-auto rounded-2xl shadow-2xl p-6"
+                  style={{ background: currentTheme.bg, color: currentTheme.text }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-start justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="w-6 h-6" style={{ color: currentTheme.progressFill }} />
+                      <h2 className="text-xl font-bold font-serif">You finished it! 🎉</h2>
+                    </div>
+                    <button onClick={() => setShowEndOfBook(false)} aria-label="Close" className="p-1.5 rounded-lg hover:opacity-70">
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <p className="text-sm opacity-70 mb-5">{bookTitle}</p>
+
+                  {endRecap.length > 0 && (
+                    <div className="mb-5">
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <BookText className="w-4 h-4" style={{ color: currentTheme.progressFill }} />
+                        <h3 className="text-xs font-semibold uppercase tracking-wider opacity-70">The story, recapped</h3>
+                      </div>
+                      <div className="space-y-3">
+                        {endRecap.map((sec, i) => (
+                          <div key={i}>
+                            <p className="text-xs font-semibold opacity-80">{sec.chapter}</p>
+                            <p className="text-sm leading-relaxed opacity-90">{sec.summary}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2.5">
+                    <button
+                      onClick={() => { setShowEndOfBook(false); setShowVocab(true) }}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-white"
+                      style={{ background: currentTheme.progressFill }}
+                    >
+                      <Brain className="w-4 h-4" />
+                      Review the words you saved
+                    </button>
+                    <button
+                      onClick={onClose}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium border"
+                      style={{ borderColor: currentTheme.progressTrack }}
+                    >
+                      <BookOpen className="w-4 h-4" />
+                      Find your next read
+                    </button>
+                    <button
+                      onClick={() => setShowEndOfBook(false)}
+                      className="w-full py-2 rounded-xl text-xs font-medium opacity-60 hover:opacity-100"
+                    >
+                      Keep reading
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
         </motion.div>
       )}
