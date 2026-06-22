@@ -37,18 +37,27 @@ export function FreeBooksBrowser() {
     const rawAuthor = book.authors[0]?.name ?? "Unknown"
     const author = rawAuthor.includes(",") ? rawAuthor.split(",").reverse().join(" ").trim() : rawAuthor
     const coverUrl = getCoverUrl(book)
+    const subjects = book.subjects?.slice(0, 8) ?? []
+    // Give saved free books SANE metadata, not rating:0/pages:0/description:"".
+    // Those zeros poisoned the recommendation engine (a liked book with empty
+    // description + no rating contributes garbage to the taste profile / quality
+    // boost). A subject-derived description gives the TF-IDF/LLM ranker real
+    // signal, and metadata.source tags it as a public-domain classic.
     const libBook: Book = {
       id: `gutenberg-${book.id}`,
       title: book.title,
       author,
       cover: coverUrl || "",
-      rating: 0,
+      rating: 4.2, // public-domain classics skew well-regarded; neutral-positive default
       pages: 0,
-      genre: book.subjects?.slice(0, 3) || ["Classic"],
+      genre: subjects.length ? subjects.slice(0, 3) : ["Classic"],
       mood: [],
-      description: "",
+      description: subjects.length
+        ? `A public-domain classic by ${author}. Themes: ${subjects.join(", ")}.`
+        : `A public-domain classic by ${author}.`,
       publishedYear: 0,
       readingTime: "",
+      metadata: { source: "gutenberg", subjects },
     }
     addLikedBook(libBook)
     setSavedIds(prev => new Set(prev).add(libBook.id))

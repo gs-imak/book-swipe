@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import { ArrowLeft, ChevronLeft, ChevronRight, ChevronDown, Sun, Coffee, Moon, Loader2, AlertCircle, BookOpen, Minus, Plus, List, X, Search, Bookmark, BookmarkCheck, Highlighter, StickyNote, Copy, Trash2, MessageSquare, Quote, Globe, BookText, Share2, Type, Timer, Play, Pause, Brain } from "lucide-react"
 import { GutenbergBook, fetchBookText, fetchBookImages } from "@/lib/gutenberg-api"
 import { saveReadingPosition, getReadingPosition, getBookNotesForBook, saveBookNote, deleteBookNote, type BookNote } from "@/lib/storage"
@@ -301,6 +301,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   // Initialize to a stable SSR default; hydrate the stored theme after mount
   // (reading localStorage in the useState initializer risks a hydration mismatch).
   const [theme, setTheme] = useState<ReaderTheme>("sepia")
+  const prefersReducedMotion = useReducedMotion()
   const [fontSize, setFontSize] = useState(17)
   const [readerFont, setReaderFont] = useState<ReaderFont>(getStoredFont)
   const [showFontMenu, setShowFontMenu] = useState(false)
@@ -1633,7 +1634,8 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                     ...(colWidth > 0 ? { columnWidth: `${colWidth}px` } : {}),
                     columnFill: "auto" as const,
                     columnGap: 0,
-                    transition: "transform 300ms cubic-bezier(0.25, 0.1, 0.25, 1)",
+                    // Respect prefers-reduced-motion: instant page turns, no slide.
+                    transition: prefersReducedMotion ? "none" : "transform 300ms cubic-bezier(0.25, 0.1, 0.25, 1)",
                     fontKerning: "normal",
                     fontVariantLigatures: "common-ligatures",
                     fontVariantNumeric: "oldstyle-nums proportional-nums",
@@ -1905,18 +1907,23 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                       return (
                         <p
                           key={i}
-                          className="leading-relaxed text-justify"
+                          className="leading-relaxed"
                           data-block-index={i}
                           style={{
                             fontFamily,
                             fontSize: `${fontSize}px`,
-                            lineHeight: "1.6",
+                            // Left-aligned (ragged right) + roomier leading + wider
+                            // measure read better for long-form than justified narrow
+                            // columns (which create "rivers" + eye fatigue). Gentle
+                            // hyphenation only — browser auto-hyphenation over-breaks.
+                            lineHeight: "1.75",
+                            textAlign: "left",
                             color: currentTheme.text,
                             margin: "0 auto",
-                            marginBottom: "0.3em",
-                            maxWidth: "65ch",
-                            hyphens: "auto",
-                            WebkitHyphens: "auto",
+                            marginBottom: "0.45em",
+                            maxWidth: "68ch",
+                            hyphens: "manual",
+                            WebkitHyphens: "manual",
                           }}
                         >
                           <span

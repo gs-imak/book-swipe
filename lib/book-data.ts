@@ -3,7 +3,7 @@ export interface BookMetadata {
   readinglogCount?: number
   wantToReadCount?: number
   ratingsCount?: number
-  source: 'sample' | 'google' | 'openlibrary'
+  source: 'sample' | 'google' | 'openlibrary' | 'gutenberg'
 }
 
 export interface BookFormats {
