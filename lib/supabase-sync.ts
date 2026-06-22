@@ -681,6 +681,27 @@ export async function recordSwipe(
 
 // ─── Collaborative filtering: get recs from other users ─────────────────────
 
+/**
+ * Returns book_id -> co-like count for books that users similar to the caller
+ * (they right-swiped at least one of the caller's liked books) also liked, via
+ * the aggregate security-definer RPC. Powers the "N readers like you saved this"
+ * social-proof badge. Returns an empty map when not signed in / not configured /
+ * the RPC errors — callers treat that as "no badge".
+ */
+export async function getCoLikeCounts(likedBookIds: string[]): Promise<Map<string, number>> {
+  if (!supabase || likedBookIds.length === 0) return new Map()
+  const user = await getUser()
+  if (!user) return new Map() // RPC is granted to authenticated only
+  const { data, error } = await supabase.rpc("get_co_like_counts", { liked_book_ids: likedBookIds })
+  if (error || !data) {
+    if (error) console.warn("[BookSwipe] getCoLikeCounts RPC failed:", stringifyError(error))
+    return new Map()
+  }
+  return new Map(
+    (data as Array<{ book_id: string; co_like_count: number }>).map((r) => [r.book_id, Number(r.co_like_count)])
+  )
+}
+
 export async function getCollaborativeRecs(likedBookIds: string[], limit: number = 10): Promise<string[]> {
   if (!supabase || likedBookIds.length === 0) return []
 
