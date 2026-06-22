@@ -344,6 +344,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   // Feature: Vocabulary Builder
   const [showVocab, setShowVocab] = useState(false)
   const [showEndOfBook, setShowEndOfBook] = useState(false)
+  const [definition, setDefinition] = useState<{ word: string; defs: string[]; loading: boolean; error: boolean } | null>(null)
 
   // Feature: One-time reader hints
   const [showHints, setShowHints] = useState(false)
@@ -574,9 +575,12 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     if (hitEnd) setShowEndOfBook(true)
   }, [columnTotal, colWidth, text, bookId])
 
-  // Reset the end-of-book celebration when (re)opening or switching books.
+  // Reset the end-of-book celebration + definition popover on (re)open / book switch.
   useEffect(() => {
-    if (isOpen) setShowEndOfBook(false)
+    if (isOpen) {
+      setShowEndOfBook(false)
+      setDefinition(null)
+    }
   }, [isOpen, bookId])
 
   // "Story so far" recap, computed only when the end-of-book panel is shown.
@@ -1353,19 +1357,38 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     window.getSelection()?.removeAllRanges()
   }, [selectionBar, bookId, currentPage, loadNotes])
 
-  const handleDefine = useCallback(() => {
+  const handleDefine = useCallback(async () => {
     if (!selectionBar) return
-    const word = selectionBar.text.split(/\s+/)[0] // first word if multi-word
+    const word = selectionBar.text.split(/\s+/)[0].replace(/[^A-Za-z'-]/g, "") // first word, cleaned
     const context = selectionBar.text
-    addVocabWord({
-      word: word,
-      context: context,
-      bookId,
-      bookTitle,
-    })
-    window.open(`https://en.wiktionary.org/wiki/${encodeURIComponent(word.toLowerCase())}`, "_blank")
+    addVocabWord({ word: word || selectionBar.text, context, bookId, bookTitle })
     setSelectionBar(null)
     window.getSelection()?.removeAllRanges()
+    if (!word) return
+
+    // Inline definition (free dictionary API, no key) — stays in the reader
+    // instead of opening an external tab. A "full entry" link is offered as a
+    // fallback in the popover.
+    setDefinition({ word, defs: [], loading: true, error: false })
+    try {
+      const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word.toLowerCase())}`)
+      if (!res.ok) throw new Error("not found")
+      const data = await res.json()
+      const defs: string[] = []
+      for (const entry of Array.isArray(data) ? data : []) {
+        for (const m of entry.meanings || []) {
+          for (const d of m.definitions || []) {
+            if (d.definition) defs.push(`(${m.partOfSpeech}) ${d.definition}`)
+            if (defs.length >= 4) break
+          }
+          if (defs.length >= 4) break
+        }
+        if (defs.length >= 4) break
+      }
+      setDefinition({ word, defs, loading: false, error: defs.length === 0 })
+    } catch {
+      setDefinition({ word, defs: [], loading: false, error: true })
+    }
   }, [selectionBar, bookId, bookTitle])
 
   const handleWebSearch = useCallback(() => {
@@ -2822,6 +2845,65 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
           {/* Vocabulary Flashcards */}
           <VocabFlashcards isOpen={showVocab} onClose={() => setShowVocab(false)} />
+
+          {/* Inline dictionary popover (tap "Define" on a selection) */}
+          <AnimatePresence>
+            {definition && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 z-[80] flex items-end sm:items-center justify-center"
+                style={{ background: "rgba(0,0,0,0.4)" }}
+                onClick={() => setDefinition(null)}
+              >
+                <motion.div
+                  initial={{ y: 30, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: 30, opacity: 0 }}
+                  className="w-full sm:max-w-md max-h-[70%] overflow-y-auto rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 m-0 sm:m-4"
+                  style={{ background: currentTheme.bg, color: currentTheme.text }}
+                  onClick={(e) => e.stopPropagation()}
+                  role="dialog"
+                  aria-label={`Definition of ${definition.word}`}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <BookText className="w-5 h-5" style={{ color: currentTheme.progressFill }} />
+                      <h3 className="text-lg font-bold font-serif capitalize">{definition.word}</h3>
+                    </div>
+                    <button onClick={() => setDefinition(null)} aria-label="Close definition" className="p-1.5 rounded-lg hover:opacity-70">
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {definition.loading ? (
+                    <div className="flex items-center gap-2 py-4 opacity-70 text-sm">
+                      <Loader2 className="w-4 h-4 animate-spin" /> Looking it up…
+                    </div>
+                  ) : definition.error ? (
+                    <p className="text-sm opacity-70 py-2">No definition found for &quot;{definition.word}&quot;.</p>
+                  ) : (
+                    <ol className="space-y-2.5 list-decimal list-inside">
+                      {definition.defs.map((d, i) => (
+                        <li key={i} className="text-sm leading-relaxed opacity-90">{d}</li>
+                      ))}
+                    </ol>
+                  )}
+
+                  <a
+                    href={`https://en.wiktionary.org/wiki/${encodeURIComponent(definition.word.toLowerCase())}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium hover:underline"
+                    style={{ color: currentTheme.progressFill }}
+                  >
+                    <Globe className="w-3.5 h-3.5" /> Full entry on Wiktionary
+                  </a>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* End-of-book celebration: recap + review words + what's next */}
           <AnimatePresence>
