@@ -102,6 +102,9 @@ export function GoodreadsImport({ isOpen, onClose, onComplete }: GoodreadsImport
         onClick={handleClose}
       >
         <motion.div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="goodreads-import-title"
           initial={{ opacity: 0, y: 30, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 30, scale: 0.97 }}
@@ -111,7 +114,7 @@ export function GoodreadsImport({ isOpen, onClose, onComplete }: GoodreadsImport
         >
           {/* Header */}
           <div className="flex items-center justify-between p-5 pb-3">
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">Import from Goodreads</h2>
+            <h2 id="goodreads-import-title" className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">Import from Goodreads</h2>
             {step !== "progress" && (
               <button
                 onClick={handleClose}

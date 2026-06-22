@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { X, Mail, Loader2, Check, Cloud, CloudOff } from "lucide-react"
 import { signInWithEmail, signUpWithEmail, signInWithGoogle, sendPasswordReset } from "@/lib/supabase-sync"
 import { isSupabaseConfigured } from "@/lib/supabase"
+import { useFocusTrap } from "@/lib/use-focus-trap"
 
 interface AuthModalProps {
   isOpen: boolean
@@ -31,6 +32,18 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
   }, [])
 
   const shouldRender = isOpen && isSupabaseConfigured()
+
+  // Dialog a11y: trap focus while open and close on Escape.
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(dialogRef, shouldRender)
+  useEffect(() => {
+    if (!shouldRender) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+    }
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [shouldRender, onClose])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -86,6 +99,11 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
         onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
       >
         <motion.div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="auth-modal-title"
+          tabIndex={-1}
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95 }}
@@ -96,12 +114,13 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
           <div className="flex items-center justify-between px-5 pt-5 pb-2">
             <div className="flex items-center gap-2">
               <Cloud className="w-5 h-5 text-amber-600" />
-              <h3 className="font-bold text-stone-900 dark:text-stone-100 font-serif">
+              <h3 id="auth-modal-title" className="font-bold text-stone-900 dark:text-stone-100 font-serif">
                 {mode === "signin" ? "Sign In" : mode === "signup" ? "Create Account" : "Reset Password"}
               </h3>
             </div>
             <button
               onClick={onClose}
+              aria-label="Close"
               className="p-1.5 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
             >
               <X className="w-4 h-4 text-stone-400" />
@@ -182,18 +201,22 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                   <input
                     type="email"
                     placeholder="Email"
+                    aria-label="Email address"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     required
+                    autoComplete="email"
                     className="w-full h-10 px-3 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-sm text-stone-900 dark:text-stone-100 placeholder-stone-400 outline-none focus:ring-2 focus:ring-amber-500/50"
                   />
                   <input
                     type="password"
                     placeholder="Password"
+                    aria-label="Password"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     required
                     minLength={6}
+                    autoComplete={mode === "signup" ? "new-password" : "current-password"}
                     className="w-full h-10 px-3 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-sm text-stone-900 dark:text-stone-100 placeholder-stone-400 outline-none focus:ring-2 focus:ring-amber-500/50"
                   />
 

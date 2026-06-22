@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Check } from "lucide-react"
 import {
@@ -11,6 +11,7 @@ import {
   type Shelf,
 } from "@/lib/storage"
 import { useToast } from "./toast-provider"
+import { useFocusTrap } from "@/lib/use-focus-trap"
 
 interface ShelfPickerProps {
   bookId: string
@@ -22,6 +23,8 @@ export function ShelfPicker({ bookId, isOpen, onClose }: ShelfPickerProps) {
   const [shelves, setShelves] = useState<Shelf[]>([])
   const [assignedIds, setAssignedIds] = useState<string[]>([])
   const { showToast } = useToast()
+  const panelRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(panelRef, isOpen)
 
   useEffect(() => {
     if (isOpen) {
@@ -29,6 +32,15 @@ export function ShelfPicker({ bookId, isOpen, onClose }: ShelfPickerProps) {
       setAssignedIds(getShelvesForBook(bookId))
     }
   }, [isOpen, bookId])
+
+  useEffect(() => {
+    if (!isOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+    }
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [isOpen, onClose])
 
   if (!isOpen) return null
 
@@ -55,6 +67,11 @@ export function ShelfPicker({ bookId, isOpen, onClose }: ShelfPickerProps) {
         onClick={onClose}
       >
         <motion.div
+          ref={panelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="shelf-picker-title"
+          tabIndex={-1}
           initial={{ opacity: 0, y: 60 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 60 }}
@@ -63,7 +80,7 @@ export function ShelfPicker({ bookId, isOpen, onClose }: ShelfPickerProps) {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between p-4 pb-2">
-            <h3 className="text-base font-bold text-stone-900 dark:text-stone-100 font-serif">Add to Shelf</h3>
+            <h3 id="shelf-picker-title" className="text-base font-bold text-stone-900 dark:text-stone-100 font-serif">Add to Shelf</h3>
             <button
               onClick={onClose}
               aria-label="Close shelf picker"
