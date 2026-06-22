@@ -37,6 +37,9 @@ export const STORAGE_KEYS = {
   HIDDEN_BOOKS: "bookswipe_hidden_books",
   BOOK_VIEW_COUNT: "bookswipe_book_views",
   DISMISSED_SUGGESTIONS: "bookswipe_dismissed_suggestions",
+  // Per-genre pagination cursor — advances each session so the deck pulls deeper
+  // into the source catalog instead of re-showing the same top results.
+  GENRE_OFFSETS: "bookswipe_genre_offsets",
 
   // Onboarding / preferences / meta
   ONBOARDED: "bookswipe_onboarded",

@@ -1094,3 +1094,26 @@ export function isSuggestionDismissed(bookId: string, type: string): boolean {
   const dismissed = safeGetJSON<string[]>(DISMISSED_SUGGESTIONS_KEY, [])
   return dismissed.includes(`${bookId}::${type}`)
 }
+
+// ── Per-genre pagination cursor ───────────────────────────────────────────────
+// Advances each fetch so the swipe deck pulls DEEPER into the source catalog
+// instead of re-querying the same top results every session.
+
+const GENRE_OFFSETS_KEY = STORAGE_KEYS.GENRE_OFFSETS
+// Google Books rejects startIndex+maxResults beyond ~1000, so wrap well before.
+const MAX_GENRE_OFFSET = 560
+
+/** Current pagination offset for a genre (0 if unseen). */
+export function getGenreOffset(genre: string): number {
+  const m = safeGetJSON<Record<string, number>>(GENRE_OFFSETS_KEY, {})
+  return m[genre.toLowerCase()] ?? 0
+}
+
+/** Advance a genre's offset by `step`, wrapping at MAX so it cycles the catalog. */
+export function advanceGenreOffset(genre: string, step: number): void {
+  if (step <= 0) return
+  const m = safeGetJSON<Record<string, number>>(GENRE_OFFSETS_KEY, {})
+  const key = genre.toLowerCase()
+  m[key] = ((m[key] ?? 0) + step) % MAX_GENRE_OFFSET
+  safeSetJSON(GENRE_OFFSETS_KEY, m)
+}

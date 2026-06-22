@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
   const id = searchParams.get("id") // For single volume fetch (price-tracker)
   const maxResults = searchParams.get("maxResults") || "20"
   const lang = searchParams.get("lang") || "en"
+  const startIndex = searchParams.get("startIndex") || "0"
 
   if (!API_KEY) {
     console.error("[BookSwipe] GOOGLE_BOOKS_API_KEY is not set")
@@ -44,9 +45,13 @@ export async function GET(request: NextRequest) {
       // Search query — validate and sanitize
       const sanitizedQuery = q.slice(0, 500) // Cap query length
       const safeMaxResults = Math.min(Math.max(1, parseInt(maxResults) || 20), 40)
+      // Pagination cursor — lets the client page deeper into the catalog instead
+      // of always pulling the top results. Bounded (Google rejects startIndex+
+      // maxResults beyond ~1000).
+      const safeStartIndex = Math.min(Math.max(0, parseInt(startIndex) || 0), 600)
 
       const langParam = lang !== "all" ? `&langRestrict=${encodeURIComponent(lang)}` : ""
-      url = `${GOOGLE_BOOKS_BASE}?q=${encodeURIComponent(sanitizedQuery)}&maxResults=${safeMaxResults}&printType=books&orderBy=relevance${langParam}&projection=full&key=${API_KEY}`
+      url = `${GOOGLE_BOOKS_BASE}?q=${encodeURIComponent(sanitizedQuery)}&startIndex=${safeStartIndex}&maxResults=${safeMaxResults}&printType=books&orderBy=relevance${langParam}&projection=full&key=${API_KEY}`
     } else {
       return NextResponse.json({ error: "Missing query parameter" }, { status: 400 })
     }
