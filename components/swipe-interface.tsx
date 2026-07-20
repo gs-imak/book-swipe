@@ -150,7 +150,7 @@ function filterBooks(books: Book[], preferences: UserPreferences): Book[] {
   return filtered
 }
 
-import { MAX_DECK_SIZE } from "@/lib/config"
+import { MAX_DECK_SIZE, DECK_FETCH_BUDGET } from "@/lib/config"
 
 export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeInterfaceProps) {
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([])
@@ -188,7 +188,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
       const userGenres = preferences.favoriteGenres.length > 0
         ? preferences.favoriteGenres
         : Object.keys(bookSearchQueries) // fallback to all if none selected
-      const booksPerGenre = Math.ceil(50 / userGenres.length)
+      const booksPerGenre = Math.ceil(DECK_FETCH_BUDGET / userGenres.length)
 
       // Fetch from Google Books + Open Library in parallel, only for user's genres.
       // Once there's taste signal, also pull books aligned to the user's actual
@@ -203,8 +203,10 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
         // books instead of re-querying the same top results.
         promise: getBooksByCategory(genre, booksPerGenre, getGenreOffset(genre)),
       }))
+      // Open Library supplements each genre — it also covers for Google when
+      // Google's API rate-limits (503s), so keep its share meaningful.
       const otherFetches: Promise<Book[]>[] = [
-        ...userGenres.map(genre => searchOpenLibrary(genre, Math.min(booksPerGenre, 8))),
+        ...userGenres.map(genre => searchOpenLibrary(genre, Math.min(booksPerGenre, 12))),
         ...(likedForFetch.length >= 3 ? [fetchPersonalizedBooks(likedForFetch)] : []),
       ]
 
