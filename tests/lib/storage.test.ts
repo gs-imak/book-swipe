@@ -23,6 +23,8 @@ import {
   removeBookFromShelf,
   createShelf,
   getShelves,
+  addPassedBookId,
+  getPassedFeatures,
 } from "@/lib/storage"
 import type { BookReview } from "@/lib/storage"
 
@@ -380,5 +382,38 @@ describe("createShelf", () => {
   it("caps emoji at 4 characters", () => {
     const shelf = createShelf("Test", "★★★★★★")
     expect(shelf.emoji.length).toBeLessThanOrEqual(4)
+  })
+})
+
+// ── Passed features (negative signal) ────────────────────────────────────────
+
+describe("passed features", () => {
+  it("records the passed author alongside genres and moods", () => {
+    addPassedBookId("p1", ["Fantasy"], ["Epic"], "Zorblax Vex")
+    const features = getPassedFeatures()
+    expect(features.genres).toContain("Fantasy")
+    expect(features.moods).toContain("Epic")
+    expect(features.authors).toEqual(["Zorblax Vex"])
+  })
+
+  it("returns empty authors for features stored before the field existed", () => {
+    window.localStorage.setItem(
+      "bookswipe_passed_features",
+      JSON.stringify({ genres: ["Mystery"], moods: ["Dark"] })
+    )
+    const features = getPassedFeatures()
+    expect(features.genres).toEqual(["Mystery"])
+    expect(features.moods).toEqual(["Dark"])
+    expect(features.authors).toEqual([])
+  })
+
+  it("caps stored authors at 200 most recent", () => {
+    for (let i = 0; i < 210; i++) {
+      addPassedBookId(`pass-${i}`, undefined, undefined, `Author ${i}`)
+    }
+    const features = getPassedFeatures()
+    expect(features.authors.length).toBe(200)
+    expect(features.authors[0]).toBe("Author 10")
+    expect(features.authors[199]).toBe("Author 209")
   })
 })

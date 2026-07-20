@@ -39,6 +39,15 @@ function saveCacheMetadata(meta: CacheMetadata): void {
   }
 }
 
+// Parse memo: getCachedBooks is called many times per deck load and parsing
+// ~500 books each time is the expensive part. The memo is keyed on the RAW
+// stored string, so any external write (other code paths, data import, another
+// tab) changes the string and transparently invalidates it — no hooks needed.
+// Book objects are treated as immutable app-wide, so sharing them is safe;
+// the returned ARRAY is a fresh copy so caller-side sort() can't corrupt it.
+let _memoRaw: string | null = null
+let _memoBooks: Book[] | null = null
+
 export function getCachedBooks(): Book[] {
   if (typeof window === "undefined") return [...sampleBooks]
   try {
@@ -47,10 +56,13 @@ export function getCachedBooks(): Book[] {
       seedCache()
       return [...sampleBooks]
     }
+    if (stored === _memoRaw && _memoBooks) return [..._memoBooks]
     const books = JSON.parse(stored)
     // Guard against corrupted/old shapes: require an array of books.
-    if (!Array.isArray(books)) return [...sampleBooks]
-    return books.length > 0 ? (books as Book[]) : [...sampleBooks]
+    if (!Array.isArray(books) || books.length === 0) return [...sampleBooks]
+    _memoRaw = stored
+    _memoBooks = books as Book[]
+    return [..._memoBooks]
   } catch {
     return [...sampleBooks]
   }

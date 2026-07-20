@@ -4,6 +4,10 @@ export interface BookMetadata {
   wantToReadCount?: number
   ratingsCount?: number
   source: 'sample' | 'google' | 'openlibrary' | 'gutenberg'
+  /** True when `rating` is a deterministic placeholder (no real rating from the
+   *  source API). Estimated ratings must not earn quality boosts in scoring or
+   *  "highly rated" claims in the UI. */
+  ratingEstimated?: boolean
 }
 
 export interface BookFormats {
