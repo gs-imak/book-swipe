@@ -2,7 +2,7 @@ import { Book } from "./book-data"
 import { getCachedBooks, addBooksToCache, isQueryCached, markQueryCompleted, queryCache } from "./book-cache"
 import { searchOpenLibrary, searchOpenLibraryByQuery } from "./openlibrary-api"
 import { getLanguagePreference } from "./language-preference"
-import { upgradeGoogleBooksCoverUrl } from "./covers"
+import { upgradeGoogleBooksCoverUrl, sanitizeGoogleCoverUrl } from "./covers"
 
 // Deterministic pseudo-rating from a string (always returns the same value for the same input)
 function stableRating(seed: string, min = 3.5, max = 4.5): number {
@@ -92,8 +92,9 @@ export async function searchGoogleBooks(query: string, maxResults = 20, lang?: s
 
     const books = data.items.map(transformGoogleBookToBook).filter((b: Book | null): b is Book => b !== null)
 
-    // Covers are resolved eagerly in transformGoogleBookToBook (Amazon-by-ISBN
-    // lead + Google fallback), so the books are ready to render as-is.
+    // Covers are resolved eagerly in transformGoogleBookToBook (zoom-upgraded
+    // Google cover + sanitized thumbnail fallback); the high-res iTunes cover
+    // is layered on later in a background pass. Books render as-is.
     return books
   } catch {
     return []
@@ -222,17 +223,19 @@ function transformGoogleBookToBook(googleBook: unknown): Book | null {
                      imageLinks.thumbnail ||
                      imageLinks.smallThumbnail
 
-    if (!coverUrl) return ''
-
-    return upgradeGoogleBooksCoverUrl(coverUrl)
+    return coverUrl || ''
   }
   
   const isbn = volumeInfo.industryIdentifiers?.find(id => id.type === 'ISBN_13')?.identifier ||
                volumeInfo.industryIdentifiers?.find(id => id.type === 'ISBN_10')?.identifier
   // Google Books' own cover for this volume — correct edition, reliable. A
   // higher-res iTunes cover is layered on later via upgradeCoversWithItunes.
-  const cover = getBestCoverImage(volumeInfo.imageLinks)
-  if (!cover) return null // No usable cover — skip this book
+  // The zoom-bumped upgrade can 404 for some volumes, so the un-bumped
+  // sanitized thumbnail rides along as the fallback.
+  const rawCover = getBestCoverImage(volumeInfo.imageLinks)
+  if (!rawCover) return null // No usable cover — skip this book
+  const cover = upgradeGoogleBooksCoverUrl(rawCover)
+  const coverFallback = sanitizeGoogleCoverUrl(rawCover)
 
   // Detect formats
   const isEbook = googleBook.saleInfo?.isEbook ||
@@ -249,6 +252,7 @@ function transformGoogleBookToBook(googleBook: unknown): Book | null {
     title: volumeInfo.title,
     author: volumeInfo.authors[0],
     cover,
+    coverFallback: coverFallback !== cover ? coverFallback : undefined,
     rating: Math.round(rating * 10) / 10,
     pages,
     genre: volumeInfo.categories || ['General'],

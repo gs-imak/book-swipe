@@ -55,6 +55,20 @@ export function BookCover({
     }
   }, [src, fallbackSrc, currentSrc])
 
+  // Quality gate: an image a few pixels wide is a tracking-pixel/broken
+  // response, not cover art — step down the chain instead of showing garbage.
+  const handleLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget
+    if (
+      img.naturalWidth > 0 &&
+      (img.naturalWidth < 60 || img.naturalHeight < 60)
+    ) {
+      handleError()
+      return
+    }
+    setIsLoaded(true)
+  }, [handleError])
+
   // Branded placeholder: shown when there's no cover URL or every source failed.
   // A saturated, seed-tinted "cover" card with white text — theme-independent
   // (reads on light and dark) and far more premium than a flat grey box.
@@ -103,7 +117,7 @@ export function BookCover({
         style={{
           transition: "opacity 300ms ease-out",
         }}
-        onLoad={() => setIsLoaded(true)}
+        onLoad={handleLoad}
         onError={handleError}
       />
     </>

@@ -36,6 +36,7 @@ const ReadingChallenges = dynamic(() => import("./reading-challenges").then(m =>
 const BookCollections = dynamic(() => import("./book-collections").then(m => ({ default: m.BookCollections })), { ssr: false })
 import { getShelves, getBooksForShelf, shouldShowBackupReminder, dismissBackupReminder, getHiddenBookIds, hideBook, unhideBook, type Shelf } from "@/lib/storage"
 import { estimateReadingTime, getReadingSpeed, setReadingSpeed, getAllSpeeds, type ReadingSpeed } from "@/lib/reading-time"
+import { upgradeLikedBookCovers } from "@/lib/itunes-covers"
 
 interface DashboardProps {
   onBack?: () => void
@@ -92,6 +93,13 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
         .filter(p => p.status === "reading")
         .sort((a, b) => new Date(b.lastReadDate).getTime() - new Date(a.lastReadDate).getTime())
     )
+    // Background: upgrade library covers to their edition-exact iTunes artwork
+    // (persisted, so it runs at most once per book). Best-effort.
+    let cancelled = false
+    void upgradeLikedBookCovers().then((updated) => {
+      if (updated && !cancelled) setLikedBooks(updated)
+    }).catch(() => { /* best-effort */ })
+    return () => { cancelled = true }
   }, [])
 
   useEffect(() => {
