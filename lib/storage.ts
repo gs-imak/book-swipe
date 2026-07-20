@@ -714,22 +714,30 @@ export function initCrossTabSync(): () => void {
 const PASSED_BOOKS_KEY = STORAGE_KEYS.PASSED_BOOKS
 const PASSED_FEATURES_KEY = STORAGE_KEYS.PASSED_FEATURES
 
+interface PassedFeatures {
+  genres: string[]
+  moods: string[]
+  authors?: string[] // optional: entries stored before the field existed lack it
+}
+
 /** Record a book the user swiped left on (negative signal for recommendations) */
-export function addPassedBookId(bookId: string, genres?: string[], moods?: string[]): void {
+export function addPassedBookId(bookId: string, genres?: string[], moods?: string[], author?: string): void {
   const passed = safeGetJSON<string[]>(PASSED_BOOKS_KEY, [])
   if (!passed.includes(bookId)) {
     // Keep last 200 to avoid unbounded growth
     const updated = [...passed, bookId].slice(-200)
     safeSetJSON(PASSED_BOOKS_KEY, updated)
   }
-  // Store genre/mood features for negative profile building
-  if (genres || moods) {
-    const features = safeGetJSON<{ genres: string[]; moods: string[] }>(PASSED_FEATURES_KEY, { genres: [], moods: [] })
+  // Store genre/mood/author features for negative profile building
+  if (genres || moods || author) {
+    const features = safeGetJSON<PassedFeatures>(PASSED_FEATURES_KEY, { genres: [], moods: [], authors: [] })
     if (genres) features.genres.push(...genres)
     if (moods) features.moods.push(...moods)
-    // Keep last 500 entries
+    if (author) features.authors = [...(features.authors ?? []), author]
+    // Keep last N entries
     features.genres = features.genres.slice(-500)
     features.moods = features.moods.slice(-500)
+    features.authors = (features.authors ?? []).slice(-200)
     safeSetJSON(PASSED_FEATURES_KEY, features)
   }
 }
@@ -740,8 +748,9 @@ export function getPassedBookIds(): string[] {
 }
 
 /** Get aggregated features from passed books for negative profiling */
-export function getPassedFeatures(): { genres: string[]; moods: string[] } {
-  return safeGetJSON<{ genres: string[]; moods: string[] }>(PASSED_FEATURES_KEY, { genres: [], moods: [] })
+export function getPassedFeatures(): { genres: string[]; moods: string[]; authors: string[] } {
+  const f = safeGetJSON<PassedFeatures>(PASSED_FEATURES_KEY, { genres: [], moods: [], authors: [] })
+  return { genres: f.genres ?? [], moods: f.moods ?? [], authors: f.authors ?? [] }
 }
 
 // ── Hidden / Archived books ──────────────────────────────────────────────────

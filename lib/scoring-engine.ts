@@ -13,6 +13,9 @@ export interface ScoredBook {
   score: number
   finalScore: number
   reasons: RecommendationReason[]
+  /** TF-IDF vector computed during scoring — reused by applyMMR for
+   *  content-level diversity instead of the genre-string approximation. */
+  vector?: SparseVector
 }
 
 // --- Stopwords ---
@@ -84,7 +87,7 @@ function buildVocabulary(corpus: string[]): Vocabulary {
   return { idf }
 }
 
-interface SparseVector {
+export interface SparseVector {
   [term: string]: number
 }
 
@@ -265,13 +268,15 @@ function generateReasons(
     })
   }
 
-  // Rating + genre combo for richer phrasing
-  if (book.rating >= 4.0 && matchedGenres.length > 0) {
+  // Rating + genre combo for richer phrasing. Estimated (placeholder) ratings
+  // are excluded — never present a fabricated number as a real rating.
+  const hasRealRating = !book.metadata?.ratingEstimated
+  if (hasRealRating && book.rating >= 4.0 && matchedGenres.length > 0) {
     reasons.push({
       type: "rating",
       description: `Highly rated in ${matchedGenres[0]}`,
     })
-  } else if (book.rating >= 4.0) {
+  } else if (hasRealRating && book.rating >= 4.0) {
     reasons.push({
       type: "rating",
       description: `Highly rated (${book.rating}/5)`,
@@ -358,15 +363,27 @@ export function scoreBooks(
   const passedFeatures = getPassedFeatures()
   let negativeVector: SparseVector = {}
   if (passedFeatures.genres.length >= 5) {
-    // Build negative profile from aggregated passed book features
+    // Build negative profile from aggregated passed book features.
+    // Recent passes get extra weight (mirrors the recency weighting on likes).
     const negText = [
       ...passedFeatures.genres.slice(-100),
       ...passedFeatures.genres.slice(-100), // genres weighted 2x
+      ...passedFeatures.genres.slice(-30), // most recent passes weigh extra
       ...passedFeatures.moods.slice(-100),
+      ...passedFeatures.moods.slice(-30),
     ].join(" ")
     negativeVector = computeTFIDF(negText, vocab)
   }
   const hasNegative = Object.keys(negativeVector).length > 0
+
+  // Author-level negative signal: repeatedly passing an author's books should
+  // suppress that author. Skipped when the user has ALSO liked the author
+  // (mixed signal — the positive side already carries it).
+  const passedAuthorCounts: Record<string, number> = {}
+  passedFeatures.authors.forEach((a) => {
+    passedAuthorCounts[a] = (passedAuthorCounts[a] || 0) + 1
+  })
+  const likedAuthorSet = new Set(likedBooks.map((b) => b.author))
 
   // Build pace preference from reviews
   const reviews = getBookReviews()
@@ -405,19 +422,28 @@ export function scoreBooks(
       score *= 0.1 // Heavy penalty — mostly filter them out
     }
 
+    // Author-level penalty: 1 pass = ×0.85, scaling down to a ×0.5 floor
+    const authorPassCount = passedAuthorCounts[book.author]
+    if (authorPassCount && !likedAuthorSet.has(book.author)) {
+      score *= Math.max(0.5, 1 - authorPassCount * 0.15)
+    }
+
     // Community boost: small nudge for popular books
     if (communityBoost && book.metadata?.readinglogCount) {
       score *= 1 + Math.log10(book.metadata.readinglogCount + 1) * 0.03
     }
 
-    // Quality boost for high-rated books
-    if (book.rating >= 4.0) {
+    // Quality boost for high-rated books — real ratings only; estimated
+    // (placeholder) ratings must not manufacture a quality signal
+    if (book.rating >= 4.0 && !book.metadata?.ratingEstimated) {
       score *= 1 + (book.rating - 3.5) * 0.05
     }
 
-    // Novelty bonus: small boost for books in genres the user hasn't explored
+    // Novelty bonus: surface unexplored high-quality books. A book counts as
+    // novel only when ALL its genres are unexplored — a single unfamiliar
+    // genre string (common with messy API categories) is not novelty.
     const bookGenres = book.genre.map(g => g.toLowerCase())
-    const isNovel = bookGenres.some(g => !likedGenres.has(g))
+    const isNovel = bookGenres.length > 0 && bookGenres.every(g => !likedGenres.has(g))
     if (isNovel && book.rating >= 3.8) {
       score += 0.05 // Small bump to surface unexplored high-quality books
     }
@@ -443,7 +469,7 @@ export function scoreBooks(
 
     const reasons = generateReasons(book, likedBooks, similarityScores)
 
-    return { book, score, finalScore: score, reasons }
+    return { book, score, finalScore: score, reasons, vector: bookVector }
   })
 
   // Sort by score
@@ -453,6 +479,25 @@ export function scoreBooks(
 }
 
 // --- MMR Diversity ---
+
+// Pairwise similarity for MMR. Prefers the TF-IDF vectors computed during
+// scoring (content-level — catches same-series/same-theme books that cross
+// genre labels); falls back to the genre/author approximation when a caller
+// provides ScoredBooks without vectors.
+function pairSimilarity(a: ScoredBook, b: ScoredBook): number {
+  if (a.vector && b.vector) {
+    const cos = cosineSimilarity(a.vector, b.vector)
+    // Same-author bump: author tokens are already 4x-weighted in the vectors,
+    // but sparse descriptions can still under-report the overlap.
+    return a.book.author === b.book.author ? Math.min(1, cos + 0.3) : cos
+  }
+  const genreOverlap =
+    a.book.genre.filter((g) => b.book.genre.includes(g)).length /
+    Math.max(a.book.genre.length, b.book.genre.length, 1)
+  const authorSim = a.book.author === b.book.author ? 0.5 : 0
+  return genreOverlap + authorSim
+}
+
 export function applyMMR(
   scored: ScoredBook[],
   count: number,
@@ -466,38 +511,32 @@ export function applyMMR(
   // Always pick the top-scoring book first
   selected.push(remaining.shift()!)
 
+  // Incremental max-similarity cache: max-to-selected is monotonic, so each
+  // round only needs to compare against the most recently selected book.
+  const maxSimCache = new Map<ScoredBook, number>()
+  let lastSelected = selected[0]
+
   while (selected.length < count && remaining.length > 0) {
     let bestIdx = 0
     let bestMMR = -Infinity
 
     for (let i = 0; i < remaining.length; i++) {
-      const relevance = remaining[i].finalScore
+      const item = remaining[i]
+      const maxSim = Math.max(
+        maxSimCache.get(item) ?? 0,
+        pairSimilarity(item, lastSelected)
+      )
+      maxSimCache.set(item, maxSim)
 
-      // Max similarity to already-selected books (genre-based approximation)
-      let maxSim = 0
-      selected.forEach((sel) => {
-        const genreOverlap =
-          remaining[i].book.genre.filter((g) =>
-            sel.book.genre.includes(g)
-          ).length /
-          Math.max(
-            remaining[i].book.genre.length,
-            sel.book.genre.length,
-            1
-          )
-        const authorSim =
-          remaining[i].book.author === sel.book.author ? 0.5 : 0
-        maxSim = Math.max(maxSim, genreOverlap + authorSim)
-      })
-
-      const mmrScore = lambda * relevance - (1 - lambda) * maxSim
+      const mmrScore = lambda * item.finalScore - (1 - lambda) * maxSim
       if (mmrScore > bestMMR) {
         bestMMR = mmrScore
         bestIdx = i
       }
     }
 
-    selected.push(remaining.splice(bestIdx, 1)[0])
+    lastSelected = remaining.splice(bestIdx, 1)[0]
+    selected.push(lastSelected)
   }
 
   return selected

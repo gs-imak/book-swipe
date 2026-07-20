@@ -172,6 +172,7 @@ export function transformToBook(doc: OpenLibraryDoc, searchedSubject: string): B
       wantToReadCount: doc.want_to_read_count,
       ratingsCount: doc.ratings_count,
       source: "openlibrary",
+      ...(rating > 0 ? {} : { ratingEstimated: true }),
     },
   }
 }
@@ -326,6 +327,7 @@ export async function fetchSubjectBooks(
           metadata: {
             subjects: subjects.slice(0, 20),
             source: "openlibrary" as const,
+            ratingEstimated: true,
           },
         } satisfies Book
       })

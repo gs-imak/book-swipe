@@ -162,7 +162,6 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   const [batchCount, setBatchCount] = useState(1)
   const [sessionLikedBooks, setSessionLikedBooks] = useState<Book[]>([])
   const [bookReasons, setBookReasons] = useState<Record<string, string>>({})
-  const [llmReasons, setLlmReasons] = useState<Record<string, string>>({})
   const [coLikeCounts, setCoLikeCounts] = useState<Record<string, number>>({})
   const { triggerActivity } = useGamification()
   const { showToast } = useToast()
@@ -196,21 +195,33 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
       // likes (same authors / top genres) in the same parallel batch — broadens
       // the candidate pool the ranker draws from, no extra latency.
       const likedForFetch = getLikedBooks()
-      const fetchPromises: Promise<Book[]>[] = [
-        ...userGenres.flatMap(genre => [
-          // Page deeper each session via the per-genre cursor — surfaces fresh
-          // books instead of re-querying the same top results.
-          getBooksByCategory(genre, booksPerGenre, getGenreOffset(genre)),
-          searchOpenLibrary(genre, Math.min(booksPerGenre, 8)),
-        ]),
+      // Paged Google fetches are labeled per genre so the cursor can advance
+      // selectively below. All promises start before any await — still parallel.
+      const genreFetches = userGenres.map(genre => ({
+        genre,
+        // Page deeper each session via the per-genre cursor — surfaces fresh
+        // books instead of re-querying the same top results.
+        promise: getBooksByCategory(genre, booksPerGenre, getGenreOffset(genre)),
+      }))
+      const otherFetches: Promise<Book[]>[] = [
+        ...userGenres.map(genre => searchOpenLibrary(genre, Math.min(booksPerGenre, 8))),
         ...(likedForFetch.length >= 3 ? [fetchPersonalizedBooks(likedForFetch)] : []),
       ]
 
-      const results = await Promise.allSettled(fetchPromises)
-      // Advance each genre's cursor so the NEXT load pulls a deeper page.
+      const [genreResults, otherResults] = await Promise.all([
+        Promise.allSettled(genreFetches.map(f => f.promise)),
+        Promise.allSettled(otherFetches),
+      ])
+      // Advance a genre's cursor only when its page actually loaded — advancing
+      // on a failed fetch would permanently skip books the user never saw.
       const fetchStep = Math.min(booksPerGenre * 2, 40)
-      userGenres.forEach(g => advanceGenreOffset(g, fetchStep))
-      const freshBooks = results
+      genreFetches.forEach((f, i) => {
+        const r = genreResults[i]
+        if (r.status === 'fulfilled' && r.value.length > 0) {
+          advanceGenreOffset(f.genre, fetchStep)
+        }
+      })
+      const freshBooks = [...genreResults, ...otherResults]
         .filter((r): r is PromiseFulfilledResult<Book[]> => r.status === 'fulfilled')
         .flatMap(r => r.value)
 
@@ -227,19 +238,25 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
       books = books.filter(b => !passedSet.has(b.id))
       const filtered = filterBooks(books, preferences)
 
-      // Rank the deck. With taste signal, order by the TF-IDF engine + MMR
-      // diversity (the real personalization — previously the deck used only the
-      // genre-match heuristic and the engine just generated reason text). Cold
-      // start keeps the genre-match / rating order.
+      // Rank the deck. With enough taste signal (>= 3 likes, same gate as the
+      // LLM recs), order by the TF-IDF engine + MMR diversity. Below that the
+      // profile is 1-2 books — similarity ranking tunnels on them, so keep the
+      // genre-match / rating order instead.
       const liked = getLikedBooks()
       const candidatePool = filtered.length > 0 ? filtered : (freshBooks.length > 0 ? freshBooks : books)
       let deck: Book[]
-      if (liked.length >= 1 && candidatePool.length > 0) {
+      // Local TF-IDF reasons, computed once per deck load — the deck is stable
+      // for the session, so its reason texts should be too.
+      const localReasons: Record<string, string> = {}
+      if (liked.length >= 3 && candidatePool.length > 0) {
         const likedIds = new Set(liked.map(b => b.id))
         const scored = scoreBooks(candidatePool, liked, { communityBoost: true, excludeIds: likedIds })
         deck = scored.length > 0
           ? applyMMR(scored, MAX_DECK_SIZE, 0.7).map(s => s.book)
           : [...candidatePool].sort((a, b) => b.rating - a.rating).slice(0, MAX_DECK_SIZE)
+        scored.forEach(s => {
+          if (s.reasons.length > 0) localReasons[s.book.id] = s.reasons[0].description
+        })
       } else {
         deck = (filtered.length > 0 ? filtered : [...candidatePool].sort((a, b) => b.rating - a.rating)).slice(0, MAX_DECK_SIZE)
       }
@@ -271,7 +288,14 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
           // best-effort — keep the local deck
         }
       }
-      setLlmReasons(llmReasonMap)
+      // Reasons are finalized here, once per deck load. LLM reasons (for the
+      // recommended books leading the deck) take precedence over local ones.
+      const deckReasons: Record<string, string> = {}
+      deck.forEach(b => {
+        const r = localReasons[b.id]
+        if (r) deckReasons[b.id] = r
+      })
+      setBookReasons({ ...deckReasons, ...llmReasonMap })
       setFilteredBooks(deck)
       // Background: swap OL books to their correct-edition Amazon cover (no
       // perceived latency — the deck already renders with OL -L).
@@ -287,6 +311,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
         setFilteredBooks(
           (filtered.length > 0 ? filtered : cached).slice(0, MAX_DECK_SIZE)
         )
+        setBookReasons({}) // fallback deck was never scored — drop stale reasons
       }
       showToast("Couldn't load new books. Showing cached results.", "error")
     } finally {
@@ -297,27 +322,6 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   useEffect(() => {
     loadBooks()
   }, [preferences])
-
-  // Build reason map whenever the deck or liked books change
-  useEffect(() => {
-    const liked = getLikedBooks()
-    if (liked.length === 0 || filteredBooks.length === 0) {
-      setBookReasons({})
-      return
-    }
-    const scored = scoreBooks(filteredBooks, liked)
-    const reasons: Record<string, string> = {}
-    scored.forEach(s => {
-      if (s.reasons.length > 0) {
-        reasons[s.book.id] = s.reasons[0].description
-      }
-    })
-    // LLM reasons (for recommended books) take precedence over the local
-    // TF-IDF reason for the same book.
-    setBookReasons({ ...reasons, ...llmReasons })
-    // Re-run when the deck changes or the user's liked books change (the
-    // likedBooks state mirrors getLikedBooks() and updates on every swipe/undo).
-  }, [filteredBooks, likedBooks, llmReasons])
 
   // Fetch collaborative-filtering co-like counts (social proof) for signed-in
   // users. Keyed on the user's liked books; the RPC returns counts for books
@@ -353,7 +357,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
     } else {
       hapticLight()
       setPassedBooks(prev => [...prev, currentBook])
-      addPassedBookId(currentBook.id, currentBook.genre, currentBook.mood) // persist for negative signal
+      addPassedBookId(currentBook.id, currentBook.genre, currentBook.mood, currentBook.author) // persist for negative signal
     }
 
     setUndoStack(prev => [...prev, { book: currentBook, direction }])

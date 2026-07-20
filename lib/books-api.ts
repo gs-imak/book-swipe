@@ -203,7 +203,10 @@ function transformGoogleBookToBook(googleBook: unknown): Book | null {
   }
   
   const pages = volumeInfo.pageCount || 200
-  const rating = volumeInfo.averageRating || stableRating(`${volumeInfo.title}:${volumeInfo.authors?.[0] || ""}`)
+  const hasRealRating = typeof volumeInfo.averageRating === "number" && volumeInfo.averageRating > 0
+  const rating = hasRealRating
+    ? volumeInfo.averageRating!
+    : stableRating(`${volumeInfo.title}:${volumeInfo.authors?.[0] || ""}`)
   const publishedYear = volumeInfo.publishedDate ? 
     parseInt(volumeInfo.publishedDate.split('-')[0]) : 2020
   
@@ -257,6 +260,7 @@ function transformGoogleBookToBook(googleBook: unknown): Book | null {
     formats,
     metadata: {
       source: 'google' as const,
+      ...(hasRealRating ? {} : { ratingEstimated: true }),
     }
   }
 }
