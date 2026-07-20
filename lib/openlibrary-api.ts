@@ -1,5 +1,6 @@
 import { Book } from "./book-data"
 import { getOpenLibraryLanguageCodes } from "./language-preference"
+import { pickPreferredIsbn } from "./covers"
 
 // Deterministic pseudo-rating from a string (always returns the same value for the same input)
 function stableRating(seed: string, min = 3.5, max = 4.5): number {
@@ -24,6 +25,7 @@ export interface OpenLibraryDoc {
   number_of_pages_median?: number
   first_publish_year?: number
   language?: string[]
+  isbn?: string[] // flat, unordered list across all editions
 }
 
 interface OpenLibrarySearchResponse {
@@ -94,6 +96,12 @@ function getOpenLibraryCover(coverId: number, size: "S" | "M" | "L" = "L"): stri
   return `https://covers.openlibrary.org/b/id/${coverId}-${size}.jpg?default=false`
 }
 
+function getOpenLibraryIsbnCover(isbn: string, size: "S" | "M" | "L" = "L"): string {
+  // Edition-exact cover keyed by ISBN — used as the fallback when the work's
+  // cover_i image (an arbitrary edition) is missing or broken.
+  return `https://covers.openlibrary.org/b/isbn/${isbn}-${size}.jpg?default=false`
+}
+
 function mapSubjectsToGenres(subjects: string[]): string[] {
   const genres = new Set<string>()
   for (const subject of subjects) {
@@ -154,11 +162,19 @@ export function transformToBook(doc: OpenLibraryDoc, searchedSubject: string): B
   // Skip books with very low or no ratings
   if (rating < 2.5 && doc.ratings_count && doc.ratings_count >= 10) return null
 
+  // A stored ISBN unlocks the edition-exact cover pipeline (iTunes upgrade +
+  // OL by-ISBN fallback) that OL-sourced books were previously locked out of.
+  const isbn = pickPreferredIsbn(doc.isbn)
+
   return {
     id: `ol_${doc.key.replace("/works/", "")}`,
     title: doc.title,
     author: doc.author_name[0],
     cover: getOpenLibraryCover(doc.cover_i),
+    coverFallback: isbn
+      ? getOpenLibraryIsbnCover(isbn)
+      : getOpenLibraryCover(doc.cover_i, "M"),
+    isbn,
     rating: rating || stableRating(`${doc.title}:${doc.author_name[0]}`),
     pages,
     genre: genres,
@@ -195,6 +211,7 @@ export async function searchOpenLibrary(
       "number_of_pages_median",
       "first_publish_year",
       "language",
+      "isbn",
     ].join(",")
 
     const olLangCodes = getOpenLibraryLanguageCodes()
@@ -248,6 +265,7 @@ export async function searchOpenLibraryByQuery(
       "number_of_pages_median",
       "first_publish_year",
       "language",
+      "isbn",
     ].join(",")
 
     const olLangCodes = getOpenLibraryLanguageCodes()
@@ -317,6 +335,8 @@ export async function fetchSubjectBooks(
           title: w.title,
           author: w.authors![0].name,
           cover: getOpenLibraryCover(w.cover_id!),
+          // Subjects endpoint carries no ISBNs — medium size is the only fallback
+          coverFallback: getOpenLibraryCover(w.cover_id!, "M"),
           rating: stableRating(`${w.title}:${w.authors![0].name}`, 3.8, 4.8),
           pages,
           genre: genres,
