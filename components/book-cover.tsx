@@ -3,7 +3,6 @@
 import Image from "next/image"
 import { useState, useCallback, useEffect } from "react"
 import { BookOpen } from "lucide-react"
-import { Skeleton } from "@/components/ui/skeleton"
 
 // Deterministic hue from a string so each book gets a stable, distinct
 // placeholder/gradient tint instead of a flat grey box.
@@ -69,41 +68,42 @@ export function BookCover({
     setIsLoaded(true)
   }, [handleError])
 
-  // Branded placeholder: shown when there's no cover URL or every source failed.
-  // A saturated, seed-tinted "cover" card with white text — theme-independent
-  // (reads on light and dark) and far more premium than a flat grey box.
+  // Branded fill: a saturated, seed-tinted "cover" card with the title in
+  // white serif — theme-independent and far more premium than a grey box.
+  // Doubles as the INSTANT loading state (the real cover fades in over it)
+  // and as the terminal placeholder when every source failed.
+  const brandedFill = (
+    <div
+      className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 p-4 text-center"
+      style={{
+        background: `linear-gradient(150deg, hsl(${getSeedHue(alt || src || "book")} 45% 35%), hsl(${(getSeedHue(alt || src || "book") + 38) % 360} 50% 22%))`,
+      }}
+    >
+      {/* Subtle top sheen for depth */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/15 to-transparent" />
+      <BookOpen className="relative h-7 w-7 flex-shrink-0 text-white/80" />
+      {alt && (
+        <span className="relative line-clamp-3 font-serif text-[12px] font-semibold leading-tight text-white drop-shadow-sm">
+          {alt}
+        </span>
+      )}
+      {author && (
+        <span className="relative line-clamp-1 text-[10px] font-medium leading-tight text-white/75">
+          {author}
+        </span>
+      )}
+    </div>
+  )
+
   if (hasError || !src) {
-    const hue = getSeedHue(alt || src || "book")
-    return (
-      <div
-        className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 p-4 text-center"
-        style={{
-          background: `linear-gradient(150deg, hsl(${hue} 45% 35%), hsl(${(hue + 38) % 360} 50% 22%))`,
-        }}
-      >
-        {/* Subtle top sheen for depth */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/15 to-transparent" />
-        <BookOpen className="relative h-7 w-7 flex-shrink-0 text-white/80" />
-        {alt && (
-          <span className="relative line-clamp-3 font-serif text-[12px] font-semibold leading-tight text-white drop-shadow-sm">
-            {alt}
-          </span>
-        )}
-        {author && (
-          <span className="relative line-clamp-1 text-[10px] font-medium leading-tight text-white/75">
-            {author}
-          </span>
-        )}
-      </div>
-    )
+    return brandedFill
   }
 
   return (
     <>
-      {/* Loading skeleton — consistent with the project's Skeleton component. */}
-      {!isLoaded && (
-        <Skeleton className="absolute inset-0 rounded-none" />
-      )}
+      {/* Instant paint: the branded fill shows the book identity immediately;
+          the real cover fades in over it once loaded. */}
+      {!isLoaded && brandedFill}
       <Image
         key={currentSrc}
         src={currentSrc}
