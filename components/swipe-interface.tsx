@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
+import Image from "next/image"
 import { BookCard } from "./book-card"
 import { Button } from "@/components/ui/button"
 import { Book, UserPreferences } from "@/lib/book-data"
@@ -628,6 +629,18 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
                   />
                 )}
               </AnimatePresence>
+              {/* Look-ahead cover preload: warm the browser + image-optimizer
+                  caches for the next few cards so they surface with their art
+                  already loaded. Same sizes/quality as the card's BookCover so
+                  the optimized URL matches exactly. Open Library's origin can
+                  take seconds on a cold fetch — this buys that time upfront. */}
+              <div aria-hidden className="pointer-events-none absolute h-px w-px overflow-hidden opacity-0">
+                {filteredBooks.slice(currentIndex + 2, currentIndex + 5).map((b) => (
+                  <div key={`preload-${b.id}`} className="relative h-px w-px">
+                    <Image src={b.cover} alt="" fill sizes="(max-width: 640px) 100vw, 400px" quality={85} priority />
+                  </div>
+                ))}
+              </div>
             </motion.div>
           </div>
 
