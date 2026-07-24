@@ -293,6 +293,7 @@ export function ProfileShareCard({ isOpen, onClose }: ProfileShareCardProps) {
               </div>
             )}
             {preview && !generating && (
+              // eslint-disable-next-line @next/next/no-img-element -- locally generated canvas data URL; the image optimizer can't process it
               <img
                 src={preview}
                 alt="Reading profile card"
