@@ -34,7 +34,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: 'BookSwipe - Discover Your Next Favorite Book',
   description: 'Swipe through personalized book recommendations matched to your taste. No accounts, no fuss — just great books.',
-  metadataBase: new URL('https://bookswipe.app'),
+  metadataBase: new URL('https://book-swipe-tau.vercel.app'),
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },

@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://bookswipe.app/sitemap.xml
+Sitemap: https://book-swipe-tau.vercel.app/sitemap.xml
