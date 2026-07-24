@@ -47,3 +47,10 @@ next-env.d.ts
 *.swo
 *~
 
+
+# AI assistant workspaces (local session state, design refs)
+.claude/
+.cursor/
+
+# repomix output
+.repomix-output.*

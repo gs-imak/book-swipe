@@ -1,7 +1,13 @@
 {
-  "name": "book-tinder",
+  "name": "bookswipe",
   "version": "0.1.0",
   "private": true,
+  "description": "Tinder-style book discovery — swipe through live recommendations from Google Books & Open Library, build your shelf, read public-domain classics in-app.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gs-imak/book-swipe.git"
+  },
+  "license": "MIT",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
