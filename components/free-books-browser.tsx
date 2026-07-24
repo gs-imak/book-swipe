@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
+import dynamic from "next/dynamic"
 import { motion } from "framer-motion"
 import { Search, BookOpen, AlertCircle, Loader2, Heart, Check } from "lucide-react"
 import { BookCardSkeleton } from "@/components/ui/skeleton"
@@ -15,8 +16,11 @@ import {
   hasReadableText,
   getCoverUrl,
 } from "@/lib/gutenberg-browser-api"
-import BookReader from "@/components/book-reader"
 import Image from "next/image"
+
+// Lazy: the reader is ~2800 lines and only needed once a book is opened —
+// keeps it out of the browse chunk (book-detail-modal lazy-loads it the same way).
+const BookReader = dynamic(() => import("@/components/book-reader"))
 
 // Map the app's genre labels → a Gutenberg browse topic, so free-book discovery
 // reflects the user's swipe taste instead of being a disconnected side tab.
