@@ -6,24 +6,28 @@ import { Loader2 } from "lucide-react"
 import { LoginScreen } from "@/components/login-screen"
 import { Dashboard } from "@/components/dashboard"
 import { GamificationProvider } from "@/components/gamification-provider"
-import { AchievementsPanel } from "@/components/achievements-panel"
 import { ToastProvider, useToast } from "@/components/toast-provider"
 import { MobileNav } from "@/components/mobile-nav"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { UserPreferences } from "@/lib/book-data"
 import { getLikedBooks, migrateCoverUrls, isOnboarded, setOnboarded, getSavedPreferences, savePreferences, runStorageMigrations, initCrossTabSync } from "@/lib/storage"
-import { TasteProfile } from "@/components/taste-profile"
-import { GlobalSearch } from "@/components/global-search"
-import { BookDetailModal } from "@/components/book-detail-modal"
 import { Book } from "@/lib/book-data"
 import { InstallPrompt } from "@/components/install-prompt"
-import { OnboardingGuide } from "@/components/onboarding-guide"
 import { motion, AnimatePresence, MotionConfig } from "framer-motion"
 import { getTheme, applyTheme } from "@/lib/theme"
 import { initMonitoring } from "@/lib/monitoring"
-import { WhatsNewModal } from "@/components/whats-new-modal"
 import { Skeleton, BookGridSkeleton } from "@/components/ui/skeleton"
-import { AuthModal } from "@/components/auth-modal"
+
+// Flag-gated panels/modals — none render on first paint, so none belong in the
+// root chunk. Each loads on first open. BookDetailModal is the heavy one (it
+// carries the reader-adjacent subtree).
+const AchievementsPanel = dynamic(() => import("@/components/achievements-panel").then(m => ({ default: m.AchievementsPanel })))
+const TasteProfile = dynamic(() => import("@/components/taste-profile").then(m => ({ default: m.TasteProfile })))
+const GlobalSearch = dynamic(() => import("@/components/global-search").then(m => ({ default: m.GlobalSearch })))
+const BookDetailModal = dynamic(() => import("@/components/book-detail-modal").then(m => ({ default: m.BookDetailModal })))
+const OnboardingGuide = dynamic(() => import("@/components/onboarding-guide").then(m => ({ default: m.OnboardingGuide })))
+const WhatsNewModal = dynamic(() => import("@/components/whats-new-modal").then(m => ({ default: m.WhatsNewModal })))
+const AuthModal = dynamic(() => import("@/components/auth-modal").then(m => ({ default: m.AuthModal })))
 import { onAuthChange, syncBidirectional, getUser } from "@/lib/supabase-sync"
 import { isSupabaseConfigured } from "@/lib/supabase"
 
