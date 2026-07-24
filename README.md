@@ -1,11 +1,11 @@
 # BookSwipe 📚
 
-A Next.js 14 (App Router) PWA for discovering books with a Tinder-style swipe deck.
+**Live at [book-swipe-tau.vercel.app](https://book-swipe-tau.vercel.app)**
+
+A Next.js 16 (App Router) PWA for discovering books with a Tinder-style swipe deck.
 Books are sourced live from public book APIs, your reading life is tracked locally in
 `localStorage`, and an optional Supabase backend syncs it to the cloud. The app is
 installable as a Progressive Web App and ships an in-app reader for public-domain titles.
-
-> Package name: `book-tinder`.
 
 ## Features
 
@@ -29,7 +29,7 @@ installable as a Progressive Web App and ships an in-app reader for public-domai
 
 ## Tech Stack
 
-- **Next.js 14** (App Router) + **React 18** + **TypeScript**
+- **Next.js 16** (App Router, Turbopack) + **React 19** + **TypeScript**
 - **Tailwind CSS** with **shadcn/ui** (Radix UI primitives) and **CVA**
 - **Framer Motion** for swipe/animation
 - **Supabase** (`@supabase/supabase-js`) for optional auth + cloud sync
