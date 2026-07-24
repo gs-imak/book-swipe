@@ -164,6 +164,7 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
                   <p className="text-sm">{error}</p>
                 </div>
               ) : preview ? (
+                // eslint-disable-next-line @next/next/no-img-element -- locally generated canvas data URL; the image optimizer can't process it
                 <img src={preview} alt="Share card preview" className="w-full h-full object-contain" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Image from "next/image"
 import { motion } from "framer-motion"
 import { Sparkles, X, Bookmark, Star, BookOpen } from "lucide-react"
 import { Book } from "@/lib/book-data"
@@ -68,12 +69,13 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
       >
         {/* Blurred cover background */}
         {pick.book.cover && (
-          <div className="absolute inset-0 z-0">
-            <img
+          <div aria-hidden="true" className="absolute inset-0 z-0">
+            <Image
               src={pick.book.cover}
               alt=""
-              aria-hidden="true"
-              className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-30 dark:opacity-20"
+              fill
+              sizes="100px"
+              className="object-cover scale-110 blur-2xl opacity-30 dark:opacity-20"
             />
           </div>
         )}
