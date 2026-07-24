@@ -89,7 +89,7 @@ export function VocabFlashcards({ isOpen, onClose }: VocabFlashcardsProps) {
             >
               {mode === "review" ? "Browse All" : "Review Due"}
             </button>
-            <button onClick={onClose} className="p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800">
+            <button onClick={onClose} aria-label="Close flashcards" className="p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800">
               <X className="w-5 h-5 text-stone-400" />
             </button>
           </div>

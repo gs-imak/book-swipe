@@ -2210,7 +2210,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                               )}
                             </button>
                           </div>
-                          <button onClick={() => { setShowNavPanel(false); setSearchOpen(false) }} className="p-2 -mr-2 rounded-lg">
+                          <button onClick={() => { setShowNavPanel(false); setSearchOpen(false) }} aria-label="Close navigation panel" className="p-2 -mr-2 rounded-lg">
                             <X className="w-5 h-5 opacity-60" />
                           </button>
                         </div>
