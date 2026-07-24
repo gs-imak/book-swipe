@@ -3,16 +3,7 @@ import { getCachedBooks, addBooksToCache, isQueryCached, markQueryCompleted, que
 import { searchOpenLibrary, searchOpenLibraryByQuery } from "./openlibrary-api"
 import { getLanguagePreference } from "./language-preference"
 import { upgradeGoogleBooksCoverUrl, sanitizeGoogleCoverUrl } from "./covers"
-
-// Deterministic pseudo-rating from a string (always returns the same value for the same input)
-function stableRating(seed: string, min = 3.5, max = 4.5): number {
-  let hash = 0
-  for (let i = 0; i < seed.length; i++) {
-    hash = ((hash << 5) - hash + seed.charCodeAt(i)) | 0
-  }
-  const norm = (Math.abs(hash) % 1000) / 1000 // 0..1
-  return Math.round((min + norm * (max - min)) * 10) / 10
-}
+import { stableRating } from "./stable-rating"
 
 // Strip HTML tags from API descriptions and truncate safely
 function sanitizeDescription(raw?: string): string {
