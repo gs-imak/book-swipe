@@ -213,3 +213,18 @@
     transform: translateY(-12px) rotate(calc(var(--rotate, 0deg) + 3deg));
   }
 }
+
+/* Accessibility: honor the user's reduced-motion preference. Collapses CSS
+   animations/transitions to a single frame and disables smooth scrolling.
+   Framer Motion spring animations are largely transform-based and finish
+   instantly under the near-zero durations forced here. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
