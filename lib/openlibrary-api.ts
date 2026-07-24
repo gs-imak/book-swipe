@@ -2,6 +2,7 @@ import { Book } from "./book-data"
 import { getOpenLibraryLanguageCodes } from "./language-preference"
 import { pickPreferredIsbn } from "./covers"
 import { stableRating } from "./stable-rating"
+import { estimateReadingTimeRange } from "./reading-time"
 
 export interface OpenLibraryDoc {
   key: string
@@ -120,17 +121,6 @@ function mapSubjectsToMoods(subjects: string[]): string[] {
   return Array.from(moods).slice(0, 3)
 }
 
-function estimateReadingTime(pages: number): string {
-  const hours = Math.ceil((pages * 250) / 250 / 60)
-  if (hours < 1) return "< 1 hour"
-  if (hours < 2) return "1-2 hours"
-  if (hours < 4) return "2-4 hours"
-  if (hours < 6) return "4-6 hours"
-  if (hours < 8) return "6-8 hours"
-  if (hours < 12) return "8-12 hours"
-  return "12+ hours"
-}
-
 export function transformToBook(doc: OpenLibraryDoc, searchedSubject: string): Book | null {
   if (!doc.title || !doc.author_name?.[0] || !doc.cover_i) return null
 
@@ -172,7 +162,7 @@ export function transformToBook(doc: OpenLibraryDoc, searchedSubject: string): B
     mood: moods,
     description: "Discover this book on your reading journey.",
     publishedYear: doc.first_publish_year || 2020,
-    readingTime: estimateReadingTime(pages),
+    readingTime: estimateReadingTimeRange(pages),
     metadata: {
       subjects: subjects.slice(0, 20),
       readinglogCount: doc.readinglog_count,
@@ -334,7 +324,7 @@ export async function fetchSubjectBooks(
           mood: moods,
           description: "Discover this book on your reading journey.",
           publishedYear: w.first_publish_year || 2000,
-          readingTime: estimateReadingTime(pages),
+          readingTime: estimateReadingTimeRange(pages),
           metadata: {
             subjects: subjects.slice(0, 20),
             source: "openlibrary" as const,

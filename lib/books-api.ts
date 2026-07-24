@@ -4,6 +4,7 @@ import { searchOpenLibrary, searchOpenLibraryByQuery } from "./openlibrary-api"
 import { getLanguagePreference } from "./language-preference"
 import { upgradeGoogleBooksCoverUrl, sanitizeGoogleCoverUrl } from "./covers"
 import { stableRating } from "./stable-rating"
+import { estimateReadingTimeRange } from "./reading-time"
 
 // Strip HTML tags from API descriptions and truncate safely
 function sanitizeDescription(raw?: string): string {
@@ -150,23 +151,6 @@ function transformGoogleBookToBook(googleBook: unknown): Book | null {
     return null
   }
   
-  // Estimate reading time based on page count
-  const estimateReadingTime = (pages: number): string => {
-    const wordsPerPage = 250
-    const wordsPerMinute = 250
-    const totalWords = pages * wordsPerPage
-    const minutes = totalWords / wordsPerMinute
-    const hours = Math.ceil(minutes / 60)
-    
-    if (hours < 1) return "< 1 hour"
-    if (hours < 2) return "1-2 hours"
-    if (hours < 4) return "2-4 hours"
-    if (hours < 6) return "4-6 hours"
-    if (hours < 8) return "6-8 hours"
-    if (hours < 12) return "8-12 hours"
-    return "12+ hours"
-  }
-  
   // Map categories to our mood system
   const mapCategoriesToMoods = (categories: string[]): string[] => {
     const moodMap: Record<string, string[]> = {
@@ -250,7 +234,7 @@ function transformGoogleBookToBook(googleBook: unknown): Book | null {
     mood: mapCategoriesToMoods(volumeInfo.categories || []),
     description: sanitizeDescription(volumeInfo.description),
     publishedYear,
-    readingTime: estimateReadingTime(pages),
+    readingTime: estimateReadingTimeRange(pages),
     isbn: isbn || undefined,
     formats,
     metadata: {
