@@ -472,7 +472,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                       <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-stone-800 leading-snug">Looks like you've finished this book!</p>
+                      <p className="text-sm font-medium text-stone-800 leading-snug">Looks like you&apos;ve finished this book!</p>
                       <p className="text-xs text-stone-500 mt-0.5">Mark it as completed?</p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
@@ -484,7 +484,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                         }}
                         className="h-8 px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors active:scale-[0.97]"
                       >
-                        Yes, I'm done
+                        Yes, I&apos;m done
                       </button>
                       <button
                         onClick={() => {

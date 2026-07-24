@@ -57,7 +57,7 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
         
         {review.review && (
           <p className="text-sm text-stone-500 line-clamp-2">
-            "{review.review}"
+            &ldquo;{review.review}&rdquo;
           </p>
         )}
         
@@ -114,7 +114,7 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
           </div>
           <div className="bg-stone-50 dark:bg-stone-800/50 rounded-lg p-4">
             <p className={`text-stone-700 dark:text-stone-300 leading-relaxed ${!showFullReview && review.review.length > 200 ? 'line-clamp-3' : ''}`}>
-              "{review.review}"
+              &ldquo;{review.review}&rdquo;
             </p>
             {review.review.length > 200 && (
               <Button
