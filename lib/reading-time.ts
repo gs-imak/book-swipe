@@ -45,6 +45,27 @@ export function getAllSpeeds(): { value: ReadingSpeed; label: string }[] {
 
 const WORDS_PER_PAGE = 250
 
+/**
+ * Catalog-facing reading-time BUCKETS ("2-4 hours", "12+ hours") at a fixed
+ * average speed. This is the format stored on `Book.readingTime` and parsed
+ * by the time filters (regex on "N-M hours") — distinct from
+ * `estimateReadingTime` below, which is personalized to the user's reading
+ * speed and returns display strings like "~2 hrs". Don't merge them.
+ */
+export function estimateReadingTimeRange(pages: number): string {
+  const wordsPerMinute = 250
+  const totalWords = pages * WORDS_PER_PAGE
+  const hours = Math.ceil(totalWords / wordsPerMinute / 60)
+
+  if (hours < 1) return "< 1 hour"
+  if (hours < 2) return "1-2 hours"
+  if (hours < 4) return "2-4 hours"
+  if (hours < 6) return "4-6 hours"
+  if (hours < 8) return "6-8 hours"
+  if (hours < 12) return "8-12 hours"
+  return "12+ hours"
+}
+
 export function estimateReadingTime(pages: number, speed?: ReadingSpeed): string {
   const s = speed || getReadingSpeed()
   const wpm = WPM[s]
