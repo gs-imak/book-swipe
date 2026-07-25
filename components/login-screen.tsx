@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { BookOpen, ArrowRight, Bookmark, Library, Star, Heart, Clock, Sparkles, Users, BookMarked } from "lucide-react"
+import { BookOpen, ArrowRight, Bookmark, Library, Star, Heart, Clock, Sparkles, BookMarked } from "lucide-react"
 import { motion } from "framer-motion"
 import Image from "next/image"
 
@@ -201,30 +201,20 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               </motion.div>
 
               {/* Social proof */}
+              {/* Truthful trust row — every claim here is verifiable (no
+                  fabricated ratings/user counts on a public project) */}
               <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center gap-4 lg:justify-start justify-center">
                 <div className="flex items-center gap-1.5">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Star
-                      key={i}
-                      className={`w-4 h-4 ${i <= 4 ? "fill-amber-500 text-amber-500" : "fill-amber-500/40 text-amber-500/40"}`}
-                    />
-                  ))}
-                  <span className="text-sm font-medium text-stone-600 dark:text-stone-400 ml-1">4.8</span>
+                  <BookMarked className="w-4 h-4 text-amber-600 dark:text-amber-500" />
+                  <p className="text-sm text-stone-500 dark:text-stone-400">
+                    <span className="font-semibold text-stone-700 dark:text-stone-300">70,000+</span> free classics to read
+                  </p>
                 </div>
                 <div className="hidden sm:block w-px h-4 bg-stone-300 dark:bg-stone-700" />
-                <div className="flex items-center gap-2">
-                  <div className="flex -space-x-2">
-                    {["bg-amber-200 dark:bg-amber-800", "bg-rose-200 dark:bg-rose-800", "bg-teal-200 dark:bg-teal-800", "bg-indigo-200 dark:bg-indigo-800"].map((color, i) => (
-                      <div
-                        key={i}
-                        className={`w-7 h-7 rounded-full ${color} border-2 border-white dark:border-stone-900 flex items-center justify-center`}
-                      >
-                        <Users className="w-3 h-3 text-stone-600 dark:text-stone-300" />
-                      </div>
-                    ))}
-                  </div>
+                <div className="flex items-center gap-1.5">
+                  <Heart className="w-4 h-4 text-emerald-600 dark:text-emerald-500" />
                   <p className="text-sm text-stone-500 dark:text-stone-400">
-                    Loved by <span className="font-semibold text-stone-700 dark:text-stone-300">2,400+</span> readers
+                    Free &amp; <a href="https://github.com/gs-imak/book-swipe" target="_blank" rel="noopener noreferrer" className="font-semibold text-stone-700 dark:text-stone-300 underline decoration-stone-300 dark:decoration-stone-600 underline-offset-2 hover:decoration-amber-500">open source</a>
                   </p>
                 </div>
               </motion.div>
