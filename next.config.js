@@ -3,6 +3,11 @@ const nextConfig = {
   poweredByHeader: false,
   images: {
     minimumCacheTTL: 2592000, // 30 days — book covers don't change
+    // Next 16 rejects any quality not in this allowlist (default [75]) with a
+    // 400 INVALID_IMAGE_OPTIMIZE_REQUEST — BookCover requests quality 85, so
+    // omitting 85 here silently broke every cover in production after the
+    // Next 16 upgrade (dev doesn't enforce the allowlist).
+    qualities: [75, 85],
     remotePatterns: [
       {
         protocol: 'https',
