@@ -11,9 +11,13 @@ import { checkRateLimit, getClientIp } from "@/lib/rate-limit"
 // Routed through the Vercel AI Gateway via a model string (no provider SDK / no
 // provider key in code) — gives unified billing, routing, and failover.
 //
-// INERT WITHOUT A KEY: if AI_GATEWAY_API_KEY is unset the route returns an empty
-// list and the client falls back to the existing local scoring engine. To enable,
-// set AI_GATEWAY_API_KEY (and optionally RECOMMENDER_MODEL). See ADR-0003.
+// AUTH: the gateway resolves credentials as AI_GATEWAY_API_KEY first, else the
+// Vercel OIDC token that deployments provision and refresh automatically — so on
+// Vercel this route needs NO configured secret at all. The gate below only
+// short-circuits environments with no possible auth (e.g. bare local dev without
+// a key), where calling the gateway would just burn the 20s timeout. Errors on
+// the OIDC path (gateway disabled, no credits) fail soft to an empty list and
+// the client falls back to the local engine. See ADR-0003.
 //
 // generateObject is verified present in ai@6 (v6 migration guide + exported
 // function); a model string resolves through the gateway (LanguageModel accepts
@@ -39,8 +43,15 @@ interface LikedInput {
 }
 
 export async function POST(request: NextRequest) {
-  // No gateway key → no-op. Client treats an empty list as "use the local engine".
-  if (!process.env.AI_GATEWAY_API_KEY) {
+  // No possible gateway auth → no-op. Client treats an empty list as "use the
+  // local engine". VERCEL is set on all Vercel deployments, where OIDC auth is
+  // available without a key.
+  const hasGatewayAuth = !!(
+    process.env.AI_GATEWAY_API_KEY ||
+    process.env.VERCEL_OIDC_TOKEN ||
+    process.env.VERCEL
+  )
+  if (!hasGatewayAuth) {
     return NextResponse.json({ recommendations: [], reason: "not configured" })
   }
 
