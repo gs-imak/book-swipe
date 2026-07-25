@@ -1,6 +1,9 @@
 const CACHE_NAME = 'bookswipe-v6'
 const API_CACHE_NAME = 'bookswipe-api-v1'
-const IMG_CACHE_NAME = 'bookswipe-images-v1'
+// v2: purges covers cached during the Next-16 broken-quality era (q=85 400s,
+// fixed in next.config images.qualities) — the old cache-first entries would
+// otherwise serve stale placeholders until LRU eviction.
+const IMG_CACHE_NAME = 'bookswipe-images-v2'
 // Gutenberg book text is immutable, so cache it cache-first → instant reopen +
 // offline reading once a book has been opened.
 const TEXT_CACHE_NAME = 'bookswipe-text-v1'
