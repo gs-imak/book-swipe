@@ -1,6 +1,7 @@
 "use client"
 
-import { supabase, isSupabaseConfigured } from "./supabase"
+import { getSupabase, isSupabaseConfigured } from "./supabase"
+import type { User } from "@supabase/supabase-js"
 import { Book } from "./book-data"
 import {
   getLikedBooks,
@@ -28,8 +29,7 @@ import {
 // getUser() many times (syncToCloud, recordSwipe, getCollaborativeRecs all do).
 // The cache is invalidated on any auth state change (see onAuthChange below) and
 // after a short TTL, so it never serves a stale session beyond that window.
-type CachedUser = Awaited<ReturnType<NonNullable<typeof supabase>["auth"]["getUser"]>>["data"]["user"]
-let cachedUser: CachedUser = null
+let cachedUser: User | null = null
 let cachedUserAt = 0
 const USER_CACHE_TTL_MS = 30_000
 
@@ -39,6 +39,7 @@ function clearUserCache() {
 }
 
 export async function getUser() {
+  const supabase = await getSupabase()
   if (!supabase) return null
   if (cachedUser && Date.now() - cachedUserAt < USER_CACHE_TTL_MS) {
     return cachedUser
@@ -57,16 +58,19 @@ export async function getUser() {
 }
 
 export async function signInWithEmail(email: string, password: string) {
+  const supabase = await getSupabase()
   if (!supabase) throw new Error("Supabase not configured")
   return supabase.auth.signInWithPassword({ email, password })
 }
 
 export async function signUpWithEmail(email: string, password: string) {
+  const supabase = await getSupabase()
   if (!supabase) throw new Error("Supabase not configured")
   return supabase.auth.signUp({ email, password })
 }
 
 export async function signInWithGoogle() {
+  const supabase = await getSupabase()
   if (!supabase) throw new Error("Supabase not configured")
   return supabase.auth.signInWithOAuth({
     provider: "google",
@@ -75,6 +79,7 @@ export async function signInWithGoogle() {
 }
 
 export async function signOut() {
+  const supabase = await getSupabase()
   if (!supabase) return
   return supabase.auth.signOut()
 }
@@ -85,6 +90,7 @@ export async function signOut() {
  * Supabase establishes from the link.
  */
 export async function sendPasswordReset(email: string) {
+  const supabase = await getSupabase()
   if (!supabase) throw new Error("Supabase not configured")
   const redirectTo =
     typeof window !== "undefined" ? `${window.location.origin}/reset-password` : undefined
@@ -93,12 +99,14 @@ export async function sendPasswordReset(email: string) {
 
 /** Set a new password for the currently-authenticated (recovery) session. */
 export async function updatePassword(newPassword: string) {
+  const supabase = await getSupabase()
   if (!supabase) throw new Error("Supabase not configured")
   return supabase.auth.updateUser({ password: newPassword })
 }
 
 /** Resend the signup confirmation email. */
 export async function resendConfirmation(email: string) {
+  const supabase = await getSupabase()
   if (!supabase) throw new Error("Supabase not configured")
   return supabase.auth.resend({ type: "signup", email })
 }
@@ -111,6 +119,7 @@ export async function resendConfirmation(email: string) {
  * it. Local on-device data is the caller's responsibility to clear afterwards.
  */
 export async function deleteAccount(): Promise<{ ok: boolean; reason?: string }> {
+  const supabase = await getSupabase()
   if (!supabase) return { ok: false, reason: "not configured" }
   const user = await getUser()
   if (!user) return { ok: false, reason: "not signed in" }
@@ -130,18 +139,42 @@ export function onAuthChange(callback: (user: any) => void) {
   // caller (app/page.tsx useEffect cleanup) can always call
   // data.subscription.unsubscribe() — including when Supabase is not configured —
   // which prevents a dangling listener / leak.
-  if (!supabase) return { data: { subscription: { unsubscribe: () => {} } } }
-  return supabase.auth.onAuthStateChange((_event, session) => {
-    // The cached user is now stale (sign-in/out/token refresh); drop it so the next
-    // getUser() re-reads the real session.
-    clearUserCache()
-    callback(session?.user ?? null)
-  })
+  //
+  // The client now loads lazily, so the subscription attaches when the chunk
+  // resolves (~first paint + a tick). Supabase replays the INITIAL_SESSION event
+  // to late subscribers, so a session restored before attachment is still
+  // delivered — no sign-in state is missed.
+  let unsubscribe: (() => void) | null = null
+  let cancelled = false
+  if (isSupabaseConfigured()) {
+    void getSupabase().then((client) => {
+      if (!client || cancelled) return
+      const { data } = client.auth.onAuthStateChange((_event, session) => {
+        // The cached user is now stale (sign-in/out/token refresh); drop it so the
+        // next getUser() re-reads the real session.
+        clearUserCache()
+        callback(session?.user ?? null)
+      })
+      unsubscribe = () => data.subscription.unsubscribe()
+      if (cancelled) unsubscribe()
+    })
+  }
+  return {
+    data: {
+      subscription: {
+        unsubscribe: () => {
+          cancelled = true
+          unsubscribe?.()
+        },
+      },
+    },
+  }
 }
 
 // ─── Book upsert (shared catalog) ───────────────────────────────────────────
 
 async function upsertBook(book: Book): Promise<{ error: unknown | null }> {
+  const supabase = await getSupabase()
   if (!supabase) return { error: null }
   // ignoreDuplicates:true => "insert if absent, no-op if the id already exists".
   // This matches the books RLS policy, which is INSERT-only (no UPDATE policy): an
@@ -173,6 +206,7 @@ export async function syncToCloud(): Promise<{
   books?: number
   reviews?: number
 }> {
+  const supabase = await getSupabase()
   if (!supabase) return { synced: false, reason: "not configured" }
 
   const user = await getUser()
@@ -358,6 +392,7 @@ async function fetchUpdatedAtMap(
   userId: string,
   column: "updated_at" | "last_read_date" = "updated_at",
 ): Promise<Map<string, string> | null> {
+  const supabase = await getSupabase()
   if (!supabase) return new Map()
   const { data, error } = await supabase
     .from(table)
@@ -445,6 +480,7 @@ export async function syncFromCloud(): Promise<{
   assignments: BookShelfAssignment[]
   positions: Record<string, number>
 } | null> {
+  const supabase = await getSupabase()
   if (!supabase) return null
 
   const user = await getUser()
@@ -674,6 +710,7 @@ export async function recordSwipe(
   direction: "left" | "right",
   book?: Book,
 ): Promise<{ ok: boolean; reason?: string }> {
+  const supabase = await getSupabase()
   if (!supabase) return { ok: false, reason: "not configured" }
   const user = await getUser()
   if (!user) return { ok: false, reason: "not signed in" }
@@ -719,6 +756,7 @@ export async function recordSwipe(
  * the RPC errors — callers treat that as "no badge".
  */
 export async function getCoLikeCounts(likedBookIds: string[]): Promise<Map<string, number>> {
+  const supabase = await getSupabase()
   if (!supabase || likedBookIds.length === 0) return new Map()
   const user = await getUser()
   if (!user) return new Map() // RPC is granted to authenticated only
@@ -733,6 +771,7 @@ export async function getCoLikeCounts(likedBookIds: string[]): Promise<Map<strin
 }
 
 export async function getCollaborativeRecs(likedBookIds: string[], limit: number = 10): Promise<string[]> {
+  const supabase = await getSupabase()
   if (!supabase || likedBookIds.length === 0) return []
 
   // P1-5 (injection) + P1-4 (RLS): the old implementation read other users' raw
