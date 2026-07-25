@@ -328,6 +328,26 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                   })()}
                 </div>
 
+                {/* Description — Goodreads placement: beside the cover, directly
+                    under the title/author/rating block, clamped with an expander */}
+                {book.description && (
+                  <div>
+                    <p className="text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
+                      {descExpanded || book.description.length <= 200
+                        ? book.description
+                        : book.description.slice(0, 200) + "..."}
+                    </p>
+                    {book.description.length > 200 && (
+                      <button
+                        onClick={() => setDescExpanded(!descExpanded)}
+                        className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium mt-1 transition-colors"
+                      >
+                        {descExpanded ? "Show less" : "...more"}
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 {/* Action buttons — primary row */}
                 <div className="flex items-center gap-2 pt-0.5">
                   {onStartReading && (
@@ -545,29 +565,6 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
 
             {activeTab === "overview" && (
               <div className="space-y-5">
-                {/* Description */}
-                <div>
-                  <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2">
-                    About this book
-                  </h3>
-                  <p className="text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
-                    {(() => {
-                      const description = book.description ?? ""
-                      return descExpanded || description.length <= 200
-                        ? description
-                        : description.slice(0, 200) + "..."
-                    })()}
-                  </p>
-                  {(book.description?.length ?? 0) > 200 && (
-                    <button
-                      onClick={() => setDescExpanded(!descExpanded)}
-                      className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium mt-1.5 transition-colors"
-                    >
-                      {descExpanded ? "Show less" : "Read more"}
-                    </button>
-                  )}
-                </div>
-
                 {/* Content Warnings */}
                 {(() => {
                   const warnings: string[] = []
