@@ -85,7 +85,6 @@ export function GlobalSearch({ isOpen, onClose, onBookClick }: GlobalSearchProps
   if (isOpen !== wasOpen) {
     setWasOpen(isOpen)
     if (!isOpen) {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
       setQuery("")
       setResults([])
       setHasSearched(false)
@@ -107,9 +106,8 @@ export function GlobalSearch({ isOpen, onClose, onBookClick }: GlobalSearchProps
       const focusTimer = setTimeout(() => inputRef.current?.focus(), 100)
       return () => clearTimeout(focusTimer)
     }
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-    }
+    // Closed: cancel any in-flight debounced search.
+    if (debounceRef.current) clearTimeout(debounceRef.current)
   }, [isOpen])
 
   // Lock body scroll
