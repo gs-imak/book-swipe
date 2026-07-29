@@ -69,9 +69,10 @@ const sectionVariants = {
 }
 
 export function SettingsPage({ onBack }: SettingsPageProps) {
-  const [currentTheme, setCurrentTheme] = useState<"light" | "dark">("light")
-  const [speed, setSpeed] = useState<ReadingSpeed>("average")
-  const [language, setLanguage] = useState<BookLanguage>("en")
+  // Mounted post-interaction (settings view), so lazy storage reads are safe.
+  const [currentTheme, setCurrentTheme] = useState<"light" | "dark">(() => getTheme())
+  const [speed, setSpeed] = useState<ReadingSpeed>(() => getReadingSpeed())
+  const [language, setLanguage] = useState<BookLanguage>(() => getLanguagePreference())
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [backupPreview, setBackupPreview] = useState<{
     json: string
@@ -86,9 +87,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
   const { showToast } = useToast()
 
   useEffect(() => {
-    setCurrentTheme(getTheme())
-    setSpeed(getReadingSpeed())
-    setLanguage(getLanguagePreference())
+    // Async fetch — setState in .then is the intended subscription pattern.
     if (isSupabaseConfigured()) {
       getUser().then((u) => setUserEmail(u?.email ?? null))
     }
