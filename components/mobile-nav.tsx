@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Home, Sparkles, Trophy, BarChart3, BookOpen, Search, Sun, Moon, Camera, Cloud, User } from "lucide-react"
-import { getTheme, toggleTheme } from "@/lib/theme"
+import { toggleTheme } from "@/lib/theme"
+import { useTheme } from "@/lib/use-theme"
 
 type NavView = "dashboard" | "swipe" | "read" | "achievements" | "profile"
 
@@ -18,8 +18,9 @@ interface MobileNavProps {
 }
 
 export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, onScan, onSignIn, isSignedIn }: MobileNavProps) {
-  const [isDark, setIsDark] = useState(false)
-  useEffect(() => { setIsDark(getTheme() === "dark") }, [])
+  // Subscribed: stays in sync when the theme is toggled anywhere (settings,
+  // another tab), and is hydration-safe via the store's server snapshot.
+  const isDark = useTheme() === "dark"
 
   const navItems = [
     {
@@ -176,7 +177,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
           )}
           <div className="lg:flex lg:items-center lg:justify-center lg:py-1">
             <button
-              onClick={() => { const next = toggleTheme(); setIsDark(next === "dark") }}
+              onClick={() => toggleTheme()}
               aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
               className="flex flex-col items-center gap-0.5 py-2 px-1 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors duration-150 w-[calc(100%-8px)]"
             >

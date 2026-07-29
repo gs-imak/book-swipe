@@ -18,7 +18,11 @@ export function VocabFlashcards({ isOpen, onClose }: VocabFlashcardsProps) {
   const [mode, setMode] = useState<"review" | "browse">("review")
   const [sessionComplete, setSessionComplete] = useState(false)
 
-  useEffect(() => {
+  // Reset the session on the closed -> open transition, during render
+  // (React's "adjusting state when props change" pattern — no extra commit).
+  const [wasOpen, setWasOpen] = useState(false)
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen)
     if (isOpen) {
       setAllWords(getVocabulary())
       const due = getDueWords()
@@ -28,7 +32,7 @@ export function VocabFlashcards({ isOpen, onClose }: VocabFlashcardsProps) {
       setSessionComplete(due.length === 0)
       setMode(due.length > 0 ? "review" : "browse")
     }
-  }, [isOpen])
+  }
 
   useEffect(() => {
     if (!isOpen) return

@@ -67,12 +67,16 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
   const [showProfileCard, setShowProfileCard] = useState(false)
   const [showStats, setShowStats] = useState(false)
 
-  useEffect(() => {
+  // Refresh from storage on the closed -> open transition, during render
+  // (React's "adjusting state when props change" pattern — no extra commit).
+  const [wasOpen, setWasOpen] = useState(false)
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen)
     if (isOpen) {
       setLikedBooks(getLikedBooks())
       setReviews(getBookReviews())
     }
-  }, [isOpen])
+  }
 
   // Lock body scroll when open
   useEffect(() => {

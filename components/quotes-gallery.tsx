@@ -15,29 +15,22 @@ interface QuoteEntry {
 }
 
 export function QuotesGallery() {
-  const [quotes, setQuotes] = useState<QuoteEntry[]>([])
-  const [copyFailedId, setCopyFailedId] = useState<string | null>(null)
-
-  useEffect(() => {
-    const allNotes = getBookNotes()
-    const quoteNotes = allNotes.filter((n) => n.type === "quote")
-    if (quoteNotes.length === 0) {
-      setQuotes([])
-      return
-    }
-    const books = getLikedBooks()
+  // Mounted only on its dashboard tab (post-hydration), so reading storage in
+  // the lazy initializer is safe — no mount effect, no double render.
+  const [quotes] = useState<QuoteEntry[]>(() => {
+    const quoteNotes = getBookNotes().filter((n) => n.type === "quote")
+    if (quoteNotes.length === 0) return []
     const bookMap: Record<string, Book> = {}
-    books.forEach((b) => { bookMap[b.id] = b })
-    setQuotes(
-      quoteNotes.map((n) => ({
-        id: n.id,
-        content: n.content,
-        page: n.page,
-        bookId: n.bookId,
-        book: bookMap[n.bookId],
-      }))
-    )
-  }, [])
+    getLikedBooks().forEach((b) => { bookMap[b.id] = b })
+    return quoteNotes.map((n) => ({
+      id: n.id,
+      content: n.content,
+      page: n.page,
+      bookId: n.bookId,
+      book: bookMap[n.bookId],
+    }))
+  })
+  const [copyFailedId, setCopyFailedId] = useState<string | null>(null)
 
   if (quotes.length === 0) return null
 

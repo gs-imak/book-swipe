@@ -16,16 +16,20 @@ interface AchievementsPanelProps {
 }
 
 export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
-  const [stats, setStats] = useState(getUserStats())
-  const [achievements, setAchievements] = useState(getUserAchievements())
+  const [stats, setStats] = useState(() => getUserStats())
+  const [achievements, setAchievements] = useState(() => getUserAchievements())
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'stats'>('overview')
 
-  useEffect(() => {
+  // Refresh from storage on the closed -> open transition, during render
+  // (React's "adjusting state when props change" pattern — no extra commit).
+  const [wasOpen, setWasOpen] = useState(isOpen)
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen)
     if (isOpen) {
       setStats(getUserStats())
       setAchievements(getUserAchievements())
     }
-  }, [isOpen])
+  }
 
   // Close on Escape key
   useEffect(() => {

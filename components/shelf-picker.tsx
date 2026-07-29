@@ -26,12 +26,18 @@ export function ShelfPicker({ bookId, isOpen, onClose }: ShelfPickerProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   useFocusTrap(panelRef, isOpen)
 
-  useEffect(() => {
+  // Refresh on the closed -> open transition (or book switch while open),
+  // during render — React's "adjusting state when props change" pattern.
+  const [wasOpen, setWasOpen] = useState(false)
+  const [prevBookId, setPrevBookId] = useState(bookId)
+  if (isOpen !== wasOpen || bookId !== prevBookId) {
+    setWasOpen(isOpen)
+    setPrevBookId(bookId)
     if (isOpen) {
       setShelves(getShelves())
       setAssignedIds(getShelvesForBook(bookId))
     }
-  }, [isOpen, bookId])
+  }
 
   useEffect(() => {
     if (!isOpen) return

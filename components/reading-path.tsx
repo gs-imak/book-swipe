@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { motion } from "framer-motion"
 import { ArrowRight, RefreshCw } from "lucide-react"
 import { Book } from "@/lib/book-data"
@@ -15,19 +15,25 @@ export function ReadingPath({ onBookClick }: ReadingPathProps) {
   const [chains, setChains] = useState<BookChain[]>([])
   const [loading, setLoading] = useState(true)
 
-  const loadChains = () => {
-    setLoading(true)
-    // Use setTimeout so the UI doesn't block
-    setTimeout(() => {
-      const result = generateChainFromLiked(2)
-      setChains(result)
+  // Chain generation is deferred to a timeout so the UI doesn't block.
+  const runGeneration = useCallback(() => {
+    return setTimeout(() => {
+      setChains(generateChainFromLiked(2))
       setLoading(false)
     }, 50)
+  }, [])
+
+  // Retry button handler — the sync setLoading is fine in an event handler.
+  const loadChains = () => {
+    setLoading(true)
+    runGeneration()
   }
 
   useEffect(() => {
-    loadChains()
-  }, [])
+    // Initial load: `loading` already starts true, so only async setStates run.
+    const timer = runGeneration()
+    return () => clearTimeout(timer)
+  }, [runGeneration])
 
   if (loading) return null
   if (chains.length === 0) return null

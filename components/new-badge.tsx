@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { isFeatureSeen, markFeatureSeen } from "@/lib/storage"
+import { useClientValue } from "@/lib/use-client-value"
 
 interface NewBadgeProps {
   featureId: string
@@ -10,15 +11,14 @@ interface NewBadgeProps {
 }
 
 export function NewBadge({ featureId, className = "" }: NewBadgeProps) {
-  const [visible, setVisible] = useState(false)
-
-  useEffect(() => {
-    setVisible(!isFeatureSeen(featureId))
-  }, [featureId])
+  // Hydration-safe: hidden on the server (no flash), real value after hydration.
+  const unseen = useClientValue(() => !isFeatureSeen(featureId), false)
+  const [dismissed, setDismissed] = useState(false)
+  const visible = unseen && !dismissed
 
   const dismiss = useCallback(() => {
     markFeatureSeen(featureId)
-    setVisible(false)
+    setDismissed(true)
   }, [featureId])
 
   if (!visible) return null
@@ -57,12 +57,13 @@ interface NewDotProps {
 }
 
 export function NewDot({ featureIds, className = "" }: NewDotProps) {
-  const [hasNew, setHasNew] = useState(false)
-
-  useEffect(() => {
-    const anyNew = featureIds.some(id => !isFeatureSeen(id))
-    setHasNew(anyNew)
-  }, [featureIds])
+  // Join the ids so the client snapshot is referentially stable across renders
+  // (callers pass a fresh array literal each time).
+  const key = featureIds.join(",")
+  const hasNew = useClientValue(
+    useCallback(() => key.split(",").some(id => id && !isFeatureSeen(id)), [key]),
+    false,
+  )
 
   if (!hasNew) return null
 

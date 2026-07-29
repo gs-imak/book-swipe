@@ -15,20 +15,11 @@ import {
 } from "@/lib/notifications"
 
 export function NotificationSettings() {
-  const [supported, setSupported] = useState(true)
-  const [permission, setPermission] = useState<NotificationPermission | "unsupported">("default")
-  const [settings, setSettings] = useState<NotifSettings>({
-    enabled: false,
-    reminderHour: 20,
-    reminderMinute: 0,
-  })
-
-  useEffect(() => {
-    const sup = isNotificationSupported()
-    setSupported(sup)
-    setPermission(getNotificationPermission())
-    setSettings(getNotificationSettings())
-  }, [])
+  // Mounted post-interaction (inside settings), so lazy browser-API/storage
+  // reads are safe — no mount effect, no flash of default state.
+  const [supported, setSupported] = useState(() => isNotificationSupported())
+  const [permission, setPermission] = useState<NotificationPermission | "unsupported">(() => getNotificationPermission())
+  const [settings, setSettings] = useState<NotifSettings>(() => getNotificationSettings())
 
   const handleToggle = useCallback(async () => {
     if (settings.enabled) {

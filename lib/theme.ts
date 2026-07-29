@@ -16,6 +16,26 @@ export function getTheme(): Theme {
   return "light"
 }
 
+// Subscribers for useTheme(). Without this, each component that read the theme
+// held its own copy, so toggling in one place (settings) left others (the nav
+// icon) stale until remount.
+const listeners = new Set<() => void>()
+
+/** Subscribe to theme changes. Returns an unsubscribe function. */
+export function subscribeTheme(onChange: () => void): () => void {
+  listeners.add(onChange)
+  if (typeof window !== "undefined") {
+    // Another tab changed the theme.
+    window.addEventListener("storage", onChange)
+  }
+  return () => {
+    listeners.delete(onChange)
+    if (typeof window !== "undefined") {
+      window.removeEventListener("storage", onChange)
+    }
+  }
+}
+
 export function setTheme(theme: Theme): void {
   if (typeof window === "undefined") return
   try {
@@ -24,6 +44,7 @@ export function setTheme(theme: Theme): void {
     // ignore
   }
   applyTheme(theme)
+  listeners.forEach((l) => l())
 }
 
 export function toggleTheme(): Theme {

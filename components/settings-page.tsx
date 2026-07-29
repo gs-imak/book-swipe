@@ -25,7 +25,8 @@ import {
   FileText,
   Loader2,
 } from "lucide-react"
-import { getTheme, setTheme, applyTheme } from "@/lib/theme"
+import { setTheme, applyTheme } from "@/lib/theme"
+import { useTheme } from "@/lib/use-theme"
 import {
   getReadingSpeed,
   setReadingSpeed,
@@ -69,9 +70,10 @@ const sectionVariants = {
 }
 
 export function SettingsPage({ onBack }: SettingsPageProps) {
-  const [currentTheme, setCurrentTheme] = useState<"light" | "dark">("light")
-  const [speed, setSpeed] = useState<ReadingSpeed>("average")
-  const [language, setLanguage] = useState<BookLanguage>("en")
+  // Subscribed to the theme store — shares one source of truth with the nav.
+  const currentTheme = useTheme()
+  const [speed, setSpeed] = useState<ReadingSpeed>(() => getReadingSpeed())
+  const [language, setLanguage] = useState<BookLanguage>(() => getLanguagePreference())
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [backupPreview, setBackupPreview] = useState<{
     json: string
@@ -86,9 +88,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
   const { showToast } = useToast()
 
   useEffect(() => {
-    setCurrentTheme(getTheme())
-    setSpeed(getReadingSpeed())
-    setLanguage(getLanguagePreference())
+    // Async fetch — setState in .then is the intended subscription pattern.
     if (isSupabaseConfigured()) {
       getUser().then((u) => setUserEmail(u?.email ?? null))
     }
@@ -122,7 +122,6 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
 
   const handleThemeToggle = () => {
     const next = currentTheme === "dark" ? "light" : "dark"
-    setCurrentTheme(next)
     setTheme(next)
     applyTheme(next)
   }

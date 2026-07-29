@@ -32,30 +32,34 @@ export function WhereToRead({ book }: WhereToReadProps) {
   const buyLinks = links.filter(l => l.type === "buy")
   const borrowLinks = links.filter(l => l.type === "borrow")
 
-  useEffect(() => {
-    let cancelled = false
+  // Reset per-book state during render on book switch (React's "adjusting
+  // state when props change" pattern); cache hits apply synchronously here so
+  // the effect below only ever performs the async fetch.
+  const [prevBookId, setPrevBookId] = useState<string | null>(null)
+  if (book.id !== prevBookId) {
+    setPrevBookId(book.id)
     setWatching(isOnWatchList(book.id))
-    setPriceInfo(null)
-    setLoadingPrice(false)
-    // Fetch price info if book is from Google Books
-    if (book.id && !book.id.match(/^\d+$/)) {
-      const cached = priceCache.get(book.id)
-      if (cached && Date.now() - cached.ts < PRICE_CACHE_TTL) {
-        setPriceInfo(cached.info)
-        return
-      }
-      setLoadingPrice(true)
-      fetchPriceInfo(book.id).then(info => {
-        if (cancelled) return
-        priceCache.set(book.id, { info, ts: Date.now() })
-        setPriceInfo(info)
-        setLoadingPrice(false)
-      }).catch(() => {
-        if (!cancelled) setLoadingPrice(false)
-      })
-    }
+    const cached = priceCache.get(book.id)
+    // eslint-disable-next-line react-hooks/purity -- TTL check needs the clock; a price stale by one render is harmless
+    const fresh = !!cached && Date.now() - cached.ts < PRICE_CACHE_TTL
+    setPriceInfo(fresh ? cached!.info : null)
+    // Fetch price info only for Google Books ids (numeric ids = Gutenberg)
+    setLoadingPrice(!fresh && !!book.id && !book.id.match(/^\d+$/))
+  }
+
+  useEffect(() => {
+    if (!loadingPrice) return
+    let cancelled = false
+    fetchPriceInfo(book.id).then(info => {
+      if (cancelled) return
+      priceCache.set(book.id, { info, ts: Date.now() })
+      setPriceInfo(info)
+      setLoadingPrice(false)
+    }).catch(() => {
+      if (!cancelled) setLoadingPrice(false)
+    })
     return () => { cancelled = true }
-  }, [book.id])
+  }, [book.id, loadingPrice])
 
   const toggleWatch = () => {
     if (watching) {

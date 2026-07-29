@@ -27,11 +27,15 @@ export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManager
   const [name, setName] = useState("")
   const [emoji, setEmoji] = useState("\u{1F4DA}")
 
-  useEffect(() => {
+  // Refresh on the closed -> open transition, during render — React's
+  // "adjusting state when props change" pattern (no extra commit).
+  const [wasOpen, setWasOpen] = useState(false)
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen)
     if (isOpen) {
       setShelves(getShelves())
     }
-  }, [isOpen])
+  }
 
   useEffect(() => {
     if (!isOpen) return
