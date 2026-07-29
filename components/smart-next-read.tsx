@@ -106,26 +106,33 @@ function pickNextRead(
   return top ? { book: top.book, reason: top.reason } : null
 }
 
+// Reads storage and picks the next book. Pure w.r.t. React — used both for the
+// lazy initial state and by the "pick another" handler.
+function computePickFrom(currentSkipIds: Set<string>) {
+  const likedBooks = getLikedBooks()
+  const progress = getReadingProgress()
+  const reviews = getBookReviews()
+  return {
+    result: pickNextRead(likedBooks, progress, reviews, currentSkipIds),
+    hasData: likedBooks.length >= 3,
+  }
+}
+
 export function SmartNextRead({ onBookClick, onStartReading }: SmartNextReadProps) {
-  const [result, setResult] = useState<{ book: Book; reason: string } | null>(null)
+  // Rendered inside the dashboard (post-hydration), so the initial pick is
+  // computed lazily instead of in a mount effect.
+  const [initial] = useState(() => computePickFrom(new Set()))
+  const [result, setResult] = useState<{ book: Book; reason: string } | null>(initial.result)
   const [skipIds, setSkipIds] = useState<Set<string>>(new Set())
-  const [hasData, setHasData] = useState(false)
+  const [hasData, setHasData] = useState(initial.hasData)
   const [startedId, setStartedId] = useState<string | null>(null)
   const [isShuffling, setIsShuffling] = useState(false)
 
   function computePick(currentSkipIds: Set<string>) {
-    const likedBooks = getLikedBooks()
-    const progress = getReadingProgress()
-    const reviews = getBookReviews()
-    const pick = pickNextRead(likedBooks, progress, reviews, currentSkipIds)
-    setResult(pick)
-    setHasData(likedBooks.length >= 3)
+    const next = computePickFrom(currentSkipIds)
+    setResult(next.result)
+    setHasData(next.hasData)
   }
-
-  useEffect(() => {
-    computePick(skipIds)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   const handlePickAnother = () => {
     if (!result) return
