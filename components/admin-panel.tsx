@@ -68,8 +68,14 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
   const [showGoodreadsImport, setShowGoodreadsImport] = useState(false)
   // SSR-safe default ("en" matches getLanguagePreference's server fallback);
   // the real stored value is read client-side after mount in the effect below.
-  const [language, setLanguage] = useState<BookLanguage>("en")
-  const [counts, setCounts] = useState({ liked: 0, reviews: 0, notes: 0, progress: 0 })
+  // Mounted on demand (post-hydration), so lazy storage reads are safe here.
+  const [language, setLanguage] = useState<BookLanguage>(() => getLanguagePreference())
+  const [counts, setCounts] = useState(() => ({
+    liked: getLikedBooks().length,
+    reviews: getBookReviews().length,
+    notes: getBookNotes().length,
+    progress: getReadingProgress().length,
+  }))
   const [fullBackupPreview, setFullBackupPreview] = useState<{
     json: string
     stats: { books: number; reviews: number; notes: number; totalKeys: number }
@@ -90,10 +96,9 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
     })
   }
 
-  useEffect(() => {
-    setLanguage(getLanguagePreference())
-    refreshCounts()
-  }, [])
+  // Admin panel only mounts on demand (post-hydration), so the initial reads
+  // happen in lazy initializers instead of a mount effect — see the useState
+  // declarations above.
 
   const handleLanguageChange = (lang: BookLanguage) => {
     setLanguage(lang)
