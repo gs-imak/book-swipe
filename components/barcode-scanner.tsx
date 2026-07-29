@@ -138,9 +138,12 @@ export function BarcodeScanner({ isOpen, onClose }: BarcodeScannerProps) {
     }
   }, [stopCamera])
 
-  // Auto-start when opened; stop the camera when closed
+  // Auto-start when opened; stop the camera when closed. startCamera flips its
+  // status flags synchronously before awaiting getUserMedia — a hardware side
+  // effect that can only run after commit, never during render.
   useEffect(() => {
     if (isOpen && isSupported) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       startCamera()
     }
     return () => stopCamera()

@@ -227,13 +227,14 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
     return { ...genre, segmentLength }
   })
   // Start half a gap in so the leading gap is applied to the first slice too,
-  // centering every gap between slices instead of letting the first slice sit flush.
-  let runningOffset = gap / 2
-  const donutOffsets = donutSegments.map(seg => {
-    const offset = runningOffset
-    runningOffset += seg.segmentLength + gap
-    return offset
-  })
+  // centering every gap between slices instead of letting the first slice sit
+  // flush. Computed without mutation (render must stay pure); the segment count
+  // is the number of genres, so the quadratic scan is negligible.
+  const donutOffsets = donutSegments.map((_, i) =>
+    donutSegments
+      .slice(0, i)
+      .reduce((sum, prev) => sum + prev.segmentLength + gap, gap / 2)
+  )
 
   const fadeIn = (delay: number) => ({
     initial: { opacity: 0, y: 12 },

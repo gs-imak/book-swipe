@@ -303,10 +303,15 @@ export function ReadingWrapped({ isOpen, onClose }: ReadingWrappedProps) {
   const [slide, setSlide] = useState(0)
   const TOTAL_SLIDES = 6
 
-  useEffect(() => {
-    if (!isOpen) { setSlide(0); return }
-
-    const books = getLikedBooks()
+  // Recompute the year-in-review during render on the closed -> open transition
+  // — React's "adjusting state when props change" pattern (no extra commit).
+  const [wasOpen, setWasOpen] = useState(false)
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen)
+    if (!isOpen) {
+      setSlide(0)
+    } else {
+      const books = getLikedBooks()
     const reviews = getBookReviews()
     const goals = getReadingGoals()
 
@@ -345,21 +350,22 @@ export function ReadingWrapped({ isOpen, onClose }: ReadingWrappedProps) {
 
     const archetype = topGenre ? getArchetype(topGenre, topMood) : "Curious Reader"
 
-    setStats({
-      year,
-      totalBooks,
-      totalPages,
-      topGenre,
-      topGenreCount,
-      topAuthor,
-      topAuthorCount,
-      bestBook,
-      bestRating,
-      archetype,
-      booksCompleted: goals.booksCompleted,
-      streak: goals.streak,
-    })
-  }, [isOpen])
+      setStats({
+        year,
+        totalBooks,
+        totalPages,
+        topGenre,
+        topGenreCount,
+        topAuthor,
+        topAuthorCount,
+        bestBook,
+        bestRating,
+        archetype,
+        booksCompleted: goals.booksCompleted,
+        streak: goals.streak,
+      })
+    }
+  }
 
   const handleShare = useCallback(() => {
     if (!stats) return

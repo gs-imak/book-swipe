@@ -300,9 +300,10 @@ function RenderInlineText({ text, skipTypography }: { text: string; skipTypograp
 }
 
 export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, onClose }: BookReaderProps) {
-  // Initialize to a stable SSR default; hydrate the stored theme after mount
-  // (reading localStorage in the useState initializer risks a hydration mismatch).
-  const [theme, setTheme] = useState<ReaderTheme>("sepia")
+  // The reader is lazy-loaded and only ever mounts from a user interaction —
+  // never during the initial hydration pass — so reading the stored theme in
+  // the initializer is hydration-safe and avoids a flash of the default.
+  const [theme, setTheme] = useState<ReaderTheme>(() => getStoredTheme())
   const prefersReducedMotion = useReducedMotion()
   // Trap focus inside the full-screen reader + restore it to the trigger on close.
   const dialogRef = useRef<HTMLDivElement>(null)
@@ -349,7 +350,9 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   // Feature: One-time reader hints
   const [showHints, setShowHints] = useState(false)
 
-  // Session tracking for end-of-session summary
+  // Session tracking for end-of-session summary. The clock read is the point —
+  // this records when the reader mounted.
+  // eslint-disable-next-line react-hooks/purity
   const sessionStartRef = useRef(Date.now())
   const sessionStartProgressRef = useRef(0)
   const sessionStartRecordedRef = useRef(false)
@@ -393,6 +396,9 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   }, [bookId])
 
   useEffect(() => {
+    // Reads persisted notes for the open book — client-only storage, so it
+    // belongs after commit rather than in render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (isOpen) loadNotes()
   }, [isOpen, loadNotes])
 
@@ -401,17 +407,14 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
     if (isOpen) loadReaderFonts()
   }, [isOpen])
 
-  // Hydrate the persisted theme after mount (SSR-safe — see useState above)
-  useEffect(() => {
-    setTheme(getStoredTheme())
-  }, [])
-
   // One-time hints on first open
   useEffect(() => {
     if (!isOpen || !text) return
     try {
       const seen = localStorage.getItem("bookswipe_reader_hints_seen")
       if (!seen) {
+        // Paired with the localStorage write below — a one-time side effect.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setShowHints(true)
         localStorage.setItem("bookswipe_reader_hints_seen", "1")
         const timer = setTimeout(() => setShowHints(false), 4000)
@@ -477,11 +480,20 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   // Mirror the current ambient selection/volume into refs so the pomodoro timer
   // effect can read the latest values without taking them as dependencies
   // (which would otherwise tear down and restart the interval on every change).
+  // Latest-ref mirrors. The lint rule treats a ref seeded from state as
+  // immutable; writing to `.current` inside an effect is the documented
+  // latest-ref pattern and is exactly what keeps the audio interval stable.
+  /* eslint-disable react-hooks/immutability */
   const ambientSoundRef = useRef(ambientSound)
   const ambientVolumeRef = useRef(ambientVolume)
   useEffect(() => { ambientSoundRef.current = ambientSound }, [ambientSound])
   useEffect(() => { ambientVolumeRef.current = ambientVolume }, [ambientVolume])
+  /* eslint-enable react-hooks/immutability */
 
+  // Ambient audio player handle. Mutating `.current` inside event handlers is
+  // the correct place for it (Web Audio nodes must not be created in render);
+  // the rule flags the assignment because the ref holds a mutable instance.
+  /* eslint-disable react-hooks/immutability */
   // Start ambient sound — called directly from click handlers
   const startAmbientSound = useCallback((soundId: AmbientSound) => {
     if (ambientRef.current) {
@@ -502,15 +514,19 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       ambientRef.current = null
     }
   }, [])
+  /* eslint-enable react-hooks/immutability */
 
-  // Cleanup audio on unmount or reader close
+  // Cleanup audio and session modes when the reader closes. stopAmbientSound
+  // touches the Web Audio graph, so this must happen after commit; the two
+  // flags are reset alongside it to keep the teardown atomic.
   useEffect(() => {
     if (!isOpen) {
       stopAmbientSound()
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFocusMode(false)
       setPomodoroRunning(false)
     }
-  }, [isOpen])
+  }, [isOpen, stopAmbientSound])
 
   // Helper: reset pomodoro to a new duration
   const resetPomodoro = useCallback((minutes: number) => {
@@ -578,6 +594,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   // Reset the end-of-book celebration + definition popover on (re)open / book switch.
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowEndOfBook(false)
       setDefinition(null)
     }
@@ -1145,6 +1162,8 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       return
     }
 
+    // Fetch trigger: these flags gate the request started immediately below.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
     setError(null)
     setText(null)
@@ -1195,8 +1214,9 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
 
   useEffect(() => {
     if (!isOpen) return
-    // Detect desktop (no touch support)
+    // Device capability probe — browser-only APIs, unavailable during render.
     const desktop = !("ontouchstart" in window) && window.matchMedia("(pointer: fine)").matches
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsDesktop(desktop)
 
     // Show keyboard hint once for desktop users
@@ -2024,7 +2044,11 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 </div>
               </div>
 
-              {/* Floating selection bar — outside pagesRef so not affected by translateX */}
+              {/* Floating selection bar — outside pagesRef so not affected by translateX.
+                  Reads the scroll container's width to clamp the bar on screen. This
+                  only renders once `selectionBar` is set by a selection event, so the
+                  ref is always populated by then; a layout read is the point. */}
+              {/* eslint-disable-next-line react-hooks/refs */}
               {selectionBar && (() => {
                 const isDark = currentTheme.text === "#e7e5e4"
                 const barBg = isDark ? "#292524" : "#fafaf9"

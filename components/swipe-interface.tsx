@@ -299,7 +299,10 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
         if (r) deckReasons[b.id] = r
       })
       setBookReasons({ ...deckReasons, ...llmReasonMap })
-      setFilteredBooks(deck)
+      // Guard against the same book arriving from two sources (LLM recs, the
+      // ranked pool, or overlapping API pages) — duplicates would show the same
+      // card twice and collide on React keys.
+      setFilteredBooks(Array.from(new Map(deck.map(b => [b.id, b])).values()))
       // Background: swap OL books to their correct-edition Amazon cover (no
       // perceived latency — the deck already renders with OL -L).
       void upgradeDeckCovers(deck)
@@ -323,7 +326,13 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   }
 
   useEffect(() => {
+    // Deck fetch. loadBooks flips the loading flag synchronously before its
+    // first await — the canonical "start async work" trigger — and it is
+    // intentionally re-run only when preferences change, not on every render
+    // (the function closes over fresh state each time it is called).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadBooks()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preferences])
 
   // Fetch collaborative-filtering co-like counts (social proof) for signed-in
@@ -332,13 +341,15 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   // the user isn't signed in. Best-effort — failures just mean no badge.
   useEffect(() => {
     if (!isSupabaseConfigured()) return
-    const liked = getLikedBooks()
-    if (liked.length === 0) {
-      setCoLikeCounts({})
-      return
-    }
+    const ids = getLikedBooks().map((b) => b.id)
     let cancelled = false
-    getCoLikeCounts(liked.map((b) => b.id)).then((map) => {
+    // Route the empty case through the same async path, so the state update
+    // always lands in a promise callback rather than synchronously in the
+    // effect body (which would cost a cascading render).
+    const pending = ids.length === 0
+      ? Promise.resolve(new Map<string, number>())
+      : getCoLikeCounts(ids)
+    pending.then((map) => {
       if (!cancelled) setCoLikeCounts(Object.fromEntries(map))
     })
     return () => {
@@ -400,10 +411,14 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   const handleUndoRef = useRef(handleUndo)
   const hasMoreRef = useRef(hasMoreBooks)
   const currentBookRef = useRef(currentBook)
-  handleSwipeRef.current = handleSwipe
-  handleUndoRef.current = handleUndo
-  hasMoreRef.current = hasMoreBooks
-  currentBookRef.current = currentBook
+  // Latest-ref pattern: refs are updated AFTER each commit, never during
+  // render, so the stable keyboard handler below always sees current values.
+  useEffect(() => {
+    handleSwipeRef.current = handleSwipe
+    handleUndoRef.current = handleUndo
+    hasMoreRef.current = hasMoreBooks
+    currentBookRef.current = currentBook
+  })
 
   // Keyboard navigation for swipe actions
   useEffect(() => {
@@ -635,8 +650,8 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
                   the optimized URL matches exactly. Open Library's origin can
                   take seconds on a cold fetch — this buys that time upfront. */}
               <div aria-hidden className="pointer-events-none absolute h-px w-px overflow-hidden opacity-0">
-                {filteredBooks.slice(currentIndex + 2, currentIndex + 5).map((b) => (
-                  <div key={`preload-${b.id}`} className="relative h-px w-px">
+                {filteredBooks.slice(currentIndex + 2, currentIndex + 5).map((b, i) => (
+                  <div key={`preload-${currentIndex + 2 + i}-${b.id}`} className="relative h-px w-px">
                     <Image src={b.cover} alt="" fill sizes="(max-width: 640px) 100vw, 400px" quality={85} priority />
                   </div>
                 ))}

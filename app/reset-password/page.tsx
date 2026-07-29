@@ -11,11 +11,10 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
-  const [configured, setConfigured] = useState(true)
 
-  useEffect(() => {
-    setConfigured(isSupabaseConfigured())
-  }, [])
+  // Env-var check — inlined at build time, so it's identical on server and
+  // client. No state or effect needed (and no hydration risk).
+  const configured = isSupabaseConfigured()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
