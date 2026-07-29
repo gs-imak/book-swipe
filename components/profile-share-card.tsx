@@ -184,11 +184,21 @@ export function ProfileShareCard({ isOpen, onClose }: ProfileShareCardProps) {
     }, "image/png")
   }, [])
 
-  useEffect(() => {
+  // Reset during render on the closed -> open transition; generation (canvas
+  // work) stays in the effect below.
+  const [wasOpen, setWasOpen] = useState(false)
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen)
     if (isOpen) {
       setCopied(false)
       setPreview(null)
-      setTimeout(generate, 100)
+    }
+  }
+
+  useEffect(() => {
+    if (isOpen) {
+      const id = setTimeout(generate, 100)
+      return () => clearTimeout(id)
     }
     return () => {
       // Revoke the CURRENT preview url via the ref (skips null, no double-revoke).
