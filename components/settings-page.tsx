@@ -25,7 +25,8 @@ import {
   FileText,
   Loader2,
 } from "lucide-react"
-import { getTheme, setTheme, applyTheme } from "@/lib/theme"
+import { setTheme, applyTheme } from "@/lib/theme"
+import { useTheme } from "@/lib/use-theme"
 import {
   getReadingSpeed,
   setReadingSpeed,
@@ -69,8 +70,8 @@ const sectionVariants = {
 }
 
 export function SettingsPage({ onBack }: SettingsPageProps) {
-  // Mounted post-interaction (settings view), so lazy storage reads are safe.
-  const [currentTheme, setCurrentTheme] = useState<"light" | "dark">(() => getTheme())
+  // Subscribed to the theme store — shares one source of truth with the nav.
+  const currentTheme = useTheme()
   const [speed, setSpeed] = useState<ReadingSpeed>(() => getReadingSpeed())
   const [language, setLanguage] = useState<BookLanguage>(() => getLanguagePreference())
   const [showClearConfirm, setShowClearConfirm] = useState(false)
@@ -121,7 +122,6 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
 
   const handleThemeToggle = () => {
     const next = currentTheme === "dark" ? "light" : "dark"
-    setCurrentTheme(next)
     setTheme(next)
     applyTheme(next)
   }
