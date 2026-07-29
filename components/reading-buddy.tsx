@@ -32,7 +32,11 @@ export function ReadingBuddyPanel({ bookId, bookTitle, progress, isOpen, onClose
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [step, setStep] = useState<"main" | "add-buddy">("main")
 
-  useEffect(() => {
+  // Reset the panel on the closed -> open transition, during render
+  // (React's "adjusting state when props change" pattern — no extra commit).
+  const [wasOpen, setWasOpen] = useState(false)
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen)
     if (isOpen) {
       setBuddies(getBuddies(bookId))
       const stored = getMyCode(bookId)
@@ -47,7 +51,7 @@ export function ReadingBuddyPanel({ bookId, bookTitle, progress, isOpen, onClose
       setErrorMsg(null)
       setStep("main")
     }
-  }, [isOpen, bookId])
+  }
 
   // Escape key
   useEffect(() => {
