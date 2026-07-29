@@ -299,7 +299,10 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
         if (r) deckReasons[b.id] = r
       })
       setBookReasons({ ...deckReasons, ...llmReasonMap })
-      setFilteredBooks(deck)
+      // Guard against the same book arriving from two sources (LLM recs, the
+      // ranked pool, or overlapping API pages) — duplicates would show the same
+      // card twice and collide on React keys.
+      setFilteredBooks(Array.from(new Map(deck.map(b => [b.id, b])).values()))
       // Background: swap OL books to their correct-edition Amazon cover (no
       // perceived latency — the deck already renders with OL -L).
       void upgradeDeckCovers(deck)
@@ -647,8 +650,8 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
                   the optimized URL matches exactly. Open Library's origin can
                   take seconds on a cold fetch — this buys that time upfront. */}
               <div aria-hidden className="pointer-events-none absolute h-px w-px overflow-hidden opacity-0">
-                {filteredBooks.slice(currentIndex + 2, currentIndex + 5).map((b) => (
-                  <div key={`preload-${b.id}`} className="relative h-px w-px">
+                {filteredBooks.slice(currentIndex + 2, currentIndex + 5).map((b, i) => (
+                  <div key={`preload-${currentIndex + 2 + i}-${b.id}`} className="relative h-px w-px">
                     <Image src={b.cover} alt="" fill sizes="(max-width: 640px) 100vw, 400px" quality={85} priority />
                   </div>
                 ))}
