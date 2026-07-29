@@ -40,6 +40,7 @@ export function WhereToRead({ book }: WhereToReadProps) {
     setPrevBookId(book.id)
     setWatching(isOnWatchList(book.id))
     const cached = priceCache.get(book.id)
+    // eslint-disable-next-line react-hooks/purity -- TTL check needs the clock; a price stale by one render is harmless
     const fresh = !!cached && Date.now() - cached.ts < PRICE_CACHE_TTL
     setPriceInfo(fresh ? cached!.info : null)
     // Fetch price info only for Google Books ids (numeric ids = Gutenberg)
