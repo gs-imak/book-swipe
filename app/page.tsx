@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import dynamic from "next/dynamic"
 import { Loader2 } from "lucide-react"
+import { useLikedCount } from "@/lib/use-liked-count"
 import { LoginScreen } from "@/components/login-screen"
 import { Dashboard } from "@/components/dashboard"
 import { GamificationProvider } from "@/components/gamification-provider"
@@ -120,7 +121,9 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   const [userPreferences, setUserPreferences] = useState<UserPreferences | null>(null)
   const [currentView, setCurrentView] = useState<AppState>("login")
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [likedBooksCount, setLikedBooksCount] = useState(0)
+  // Subscribed to the liked-books store (see lib/use-liked-count) — no mirrored
+  // state, no mount effect, and it stays correct across tabs.
+  const likedBooksCount = useLikedCount()
   const [showTasteProfile, setShowTasteProfile] = useState(false)
   const [showGuide, setShowGuide] = useState(false)
   const [showGlobalSearch, setShowGlobalSearch] = useState(false)
@@ -219,10 +222,18 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   }, [showToast])
 
   // ---------------------------------------------------------------------------
-  // Session restore — runs once on mount
+  // Session restore — runs once on mount.
+  //
+  // This one stays a mount effect on purpose. It restores client-only session
+  // state (localStorage + window.location.hash) on the SSR'd root page, and it
+  // also WRITES (history.replaceState) while normalising the hash. Hoisting any
+  // of it into render would either mismatch the server HTML or perform a side
+  // effect during render — both worse than the single extra commit here, which
+  // is masked by the `ready` gate below.
   // ---------------------------------------------------------------------------
   useEffect(() => {
     if (isOnboarded()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsLoggedIn(true)
       const saved = getSavedPreferences()
       if (saved) setUserPreferences(saved)
@@ -254,20 +265,6 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // ---------------------------------------------------------------------------
-  // Liked books count
-  // ---------------------------------------------------------------------------
-  useEffect(() => {
-    if (isLoggedIn) {
-      setLikedBooksCount(getLikedBooks().length)
-
-      const handleChange = (e: Event) => {
-        setLikedBooksCount((e as CustomEvent).detail ?? getLikedBooks().length)
-      }
-      window.addEventListener("bookswipe:liked-changed", handleChange)
-      return () => window.removeEventListener("bookswipe:liked-changed", handleChange)
-    }
-  }, [isLoggedIn, currentView])
 
   // ---------------------------------------------------------------------------
   // Handlers
