@@ -25,22 +25,33 @@ export function BookSearch({ isOpen, onClose, onSaveBook, onBookClick, savedBook
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const activeRef = useRef(false)
 
-  useEffect(() => {
-    if (isOpen) {
-      activeRef.current = true
-      setTimeout(() => inputRef.current?.focus(), 100)
-    } else {
-      activeRef.current = false
-      if (debounceRef.current) clearTimeout(debounceRef.current)
+  // Clear the search during render on the open -> closed transition — React's
+  // "adjusting state when props change" pattern (no extra commit).
+  const [wasOpen, setWasOpen] = useState(false)
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen)
+    if (!isOpen) {
       setQuery("")
       setResults([])
       setHasSearched(false)
       setIsSearching(false)
       setSearchError(false)
     }
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
+  }
+
+  // Side effects only: the active flag, focus, and debounce cleanup.
+  useEffect(() => {
+    if (isOpen) {
+      activeRef.current = true
+      const focusTimer = setTimeout(() => inputRef.current?.focus(), 100)
+      return () => {
+        clearTimeout(focusTimer)
+        activeRef.current = false
+        if (debounceRef.current) clearTimeout(debounceRef.current)
+      }
     }
+    activeRef.current = false
+    if (debounceRef.current) clearTimeout(debounceRef.current)
   }, [isOpen])
 
   // Lock body scroll when open
