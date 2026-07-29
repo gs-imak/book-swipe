@@ -1,11 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useSyncExternalStore } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Target, Check } from "lucide-react"
 import { updateReadingGoals } from "@/lib/storage"
 
 const GOAL_CONFIGURED_KEY = "bookswipe_goal_configured"
+
+// One-shot external read — nothing invalidates it during the component's life.
+const emptySubscribe = () => () => {}
 
 const GOAL_OPTIONS = [
   { value: 6,  label: "6 books",  sub: "One every 2 months" },
@@ -19,17 +22,20 @@ interface ReadingGoalSetterProps {
 }
 
 export function ReadingGoalSetter({ onGoalSet }: ReadingGoalSetterProps) {
-  const [visible, setVisible] = useState(false)
   const [selected, setSelected] = useState<number | null>(null)
   const [confirmed, setConfirmed] = useState(false)
+  const [dismissed, setDismissed] = useState(false)
 
-  useEffect(() => {
-    // Runs only on the client. Show the setter unless a goal was already
-    // configured; never treat the server/no-window case as "already set".
-    if (typeof window === "undefined") return
-    const alreadySet = localStorage.getItem(GOAL_CONFIGURED_KEY)
-    if (!alreadySet) setVisible(true)
-  }, [])
+  // Hydration-safe one-shot read: the server snapshot pretends the goal is
+  // configured (renders nothing, no SSR flash); the client snapshot reads the
+  // real flag after hydration. useSyncExternalStore is the documented tool for
+  // exactly this client-only-data case.
+  const alreadyConfigured = useSyncExternalStore(
+    emptySubscribe,
+    () => localStorage.getItem(GOAL_CONFIGURED_KEY) !== null,
+    () => true,
+  )
+  const visible = !alreadyConfigured && !dismissed
 
   const handleSet = () => {
     if (!selected) return
@@ -39,7 +45,7 @@ export function ReadingGoalSetter({ onGoalSet }: ReadingGoalSetterProps) {
     }
     setConfirmed(true)
     setTimeout(() => {
-      setVisible(false)
+      setDismissed(true)
       onGoalSet?.()
     }, 1200)
   }
