@@ -300,9 +300,10 @@ function RenderInlineText({ text, skipTypography }: { text: string; skipTypograp
 }
 
 export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, onClose }: BookReaderProps) {
-  // Initialize to a stable SSR default; hydrate the stored theme after mount
-  // (reading localStorage in the useState initializer risks a hydration mismatch).
-  const [theme, setTheme] = useState<ReaderTheme>("sepia")
+  // The reader is lazy-loaded and only ever mounts from a user interaction —
+  // never during the initial hydration pass — so reading the stored theme in
+  // the initializer is hydration-safe and avoids a flash of the default.
+  const [theme, setTheme] = useState<ReaderTheme>(() => getStoredTheme())
   const prefersReducedMotion = useReducedMotion()
   // Trap focus inside the full-screen reader + restore it to the trigger on close.
   const dialogRef = useRef<HTMLDivElement>(null)
@@ -400,11 +401,6 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
   useEffect(() => {
     if (isOpen) loadReaderFonts()
   }, [isOpen])
-
-  // Hydrate the persisted theme after mount (SSR-safe — see useState above)
-  useEffect(() => {
-    setTheme(getStoredTheme())
-  }, [])
 
   // One-time hints on first open
   useEffect(() => {
