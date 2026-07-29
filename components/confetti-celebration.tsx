@@ -73,6 +73,9 @@ export function ConfettiCelebration({
       })
     }
 
+    // The payload is randomized per activation, so it cannot be derived during
+    // render (purity); generating it in the effect is the intended pattern here.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setConfetti(pieces)
 
     // Clear confetti after duration
