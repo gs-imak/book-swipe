@@ -33,7 +33,14 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
   const modalRef = useRef<HTMLDivElement>(null)
   useFocusTrap(modalRef, isOpen)
 
-  useEffect(() => {
+  // Reset the generator on the closed -> open transition (or a book switch
+  // while open), during render — React's "adjusting state when props change"
+  // pattern (no extra commit).
+  const [wasOpen, setWasOpen] = useState(false)
+  const [prevBookId, setPrevBookId] = useState(book.id)
+  if (isOpen !== wasOpen || book.id !== prevBookId) {
+    setWasOpen(isOpen)
+    setPrevBookId(book.id)
     if (isOpen) {
       setReview(getBookReview(book.id))
       setTemplate("clean")
@@ -42,7 +49,7 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
       setCopied(false)
       setCopyError(null)
     }
-  }, [isOpen, book.id])
+  }
 
   // Generate preview whenever template or quote changes
   useEffect(() => {
@@ -51,9 +58,12 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
     // Invalidate any previously-generated blob so a stale template image
     // can't be copied/downloaded while the new one is regenerating.
     blobRef.current = null
+    // The sync flip to "generating" is the point of this effect — it must run
+    // after the template/quote change commits, and it gates the copy/download
+    // buttons while the new card renders.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setGenerating(true)
     const timer = setTimeout(async () => {
-      setGenerating(true)
       setError(null)
       const blob = await generateShareCard(book, review, { template, quote: quote.trim() || undefined })
       if (cancelled) return
@@ -218,7 +228,7 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
             <div className="flex gap-3">
               <button
                 onClick={handleCopy}
-                disabled={!blobRef.current || generating}
+                disabled={!preview || generating}
                 className="flex-1 h-10 bg-stone-900 hover:bg-stone-800 disabled:opacity-40 text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 {copied ? (
@@ -235,7 +245,7 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
               </button>
               <button
                 onClick={handleDownload}
-                disabled={!blobRef.current || generating}
+                disabled={!preview || generating}
                 className="flex-1 h-10 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:bg-stone-800/50 disabled:opacity-40 text-stone-700 dark:text-stone-300 text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 <Download className="w-4 h-4" />
