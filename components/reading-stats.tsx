@@ -41,7 +41,11 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
   const [goals, setGoals] = useState<ReadingGoals | null>(null)
   const [paceInsights, setPaceInsights] = useState<ReadingPaceInsights | null>(null)
 
-  useEffect(() => {
+  // Refresh on the closed -> open transition, during render — React's
+  // "adjusting state when props change" pattern (no extra commit).
+  const [wasOpen, setWasOpen] = useState(false)
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen)
     if (isOpen) {
       setLikedBooks(getLikedBooks())
       setProgress(getReadingProgress())
@@ -51,7 +55,7 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
       setGoals(getReadingGoals())
       setPaceInsights(getReadingPaceInsights())
     }
-  }, [isOpen])
+  }
 
   useEffect(() => {
     if (isOpen) {
@@ -211,7 +215,7 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
       monthlyChange,
       hasAnyData,
     }
-  }, [likedBooks, progress, reviews, notes, stats, goals])
+  }, [likedBooks, progress, reviews, notes, stats])
 
   const getHeatColor = (count: number): string => {
     if (count === 0) return "bg-stone-100 dark:bg-stone-800"

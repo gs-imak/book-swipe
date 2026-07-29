@@ -12,9 +12,13 @@ interface GamificationToastProps {
 }
 
 export function GamificationToast({ events, onEventShown, onOpenAchievements }: GamificationToastProps) {
-  const [currentEvent, setCurrentEvent] = useState<GamificationEvent | null>(null)
   const [eventQueue, setEventQueue] = useState<GamificationEvent[]>([])
   const seenEventsRef = useRef(new WeakSet<GamificationEvent>())
+
+  // The toast on screen is simply the head of the queue — derived, not a second
+  // piece of state kept in sync by an effect. Dismissing shifts the queue, which
+  // promotes the next event in the same render.
+  const currentEvent = eventQueue[0] ?? null
 
   useEffect(() => {
     if (events.length > 0) {
@@ -27,21 +31,12 @@ export function GamificationToast({ events, onEventShown, onOpenAchievements }: 
     }
   }, [events])
 
-  // Dequeue next event when idle
-  useEffect(() => {
-    if (!currentEvent && eventQueue.length > 0) {
-      const nextEvent = eventQueue[0]
-      setCurrentEvent(nextEvent)
-      setEventQueue(prev => prev.slice(1))
-    }
-  }, [currentEvent, eventQueue])
-
   // Auto-dismiss the current event after a short delay
   useEffect(() => {
     if (!currentEvent) return
     const timer = setTimeout(() => {
       onEventShown?.(currentEvent)
-      setCurrentEvent(null)
+      setEventQueue(prev => prev.slice(1))
     }, getEventDuration(currentEvent))
     return () => clearTimeout(timer)
   }, [currentEvent, onEventShown])
@@ -58,9 +53,9 @@ export function GamificationToast({ events, onEventShown, onOpenAchievements }: 
       >
         <div
           onClick={() => {
-            if (currentEvent?.type === 'achievement_unlocked') {
+            if (currentEvent.type === 'achievement_unlocked') {
               onOpenAchievements?.()
-              setCurrentEvent(null)
+              setEventQueue(prev => prev.slice(1))
             }
           }}
           className={`

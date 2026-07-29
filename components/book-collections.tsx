@@ -35,7 +35,11 @@ export function BookCollections({ isOpen, onClose, onBookClick }: BookCollection
   const [newEmoji, setNewEmoji] = useState("📚")
   const [newDescription, setNewDescription] = useState("")
 
-  useEffect(() => {
+  // Refresh on the closed -> open transition, during render — React's
+  // "adjusting state when props change" pattern (no extra commit).
+  const [wasOpen, setWasOpen] = useState(false)
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen)
     if (isOpen) {
       setCollections(getCollections())
       setLikedBooks(getLikedBooks())
@@ -43,7 +47,7 @@ export function BookCollections({ isOpen, onClose, onBookClick }: BookCollection
       setActiveCollection(null)
       setConfirmDeleteId(null)
     }
-  }, [isOpen])
+  }
 
   // Lock body scroll while open
   useEffect(() => {

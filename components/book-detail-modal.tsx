@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Star, Heart, MessageSquare, FileText, Calendar, Clock, BookOpen, Library, Share2, Trash2, Loader2, EyeOff, Plus, ChevronRight, Tag, CheckCircle2, Sparkles, Users, AlertTriangle, TrendingUp } from "lucide-react"
 import { Book } from "@/lib/book-data"
-import { BookReview, getBookReview, getShelvesForBook, getShelves, type Shelf, addLikedBook, getLikedBooks, getBookTags, getTagDefinitions, addTagToBook, removeTagFromBook, createTag, type TagDefinition, TAG_COLORS, getReadingProgress, updateReadingProgress, addBookToReading, recordBookView, isSuggestionDismissed, dismissSuggestion } from "@/lib/storage"
+import { BookReview, getBookReview, getShelvesForBook, getShelves, type Shelf, addLikedBook, getLikedBooks, getBookTags, getTagDefinitions, addTagToBook, removeTagFromBook, createTag, type TagDefinition, TAG_COLORS, getReadingProgress, updateReadingProgress, addBookToReading, recordBookView, getBookViewCount, isSuggestionDismissed, dismissSuggestion } from "@/lib/storage"
 import { scoreBooks } from "@/lib/scoring-engine"
 import { getCachedBooks } from "@/lib/book-cache"
 import { detectSeries, findNextInSeries, type SeriesInfo } from "@/lib/series-detection"
@@ -86,71 +86,71 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
     return scored
   }, [book])
 
-  useEffect(() => {
-    if (book) {
-      let cancelled = false
-      setGutenbergBook(undefined)
-      setShowReader(false)
-      searchGutenberg(book.title, book.author).then((result) => {
-        if (!cancelled) setGutenbergBook(result)
-      })
-      const review = getBookReview(book.id)
-      setExistingReview(review)
-      setActiveTab("overview")
-      setDescExpanded(false)
-      // Load assigned shelves
-      const shelfIds = getShelvesForBook(book.id)
-      const allShelves = getShelves()
-      setAssignedShelves(allShelves.filter(s => shelfIds.includes(s.id)))
-      // Load assigned tags
-      setBookTagDefs(getBookTags(book.id))
-      setShowTagDropdown(false)
-      setCreatingTag(false)
-      // Smart shelf suggestions
-      const viewCount = recordBookView(book.id)
-      const progress = getReadingProgress()
-      const bookProgress = progress.find(p => p.bookId === book.id)
-      if (
-        bookProgress &&
+  // Reset every per-book panel during render when the modal switches books —
+  // React's "adjusting state when props change" pattern. Only pure reads happen
+  // here; the storage WRITE (recordBookView) and the async fetches stay in the
+  // effect below.
+  const [prevBookId, setPrevBookId] = useState<string | null>(book?.id ?? null)
+  if (book && book.id !== prevBookId) {
+    setPrevBookId(book.id)
+    setGutenbergBook(undefined)
+    setShowReader(false)
+    setExistingReview(getBookReview(book.id))
+    setActiveTab("overview")
+    setDescExpanded(false)
+    // Assigned shelves + tags
+    const shelfIds = getShelvesForBook(book.id)
+    setAssignedShelves(getShelves().filter(s => shelfIds.includes(s.id)))
+    setBookTagDefs(getBookTags(book.id))
+    setShowTagDropdown(false)
+    setCreatingTag(false)
+    // Smart shelf suggestions (read-only view count here; the increment is in
+    // the effect, so the ">= 3 views" threshold counts previous opens)
+    const bookProgress = getReadingProgress().find(p => p.bookId === book.id)
+    setShowFinishedSuggestion(
+      !!bookProgress &&
         bookProgress.status !== "completed" &&
         bookProgress.totalPages > 0 &&
-        (bookProgress.currentPage / bookProgress.totalPages) >= 0.95 &&
-        !isSuggestionDismissed(book.id, "finished")
-      ) {
-        setShowFinishedSuggestion(true)
-      } else {
-        setShowFinishedSuggestion(false)
-      }
-      if (
-        viewCount >= 3 &&
+        bookProgress.currentPage / bookProgress.totalPages >= 0.95 &&
+        !isSuggestionDismissed(book.id, "finished"),
+    )
+    setShowStartReadingSuggestion(
+      getBookViewCount(book.id) >= 2 &&
         !bookProgress &&
-        !isSuggestionDismissed(book.id, "start-reading")
-      ) {
-        setShowStartReadingSuggestion(true)
-      } else {
-        setShowStartReadingSuggestion(false)
-      }
-      // Compute similar books using the current book as the "liked" input
-      const cached = getCachedBooks().filter(b => b.id !== book.id)
-      const scored = scoreBooks(cached, [book])
-      setSimilarBooks(scored.slice(0, 6).map(s => s.book))
-      // Detect series and fetch next books
-      const detected = detectSeries(book)
-      setSeriesInfo(detected)
-      setSeriesBooks([])
-      if (detected) {
-        setSeriesLoading(true)
-        findNextInSeries(book, detected).then((books) => {
-          if (!cancelled) {
-            setSeriesBooks(books)
-            setSeriesLoading(false)
-          }
-        }).catch(() => {
-          if (!cancelled) setSeriesLoading(false)
-        })
-      }
-      return () => { cancelled = true }
+        !isSuggestionDismissed(book.id, "start-reading"),
+    )
+    // Similar books, using the current book as the "liked" input
+    const cached = getCachedBooks().filter(b => b.id !== book.id)
+    setSimilarBooks(scoreBooks(cached, [book]).slice(0, 6).map(s => s.book))
+    // Series detection (the fetch itself runs in the effect)
+    const detected = detectSeries(book)
+    setSeriesInfo(detected)
+    setSeriesBooks([])
+    setSeriesLoading(!!detected)
+  }
+
+  // Side effects for the current book: record the view, then fetch.
+  useEffect(() => {
+    if (!book) return
+    let cancelled = false
+    recordBookView(book.id)
+
+    searchGutenberg(book.title, book.author).then((result) => {
+      if (!cancelled) setGutenbergBook(result)
+    })
+
+    const detected = detectSeries(book)
+    if (detected) {
+      findNextInSeries(book, detected).then((books) => {
+        if (!cancelled) {
+          setSeriesBooks(books)
+          setSeriesLoading(false)
+        }
+      }).catch(() => {
+        if (!cancelled) setSeriesLoading(false)
+      })
     }
+    return () => { cancelled = true }
   }, [book])
 
   // Close tag dropdown on outside click
@@ -183,7 +183,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
     return () => {
       document.removeEventListener("keydown", handleKeyDown)
     }
-  }, [isOpen, onClose, showShelfPicker, showShareCard])
+  }, [isOpen, onClose, showShelfPicker, showShareCard, showTagDropdown])
 
   // Trap focus inside dialog (disabled when sub-modals are active)
   useFocusTrap(dialogRef, isOpen && !showShelfPicker && !showShareCard)

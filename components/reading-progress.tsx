@@ -13,8 +13,10 @@ interface ReadingProgressProps {
 }
 
 export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps) {
-  const [readingBooks, setReadingBooks] = useState<ReadingProgress[]>([])
-  const [goals, setGoals] = useState<ReadingGoals | null>(null)
+  // Rendered inside the dashboard (post-hydration), so lazy storage reads are
+  // safe — no mount effect, no cascading render.
+  const [readingBooks, setReadingBooks] = useState<ReadingProgress[]>(() => getReadingProgress())
+  const [goals, setGoals] = useState<ReadingGoals | null>(() => getReadingGoals())
   const [justUpdated, setJustUpdated] = useState<string | null>(null)
   const [editingPage, setEditingPage] = useState<string | null>(null)
   const [pageInput, setPageInput] = useState("")
@@ -32,11 +34,6 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
       flashTimerRef.current = null
       setJustUpdated(null)
     }, 600)
-  }, [])
-
-  useEffect(() => {
-    setReadingBooks(getReadingProgress())
-    setGoals(getReadingGoals())
   }, [])
 
   // Clear any pending flash timer on unmount.

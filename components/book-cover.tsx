@@ -38,11 +38,16 @@ export function BookCover({
   const [hasError, setHasError] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
 
-  useEffect(() => {
+  // Restart the fallback chain during render when the src prop changes (the
+  // background cover upgrade swaps these live) — React's "adjusting state when
+  // props change" pattern, so the new image never renders behind stale state.
+  const [prevSrc, setPrevSrc] = useState(src)
+  if (src !== prevSrc) {
+    setPrevSrc(src)
     setCurrentSrc(src)
     setHasError(false)
     setIsLoaded(false)
-  }, [src])
+  }
 
   const handleError = useCallback(() => {
     // Step down the fallback chain: src -> fallbackSrc -> branded placeholder.

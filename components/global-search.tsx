@@ -79,6 +79,20 @@ export function GlobalSearch({ isOpen, onClose, onBookClick }: GlobalSearchProps
   const bookReviews = useRef<BookReview[]>([])
   const bookMap = useRef<Record<string, Book>>({})
 
+  // Clear the search during render on the open -> closed transition — React's
+  // "adjusting state when props change" pattern (no extra commit).
+  const [wasOpen, setWasOpen] = useState(false)
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen)
+    if (!isOpen) {
+      setQuery("")
+      setResults([])
+      setHasSearched(false)
+      setIsSearching(false)
+    }
+  }
+
+  // Side effects only: snapshot the data sources into refs and focus the input.
   useEffect(() => {
     if (isOpen) {
       likedBooks.current = getLikedBooks()
@@ -89,17 +103,11 @@ export function GlobalSearch({ isOpen, onClose, onBookClick }: GlobalSearchProps
       likedBooks.current.forEach(b => { map[b.id] = b })
       bookMap.current = map
 
-      setTimeout(() => inputRef.current?.focus(), 100)
-    } else {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-      setQuery("")
-      setResults([])
-      setHasSearched(false)
-      setIsSearching(false)
+      const focusTimer = setTimeout(() => inputRef.current?.focus(), 100)
+      return () => clearTimeout(focusTimer)
     }
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-    }
+    // Closed: cancel any in-flight debounced search.
+    if (debounceRef.current) clearTimeout(debounceRef.current)
   }, [isOpen])
 
   // Lock body scroll

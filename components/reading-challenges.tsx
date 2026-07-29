@@ -270,14 +270,18 @@ export function ReadingChallenges({ isOpen, onClose }: ReadingChallengesProps) {
     ]
   }, [])
 
-  useEffect(() => {
+  // Refresh on the closed -> open transition, during render — React's
+  // "adjusting state when props change" pattern (no extra commit).
+  const [wasOpen, setWasOpen] = useState(false)
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen)
     if (isOpen) {
       const t = loadTargets()
       setTargets(t)
       setChallenges(buildChallenges(t))
       setCompletedPrompts(loadCompletedPrompts())
     }
-  }, [isOpen, buildChallenges])
+  }
 
   // Lock body scroll
   useEffect(() => {
