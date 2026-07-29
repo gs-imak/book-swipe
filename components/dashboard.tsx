@@ -38,6 +38,19 @@ import { getShelves, getBooksForShelf, shouldShowBackupReminder, dismissBackupRe
 import { estimateReadingTime, getReadingSpeed, setReadingSpeed, getAllSpeeds, type ReadingSpeed } from "@/lib/reading-time"
 import { upgradeLikedBookCovers } from "@/lib/itunes-covers"
 
+// Module scope: a constant lookup table, so it isn't rebuilt on every render
+// (and doesn't need to be a memo dependency).
+const MOOD_KEYWORDS: Record<string, string[]> = {
+  "Adventurous": ["adventurous", "epic", "thrilling", "immersive", "exciting"],
+  "Cozy": ["cozy", "heartwarming", "feel-good", "light-hearted", "warm", "comforting"],
+  "Intellectual": ["thought-provoking", "philosophical", "complex", "contemplative", "reflective", "smart"],
+  "Romantic": ["romantic", "emotional", "love", "passionate", "sensual"],
+  "Thrilling": ["suspenseful", "gripping", "twisty", "tense", "dark", "thrilling"],
+  "Relaxing": ["relaxing", "gentle", "peaceful", "simple", "calming", "uplifting", "spiritual"],
+  "Inspiring": ["inspiring", "motivational", "empowering", "powerful", "eye-opening", "honest"],
+  "Dark": ["dark", "atmospheric", "melancholic", "tragic", "haunting", "gothic"],
+}
+
 interface DashboardProps {
   onBack?: () => void
   onStartDiscovery: () => void
@@ -46,29 +59,40 @@ interface DashboardProps {
 }
 
 export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onScan }: DashboardProps) {
-  const [likedBooks, setLikedBooks] = useState<Book[]>([])
+  // The dashboard only mounts after the session-restore gate in app/page.tsx,
+  // i.e. post-hydration — so every initial read happens in a lazy initializer
+  // instead of a mount effect.
+  const [likedBooks, setLikedBooks] = useState<Book[]>(() => getLikedBooks())
   const [filter, setFilter] = useState<string>("all")
   const [sortBy, setSortBy] = useState<"recent" | "rating" | "pages">("recent")
   const [showAdmin, setShowAdmin] = useState(false)
   const [selectedBook, setSelectedBook] = useState<Book | null>(null)
   const [isBookModalOpen, setIsBookModalOpen] = useState(false)
-  const [userStats, setUserStats] = useState(getUserStats())
+  // Derived from storage, which the liked list drives — recomputed rather than
+  // mirrored into state by an effect. `likedBooks` is the cache key, not an
+  // input, so the linter can't see the relationship.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const userStats = useMemo(() => getUserStats(), [likedBooks])
   const [showSearch, setShowSearch] = useState(false)
   const [showShelfManager, setShowShelfManager] = useState(false)
-  const [shelves, setShelves] = useState<Shelf[]>([])
+  const [shelves, setShelves] = useState<Shelf[]>(() => getShelves())
   const [shelfFilter, setShelfFilter] = useState<string | null>(null)
   const [formatFilter, setFormatFilter] = useState<"all" | "ebook" | "audio">("all")
-  const [readingSpd, setReadingSpd] = useState<ReadingSpeed>("average")
+  const [readingSpd, setReadingSpd] = useState<ReadingSpeed>(() => getReadingSpeed())
   const [showFilters, setShowFilters] = useState(false)
-  const [showBackupBanner, setShowBackupBanner] = useState(false)
+  const [showBackupBanner, setShowBackupBanner] = useState(() => shouldShowBackupReminder())
   const [showWrapped, setShowWrapped] = useState(false)
   const [showCollections, setShowCollections] = useState(false)
   const [showChallenges, setShowChallenges] = useState(false)
-  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set())
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(() => new Set(getHiddenBookIds()))
   const [showHidden, setShowHidden] = useState(false)
   const [authorFilter, setAuthorFilter] = useState<string | null>(null)
   const [moodFilter, setMoodFilter] = useState<string | null>(null)
-  const [currentlyReading, setCurrentlyReading] = useState<ReturnType<typeof getReadingProgress>>([])
+  const [currentlyReading, setCurrentlyReading] = useState<ReturnType<typeof getReadingProgress>>(() =>
+    getReadingProgress()
+      .filter(p => p.status === "reading")
+      .sort((a, b) => new Date(b.lastReadDate).getTime() - new Date(a.lastReadDate).getTime())
+  )
   const [showAllReading, setShowAllReading] = useState(false)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
 
@@ -82,29 +106,14 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
   const { showToast } = useToast()
 
   useEffect(() => {
-    setLikedBooks(getLikedBooks())
-    setUserStats(getUserStats())
-    setShelves(getShelves())
-    setReadingSpd(getReadingSpeed())
-    setShowBackupBanner(shouldShowBackupReminder())
-    setHiddenIds(new Set(getHiddenBookIds()))
-    setCurrentlyReading(
-      getReadingProgress()
-        .filter(p => p.status === "reading")
-        .sort((a, b) => new Date(b.lastReadDate).getTime() - new Date(a.lastReadDate).getTime())
-    )
     // Background: upgrade library covers to their edition-exact iTunes artwork
-    // (persisted, so it runs at most once per book). Best-effort.
+    // (persisted, so it runs at most once per book). Best-effort, async only.
     let cancelled = false
     void upgradeLikedBookCovers().then((updated) => {
       if (updated && !cancelled) setLikedBooks(updated)
     }).catch(() => { /* best-effort */ })
     return () => { cancelled = true }
   }, [])
-
-  useEffect(() => {
-    setUserStats(getUserStats())
-  }, [likedBooks])
 
   // Pre-compute review and shelf lookups once instead of per-book in render
   // Re-read reviews/shelves when books change or after modal/shelf edits
@@ -173,17 +182,6 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
   const savedBookIds = useMemo(() => new Set(likedBooks.map(b => b.id)), [likedBooks])
 
   const shelfBookIds = useMemo(() => shelfFilter ? new Set(getBooksForShelf(shelfFilter)) : null, [shelfFilter])
-  const MOOD_KEYWORDS: Record<string, string[]> = {
-    "Adventurous": ["adventurous", "epic", "thrilling", "immersive", "exciting"],
-    "Cozy": ["cozy", "heartwarming", "feel-good", "light-hearted", "warm", "comforting"],
-    "Intellectual": ["thought-provoking", "philosophical", "complex", "contemplative", "reflective", "smart"],
-    "Romantic": ["romantic", "emotional", "love", "passionate", "sensual"],
-    "Thrilling": ["suspenseful", "gripping", "twisty", "tense", "dark", "thrilling"],
-    "Relaxing": ["relaxing", "gentle", "peaceful", "simple", "calming", "uplifting", "spiritual"],
-    "Inspiring": ["inspiring", "motivational", "empowering", "powerful", "eye-opening", "honest"],
-    "Dark": ["dark", "atmospheric", "melancholic", "tragic", "haunting", "gothic"],
-  }
-
   const filteredBooks = useMemo(() => likedBooks.filter(book => {
     if (!showHidden && hiddenIds.has(book.id)) return false
     if (showHidden && !hiddenIds.has(book.id)) return false
@@ -214,10 +212,15 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
     }
   })
 
-  // Reset visible count when filters/sort change so user sees first page
-  useEffect(() => {
+  // Reset visible count when filters/sort change so the user sees the first
+  // page — done during render (React's "adjusting state" pattern) so the list
+  // never paints one frame with the old page size.
+  const filterKey = `${filter}|${sortBy}|${shelfFilter}|${formatFilter}|${authorFilter}|${moodFilter}|${showHidden}`
+  const [prevFilterKey, setPrevFilterKey] = useState(filterKey)
+  if (filterKey !== prevFilterKey) {
+    setPrevFilterKey(filterKey)
     setVisibleCount(BOOKS_PER_PAGE)
-  }, [filter, sortBy, shelfFilter, formatFilter, authorFilter, moodFilter, showHidden])
+  }
 
   // Slice the visible portion for rendering
   const visibleBooks = sortedBooks.slice(0, visibleCount)
