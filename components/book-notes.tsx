@@ -13,15 +13,21 @@ interface BookNotesProps {
 }
 
 export function BookNotes({ bookId, compact = false }: BookNotesProps) {
-  const [notes, setNotes] = useState<BookNote[]>([])
+  // Rendered inside the book modal (post-hydration), so the first read happens
+  // in the lazy initializer rather than a mount effect.
+  const [notes, setNotes] = useState<BookNote[]>(() => getBookNotesForBook(bookId))
   const [isAdding, setIsAdding] = useState(false)
   const [editingNote, setEditingNote] = useState<string | null>(null)
   const [newNote, setNewNote] = useState<{ content: string; type: 'highlight' | 'note' | 'quote'; page: string }>({ content: "", type: "note", page: "" })  
   const { triggerActivity } = useGamification()
 
-  useEffect(() => {
-    loadNotes()
-  }, [bookId])
+  // Reload notes during render when the book changes — React's "adjusting
+  // state when props change" pattern (no extra commit).
+  const [prevBookId, setPrevBookId] = useState(bookId)
+  if (bookId !== prevBookId) {
+    setPrevBookId(bookId)
+    setNotes(getBookNotesForBook(bookId))
+  }
 
   const loadNotes = () => {
     const bookNotes = getBookNotesForBook(bookId)
