@@ -173,10 +173,19 @@ export function ProgressShare({
     }, "image/png")
   }, [bookTitle, bookAuthor, progress, currentPage, totalPages])
 
-  useEffect(() => {
+  // Reset during render on the closed -> open transition; the generation itself
+  // (canvas work) stays in the effect below.
+  const [wasOpen, setWasOpen] = useState(false)
+  if (isOpen !== wasOpen) {
+    setWasOpen(isOpen)
     if (isOpen) {
       setCopied(false)
       setPreview(null)
+    }
+  }
+
+  useEffect(() => {
+    if (isOpen) {
       const id = setTimeout(generate, 80)
       return () => clearTimeout(id)
     }
