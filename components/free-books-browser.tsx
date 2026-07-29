@@ -122,6 +122,9 @@ export function FreeBooksBrowser() {
 
   // Show "taking longer" message after 5s of loading
   useEffect(() => {
+    // Clearing the flag when loading ends is inherently a post-commit reaction
+    // to async work, not derivable during render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!loading || books.length > 0) { setSlowLoad(false); return }
     const timer = setTimeout(() => setSlowLoad(true), 5000)
     return () => clearTimeout(timer)
@@ -134,7 +137,10 @@ export function FreeBooksBrowser() {
     if (!cat) return
     let cancelled = false
 
-    // Try cache first — instant, no loading state
+    // Try cache first — instant, no loading state.
+    // These are data-fetch triggers: the flags gate an async request that
+    // starts in this same effect, so they belong here rather than in render.
+    /* eslint-disable react-hooks/set-state-in-effect */
     const cached = getCachedBrowse(cat.topic)
     if (cached) {
       setBooks(cached.results.filter(hasReadableText))
@@ -166,6 +172,7 @@ export function FreeBooksBrowser() {
       })
 
     return () => { cancelled = true }
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [selectedCategory, searchQuery, categories])
 
   // Prefetch all other categories in the background after first load completes
@@ -196,6 +203,8 @@ export function FreeBooksBrowser() {
   useEffect(() => {
     if (!searchQuery) return
     let cancelled = false
+    // Fetch trigger — gates the debounced request started below.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
     setError(false)
 
