@@ -1,5 +1,8 @@
 # Enrichment: facts from APIs only, prose from the LLM only
 
+Status: amended by ADR-0006 (stable facts may now come LLM-first behind the
+cached `/api/book-facts` route; live metrics remain API-only).
+
 Book enrichment (`lib/book-enrichment.ts`) fills Goodreads-parity metadata in
 two API stages (Google Books per-volume, Open Library ISBN→work with title
 validation against foreign editions) and one LLM stage (`/api/enrich`) that
