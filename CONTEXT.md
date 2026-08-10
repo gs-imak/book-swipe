@@ -63,8 +63,10 @@ _Avoid_: preview modal, 3D modal, book viewer.
 
 **Enrichment**:
 The one-time upgrade of a Book's metadata to Goodreads-parity (full
-description, ratings count, refined genres, series, first-published) — API
-facts + LLM prose only, per `docs/adr/0005`. Marked by `metadata.enriched`.
+description, ratings count, refined genres, series, first-published) via the
+globally-cached `/api/book-facts` route — LLM-first stable facts, API-verified,
+live metrics API-only, per `docs/adr/0005` + `0006`. Marked by
+`metadata.enriched`.
 _Avoid_: hydration, augmentation, "fetching details".
 
 **Co-like**:
