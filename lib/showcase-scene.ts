@@ -30,6 +30,11 @@ export interface ShowcaseSceneHandle {
   /** Exit turn + drop; onDone fires when the book has left the frame. */
   close(onDone: () => void): void
   setViewport(width: number, height: number, panelTopPx: number | null): void
+  /** Typeset first page (public-domain text) shown by the peek state. */
+  setPageTexture(page: HTMLCanvasElement): void
+  /** Swing the cover wide + push the camera in to read the first page. */
+  openPeek(): void
+  closePeek(): void
   dispose(): void
 }
 
@@ -370,6 +375,11 @@ export function createShowcaseScene(
   const scene = new THREE.Scene()
   const camera = new THREE.PerspectiveCamera(26, 1, 0.1, 100)
   camera.position.set(0, 0.1, 9.6)
+  // Camera rides springs so the peek state can push in and frame the page.
+  const camX = new Spring(0, 13, 6.5)
+  const camZ = new Spring(9.6, 13, 6.5)
+  const lookX = new Spring(0, 13, 6.5)
+  const lookY = new Spring(0, 13, 6.5)
 
   const disposables: { dispose(): void }[] = [renderer]
   function track<Type extends { dispose(): void }>(d: Type): Type {
@@ -549,16 +559,20 @@ export function createShowcaseScene(
   }
   const pages: THREE.Group[] = []
   const pageF: number[] = []
+  let firstSheetMesh: THREE.Mesh | null = null
   for (let i = 0; i < PAGE_N; i++) {
     const pp = new THREE.Group()
     pp.position.set(-W / 2 + 0.01, jitter() * 0.006, 0.166 - i * 0.0042)
     const pm = new THREE.Mesh(pageGeo, pageMats[i % 3])
     pm.position.x = (W - 0.02) / 2
-    pm.rotation.z = jitter() * 0.006
+    pm.rotation.z = i === 0 ? 0 : jitter() * 0.006
     pp.add(pm)
     float.add(pp)
     pages.push(pp)
     pageF.push(0.3 * Math.pow(1 - i / PAGE_N, 2.6))
+    // Topmost sheet carries the typeset first page during peek — kept
+    // perfectly square (no jitter) so the text sits straight.
+    if (i === 0) firstSheetMesh = pm
   }
   const pagesB: THREE.Group[] = []
   const pageFB: number[] = []
@@ -608,6 +622,10 @@ export function createShowcaseScene(
   const phase = 2.1 // idle-bob phase offset, aesthetic constant
   let slot = { p: [-1.95, 0, 1.1], r: [0.02, -0.52, 0.1], s: 1.26 }
   let mode: "closed" | "open" | "closing" = "closed"
+  // Peek: 0 → normal showcase, 1 → cover wide open, camera framing the page.
+  const peekP = new Spring(0, 70, 13)
+  let peeking = false
+  let portrait = false
   let currentBook: ShowcaseBookData | null = null
   let loadGeneration = 0
   let isDisposed = false
@@ -676,7 +694,7 @@ export function createShowcaseScene(
     const fit = clamp(aspect / 1.75, 0.56, 1)
     bookRoot.scale.setScalar(fit)
     bookRoot.position.y = -(1 - fit) * 0.55
-    const portrait = aspect < 0.85
+    portrait = aspect < 0.85
 
     if (portrait && panelTopPx !== null) {
       // Center the book between the top chrome and the info sheet. tan(13°)
@@ -698,7 +716,10 @@ export function createShowcaseScene(
     } else {
       slot = { p: [-1.95, 0, 1.1], r: [0.02, -0.52, 0.1], s: 1.26 }
     }
-    if (mode === "open") targetSlot()
+    if (mode === "open") {
+      targetSlot()
+      if (peeking) applyPeekTargets()
+    }
   }
 
   function targetSlot() {
@@ -742,10 +763,74 @@ export function createShowcaseScene(
     targetSlot()
   }
 
+  /* ---------------- peek: read the first page ---------------- */
+  function applyPeekTargets() {
+    // Book squares up to the camera; the camera pushes in toward the page.
+    springs.rx.t = 0
+    springs.ry.t = portrait ? -0.06 : -0.1
+    springs.rz.t = 0.02
+    orb.target = 0
+    orb.phase = "return"
+    if (portrait) {
+      camX.t = 0
+      camZ.t = 8.4
+      lookX.t = 0
+      lookY.t = slot.p[1] * 0.5
+    } else {
+      camX.t = -1.15
+      camZ.t = 7.3
+      lookX.t = -1.75
+      lookY.t = 0.05
+    }
+  }
+
+  function setPageTexture(page: HTMLCanvasElement) {
+    if (!firstSheetMesh) return
+    const tex = canvasTex(page)
+    firstSheetMesh.material = std({
+      map: tex,
+      roughness: 0.94,
+      envMapIntensity: 0.18,
+    })
+  }
+
+  function openPeek() {
+    if (mode !== "open" || peeking) return
+    peeking = true
+    peekP.t = 1
+    if (RM) peekP.set(1)
+    applyPeekTargets()
+    if (RM) {
+      camX.set(camX.t)
+      camZ.set(camZ.t)
+      lookX.set(lookX.t)
+      lookY.set(lookY.t)
+    }
+  }
+
+  function closePeek() {
+    if (!peeking) return
+    peeking = false
+    peekP.t = 0
+    if (RM) peekP.set(0)
+    camX.t = 0
+    camZ.t = 9.6
+    lookX.t = 0
+    lookY.t = 0
+    if (RM) {
+      camX.set(0)
+      camZ.set(9.6)
+      lookX.set(0)
+      lookY.set(0)
+    }
+    if (mode === "open") targetSlot()
+  }
+
   let closeTimer: ReturnType<typeof setTimeout> | null = null
   function close(onDone: () => void) {
     if (mode === "closing") return
     mode = "closing"
+    closePeek()
     if (!RM) {
       // A nudge upward before the drop reads as a lift-and-release.
       springs.py.vel = 2.4
@@ -787,8 +872,9 @@ export function createShowcaseScene(
     ptr.moved = 0
     castRay()
     ptr.down = true
-    ptr.downOnBook = ptr.overBook
-    if (ptr.overBook) {
+    // While peeking there is no orbit — any clean tap dismisses instead.
+    ptr.downOnBook = peeking ? false : ptr.overBook
+    if (ptr.downOnBook) {
       drag.dxAcc = 0
       drag.dyAcc = 0
       canvas.setPointerCapture(e.pointerId)
@@ -907,8 +993,12 @@ export function createShowcaseScene(
       )
       coverBBase = (0.1 + Math.sin(t * 0.8 + phase + 1.7) * 0.012 * idle) * (1 - activityB)
     }
-    springs.cover.t = coverBase + clamp(orb.yv * 0.16, 0, 0.75)
-    springs.coverB.t = coverBBase + clamp(-orb.yv * 0.16, 0, 0.75)
+    // Peek blends the cover to wide-open and freezes the fan/idle motion so
+    // the typeset page reads steady.
+    const pk = peekP.update(dt)
+    springs.cover.t =
+      (coverBase + clamp(orb.yv * 0.16, 0, 0.75)) * (1 - pk) + 2.35 * pk
+    springs.coverB.t = (coverBBase + clamp(-orb.yv * 0.16, 0, 0.75)) * (1 - pk)
 
     for (const s of [
       springs.px,
@@ -923,10 +1013,14 @@ export function createShowcaseScene(
     ])
       s.update(dt)
 
-    /* idle bob + compose transforms */
-    float.position.y = Math.sin(t * 0.7 + phase) * 0.035 * idle
-    float.rotation.z = Math.sin(t * 0.9 + phase * 1.7) * 0.006 * idle
-    const sway = mode === "open" ? Math.sin(t * 0.45 + phase) * 0.035 * idle * (1 - activity) : 0
+    /* idle bob + compose transforms (damped to near-still while peeking) */
+    const calm = 1 - pk * 0.92
+    float.position.y = Math.sin(t * 0.7 + phase) * 0.035 * idle * calm
+    float.rotation.z = Math.sin(t * 0.9 + phase * 1.7) * 0.006 * idle * calm
+    const sway =
+      mode === "open"
+        ? Math.sin(t * 0.45 + phase) * 0.035 * idle * (1 - activity) * calm
+        : 0
     root.position.set(springs.px.v, springs.py.v, springs.pz.v)
     root.rotation.set(springs.rx.v + springs.orbX.v, springs.ry.v + orb.y + sway, springs.rz.v)
     root.scale.setScalar(Math.max(springs.sc.v, 0.001))
@@ -942,15 +1036,21 @@ export function createShowcaseScene(
     block.position.z = BLOCK_Z - ang * 0.006 + angB * 0.006
     for (let i = 0; i < PAGE_N; i++) {
       const flutter = idle * Math.sin(t * 1.15 + phase + i * 0.6) * 0.006 * (1 - i / PAGE_N)
-      pages[i].rotation.y = -(ang * pageF[i] + Math.max(0, flutter))
+      // Sheets flatten as the peek opens: the first page must lie square in
+      // the block while the cover alone swings wide.
+      pages[i].rotation.y = -((ang * pageF[i] + Math.max(0, flutter)) * (1 - pk))
     }
-    for (let i = 0; i < PAGE_BN; i++) pagesB[i].rotation.y = angB * pageFB[i]
+    for (let i = 0; i < PAGE_BN; i++) pagesB[i].rotation.y = angB * pageFB[i] * (1 - pk)
 
-    /* cursor-follow parallax on the whole stage */
-    parX.t = RM ? 0 : ptr.ndcX * 0.02
-    parY.t = RM ? 0 : -ptr.ndcY * 0.012
+    /* cursor-follow parallax on the whole stage (off while reading) */
+    parX.t = RM || peeking ? 0 : ptr.ndcX * 0.02
+    parY.t = RM || peeking ? 0 : -ptr.ndcY * 0.012
     bookRoot.rotation.y = parX.update(dt)
     bookRoot.rotation.x = parY.update(dt)
+
+    /* camera springs (pushed in by peek, home otherwise) */
+    camera.position.set(camX.update(dt), 0.1, camZ.update(dt))
+    camera.lookAt(lookX.update(dt), lookY.update(dt), 0)
 
     renderer.render(scene, camera)
   }
@@ -970,5 +1070,73 @@ export function createShowcaseScene(
     for (const d of disposables.reverse()) d.dispose()
   }
 
-  return { setBook, open, close, setViewport, dispose }
+  return { setBook, open, close, setViewport, setPageTexture, openPeek, closePeek, dispose }
+}
+
+/* ------------------------------------------------------------------ */
+/* First-page painter (public-domain text only — the peek feature is  */
+/* gated on Project Gutenberg availability upstream)                   */
+/* ------------------------------------------------------------------ */
+
+export function paintFirstPage(
+  c: HTMLCanvasElement,
+  opts: { title: string; author: string; text: string; serifFamily: string },
+) {
+  const x = ctx2d(c)
+  const { width: w, height: h } = c
+  const serif = opts.serifFamily
+  const MARGIN = 100
+
+  // Aged paper base with a faint edge vignette
+  x.fillStyle = "#f7f2e6"
+  x.fillRect(0, 0, w, h)
+  const vg = x.createLinearGradient(0, 0, w, 0)
+  vg.addColorStop(0, "rgba(90,74,40,.08)")
+  vg.addColorStop(0.08, "rgba(90,74,40,0)")
+  vg.addColorStop(0.92, "rgba(90,74,40,0)")
+  vg.addColorStop(1, "rgba(90,74,40,.06)")
+  x.fillStyle = vg
+  x.fillRect(0, 0, w, h)
+
+  x.fillStyle = "#2e2618"
+  x.textAlign = "center"
+  x.font = `700 46px ${serif}`
+  const titleLines = wrapText(x, opts.title, w - MARGIN * 2).slice(0, 2)
+  let y = 190
+  for (const line of titleLines) {
+    x.fillText(line, w / 2, y)
+    y += 58
+  }
+  x.font = `italic 28px ${serif}`
+  x.globalAlpha = 0.75
+  x.fillText(opts.author, w / 2, y + 8)
+  x.globalAlpha = 1
+  y += 46
+  x.fillRect(w / 2 - 60, y, 120, 2)
+  y += 64
+
+  // Body: real first-page text, left-set, clipped at the footer
+  x.textAlign = "left"
+  x.font = `30px ${serif}`
+  const lineHeight = 46
+  const paragraphs = opts.text
+    .split(/\n\s*\n/)
+    .map((p) => p.replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+  outer: for (const para of paragraphs) {
+    const lines = wrapText(x, para, w - MARGIN * 2)
+    for (const line of lines) {
+      if (y > h - 150) break outer
+      x.fillText(line, MARGIN, y)
+      y += lineHeight
+    }
+    y += lineHeight * 0.5
+    if (y > h - 150) break
+  }
+
+  x.textAlign = "center"
+  x.font = `italic 24px ${serif}`
+  x.globalAlpha = 0.55
+  x.fillText("1", w / 2, h - 84)
+  x.globalAlpha = 1
 }

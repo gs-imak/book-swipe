@@ -69,6 +69,13 @@ live metrics API-only, per `docs/adr/0005` + `0006`. Marked by
 `metadata.enriched`.
 _Avoid_: hydration, augmentation, "fetching details".
 
+**Peek**:
+The Showcase state where the 3D book's cover swings wide and the camera
+frames a typeset first page of the actual text. Available only for books with
+a Project Gutenberg (public-domain) edition; "Keep reading" bridges into the
+Reader.
+_Avoid_: preview mode, look inside.
+
 **Co-like**:
 The collaborative-filtering signal: how many OTHER users right-swiped a book that
 the current user has not. Served only as aggregate counts by the
