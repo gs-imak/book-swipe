@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import Image from "next/image"
+import dynamic from "next/dynamic"
 import { BookCard } from "./book-card"
+import { BookShowcase } from "./book-showcase"
 import { Button } from "@/components/ui/button"
 import { Book, UserPreferences } from "@/lib/book-data"
 import { addLikedBook, removeLikedBook, getLikedBooks, addPassedBookId, getPassedBookIds, getGenreOffset, advanceGenreOffset } from "@/lib/storage"
@@ -19,6 +21,11 @@ import { useToast } from "./toast-provider"
 import { hapticLight, hapticMedium, hapticSuccess } from "@/lib/haptics"
 import { recordSwipe, getCoLikeCounts } from "@/lib/supabase-sync"
 import { isSupabaseConfigured } from "@/lib/supabase"
+
+// The full Detail Modal only loads if someone goes past the Showcase preview.
+const BookDetailModal = dynamic(() =>
+  import("./book-detail-modal").then((m) => ({ default: m.BookDetailModal })),
+)
 
 interface SwipeInterfaceProps {
   preferences: UserPreferences
@@ -159,6 +166,9 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   const [likedBooks, setLikedBooks] = useState<Book[]>([])
   const [passedBooks, setPassedBooks] = useState<Book[]>([])
   const [undoStack, setUndoStack] = useState<{ book: Book; direction: "left" | "right" }[]>([])
+  // Showcase = 3D preview layer on card tap; Detail Modal sits behind it.
+  const [showcaseBook, setShowcaseBook] = useState<Book | null>(null)
+  const [detailBook, setDetailBook] = useState<Book | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [batchCount, setBatchCount] = useState(1)
   const [sessionLikedBooks, setSessionLikedBooks] = useState<Book[]>([])
@@ -641,6 +651,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
                     isTop={true}
                     reason={bookReasons[currentBook.id]}
                     coLikeCount={coLikeCounts[currentBook.id]}
+                    onOpenDetails={() => setShowcaseBook(currentBook)}
                   />
                 )}
               </AnimatePresence>
@@ -708,6 +719,21 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
           </div>
         </div>
       </div>
+
+      {/* 3D Showcase — tap on the top card; "Details" continues to the modal */}
+      <BookShowcase
+        book={showcaseBook}
+        onClose={() => setShowcaseBook(null)}
+        onMoreDetails={(book) => setDetailBook(book)}
+      />
+      <BookDetailModal
+        book={detailBook}
+        isOpen={!!detailBook}
+        onClose={() => setDetailBook(null)}
+        onBookClick={(book) => {
+          if (book) setDetailBook(book)
+        }}
+      />
     </div>
   )
 }

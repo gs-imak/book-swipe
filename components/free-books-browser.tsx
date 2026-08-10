@@ -5,6 +5,7 @@ import dynamic from "next/dynamic"
 import { motion } from "framer-motion"
 import { Search, BookOpen, AlertCircle, Loader2, Heart, Check } from "lucide-react"
 import { BookCardSkeleton } from "@/components/ui/skeleton"
+import { BookShowcase } from "@/components/book-showcase"
 import { GutenbergBook } from "@/lib/gutenberg-api"
 import { Book } from "@/lib/book-data"
 import { addLikedBook, getLikedBooks } from "@/lib/storage"
@@ -90,32 +91,11 @@ export function FreeBooksBrowser() {
     return new Set(liked.map(b => b.id))
   })
 
+  // Gutenberg result currently open in the 3D Showcase (null = closed)
+  const [showcaseGB, setShowcaseGB] = useState<GutenbergBook | null>(null)
+
   const handleSaveToLibrary = useCallback((book: GutenbergBook) => {
-    const rawAuthor = book.authors[0]?.name ?? "Unknown"
-    const author = rawAuthor.includes(",") ? rawAuthor.split(",").reverse().join(" ").trim() : rawAuthor
-    const coverUrl = getCoverUrl(book)
-    const subjects = book.subjects?.slice(0, 8) ?? []
-    // Give saved free books SANE metadata, not rating:0/pages:0/description:"".
-    // Those zeros poisoned the recommendation engine (a liked book with empty
-    // description + no rating contributes garbage to the taste profile / quality
-    // boost). A subject-derived description gives the TF-IDF/LLM ranker real
-    // signal, and metadata.source tags it as a public-domain classic.
-    const libBook: Book = {
-      id: `gutenberg-${book.id}`,
-      title: book.title,
-      author,
-      cover: coverUrl || "",
-      rating: 4.2, // public-domain classics skew well-regarded; neutral-positive default
-      pages: 0,
-      genre: subjects.length ? subjects.slice(0, 3) : ["Classic"],
-      mood: [],
-      description: subjects.length
-        ? `A public-domain classic by ${author}. Themes: ${subjects.join(", ")}.`
-        : `A public-domain classic by ${author}.`,
-      publishedYear: 0,
-      readingTime: "",
-      metadata: { source: "gutenberg", subjects },
-    }
+    const libBook = toLibraryBook(book)
     addLikedBook(libBook)
     setSavedIds(prev => new Set(prev).add(libBook.id))
   }, [])
@@ -245,6 +225,12 @@ export function FreeBooksBrowser() {
     setReaderOpen(true)
   }
 
+  const handleShowcaseRead = () => {
+    const gb = showcaseGB
+    setShowcaseGB(null)
+    if (gb) handleRead(gb)
+  }
+
   const handleCloseReader = () => {
     setReaderOpen(false)
     setTimeout(() => setReaderBook(null), 500)
@@ -355,13 +341,28 @@ export function FreeBooksBrowser() {
               )}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-4">
                 {books.map((book, i) => (
-                  <BookGridCard key={book.id} book={book} onRead={handleRead} onSave={handleSaveToLibrary} isSaved={savedIds.has(`gutenberg-${book.id}`)} index={i} />
+                  <BookGridCard key={book.id} book={book} onRead={handleRead} onSave={handleSaveToLibrary} onPreview={setShowcaseGB} isSaved={savedIds.has(`gutenberg-${book.id}`)} index={i} />
                 ))}
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* 3D Showcase — cover tap previews; every book here is free to read */}
+      <BookShowcase
+        book={showcaseGB ? toLibraryBook(showcaseGB) : null}
+        onClose={() => setShowcaseGB(null)}
+        onRead={handleShowcaseRead}
+        onSavedChange={(book, saved) =>
+          setSavedIds(prev => {
+            const next = new Set(prev)
+            if (saved) next.add(book.id)
+            else next.delete(book.id)
+            return next
+          })
+        }
+      />
 
       {/* Reader */}
       {readerBook && (
@@ -377,16 +378,47 @@ export function FreeBooksBrowser() {
   )
 }
 
+// Book-shaped view of a Gutenberg result, shared by save-to-library and the
+// 3D Showcase. Gives free books SANE metadata, not rating:0/pages:0/desc:"".
+// Those zeros poisoned the recommendation engine (a liked book with empty
+// description + no rating contributes garbage to the taste profile / quality
+// boost). A subject-derived description gives the TF-IDF/LLM ranker real
+// signal, and metadata.source tags it as a public-domain classic.
+function toLibraryBook(book: GutenbergBook): Book {
+  const rawAuthor = book.authors[0]?.name ?? "Unknown"
+  const author = rawAuthor.includes(",") ? rawAuthor.split(",").reverse().join(" ").trim() : rawAuthor
+  const coverUrl = getCoverUrl(book)
+  const subjects = book.subjects?.slice(0, 8) ?? []
+  return {
+    id: `gutenberg-${book.id}`,
+    title: book.title,
+    author,
+    cover: coverUrl || "",
+    rating: 4.2, // public-domain classics skew well-regarded; neutral-positive default
+    pages: 0,
+    genre: subjects.length ? subjects.slice(0, 3) : ["Classic"],
+    mood: [],
+    description: subjects.length
+      ? `A public-domain classic by ${author}. Themes: ${subjects.join(", ")}.`
+      : `A public-domain classic by ${author}.`,
+    publishedYear: 0,
+    readingTime: "",
+    metadata: { source: "gutenberg", subjects },
+  }
+}
+
 function BookGridCard({
   book,
   onRead,
   onSave,
+  onPreview,
   isSaved,
   index,
 }: {
   book: GutenbergBook
   onRead: (book: GutenbergBook) => void
   onSave: (book: GutenbergBook) => void
+  onPreview: (book: GutenbergBook) => void
   isSaved: boolean
   index: number
 }) {
@@ -418,7 +450,7 @@ function BookGridCard({
     >
       <div
         className="relative w-full aspect-[2/3] rounded-xl overflow-hidden bg-stone-100 dark:bg-stone-800 mb-2.5 shadow-sm group-hover:shadow-md transition-shadow ring-1 ring-stone-200/50 dark:ring-stone-700/50 cursor-pointer"
-        onClick={() => onRead(book)}
+        onClick={() => onPreview(book)}
       >
         {coverUrl && !imgError ? (
           <Image
