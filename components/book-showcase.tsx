@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { X, Heart, BookOpen, Info } from "lucide-react"
 import { Book } from "@/lib/book-data"
 import { addLikedBook, removeLikedBook, getLikedBooks } from "@/lib/storage"
+import { enrichBook, persistEnrichedBooks, formatCount } from "@/lib/book-enrichment"
 import { getSeedHue } from "@/components/book-cover"
 import { StarRating } from "@/components/star-rating"
 import { useToast } from "@/components/toast-provider"
@@ -78,8 +79,26 @@ function ShowcaseOverlay({
   const [saved, setSaved] = useState(() =>
     getLikedBooks().some((b) => b.id === book.id),
   )
+  // Enrich-on-open (ADR-0005): the panel upgrades to Goodreads-parity fields
+  // as they land — `book` stays the scene's identity, `display` feeds text.
+  const [display, setDisplay] = useState(book)
   const { showToast } = useToast()
   useFocusTrap(dialogRef, true)
+
+  useEffect(() => {
+    let cancelled = false
+    enrichBook(book).then((b) => {
+      if (!cancelled && b !== book) {
+        setDisplay(b)
+        persistEnrichedBooks([b])
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+    // book identity is fixed per overlay instance (keyed by book.id).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // The scene exit runs before unmount so the book visibly leaves the frame;
   // AnimatePresence then fades the (already emptied) overlay.
@@ -252,37 +271,63 @@ function ShowcaseOverlay({
             variants={item}
             className="mt-3 text-sm text-[#D8CDB8]/80 lg:mt-5 lg:text-base"
           >
-            {book.author}
-            {book.publishedYear ? ` · ${book.publishedYear}` : ""}
+            {display.author}
+            {display.publishedYear ? ` · ${display.publishedYear}` : ""}
           </motion.p>
+
+          {(display.metadata?.enriched?.series ||
+            display.metadata?.enriched?.firstPublished) && (
+            <motion.p
+              variants={item}
+              className="mt-1.5 text-xs italic text-[#D8CDB8]/60 lg:text-sm"
+            >
+              {[
+                display.metadata.enriched.series
+                  ? display.metadata.enriched.series.index
+                    ? `Book ${display.metadata.enriched.series.index} of ${display.metadata.enriched.series.name}`
+                    : display.metadata.enriched.series.name
+                  : null,
+                display.metadata.enriched.firstPublished
+                  ? `First published ${display.metadata.enriched.firstPublished}`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </motion.p>
+          )}
 
           <motion.p
             variants={item}
             className="mt-3 max-w-[54ch] text-[15px] leading-[1.65] text-[#D8CDB8] line-clamp-3 sm:line-clamp-4 lg:mt-6 lg:text-[17px] lg:line-clamp-[7]"
           >
-            {book.description}
+            {display.description}
           </motion.p>
 
           <motion.div
             variants={item}
             className="mt-4 flex items-center gap-4 lg:mt-7"
           >
-            {book.rating > 0 && (
-              <StarRating rating={book.rating} readonly size="sm" />
+            {display.rating > 0 && (
+              <StarRating rating={display.rating} readonly size="sm" />
             )}
-            {book.readingTime && (
+            {display.metadata?.ratingsCount ? (
+              <span className="text-sm text-[#D8CDB8]/70">
+                {formatCount(display.metadata.ratingsCount)} ratings
+              </span>
+            ) : null}
+            {display.readingTime && (
               <>
                 <div className="h-6 w-px bg-[#D8CDB8]/25" />
                 <span className="text-sm italic text-[#D8CDB8]/70">
-                  {book.readingTime}
+                  {display.readingTime}
                 </span>
               </>
             )}
           </motion.div>
 
-          {book.genre.length > 0 && (
+          {display.genre.length > 0 && (
             <motion.div variants={item} className="mt-4 flex flex-wrap gap-2">
-              {book.genre.slice(0, 3).map((g) => (
+              {display.genre.slice(0, 3).map((g) => (
                 <span
                   key={g}
                   className="rounded-full border border-[#F5EFE0]/20 px-3 py-1 text-xs text-[#D8CDB8]"

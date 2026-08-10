@@ -6,6 +6,7 @@ import { X, Star, Heart, MessageSquare, FileText, Calendar, Clock, BookOpen, Lib
 import { Book } from "@/lib/book-data"
 import { BookReview, getBookReview, getShelvesForBook, getShelves, type Shelf, addLikedBook, getLikedBooks, getBookTags, getTagDefinitions, addTagToBook, removeTagFromBook, createTag, type TagDefinition, TAG_COLORS, getReadingProgress, updateReadingProgress, addBookToReading, recordBookView, getBookViewCount, isSuggestionDismissed, dismissSuggestion } from "@/lib/storage"
 import { scoreBooks } from "@/lib/scoring-engine"
+import { enrichBook, persistEnrichedBooks, formatCount } from "@/lib/book-enrichment"
 import { getCachedBooks } from "@/lib/book-cache"
 import { detectSeries, findNextInSeries, type SeriesInfo } from "@/lib/series-detection"
 import { QuickReview } from "./quick-review"
@@ -63,6 +64,8 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
   const [showFinishedSuggestion, setShowFinishedSuggestion] = useState(false)
   const [showStartReadingSuggestion, setShowStartReadingSuggestion] = useState(false)
+  // Goodreads-parity fields land async (ADR-0005); overlays the display reads.
+  const [enrichedBook, setEnrichedBook] = useState<Book | null>(null)
   const tagDropdownRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -93,6 +96,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
   const [prevBookId, setPrevBookId] = useState<string | null>(book?.id ?? null)
   if (book && book.id !== prevBookId) {
     setPrevBookId(book.id)
+    setEnrichedBook(null)
     setGutenbergBook(undefined)
     setShowReader(false)
     setExistingReview(getBookReview(book.id))
@@ -134,6 +138,14 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
     if (!book) return
     let cancelled = false
     recordBookView(book.id)
+
+    // Goodreads-parity upgrade (ADR-0005) — overlays the display when it lands
+    enrichBook(book).then((b) => {
+      if (!cancelled && b !== book) {
+        setEnrichedBook(b)
+        persistEnrichedBooks([b])
+      }
+    })
 
     searchGutenberg(book.title, book.author).then((result) => {
       if (!cancelled) setGutenbergBook(result)
@@ -290,8 +302,33 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                   </div>
                   <div className="flex items-center gap-1">
                     <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                    <span className="font-medium text-stone-700 dark:text-stone-300">{book.rating}</span>
+                    <span className="font-medium text-stone-700 dark:text-stone-300">{(enrichedBook ?? book).rating}</span>
+                    {(() => {
+                      const m = (enrichedBook ?? book).metadata
+                      if (!m?.ratingsCount) return null
+                      return <span className="text-stone-400 dark:text-stone-500">· {formatCount(m.ratingsCount)} ratings</span>
+                    })()}
                   </div>
+                  {(() => {
+                    const e = (enrichedBook ?? book).metadata?.enriched
+                    if (!e?.series && !e?.firstPublished) return null
+                    return (
+                      <>
+                        {e.series && (
+                          <div className="flex items-center gap-1">
+                            <Library className="w-3.5 h-3.5 text-stone-400 dark:text-stone-500" />
+                            <span>{e.series.index ? `Book ${e.series.index} of ${e.series.name}` : e.series.name}</span>
+                          </div>
+                        )}
+                        {e.firstPublished && (
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-3.5 h-3.5 text-stone-400 dark:text-stone-500" />
+                            <span>First published {e.firstPublished}</span>
+                          </div>
+                        )}
+                      </>
+                    )
+                  })()}
                   {book.metadata?.readinglogCount && book.metadata.readinglogCount > 0 && (
                     <div className="flex items-center gap-1">
                       <Users className="w-3.5 h-3.5 text-stone-400 dark:text-stone-500" />
@@ -329,24 +366,27 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                 </div>
 
                 {/* Description — Goodreads placement: beside the cover, directly
-                    under the title/author/rating block, clamped with an expander */}
-                {book.description && (
-                  <div>
-                    <p className="text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
-                      {descExpanded || book.description.length <= 200
-                        ? book.description
-                        : book.description.slice(0, 200) + "..."}
-                    </p>
-                    {book.description.length > 200 && (
-                      <button
-                        onClick={() => setDescExpanded(!descExpanded)}
-                        className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium mt-1 transition-colors"
-                      >
-                        {descExpanded ? "Show less" : "...more"}
-                      </button>
-                    )}
-                  </div>
-                )}
+                    under the title/author/rating block, clamped with an expander.
+                    Reads the enriched overlay (full text) once it lands. */}
+                {(() => {
+                  const desc = (enrichedBook ?? book).description
+                  if (!desc) return null
+                  return (
+                    <div>
+                      <p className="text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
+                        {descExpanded || desc.length <= 200 ? desc : desc.slice(0, 200) + "..."}
+                      </p>
+                      {desc.length > 200 && (
+                        <button
+                          onClick={() => setDescExpanded(!descExpanded)}
+                          className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium mt-1 transition-colors"
+                        >
+                          {descExpanded ? "Show less" : "...more"}
+                        </button>
+                      )}
+                    </div>
+                  )
+                })()}
 
                 {/* Action buttons — primary row */}
                 <div className="flex items-center gap-2 pt-0.5">
