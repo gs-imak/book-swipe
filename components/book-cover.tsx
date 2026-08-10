@@ -5,8 +5,9 @@ import { useState, useCallback, useEffect } from "react"
 import { BookOpen } from "lucide-react"
 
 // Deterministic hue from a string so each book gets a stable, distinct
-// placeholder/gradient tint instead of a flat grey box.
-function getSeedHue(seed: string): number {
+// placeholder/gradient tint instead of a flat grey box. Exported so the 3D
+// Showcase's painted fallback cover shares the same per-book tint.
+export function getSeedHue(seed: string): number {
   let hash = 0
   for (let i = 0; i < seed.length; i++) hash = seed.charCodeAt(i) + ((hash << 5) - hash)
   return Math.abs(hash) % 360

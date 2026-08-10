@@ -8,7 +8,7 @@ import { hapticLight } from "@/lib/haptics"
 import { Button } from "@/components/ui/button"
 import { BookCover } from "@/components/book-cover"
 import { useToast } from "./toast-provider"
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef } from "react"
 
 interface BookCardProps {
   book: Book
@@ -18,9 +18,11 @@ interface BookCardProps {
   reason?: string
   /** How many readers with similar taste also saved this book (social proof). */
   coLikeCount?: number
+  /** Clean tap on the top card (not a drag, not a button) — opens the Showcase. */
+  onOpenDetails?: () => void
 }
 
-export function BookCard({ book, onSwipe, isTop = false, showActions = true, reason, coLikeCount }: BookCardProps) {
+export function BookCard({ book, onSwipe, isTop = false, showActions = true, reason, coLikeCount, onOpenDetails }: BookCardProps) {
   const [infoExpanded, setInfoExpanded] = useState(false)
   const [descExpanded, setDescExpanded] = useState(false)
   const sheetY = useMotionValue(0)
@@ -30,7 +32,21 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
   const likeOpacity = useTransform(x, [0, 80], [0, 1])
   const nopeOpacity = useTransform(x, [-80, 0], [1, 0])
 
+  // Distinguishes a tap from a swipe: framer fires onDragStart only after real
+  // movement, and the browser still emits a click on release — so the flag is
+  // cleared a beat later to swallow that post-drag click.
+  const draggingRef = useRef(false)
+
+  const handleCardTap = (e: React.MouseEvent) => {
+    if (!isTop || !onOpenDetails || infoExpanded || draggingRef.current) return
+    if ((e.target as HTMLElement).closest("button")) return
+    onOpenDetails()
+  }
+
   const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    setTimeout(() => {
+      draggingRef.current = false
+    }, 80)
     // Scale threshold to screen width so small phones don't get accidental swipes
     const threshold = Math.max(60, Math.min(100, window.innerWidth * 0.22))
     const velocity = info.velocity.x
@@ -61,6 +77,9 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
       style={isTop ? { x, rotate } : undefined}
       drag={isTop && !infoExpanded ? "x" : false}
       dragConstraints={{ left: -250, right: 250 }}
+      onDragStart={() => {
+        draggingRef.current = true
+      }}
       onDragEnd={handleDragEnd}
       initial={{ scale: isTop ? 1 : 0.96, opacity: isTop ? 1 : 0.6 }}
       animate={{ scale: isTop ? 1 : 0.96, opacity: isTop ? 1 : 0.6 }}
@@ -69,7 +88,10 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
       dragTransition={{ bounceStiffness: 500, bounceDamping: 25 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
-      <div className="relative h-full w-full overflow-hidden rounded-2xl shadow-lg border border-stone-200/40">
+      <div
+        className="relative h-full w-full overflow-hidden rounded-2xl shadow-lg border border-stone-200/40"
+        onClick={handleCardTap}
+      >
         {/* Cover image with blurred background fill */}
         <div className="absolute inset-0 bg-stone-900">
           {/* Blurred background version to fill gaps */}

@@ -54,6 +54,13 @@ One algorithmically chosen book surfaced per calendar day (`DailyPick`),
 dismissable, derived from the scoring engine + MMR diversity.
 _Avoid_: recommendation of the day, featured book.
 
+**Showcase**:
+The full-screen 3D book preview (lazy-loaded WebGL) that opens on book taps
+from discovery surfaces — swipe deck, Daily Pick, Discover hub, search,
+free-books browser — before the Detail Modal; "More details" opens the modal.
+Library/dashboard taps skip it and open the Detail Modal directly.
+_Avoid_: preview modal, 3D modal, book viewer.
+
 **Co-like**:
 The collaborative-filtering signal: how many OTHER users right-swiped a book that
 the current user has not. Served only as aggregate counts by the

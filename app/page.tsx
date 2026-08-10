@@ -26,6 +26,7 @@ const AchievementsPanel = dynamic(() => import("@/components/achievements-panel"
 const TasteProfile = dynamic(() => import("@/components/taste-profile").then(m => ({ default: m.TasteProfile })))
 const GlobalSearch = dynamic(() => import("@/components/global-search").then(m => ({ default: m.GlobalSearch })))
 const BookDetailModal = dynamic(() => import("@/components/book-detail-modal").then(m => ({ default: m.BookDetailModal })))
+const BookShowcase = dynamic(() => import("@/components/book-showcase").then(m => ({ default: m.BookShowcase })), { ssr: false })
 const OnboardingGuide = dynamic(() => import("@/components/onboarding-guide").then(m => ({ default: m.OnboardingGuide })))
 const WhatsNewModal = dynamic(() => import("@/components/whats-new-modal").then(m => ({ default: m.WhatsNewModal })))
 const AuthModal = dynamic(() => import("@/components/auth-modal").then(m => ({ default: m.AuthModal })))
@@ -128,6 +129,8 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   const [showGuide, setShowGuide] = useState(false)
   const [showGlobalSearch, setShowGlobalSearch] = useState(false)
   const [globalSearchBook, setGlobalSearchBook] = useState<Book | null>(null)
+  // 3D Showcase for search-result taps; "Details" continues into the modal
+  const [showcaseBook, setShowcaseBook] = useState<Book | null>(null)
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [cloudUser, setCloudUser] = useState<any>(null)
@@ -468,8 +471,15 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
         onClose={() => setShowGlobalSearch(false)}
         onBookClick={(book) => {
           setShowGlobalSearch(false)
-          setGlobalSearchBook(book)
+          setShowcaseBook(book)
         }}
+      />
+
+      {/* 3D Showcase for search results (docs/adr/0004) */}
+      <BookShowcase
+        book={showcaseBook}
+        onClose={() => setShowcaseBook(null)}
+        onMoreDetails={(book) => setGlobalSearchBook(book)}
       />
 
       {/* Book detail from global search */}

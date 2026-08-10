@@ -10,6 +10,7 @@ import { DashboardHeader } from "./dashboard-header"
 import { DashboardEmpty } from "./dashboard-empty"
 import { ActivityHeatmap } from "./activity-heatmap"
 import { BookDetailModal } from "./book-detail-modal"
+import { BookShowcase } from "./book-showcase"
 import { StarRating } from "./star-rating"
 import { getUserStats } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
@@ -68,6 +69,9 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
   const [showAdmin, setShowAdmin] = useState(false)
   const [selectedBook, setSelectedBook] = useState<Book | null>(null)
   const [isBookModalOpen, setIsBookModalOpen] = useState(false)
+  // 3D Showcase for discovery surfaces (Daily Pick, Discover hub) — library
+  // taps keep opening the Detail Modal directly (docs/adr/0004).
+  const [showcaseBook, setShowcaseBook] = useState<Book | null>(null)
   // Derived from storage, which the liked list drives — recomputed rather than
   // mirrored into state by an effect. `likedBooks` is the cache key, not an
   // input, so the linter can't see the relationship.
@@ -169,6 +173,11 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
   const handleBookClick = (book: Book) => {
     setSelectedBook(book)
     setIsBookModalOpen(true)
+    triggerActivity('daily_reading')
+  }
+
+  const handleDiscoveryBookClick = (book: Book) => {
+    setShowcaseBook(book)
     triggerActivity('daily_reading')
   }
 
@@ -625,7 +634,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
               {/* Daily Pick — inline within the greeting zone */}
               {likedBooks.length >= 3 && (
                 <DailyPickCard
-                  onBookClick={handleBookClick}
+                  onBookClick={handleDiscoveryBookClick}
                   onBookLiked={(book) => {
                     addLikedBook(book)
                     setLikedBooks(getLikedBooks())
@@ -1100,7 +1109,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                     setLikedBooks(getLikedBooks())
                   }}
                   savedBookIds={savedBookIds}
-                  onBookClick={handleBookClick}
+                  onBookClick={handleDiscoveryBookClick}
                 />
               </motion.div>
 
@@ -1112,6 +1121,14 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
           </div>
         )}
       </div>
+
+      {/* 3D Showcase for discovery taps; "Details" continues into the modal */}
+      <BookShowcase
+        book={showcaseBook}
+        onClose={() => setShowcaseBook(null)}
+        onMoreDetails={handleBookClick}
+        onSavedChange={() => setLikedBooks(getLikedBooks())}
+      />
 
       {/* Book Detail Modal */}
       <BookDetailModal
