@@ -7,8 +7,9 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Heart, BookOpen, Info } from "lucide-react"
+import { X, Heart, BookOpen, Info, Eye, Loader2 } from "lucide-react"
 import { Book } from "@/lib/book-data"
+import { searchGutenberg, fetchBookText, type GutenbergBook } from "@/lib/gutenberg-api"
 import { addLikedBook, removeLikedBook, getLikedBooks } from "@/lib/storage"
 import { enrichBook, persistEnrichedBooks, formatCount } from "@/lib/book-enrichment"
 import { getSeedHue } from "@/components/book-cover"
@@ -27,6 +28,8 @@ export interface BookShowcaseProps {
   onRead?: (book: Book) => void
   /** Lets the surface refresh its local liked-list state after a toggle. */
   onSavedChange?: (book: Book, saved: boolean) => void
+  /** Known Gutenberg identity (free-books browser) — skips the probe. */
+  gutenbergBook?: GutenbergBook
 }
 
 // WebGL textures need CORS-clean pixels. Remote covers go through the
@@ -69,13 +72,23 @@ function ShowcaseOverlay({
   onMoreDetails,
   onRead,
   onSavedChange,
+  gutenbergBook,
 }: BookShowcaseProps & { book: Book }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
   const sceneRef = useRef<ShowcaseSceneHandle | null>(null)
+  const engineModRef = useRef<typeof import("@/lib/showcase-scene") | null>(null)
+  const serifRef = useRef("Georgia, serif")
   const closingRef = useRef(false)
+  const peekingRef = useRef(false)
   const [closing, setClosing] = useState(false)
+  const [peeking, setPeeking] = useState(false)
+  const [peekLoading, setPeekLoading] = useState(false)
+  // undefined = probing, null = no free edition, GutenbergBook = peekable
+  const [gutenberg, setGutenberg] = useState<GutenbergBook | null | undefined>(
+    gutenbergBook ?? undefined,
+  )
   const [saved, setSaved] = useState(() =>
     getLikedBooks().some((b) => b.id === book.id),
   )
@@ -93,6 +106,13 @@ function ShowcaseOverlay({
         persistEnrichedBooks([b])
       }
     })
+    // Free-edition probe (session-cached) gates the "Peek inside" pill; the
+    // free-books browser passes its Gutenberg identity and skips this.
+    if (gutenbergBook === undefined) {
+      searchGutenberg(book.title, book.author).then((gb) => {
+        if (!cancelled) setGutenberg(gb)
+      })
+    }
     return () => {
       cancelled = true
     }
@@ -105,11 +125,53 @@ function ShowcaseOverlay({
   const requestClose = useCallback(() => {
     if (closingRef.current) return
     closingRef.current = true
+    peekingRef.current = false
     setClosing(true)
     const scene = sceneRef.current
     if (scene) scene.close(onClose)
     else onClose()
   }, [onClose])
+
+  const exitPeek = useCallback(() => {
+    peekingRef.current = false
+    setPeeking(false)
+    sceneRef.current?.closePeek()
+  }, [])
+
+  // Escape and backdrop taps close the peek first, then the showcase.
+  const dismiss = useCallback(() => {
+    if (peekingRef.current) exitPeek()
+    else requestClose()
+  }, [exitPeek, requestClose])
+
+  const handlePeek = useCallback(async () => {
+    const scene = sceneRef.current
+    const mod = engineModRef.current
+    if (!scene || !mod || !gutenberg || peekingRef.current || peekLoading) return
+    setPeekLoading(true)
+    // Public-domain text only: fetchBookText serves Project Gutenberg editions
+    // with the license boilerplate stripped, session-cached.
+    const text = await fetchBookText(gutenberg)
+    setPeekLoading(false)
+    if (closingRef.current) return
+    if (!text) {
+      showToast("Preview unavailable right now", "info")
+      return
+    }
+    const page = document.createElement("canvas")
+    page.width = 1024
+    page.height = 1536
+    mod.paintFirstPage(page, {
+      title: book.title,
+      author: book.author,
+      text: text.slice(0, 4000),
+      serifFamily: serifRef.current,
+    })
+    scene.setPageTexture(page)
+    scene.openPeek()
+    peekingRef.current = true
+    setPeeking(true)
+  }, [gutenberg, peekLoading, book.title, book.author, showToast])
 
   // Jumping to the full modal skips the exit turn — the modal covers us and a
   // half-visible spin underneath would just fight it.
@@ -148,10 +210,12 @@ function ShowcaseOverlay({
             getComputedStyle(document.body)
               .getPropertyValue("--font-serif")
               .trim() || "Georgia, serif"
+          engineModRef.current = m
+          serifRef.current = serif
           const scene = m.createShowcaseScene(canvas, {
             reducedMotion,
             serifFamily: serif,
-            onBackdropTap: requestClose,
+            onBackdropTap: dismiss,
           })
           sceneRef.current = scene
           syncViewport()
@@ -175,7 +239,7 @@ function ShowcaseOverlay({
     window.addEventListener("resize", syncViewport)
     window.visualViewport?.addEventListener("resize", syncViewport)
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") requestClose()
+      if (e.key === "Escape") dismiss()
     }
     window.addEventListener("keydown", onKey)
     return () => {
@@ -245,18 +309,46 @@ function ShowcaseOverlay({
 
       <button
         onClick={requestClose}
-        aria-label="Close preview"
+        aria-label="Close showcase"
         className="absolute right-4 top-4 z-10 flex h-12 w-12 items-center justify-center rounded-full border-[1.5px] border-[#F5EFE0]/40 text-[#F5EFE0] transition-colors hover:border-[#F5EFE0]/90 lg:left-1/2 lg:right-auto lg:top-7 lg:-translate-x-1/2 tap-target"
       >
         <X className="h-5 w-5" />
       </button>
 
+      {/* Reading bar — replaces the panel while the first page is open */}
+      <AnimatePresence>
+        {peeking && (
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 24 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="absolute bottom-[max(env(safe-area-inset-bottom),20px)] left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full bg-[#241B13]/90 p-2.5 shadow-[0_24px_60px_rgba(0,0,0,0.45)]"
+          >
+            <button
+              onClick={() => (onRead ? onRead(book) : jumpToDetails())}
+              className="inline-flex h-12 items-center gap-2 rounded-full bg-amber-600 px-6 text-[15px] font-semibold text-white transition-transform hover:scale-[1.04] tap-target"
+            >
+              <BookOpen className="h-4 w-4" />
+              Keep reading
+            </button>
+            <button
+              onClick={exitPeek}
+              className="inline-flex h-12 items-center gap-2 rounded-full bg-white/10 px-6 text-[15px] font-semibold text-[#F5EFE0] transition-transform hover:scale-[1.04] tap-target"
+            >
+              Close preview
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Info panel: bottom sheet on small screens, right column on large.
           The outer div is transform-free so the engine can measure its top
-          edge to place the book above it in portrait. */}
+          edge to place the book above it in portrait. Fades away while the
+          first page is open so nothing competes with the text. */}
       <div
         ref={panelRef}
-        className="absolute bottom-[max(env(safe-area-inset-bottom),16px)] left-1/2 w-[min(560px,92vw)] -translate-x-1/2 lg:bottom-auto lg:left-auto lg:right-[7vw] lg:top-1/2 lg:w-[min(560px,42vw)] lg:-translate-y-1/2 lg:translate-x-0"
+        className={`absolute bottom-[max(env(safe-area-inset-bottom),16px)] left-1/2 w-[min(560px,92vw)] -translate-x-1/2 transition-opacity duration-300 lg:bottom-auto lg:left-auto lg:right-[7vw] lg:top-1/2 lg:w-[min(560px,42vw)] lg:-translate-y-1/2 lg:translate-x-0 ${peeking ? "pointer-events-none opacity-0" : "opacity-100"}`}
       >
         <motion.div variants={stagger} initial="hidden" animate={panelState}>
           <motion.h1
@@ -356,6 +448,20 @@ function ShowcaseOverlay({
                 Read free
               </button>
             )}
+            {gutenberg ? (
+              <button
+                onClick={handlePeek}
+                disabled={peekLoading}
+                className="inline-flex h-12 items-center gap-2 rounded-full border border-amber-500/50 px-6 text-[15px] font-semibold text-amber-400 transition-transform hover:scale-[1.04] disabled:opacity-60 tap-target"
+              >
+                {peekLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+                Peek inside
+              </button>
+            ) : null}
             <button
               onClick={toggleSaved}
               className={`inline-flex h-12 items-center gap-2 rounded-full px-6 text-[15px] font-semibold transition-transform hover:scale-[1.04] tap-target ${

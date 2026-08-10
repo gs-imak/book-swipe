@@ -352,6 +352,7 @@ export function FreeBooksBrowser() {
       {/* 3D Showcase — cover tap previews; every book here is free to read */}
       <BookShowcase
         book={showcaseGB ? toLibraryBook(showcaseGB) : null}
+        gutenbergBook={showcaseGB ?? undefined}
         onClose={() => setShowcaseGB(null)}
         onRead={handleShowcaseRead}
         onSavedChange={(book, saved) =>
