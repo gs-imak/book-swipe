@@ -69,12 +69,15 @@ export function yearFrom(raw: unknown): number | undefined {
   return m ? Number(m[0]) : undefined
 }
 
-// "Mistborn (2)" / "The Stormlight Archive #3" / "Dune ; 1" → {name, index}
+// "Mistborn (2)" / "The Stormlight Archive #3" / "Dune ; 1" /
+// "Dune chronicles -- bk. 1" (Open Library) → {name, index}
 export function parseSeries(raw: unknown): SeriesFacts | undefined {
   if (typeof raw !== "string" || !raw.trim()) return undefined
   const s = raw.trim()
   const m =
-    s.match(/^(.*?)\s*[(#;,]\s*(?:#|book\s*)?(\d+)\s*\)?$/i) || s.match(/^(.*)$/)
+    s.match(/^(.*?)\s*-{2,}\s*(?:bk\.?|book)\s*(\d+)$/i) ||
+    s.match(/^(.*?)\s*[(#;,]\s*(?:#|book\s*)?(\d+)\s*\)?$/i) ||
+    s.match(/^(.*)$/)
   if (!m) return undefined
   const name = m[1].replace(/[\s;,(]+$/, "").trim()
   if (!name) return undefined
