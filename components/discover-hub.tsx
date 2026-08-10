@@ -38,6 +38,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
 import { useGamification } from "./gamification-provider"
 import { useToast } from "./toast-provider"
+import { upgradeVisibleBooks, formatCount } from "@/lib/book-enrichment"
 
 // ---------------------------------------------------------------------------
 // Props
@@ -103,8 +104,13 @@ function ExploreBookCard({
         <h4 className="font-semibold text-xs text-stone-900 dark:text-stone-100 line-clamp-2 leading-tight min-h-[1.875rem]">
           {book.title}
         </h4>
-        <p className="text-[11px] text-stone-400 mb-1.5 truncate">
+        <p className="text-[11px] text-stone-400 truncate">
           {book.author}
+        </p>
+        <p className="text-[10px] text-stone-400/80 mb-1.5 truncate">
+          {book.metadata?.ratingsCount
+            ? `${formatCount(book.metadata.ratingsCount)} ratings`
+            : " "}
         </p>
         <button
           onClick={() => onSave(book)}
@@ -205,6 +211,24 @@ export function DiscoverHub({
 
   const { triggerActivity } = useGamification()
   const { showToast } = useToast()
+
+  // Goodreads-parity upgrade for the always-visible trending row (ADR-0005).
+  // Keyed on trendingLoading, NOT trending: the row is fetched once per mount,
+  // and our own setTrending patches below must not re-trigger the pass. If
+  // trending ever refetches without toggling trendingLoading, revisit.
+  useEffect(() => {
+    if (trendingLoading || trending.length === 0) return
+    let cancelled = false
+    upgradeVisibleBooks(trending.slice(0, 8), (landed) => {
+      if (cancelled) return
+      setTrending(prev => {
+        const patch = new Map(landed.map(b => [b.id, b]))
+        return prev.map(b => patch.get(b.id) ?? b)
+      })
+    })
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trendingLoading])
 
   const handleSave = useCallback(
     (book: Book) => {

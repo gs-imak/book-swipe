@@ -8,6 +8,14 @@ export interface BookMetadata {
    *  source API). Estimated ratings must not earn quality boosts in scoring or
    *  "highly rated" claims in the UI. */
   ratingEstimated?: boolean
+  /** Written once the enrichment pipeline has run (ADR-0005). Facts here come
+   *  from Google Books / Open Library only — never from the LLM. */
+  enriched?: {
+    at: string
+    series?: { name: string; index?: number }
+    firstPublished?: number
+    descriptionSource: 'google' | 'openlibrary' | 'llm' | 'original'
+  }
 }
 
 export interface BookFormats {

@@ -12,6 +12,7 @@ import { scoreBooks, applyMMR } from "@/lib/scoring-engine"
 import { getRecommendedBooks } from "@/lib/recommend-client"
 import { getBooksByCategory, bookSearchQueries, fetchPersonalizedBooks } from "@/lib/books-api"
 import { getCachedBooks, addBooksToCache, updateBooksInCache } from "@/lib/book-cache"
+import { upgradeVisibleBooks } from "@/lib/book-enrichment"
 import { searchOpenLibrary } from "@/lib/openlibrary-api"
 import { upgradeCoversWithItunes } from "@/lib/itunes-covers"
 import { Heart, X, Undo2, RotateCcw, Settings, Library, BookOpen, Loader2 } from "lucide-react"
@@ -415,6 +416,25 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   const currentBook = filteredBooks[currentIndex]
   const nextBook = filteredBooks[currentIndex + 1]
   const hasMoreBooks = currentIndex < filteredBooks.length
+
+  // Goodreads-parity upgrade for the two cards the user can see (ADR-0005).
+  // Enriched books carry metadata.enriched, so re-runs are no-ops.
+  useEffect(() => {
+    const visible = [currentBook, nextBook].filter(
+      (b): b is Book => !!b && !b.metadata?.enriched
+    )
+    if (visible.length === 0) return
+    let cancelled = false
+    upgradeVisibleBooks(visible, (landed) => {
+      if (cancelled) return
+      setFilteredBooks(prev => {
+        const patch = new Map(landed.map(b => [b.id, b]))
+        return prev.map(b => patch.get(b.id) ?? b)
+      })
+    })
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentBook?.id, nextBook?.id])
 
   // Refs to avoid stale closures in keyboard handler
   const handleSwipeRef = useRef(handleSwipe)

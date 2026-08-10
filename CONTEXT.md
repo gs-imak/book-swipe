@@ -61,6 +61,12 @@ free-books browser — before the Detail Modal; "More details" opens the modal.
 Library/dashboard taps skip it and open the Detail Modal directly.
 _Avoid_: preview modal, 3D modal, book viewer.
 
+**Enrichment**:
+The one-time upgrade of a Book's metadata to Goodreads-parity (full
+description, ratings count, refined genres, series, first-published) — API
+facts + LLM prose only, per `docs/adr/0005`. Marked by `metadata.enriched`.
+_Avoid_: hydration, augmentation, "fetching details".
+
 **Co-like**:
 The collaborative-filtering signal: how many OTHER users right-swiped a book that
 the current user has not. Served only as aggregate counts by the
