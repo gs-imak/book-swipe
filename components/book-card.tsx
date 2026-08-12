@@ -75,6 +75,10 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
     <motion.div
       className={`absolute inset-0 ${isTop ? "z-10" : "z-0"}`}
       style={isTop ? { x, rotate } : undefined}
+      // Background cards are purely visual — inert removes their ~8 invisible
+      // tab stops (Info, sheet buttons) so keyboard focus can't act on a card
+      // the user isn't seeing. React 19 supports inert as a boolean prop.
+      inert={!isTop}
       drag={isTop && !infoExpanded ? "x" : false}
       dragConstraints={{ left: -250, right: 250 }}
       onDragStart={() => {
@@ -235,9 +239,12 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
           )}
         </motion.div>
 
-        {/* Expanded info sheet */}
+        {/* Expanded info sheet — kept mounted for the spring close and
+            drag-to-dismiss, so it must be inert while translated off-card
+            or its Close/Read-more/Add buttons stay in the tab order. */}
         <motion.div
           initial={false}
+          inert={!infoExpanded}
           animate={{ y: infoExpanded ? 0 : '100%' }}
           transition={{ type: "spring", damping: 30, stiffness: 300 }}
           className="absolute inset-0 bg-background z-30 flex flex-col"

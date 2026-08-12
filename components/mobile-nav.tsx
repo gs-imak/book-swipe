@@ -202,8 +202,9 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
             </div>
           )}
         </div>
-
-        <div className="h-safe lg:h-0" />
+        {/* No extra safe-area spacer here: paddingBottom on the nav itself
+            (above) already reserves the home-indicator inset. A second spacer
+            made the bar ~34px taller than the content spacer below expects. */}
       </motion.nav>
 
       {/* Spacer: bottom padding on mobile (desktop offset handled by CSS :has() rule) */}

@@ -630,6 +630,11 @@ export function isOnboarded(): boolean {
 
 export function setOnboarded(): void {
   safeSetJSON(ONBOARDED_KEY, true)
+  // New accounts start at the current feature version — the What's New modal
+  // announces features added AFTER signup, not the app's back-catalog. Without
+  // this stamp a one-session-old user gets a "since your last visit" changelog
+  // on their second launch.
+  setUserFeatureVersion(CURRENT_FEATURE_VERSION)
 }
 
 export function getSavedPreferences(): UserPreferences | null {

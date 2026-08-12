@@ -4,6 +4,11 @@ import { pickPreferredIsbn } from "./covers"
 import { stableRating } from "./stable-rating"
 import { estimateReadingTimeRange } from "./reading-time"
 
+// Open Library has no server-side cap and regularly hangs under load. Every
+// fetch below carries this timeout so a slow origin degrades to "fewer books"
+// (each catch returns []) instead of holding the whole deck hostage.
+const OL_TIMEOUT_MS = 6000
+
 export interface OpenLibraryDoc {
   key: string
   title: string
@@ -203,7 +208,7 @@ export async function searchOpenLibrary(
       subject
     )}&fields=${fields}&limit=${fetchLimit}&sort=rating`
 
-    const response = await fetch(url)
+    const response = await fetch(url, { signal: AbortSignal.timeout(OL_TIMEOUT_MS) })
     if (!response.ok) return []
 
     const data: OpenLibrarySearchResponse = await response.json()
@@ -256,7 +261,7 @@ export async function searchOpenLibraryByQuery(
       query
     )}&fields=${fields}&limit=${fetchLimit}&sort=rating`
 
-    const response = await fetch(url)
+    const response = await fetch(url, { signal: AbortSignal.timeout(OL_TIMEOUT_MS) })
     if (!response.ok) return []
 
     const data: OpenLibrarySearchResponse = await response.json()
@@ -286,7 +291,7 @@ export async function fetchSubjectBooks(
 ): Promise<Book[]> {
   try {
     const url = `https://openlibrary.org/subjects/${slug}.json?limit=${limit}`
-    const response = await fetch(url)
+    const response = await fetch(url, { signal: AbortSignal.timeout(OL_TIMEOUT_MS) })
     if (!response.ok) return []
 
     const data = await response.json()
@@ -344,7 +349,7 @@ export async function getRelatedSubjects(
   try {
     const slug = subject.toLowerCase().replace(/ /g, "_")
     const url = `https://openlibrary.org/subjects/${slug}.json?details=true&limit=1`
-    const response = await fetch(url)
+    const response = await fetch(url, { signal: AbortSignal.timeout(OL_TIMEOUT_MS) })
     if (!response.ok) return []
 
     const data = await response.json()

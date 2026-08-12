@@ -104,7 +104,7 @@ export function InstallPrompt() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 50 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="fixed bottom-20 sm:bottom-6 left-4 right-4 z-40 max-w-sm mx-auto"
+          className="fixed bottom-20 lg:bottom-6 left-4 right-4 z-40 max-w-sm mx-auto"
         >
           <div className="flex items-center gap-3 bg-stone-900 text-white rounded-xl px-4 py-3 shadow-xl">
             <Download className="w-5 h-5 text-amber-400 flex-shrink-0" />
