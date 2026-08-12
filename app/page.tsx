@@ -277,7 +277,11 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
     setIsLoggedIn(true)
     setOnboarded()
     setShowGuide(true)
-    navigateTo("dashboard")
+    // Land new users in the deck, not on an empty shelf: the landing page's
+    // "Start Discovering" should start discovering. handleStartDiscovery
+    // writes default preferences first, which the swipe render gate requires —
+    // navigateTo("swipe") directly would bounce back to the dashboard.
+    handleStartDiscovery()
   }
 
   const handleGuideComplete = () => {

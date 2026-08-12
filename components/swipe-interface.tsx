@@ -441,6 +441,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   const handleUndoRef = useRef(handleUndo)
   const hasMoreRef = useRef(hasMoreBooks)
   const currentBookRef = useRef(currentBook)
+  const overlayOpenRef = useRef(false)
   // Latest-ref pattern: refs are updated AFTER each commit, never during
   // render, so the stable keyboard handler below always sees current values.
   useEffect(() => {
@@ -448,11 +449,23 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
     handleUndoRef.current = handleUndo
     hasMoreRef.current = hasMoreBooks
     currentBookRef.current = currentBook
+    overlayOpenRef.current = !!showcaseBook || !!detailBook
   })
 
   // Keyboard navigation for swipe actions
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Never act on keys the user aimed elsewhere: an open Showcase/Detail
+      // overlay owns the keyboard, and typing contexts (global search lives
+      // outside this component) must keep native behavior — including Ctrl+Z.
+      const el = document.activeElement
+      if (
+        overlayOpenRef.current ||
+        (el instanceof HTMLElement &&
+          (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable))
+      ) {
+        return
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === "z") {
         e.preventDefault()
         handleUndoRef.current()
