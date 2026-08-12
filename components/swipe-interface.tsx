@@ -193,97 +193,137 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
     }
   }, [])
 
-  const loadBooks = async (excludeIds?: Set<string>) => {
-    setIsLoading(true)
-    try {
-      // Fetch books specifically from user's selected genres (not all genres)
-      const userGenres = preferences.favoriteGenres.length > 0
-        ? preferences.favoriteGenres
-        : Object.keys(bookSearchQueries) // fallback to all if none selected
-      const booksPerGenre = Math.ceil(DECK_FETCH_BUDGET / userGenres.length)
+  const dedupeById = (deck: Book[]): Book[] =>
+    Array.from(new Map(deck.map(b => [b.id, b])).values())
 
-      // Fetch from Google Books + Open Library in parallel, only for user's genres.
-      // Once there's taste signal, also pull books aligned to the user's actual
-      // likes (same authors / top genres) in the same parallel batch — broadens
-      // the candidate pool the ranker draws from, no extra latency.
-      const likedForFetch = getLikedBooks()
-      // Paged Google fetches are labeled per genre so the cursor can advance
-      // selectively below. All promises start before any await — still parallel.
-      const genreFetches = userGenres.map(genre => ({
-        genre,
-        // Page deeper each session via the per-genre cursor — surfaces fresh
-        // books instead of re-querying the same top results.
-        promise: getBooksByCategory(genre, booksPerGenre, getGenreOffset(genre)),
-      }))
-      // Open Library supplements each genre — it also covers for Google when
-      // Google's API rate-limits (503s), so keep its share meaningful.
-      const otherFetches: Promise<Book[]>[] = [
-        ...userGenres.map(genre => searchOpenLibrary(genre, Math.min(booksPerGenre, 12))),
-        ...(likedForFetch.length >= 3 ? [fetchPersonalizedBooks(likedForFetch)] : []),
-      ]
+  // NETWORK stage, extracted pure (no state writes): fetch fresh candidates
+  // into the shared cache and return how many landed. Callers decide what the
+  // user sees — this function never gates a paint.
+  const fetchFreshIntoCache = async (): Promise<number> => {
+    // Fetch books specifically from user's selected genres (not all genres)
+    const userGenres = preferences.favoriteGenres.length > 0
+      ? preferences.favoriteGenres
+      : Object.keys(bookSearchQueries) // fallback to all if none selected
+    const booksPerGenre = Math.ceil(DECK_FETCH_BUDGET / userGenres.length)
 
-      const [genreResults, otherResults] = await Promise.all([
-        Promise.allSettled(genreFetches.map(f => f.promise)),
-        Promise.allSettled(otherFetches),
-      ])
-      // Advance a genre's cursor only when its page actually loaded — advancing
-      // on a failed fetch would permanently skip books the user never saw.
-      const fetchStep = Math.min(booksPerGenre * 2, 40)
-      genreFetches.forEach((f, i) => {
-        const r = genreResults[i]
-        if (r.status === 'fulfilled' && r.value.length > 0) {
-          advanceGenreOffset(f.genre, fetchStep)
-        }
+    // Fetch from Google Books + Open Library in parallel, only for user's genres.
+    // Once there's taste signal, also pull books aligned to the user's actual
+    // likes (same authors / top genres) in the same parallel batch — broadens
+    // the candidate pool the ranker draws from, no extra latency.
+    const likedForFetch = getLikedBooks()
+    // Paged Google fetches are labeled per genre so the cursor can advance
+    // selectively below. All promises start before any await — still parallel.
+    const genreFetches = userGenres.map(genre => ({
+      genre,
+      // Page deeper each session via the per-genre cursor — surfaces fresh
+      // books instead of re-querying the same top results.
+      promise: getBooksByCategory(genre, booksPerGenre, getGenreOffset(genre)),
+    }))
+    // Open Library supplements each genre — it also covers for Google when
+    // Google's API rate-limits (503s), so keep its share meaningful.
+    const otherFetches: Promise<Book[]>[] = [
+      ...userGenres.map(genre => searchOpenLibrary(genre, Math.min(booksPerGenre, 12))),
+      ...(likedForFetch.length >= 3 ? [fetchPersonalizedBooks(likedForFetch)] : []),
+    ]
+
+    const [genreResults, otherResults] = await Promise.all([
+      Promise.allSettled(genreFetches.map(f => f.promise)),
+      Promise.allSettled(otherFetches),
+    ])
+    // Advance a genre's cursor only when its page actually loaded — advancing
+    // on a failed fetch would permanently skip books the user never saw.
+    const fetchStep = Math.min(booksPerGenre * 2, 40)
+    genreFetches.forEach((f, i) => {
+      const r = genreResults[i]
+      if (r.status === 'fulfilled' && r.value.length > 0) {
+        advanceGenreOffset(f.genre, fetchStep)
+      }
+    })
+    const freshBooks = [...genreResults, ...otherResults]
+      .filter((r): r is PromiseFulfilledResult<Book[]> => r.status === 'fulfilled')
+      .flatMap(r => r.value)
+
+    if (freshBooks.length > 0) {
+      addBooksToCache(freshBooks)
+    }
+    return freshBooks.length
+  }
+
+  // LOCAL stage, synchronous: rank whatever is already on the device into a
+  // deck. getCachedBooks() seeds 25 real books on first run and grows to
+  // hundreds, so this almost always has something to show in frame one.
+  const rankLocalDeck = (excludeIds?: Set<string>): { deck: Book[]; reasons: Record<string, string> } => {
+    let books = getCachedBooks()
+    // Exclude already-seen books from previous batches + previously passed
+    const passedSet = new Set(getPassedBookIds())
+    if (excludeIds && excludeIds.size > 0) {
+      books = books.filter(b => !excludeIds.has(b.id))
+    }
+    books = books.filter(b => !passedSet.has(b.id))
+    const filtered = filterBooks(books, preferences)
+
+    // Rank the deck. With enough taste signal (>= 3 likes, same gate as the
+    // LLM recs), order by the TF-IDF engine + MMR diversity. Below that the
+    // profile is 1-2 books — similarity ranking tunnels on them, so keep the
+    // genre-match / rating order instead.
+    const liked = getLikedBooks()
+    const candidatePool = filtered.length > 0 ? filtered : books
+    const reasons: Record<string, string> = {}
+    let deck: Book[]
+    if (liked.length >= 3 && candidatePool.length > 0) {
+      const likedIds = new Set(liked.map(b => b.id))
+      const scored = scoreBooks(candidatePool, liked, { communityBoost: true, excludeIds: likedIds })
+      deck = scored.length > 0
+        ? applyMMR(scored, MAX_DECK_SIZE, 0.7).map(s => s.book)
+        : [...candidatePool].sort((a, b) => b.rating - a.rating).slice(0, MAX_DECK_SIZE)
+      scored.forEach(s => {
+        if (s.reasons.length > 0) reasons[s.book.id] = s.reasons[0].description
       })
-      const freshBooks = [...genreResults, ...otherResults]
-        .filter((r): r is PromiseFulfilledResult<Book[]> => r.status === 'fulfilled')
-        .flatMap(r => r.value)
+    } else {
+      deck = (filtered.length > 0 ? filtered : [...candidatePool].sort((a, b) => b.rating - a.rating)).slice(0, MAX_DECK_SIZE)
+    }
+    return { deck: dedupeById(deck), reasons }
+  }
 
-      if (freshBooks.length > 0) {
-        addBooksToCache(freshBooks)
-      }
+  // Deck load = instant local render + background refresh (audit finding #1:
+  // the old version blocked the first card behind ~34 network calls and an
+  // LLM round-trip while a usable deck sat in localStorage).
+  const loadBooks = async (excludeIds?: Set<string>) => {
+    // 1) Instant: rank what's on the device and paint it in this frame.
+    const local = rankLocalDeck(excludeIds)
+    const renderedInstantly = local.deck.length > 0
+    if (renderedInstantly) {
+      setBookReasons(local.reasons)
+      setFilteredBooks(local.deck)
+      setCurrentIndex(0)
+      setPassedBooks([])
+      setUndoStack([])
+      setLikedBooks(getLikedBooks())
+      setIsLoading(false)
+      void upgradeDeckCovers(local.deck)
+    } else {
+      // Nothing usable locally (every cached book already passed/excluded) —
+      // the spinner is honest here.
+      setIsLoading(true)
+    }
 
-      let books = getCachedBooks()
-      // Exclude already-seen books from previous batches + previously passed
-      const passedSet = new Set(getPassedBookIds())
-      if (excludeIds && excludeIds.size > 0) {
-        books = books.filter(b => !excludeIds.has(b.id))
-      }
-      books = books.filter(b => !passedSet.has(b.id))
-      const filtered = filterBooks(books, preferences)
+    // 2) Background: fetch fresh candidates, re-rank the (now richer) cache,
+    // and merge into the part of the deck the user hasn't reached yet.
+    try {
+      await fetchFreshIntoCache()
+      const ranked = rankLocalDeck(excludeIds)
+      let deck = ranked.deck
 
-      // Rank the deck. With enough taste signal (>= 3 likes, same gate as the
-      // LLM recs), order by the TF-IDF engine + MMR diversity. Below that the
-      // profile is 1-2 books — similarity ranking tunnels on them, so keep the
-      // genre-match / rating order instead.
-      const liked = getLikedBooks()
-      const candidatePool = filtered.length > 0 ? filtered : (freshBooks.length > 0 ? freshBooks : books)
-      let deck: Book[]
-      // Local TF-IDF reasons, computed once per deck load — the deck is stable
-      // for the session, so its reason texts should be too.
-      const localReasons: Record<string, string> = {}
-      if (liked.length >= 3 && candidatePool.length > 0) {
-        const likedIds = new Set(liked.map(b => b.id))
-        const scored = scoreBooks(candidatePool, liked, { communityBoost: true, excludeIds: likedIds })
-        deck = scored.length > 0
-          ? applyMMR(scored, MAX_DECK_SIZE, 0.7).map(s => s.book)
-          : [...candidatePool].sort((a, b) => b.rating - a.rating).slice(0, MAX_DECK_SIZE)
-        scored.forEach(s => {
-          if (s.reasons.length > 0) localReasons[s.book.id] = s.reasons[0].description
-        })
-      } else {
-        deck = (filtered.length > 0 ? filtered : [...candidatePool].sort((a, b) => b.rating - a.rating)).slice(0, MAX_DECK_SIZE)
-      }
-
-      // LLM-direct recommendations (ADR-0003): when configured, lead the deck with
-      // personalized picks + their "why this book" reasons. No-ops (returns [])
-      // without a key, so this gracefully falls back to the TF-IDF-ranked deck above.
+      // LLM-direct recommendations (ADR-0003): when configured, lead the deck
+      // with personalized picks + their "why this book" reasons. No-ops
+      // (returns []) without a key — graceful fallback to the ranked deck.
       let llmReasonMap: Record<string, string> = {}
+      const liked = getLikedBooks()
       if (liked.length >= 3) {
         try {
           const seenIds = new Set<string>([
             ...liked.map(b => b.id),
-            ...Array.from(passedSet),
+            ...getPassedBookIds(),
             ...(excludeIds ? Array.from(excludeIds) : []),
           ])
           const { books: recBooks, reasons } = await getRecommendedBooks(
@@ -295,42 +335,72 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
           if (recBooks.length > 0) {
             const deckIds = new Set(deck.map(b => b.id))
             const recUnseen = recBooks.filter(b => !deckIds.has(b.id))
-            deck = [...recUnseen, ...deck].slice(0, MAX_DECK_SIZE)
+            deck = dedupeById([...recUnseen, ...deck]).slice(0, MAX_DECK_SIZE)
             llmReasonMap = reasons
           }
         } catch {
           // best-effort — keep the local deck
         }
       }
-      // Reasons are finalized here, once per deck load. LLM reasons (for the
-      // recommended books leading the deck) take precedence over local ones.
-      const deckReasons: Record<string, string> = {}
-      deck.forEach(b => {
-        const r = localReasons[b.id]
-        if (r) deckReasons[b.id] = r
+
+      // Fresh reasons win for re-ranked books; existing entries survive for
+      // cards the user is already looking at.
+      setBookReasons(prev => ({ ...prev, ...ranked.reasons, ...llmReasonMap }))
+      // Anchor the merge on what the user has actually swiped — storage is
+      // written synchronously on every swipe, so it is fresher than any ref,
+      // and reading it here keeps the updater below pure.
+      const swipedIds = new Set<string>([
+        ...getPassedBookIds(),
+        ...getLikedBooks().map(b => b.id),
+      ])
+      setFilteredBooks(prev => {
+        if (prev.length === 0) return deck
+        // Keep the already-swiped run plus the current card and the two
+        // visibly stacked behind it — everything the user hasn't reached is
+        // replaced by the fresher ranking. Books swiped since the instant
+        // render must not come back.
+        let swipedPrefix = 0
+        while (swipedPrefix < prev.length && swipedIds.has(prev[swipedPrefix].id)) {
+          swipedPrefix++
+        }
+        const keepCount = Math.min(swipedPrefix + 3, prev.length)
+        const kept = prev.slice(0, keepCount)
+        const keptIds = new Set(kept.map(b => b.id))
+        const tail = deck.filter(
+          b => !keptIds.has(b.id) && !swipedIds.has(b.id)
+        )
+        return [...kept, ...tail]
       })
-      setBookReasons({ ...deckReasons, ...llmReasonMap })
-      // Guard against the same book arriving from two sources (LLM recs, the
-      // ranked pool, or overlapping API pages) — duplicates would show the same
-      // card twice and collide on React keys.
-      setFilteredBooks(Array.from(new Map(deck.map(b => [b.id, b])).values()))
       // Background: swap OL books to their correct-edition Amazon cover (no
       // perceived latency — the deck already renders with OL -L).
       void upgradeDeckCovers(deck)
-      setCurrentIndex(0)
-      setPassedBooks([])
-      setUndoStack([])
-      setLikedBooks(getLikedBooks())
-    } catch {
-      const cached = getCachedBooks()
-      if (cached.length > 0) {
-        const filtered = filterBooks(cached, preferences)
-        setFilteredBooks(
-          (filtered.length > 0 ? filtered : cached).slice(0, MAX_DECK_SIZE)
-        )
-        setBookReasons({}) // fallback deck was never scored — drop stale reasons
+      if (!renderedInstantly) {
+        setCurrentIndex(0)
+        setPassedBooks([])
+        setUndoStack([])
+        setLikedBooks(getLikedBooks())
       }
-      showToast("Couldn't load new books. Showing cached results.", "error")
+    } catch {
+      // Books are already on screen in the instant path — a background refresh
+      // failure needs no interruption. Only surface it when the user is still
+      // staring at the spinner.
+      if (!renderedInstantly) {
+        const cached = getCachedBooks()
+        if (cached.length > 0) {
+          const filtered = filterBooks(cached, preferences)
+          setFilteredBooks(
+            (filtered.length > 0 ? filtered : cached).slice(0, MAX_DECK_SIZE)
+          )
+          setBookReasons({}) // fallback deck was never scored — drop stale reasons
+          // The fallback is a NEW deck — without these resets a stale index
+          // from the previous batch would land past the deck end and show the
+          // batch-complete screen instead of the books.
+          setCurrentIndex(0)
+          setPassedBooks([])
+          setUndoStack([])
+        }
+        showToast("Couldn't load new books. Showing cached results.", "error")
+      }
     } finally {
       setIsLoading(false)
     }
@@ -483,6 +553,39 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
       document.removeEventListener("keydown", handleKeyDown)
     }
   }, [])
+
+  // Prefetch the next batch while the user is still swiping this one, so the
+  // "Nice batch!" wall only ever appears when the network genuinely has
+  // nothing to add (audit finding #1). Ref-guarded: one in-flight prefetch,
+  // and enriched/appended books never reset index, undo, or passed state.
+  const prefetchingRef = useRef(false)
+  useEffect(() => {
+    if (isLoading || prefetchingRef.current) return
+    if (filteredBooks.length === 0) return
+    if (currentIndex < filteredBooks.length - 5) return
+    prefetchingRef.current = true
+    ;(async () => {
+      try {
+        await fetchFreshIntoCache()
+        const seen = new Set(filteredBooks.map(b => b.id))
+        const { deck: more, reasons } = rankLocalDeck(seen)
+        if (more.length === 0) return
+        setBookReasons(prev => ({ ...reasons, ...prev }))
+        setFilteredBooks(prev => {
+          const have = new Set(prev.map(b => b.id))
+          const passedSet = new Set(getPassedBookIds())
+          const add = more.filter(b => !have.has(b.id) && !passedSet.has(b.id))
+          return add.length > 0 ? [...prev, ...add] : prev
+        })
+      } catch {
+        // best-effort — the batch-complete screen remains the fallback
+      } finally {
+        prefetchingRef.current = false
+      }
+    })()
+    // fetch/rank close over fresh state per call; deps trigger on progress.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentIndex, isLoading, filteredBooks.length])
 
   // Loading
   if (isLoading) {
