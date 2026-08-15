@@ -2,6 +2,8 @@
 // route (app/api/book-facts) and the client lib (lib/book-enrichment). No
 // "use client", no I/O — everything here is unit-testable in isolation.
 //
+// Description cleaning, scoring and selection live in lib/description-clean.ts.
+//
 // Merge policy (ADR-0006): the LLM supplies STABLE literary facts LLM-first
 // (description, genres, series, first-published) gated on `known`; API facts
 // VERIFY and override on conflict; LIVE METRICS (ratings count / average)
@@ -10,6 +12,8 @@
 /** Below this, an LLM "description" is a fragment, not a usable hook — the
  *  route zeroes it and the merge ignores it (both sides share the floor). */
 export const MIN_HOOK_CHARS = 80
+
+import { chooseDescription } from "./description-clean"
 
 export interface SeriesFacts {
   name: string
@@ -43,6 +47,9 @@ export interface OlFacts {
 
 export interface BookFactsPayload {
   found: boolean
+  /** Set when no candidate met the bar: cleaned prose for the copy desk to
+   *  rewrite. Never rendered — the route consumes it and drops it. */
+  rewriteSourceMaterial?: string
   description?: string
   descriptionSource?: "google" | "openlibrary" | "llm"
   genres?: string[]
@@ -126,7 +133,7 @@ export function titlesOverlap(a: string, b: unknown): boolean {
   return na.includes(nb) || nb.includes(na)
 }
 
-/** Longest-real-description + LLM-first-facts-API-verified merge. */
+/** Quality-selected description + LLM-first-facts-API-verified merge. */
 export function mergeBookFacts(
   llm: LlmFacts | null,
   gb: GbFacts | null,
@@ -134,20 +141,19 @@ export function mergeBookFacts(
 ): BookFactsPayload {
   if (!llm?.known && !gb && !ol) return { found: false }
 
-  // Description is PROSE, not a stable fact: longest real text wins and the
-  // LLM's original hook competes on equal footing (a 2-4 sentence hook only
-  // beats an API stub, since substantive publisher copy is longer). Strict
-  // API-override applies to series/year/genres below, per ADR-0006.
-  const candidates: Array<{
-    text: string
-    source: NonNullable<BookFactsPayload["descriptionSource"]>
-  }> = []
-  if (gb?.description) candidates.push({ text: gb.description, source: "google" })
-  if (ol?.description)
-    candidates.push({ text: ol.description, source: "openlibrary" })
-  if (llm?.known && llm.description && llm.description.length >= MIN_HOOK_CHARS)
-    candidates.push({ text: llm.description, source: "llm" })
-  candidates.sort((a, b) => b.text.length - a.text.length)
+  // Description selection is by QUALITY SCORE, never by length (ADR-0007).
+  // Length only breaks ties inside the band. The old longest-wins rule made
+  // Open Library's long wiki text beat Google's tighter jacket copy on every
+  // book measured, dragging markdown, piracy links and encyclopedia ledes
+  // into the UI. `chooseDescription` cleans each candidate, disqualifies the
+  // wrong genre of writing, and trims survivors to the house band.
+  const choice = chooseDescription([
+    { source: "google", raw: gb?.description },
+    { source: "openlibrary", raw: ol?.description },
+    { source: "llm", raw: llm?.known ? llm.description : undefined },
+  ])
+  const description = choice.kind === "accept" ? choice.text : undefined
+  const descriptionSource = choice.kind === "accept" ? choice.source : undefined
 
   const genres =
     (gb?.categories && splitGenres(gb.categories).length > 0
@@ -158,9 +164,13 @@ export function mergeBookFacts(
       : undefined)
 
   return {
-    found: true,
-    description: candidates[0]?.text,
-    descriptionSource: candidates[0]?.source,
+    // `found` is a CONTENT test, not a "some API answered" test: a payload
+    // with no description and no facts previously reported found:true and
+    // permanently marked the book enriched with nothing to show.
+    found: !!(description || genres || ol?.series || ol?.firstPublished || gb?.ratingsCount),
+    description,
+    descriptionSource,
+    rewriteSourceMaterial: choice.kind === "rewrite" ? choice.sourceMaterial : undefined,
     genres,
     // Stable facts: API value verifies/overrides the model's on conflict.
     series: ol?.series ?? (llm?.known ? llm.series : undefined),

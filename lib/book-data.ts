@@ -12,6 +12,9 @@ export interface BookMetadata {
    *  from Google Books / Open Library only — never from the LLM. */
   enriched?: {
     at: string
+    /** Which description pipeline produced this. Books stamped with an older
+     *  version are reprocessed so improvements reach already-saved books. */
+    pipelineVersion?: number
     series?: { name: string; index?: number }
     firstPublished?: number
     descriptionSource: 'google' | 'openlibrary' | 'llm' | 'original'

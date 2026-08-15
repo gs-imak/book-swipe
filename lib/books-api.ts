@@ -5,22 +5,17 @@ import { getLanguagePreference } from "./language-preference"
 import { upgradeGoogleBooksCoverUrl, sanitizeGoogleCoverUrl } from "./covers"
 import { stableRating } from "./stable-rating"
 import { estimateReadingTimeRange } from "./reading-time"
+import { cleanDescription, trimToSentenceBand, DESC_MAX_CHARS } from "./description-clean"
 
 // Strip HTML tags from API descriptions and truncate safely
+// Origin-point cleaning: books reach the deck straight from search results,
+// long before enrichment runs, so the same cleaner used by the enrichment
+// pipeline runs here too. Replacing every tag with "" (the old behaviour) ran
+// words together wherever a <p> or <br> was the only separator.
 function sanitizeDescription(raw?: string): string {
-  if (!raw) return "No description available."
-  // Remove all HTML tags, then decode common entities
-  const text = raw
-    .replace(/<[^>]*>/g, "")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&nbsp;/g, " ")
-    .trim()
+  const { text } = cleanDescription(raw)
   if (!text) return "No description available."
-  return text
+  return trimToSentenceBand(text).text || text.slice(0, DESC_MAX_CHARS)
 }
 
 // Google Books API integration

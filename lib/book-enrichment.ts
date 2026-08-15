@@ -13,24 +13,27 @@ import { Book } from "./book-data"
 import { getLikedBooks, saveLikedBooks } from "./storage"
 import { updateBooksInCache } from "./book-cache"
 import type { BookFactsPayload } from "./book-facts-shared"
+import {
+  DESCRIPTION_PIPELINE_VERSION,
+  cleanDescription,
+  trimToSentenceBand,
+} from "./description-clean"
 
 // The route may wait on its LLM stage (~12s worst case) before answering.
 const FACTS_TIMEOUT_MS = 20_000
 const ENRICH_CONCURRENCY = 2
-/** Below this, a description reads as a stub worth replacing. */
-const THIN_DESCRIPTION_CHARS = 160
-const PLACEHOLDER_DESCRIPTION = "No description available."
 
 // In-flight/session dedupe: enriching the same book twice concurrently (deck
 // upgrade + showcase open) must resolve to one pipeline run.
 const _inFlight = new Map<string, Promise<Book>>()
 
-function isThin(description: string | undefined): boolean {
-  return (
-    !description ||
-    description === PLACEHOLDER_DESCRIPTION ||
-    description.length < THIN_DESCRIPTION_CHARS
-  )
+/** A book needs (re)processing when it was never enriched, or was enriched by
+ *  an older pipeline — the version bump is what re-cleans the descriptions
+ *  already persisted in a user's library from before ADR-0007. */
+export function needsEnrichment(book: Book): boolean {
+  const e = book.metadata?.enriched
+  if (!e) return true
+  return (e.pipelineVersion ?? 1) < DESCRIPTION_PIPELINE_VERSION
 }
 
 async function fetchFacts(book: Book): Promise<BookFactsPayload | null> {
@@ -55,7 +58,7 @@ async function fetchFacts(book: Book): Promise<BookFactsPayload | null> {
  * resolves; on failure the input book is returned unchanged and unmarked.
  */
 export function enrichBook(book: Book): Promise<Book> {
-  if (book.metadata?.enriched) return Promise.resolve(book)
+  if (!needsEnrichment(book)) return Promise.resolve(book)
   const existing = _inFlight.get(book.id)
   if (existing) return existing
 
@@ -63,18 +66,23 @@ export function enrichBook(book: Book): Promise<Book> {
     const facts = await fetchFacts(book)
     if (!facts?.found) return book
 
-    // Longest real text wins; the route already ordered its candidates.
+    // The route already selected and cleaned the winner by quality score and
+    // trimmed it to the house band, so the client simply takes it. Length
+    // comparisons here would reintroduce the longest-wins bug (ADR-0007).
     let description = book.description
     let descriptionSource: NonNullable<
       NonNullable<Book["metadata"]>["enriched"]
     >["descriptionSource"] = "original"
-    if (
-      facts.description &&
-      facts.descriptionSource &&
-      (isThin(description) || facts.description.length > description.length)
-    ) {
+    if (facts.description && facts.descriptionSource) {
       description = facts.description
       descriptionSource = facts.descriptionSource
+    } else {
+      // No better candidate (copy desk declined, or unavailable). Still clean
+      // and band the book's own description so a fallback is never the raw
+      // markup-laden text the search API supplied.
+      const { text } = cleanDescription(description)
+      const banded = trimToSentenceBand(text).text || text
+      if (banded) description = banded
     }
 
     // Real rating replaces the deterministic placeholder — but only with
@@ -92,6 +100,7 @@ export function enrichBook(book: Book): Promise<Book> {
 
     const enriched: NonNullable<NonNullable<Book["metadata"]>["enriched"]> = {
       at: new Date().toISOString(),
+      pipelineVersion: DESCRIPTION_PIPELINE_VERSION,
       descriptionSource,
     }
     if (facts.series) enriched.series = facts.series
@@ -149,7 +158,7 @@ export async function upgradeVisibleBooks(
   books: Book[],
   onUpdated?: (updated: Book[]) => void,
 ): Promise<Book[]> {
-  const pending = books.filter((b) => !b.metadata?.enriched)
+  const pending = books.filter(needsEnrichment)
   const changed: Book[] = []
   for (let i = 0; i < pending.length; i += ENRICH_CONCURRENCY) {
     const batch = pending.slice(i, i + ENRICH_CONCURRENCY)
