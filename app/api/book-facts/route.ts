@@ -3,16 +3,22 @@ import { generateObject } from "ai"
 import { z } from "zod"
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit"
 import {
-  MIN_HOOK_CHARS,
   mergeBookFacts,
   parseSeries,
-  stripHtml,
   titlesOverlap,
   yearFrom,
   type GbFacts,
   type LlmFacts,
   type OlFacts,
 } from "@/lib/book-facts-shared"
+import {
+  cleanDescription,
+  isPublishable,
+  trimToSentenceBand,
+  DESC_IDEAL_CHARS,
+  DESC_MAX_CHARS,
+  DESC_MIN_CHARS,
+} from "@/lib/description-clean"
 
 // Quota-proof book facts (ADR-0006). One server round-trip per book, ever:
 // - Google Books / Open Library fetches carry `next.revalidate` (30 days) so
@@ -35,11 +41,6 @@ const llmSchema = z.object({
   known: z
     .boolean()
     .describe("true ONLY if you specifically recognize this exact book"),
-  description: z
-    .string()
-    .describe(
-      "2-4 sentence ORIGINAL jacket-style description in your own words; empty when known=false",
-    ),
   genres: z
     .array(z.string())
     .max(4)
@@ -85,7 +86,6 @@ async function llmFacts(title: string, author: string): Promise<LlmFacts | null>
 Book: "${title}" by ${author}
 
 If you specifically recognize THIS exact book by this author, return known=true with:
-- description: 2-4 sentences in your OWN words — premise, stakes, what makes it distinctive. No spoilers beyond the setup. Fresh copy only: never reproduce or closely paraphrase a publisher blurb or the book's text.
 - genres: 2-4 conventional genre labels.
 - seriesName/seriesIndex: only if you are certain it belongs to a series (else "" and 0).
 - firstPublished: the year it was first published (0 if unsure).
@@ -101,10 +101,6 @@ If you do not specifically recognize it: known=false, empty/zero everything. Nev
     if (!object.known) return { known: false }
     return {
       known: true,
-      description:
-        object.description.length >= MIN_HOOK_CHARS
-          ? object.description.slice(0, 900)
-          : undefined,
       genres: object.genres.filter((g) => g.trim().length > 0).slice(0, 4),
       series: object.seriesName.trim()
         ? {
@@ -126,6 +122,69 @@ If you do not specifically recognize it: known=false, empty/zero everything. Nev
   }
 }
 
+const copyDeskSchema = z.object({
+  status: z.enum(["ok", "cannot"]),
+  description: z
+    .string()
+    .describe("House-style description, empty when status is cannot"),
+})
+
+/**
+ * The copy desk (ADR-0007). Runs only when no cleaned source candidate met the
+ * quality bar — i.e. the cases the old pipeline shipped as raw wiki text,
+ * edition marketing, or a review quote. Writes ORIGINAL copy in one consistent
+ * shape and length so every card carries the same weight, and declines rather
+ * than inventing a plot for a book it does not know.
+ */
+async function copyDesk(
+  title: string,
+  author: string,
+  sourceMaterial: string,
+): Promise<string | null> {
+  const hasGatewayAuth = !!(
+    process.env.AI_GATEWAY_API_KEY ||
+    process.env.VERCEL_OIDC_TOKEN ||
+    process.env.VERCEL
+  )
+  if (!hasGatewayAuth) return null
+
+  const prompt = `You write book descriptions for a discovery app, in one consistent house style.
+
+Book: "${title}" by ${author}
+${sourceMaterial ? `\nSOURCE MATERIAL (may be messy, may be marketing, may be an encyclopedia entry — use only as reference for facts):\n<<<\n${sourceMaterial}\n>>>` : "\nNo usable source material was found."}
+
+Write a description of this book that follows ALL of these rules:
+- Between ${DESC_MIN_CHARS} and ${DESC_MAX_CHARS} characters. Aim for ${DESC_IDEAL_CHARS}. This is a hard constraint.
+- Two to three sentences. Open on premise and character. Then the central tension or question. Stop.
+- Your OWN words entirely. Never reproduce or closely paraphrase the source material, publisher marketing, or text from the book.
+- No spoilers past the setup. No review quotes, awards, bestseller claims, comparisons to other books, edition or format notes, or publication history.
+- Do not open with "<Title> is a novel by..." — that is an encyclopedia entry, not a description.
+- Plain prose. No markdown, no HTML, no links, no lists.
+
+If you do not actually know this specific book, or the source material is about a different work, return status "cannot" with an empty description. Never guess a plot.`
+
+  try {
+    const { object } = await generateObject({
+      model: MODEL,
+      schema: copyDeskSchema,
+      prompt,
+      abortSignal: AbortSignal.timeout(GENERATION_TIMEOUT_MS),
+    })
+    if (object.status !== "ok") return null
+    // The model's own length control is unreliable; the cleaner and the band
+    // are the authority, and the final gate is isPublishable.
+    const { text } = cleanDescription(object.description, { source: "llm" })
+    const trimmed = trimToSentenceBand(text).text
+    return isPublishable(trimmed) ? trimmed : null
+  } catch (err) {
+    console.error(
+      "[BookSwipe] copy desk failed:",
+      err instanceof Error ? err.message : String(err),
+    )
+    return null
+  }
+}
+
 async function gbFacts(volumeId: string, title: string): Promise<GbFacts | null> {
   const fields =
     "volumeInfo(title,description,averageRating,ratingsCount,categories,publishedDate)"
@@ -137,8 +196,9 @@ async function gbFacts(volumeId: string, title: string): Promise<GbFacts | null>
   const info = data?.volumeInfo
   if (!info || !titlesOverlap(title, info.title)) return null
   return {
-    description:
-      typeof info.description === "string" ? stripHtml(info.description) : undefined,
+    // Raw hand-off: lib/description-clean owns all cleaning now, so there is
+    // exactly one cleaner and one place for its rules to change.
+    description: typeof info.description === "string" ? info.description : undefined,
     ratingsCount: typeof info.ratingsCount === "number" ? info.ratingsCount : undefined,
     averageRating:
       typeof info.averageRating === "number" ? info.averageRating : undefined,
@@ -226,5 +286,19 @@ export async function GET(request: NextRequest) {
     isbn ? olFacts(isbn, title) : Promise.resolve(null),
   ])
 
-  return NextResponse.json(mergeBookFacts(llm, gb, ol))
+  const facts = mergeBookFacts(llm, gb, ol)
+
+  // No source candidate cleared the quality bar — hand what survived to the
+  // copy desk. `rewriteSourceMaterial` is consumed here and never returned.
+  const { rewriteSourceMaterial, ...payload } = facts
+  if (!payload.description && author && rewriteSourceMaterial !== undefined) {
+    const written = await copyDesk(title, author, rewriteSourceMaterial)
+    if (written) {
+      payload.description = written
+      payload.descriptionSource = "llm"
+      payload.found = true
+    }
+  }
+
+  return NextResponse.json(payload)
 }

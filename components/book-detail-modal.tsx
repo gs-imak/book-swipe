@@ -7,6 +7,7 @@ import { Book } from "@/lib/book-data"
 import { BookReview, getBookReview, getShelvesForBook, getShelves, type Shelf, addLikedBook, getLikedBooks, getBookTags, getTagDefinitions, addTagToBook, removeTagFromBook, createTag, type TagDefinition, TAG_COLORS, getReadingProgress, updateReadingProgress, addBookToReading, recordBookView, getBookViewCount, isSuggestionDismissed, dismissSuggestion } from "@/lib/storage"
 import { scoreBooks } from "@/lib/scoring-engine"
 import { enrichBook, persistEnrichedBooks, formatCount } from "@/lib/book-enrichment"
+import { DESC_MAX_CHARS } from "@/lib/description-clean"
 import { getCachedBooks } from "@/lib/book-cache"
 import { detectSeries, findNextInSeries, type SeriesInfo } from "@/lib/series-detection"
 import { QuickReview } from "./quick-review"
@@ -374,9 +375,11 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                   return (
                     <div>
                       <p className="text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
-                        {descExpanded || desc.length <= 200 ? desc : desc.slice(0, 200) + "..."}
+                        {descExpanded || desc.length <= DESC_MAX_CHARS
+                          ? desc
+                          : desc.slice(0, DESC_MAX_CHARS) + "..."}
                       </p>
-                      {desc.length > 200 && (
+                      {desc.length > DESC_MAX_CHARS && (
                         <button
                           onClick={() => setDescExpanded(!descExpanded)}
                           className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium mt-1 transition-colors"
