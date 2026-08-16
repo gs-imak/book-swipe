@@ -67,11 +67,11 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className={[
           // Mobile: bottom bar
-          "fixed bottom-0 left-0 right-0 z-50",
-          "bg-background/95 backdrop-blur-xl",
-          "border-t border-stone-200/80 dark:border-stone-700/80",
+          "fixed bottom-0 left-0 right-0 z-nav",
+          "bg-[rgba(255,255,255,.95)] dark:bg-[rgba(30,26,23,.95)] backdrop-blur-xl",
+          "border-t border-border",
           // Desktop: left sidebar
-          "lg:top-0 lg:bottom-0 lg:right-auto lg:w-16",
+          "lg:top-0 lg:bottom-0 lg:right-auto lg:w-[76px]",
           "lg:border-t-0 lg:border-r",
           "lg:flex lg:flex-col",
         ].join(" ")}
@@ -80,8 +80,8 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
         }}
       >
         {/* Desktop: branding area at top of sidebar */}
-        <div className="hidden lg:flex lg:items-center lg:justify-center lg:h-14 lg:border-b lg:border-stone-200/80 lg:dark:border-stone-700/80 lg:shrink-0">
-          <span className="text-sm font-bold tracking-tight text-amber-600">BS</span>
+        <div className="hidden lg:flex lg:items-center lg:justify-center lg:h-14 lg:border-b lg:border-border lg:shrink-0">
+          <span className="font-serif font-semibold text-[17px] text-ink">B.</span>
         </div>
 
         {/* Nav items container */}
@@ -99,13 +99,13 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
                   className={[
                     // Base (mobile)
                     "relative flex flex-col items-center justify-center gap-0.5",
-                    "py-2 px-3 rounded-xl",
+                    "py-2 px-3 rounded-control",
                     "transition-all duration-200 touch-manipulation tap-target",
                     // Desktop overrides
-                    "lg:py-2.5 lg:px-1 lg:mx-1 lg:rounded-lg lg:gap-0.5",
+                    "lg:py-2.5 lg:px-1 lg:mx-1 lg:rounded-control lg:gap-0.5",
                     // Desktop hover
-                    "lg:hover:bg-stone-100 lg:dark:hover:bg-stone-800",
-                    // Desktop active — handled by the indicator bar child element
+                    "lg:hover:bg-surface-2",
+                    isActive ? "lg:bg-surface-2" : "",
                   ].join(" ")}
                   whileTap={{ scale: 0.92 }}
                 >
@@ -113,34 +113,21 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
                     <Icon
                       className={[
                         "w-[22px] h-[22px] transition-colors duration-200",
-                        isActive
-                          ? "text-stone-900 dark:text-stone-100 lg:text-amber-600 lg:dark:text-amber-500"
-                          : "text-stone-500 dark:text-stone-400",
+                        isActive ? "text-ink" : "text-ink-muted",
                       ].join(" ")}
-                      strokeWidth={isActive ? 2.5 : 1.8}
+                      strokeWidth={isActive ? 2.2 : 1.8}
                     />
-
-                    {/* Badge for liked books count */}
-                    {item.id === "dashboard" && likedCount > 0 && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="absolute -top-1.5 -right-2.5 bg-amber-600 text-white text-[9px] font-bold rounded-full min-w-[16px] h-[16px] px-1 flex items-center justify-center"
-                      >
-                        {likedCount > 99 ? "99" : likedCount}
-                      </motion.div>
-                    )}
                   </div>
 
                   <span
                     className={[
-                      "text-[10px] font-medium transition-colors duration-200",
-                      isActive
-                        ? "text-stone-900 dark:text-stone-100 lg:text-amber-600 lg:dark:text-amber-500 lg:font-bold"
-                        : "text-stone-500 dark:text-stone-400",
+                      "text-[10px] font-medium transition-colors duration-200 tabular-nums",
+                      isActive ? "text-ink font-bold" : "text-ink-muted",
                     ].join(" ")}
                   >
-                    {item.label}
+                    {item.id === "dashboard" && likedCount > 0
+                      ? `${item.label} · ${likedCount > 999 ? "1k" : likedCount}`
+                      : item.label}
                   </span>
 
                 </motion.button>
@@ -150,13 +137,13 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
         </div>
 
         {/* Desktop: search + scan + theme toggle at bottom of sidebar */}
-        <div className="hidden lg:flex lg:flex-col lg:shrink-0 lg:border-t lg:border-stone-200/80 lg:dark:border-stone-700/80">
+        <div className="hidden lg:flex lg:flex-col lg:shrink-0 lg:border-t lg:border-border">
           {onSearch && (
             <div className="lg:flex lg:items-center lg:justify-center lg:pt-3 lg:pb-1">
               <button
                 onClick={onSearch}
                 aria-label="Search"
-                className="flex flex-col items-center gap-0.5 py-2 px-1 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors duration-150 w-[calc(100%-8px)]"
+                className="flex flex-col items-center gap-0.5 py-2 px-1 rounded-control text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors duration-150 w-[calc(100%-8px)]"
               >
                 <Search className="w-[20px] h-[20px]" strokeWidth={1.8} />
                 <span className="text-[10px] font-medium">Search</span>
@@ -168,7 +155,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
               <button
                 onClick={onScan}
                 aria-label="Scan a book barcode"
-                className="flex flex-col items-center gap-0.5 py-2 px-1 rounded-lg text-amber-600 dark:text-amber-500 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors duration-150 w-[calc(100%-8px)]"
+                className="flex flex-col items-center gap-0.5 py-2 px-1 rounded-control text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors duration-150 w-[calc(100%-8px)]"
               >
                 <Camera className="w-[20px] h-[20px]" strokeWidth={1.8} />
                 <span className="text-[10px] font-medium">Scan</span>
@@ -179,7 +166,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
             <button
               onClick={() => toggleTheme()}
               aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-              className="flex flex-col items-center gap-0.5 py-2 px-1 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors duration-150 w-[calc(100%-8px)]"
+              className="flex flex-col items-center gap-0.5 py-2 px-1 rounded-control text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors duration-150 w-[calc(100%-8px)]"
             >
               {isDark ? <Sun className="w-[20px] h-[20px]" strokeWidth={1.8} /> : <Moon className="w-[20px] h-[20px]" strokeWidth={1.8} />}
               <span className="text-[10px] font-medium">{isDark ? "Light" : "Dark"}</span>
@@ -192,8 +179,8 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
                 aria-label={isSignedIn ? "Account synced" : "Sign in to sync"}
                 className={`flex flex-col items-center gap-0.5 py-2 px-1 rounded-lg transition-colors duration-150 w-[calc(100%-8px)] ${
                   isSignedIn
-                    ? "text-emerald-500 dark:text-emerald-400"
-                    : "text-stone-400 dark:text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800"
+                    ? "text-success-ink"
+                    : "text-ink-muted hover:text-ink hover:bg-surface-2"
                 }`}
               >
                 {isSignedIn ? <User className="w-[20px] h-[20px]" strokeWidth={1.8} /> : <Cloud className="w-[20px] h-[20px]" strokeWidth={1.8} />}
