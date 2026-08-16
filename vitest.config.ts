@@ -8,6 +8,9 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
     globals: true,
+    // Background-agent git worktrees live under .claude/worktrees — their
+    // stale test copies must not run against the parent repo's sources.
+    exclude: ['**/node_modules/**', '.claude/**'],
   },
   resolve: {
     alias: {
