@@ -107,7 +107,9 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
       dragTransition={{ bounceStiffness: 500, bounceDamping: 25 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
-      <div className="relative h-full w-full" onClick={handleCardTap}>
+      {/* overflow-hidden keeps the parked info sheet (y:100%) from painting
+          below the card now that there is no clipping card box anymore. */}
+      <div className="relative h-full w-full overflow-hidden" onClick={handleCardTap}>
         <div className="flex h-full w-full flex-col items-center lg:flex-row lg:items-start lg:justify-center lg:gap-16">
           {/* Cover object — radius 5px (covers are books), object shadow */}
           <div className="relative w-[264px] h-[396px] lg:w-[312px] lg:h-[468px] flex-shrink-0 rounded-cover shadow-cover overflow-hidden bg-surface-2">
@@ -145,8 +147,12 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
             )}
           </div>
 
-          {/* Caption — left-aligned column under (mobile) / beside (desktop) */}
-          <div className="w-[300px] lg:w-[420px] pt-5 lg:pt-2 text-left">
+          {/* Caption — left-aligned column under (mobile) / beside (desktop).
+              Only the top card paints its caption: captions are bare text on
+              the page surface, so the peeking card's copy would superimpose.
+              invisible (not conditional render) keeps both cards' geometry
+              identical for the stack transform. */}
+          <div className={`w-[300px] lg:w-[420px] pt-5 lg:pt-2 text-left ${isTop ? "" : "invisible"}`}>
             {reason && (
               <p className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-ink-muted truncate mb-1.5">
                 {reason}
@@ -206,7 +212,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
           inert={!infoExpanded}
           animate={{ y: infoExpanded ? 0 : '100%' }}
           transition={{ type: "spring", damping: 32, stiffness: 320 }}
-          className="absolute inset-0 bg-surface-1 z-30 flex flex-col rounded-t-sheet border border-border shadow-e3"
+          className="absolute inset-0 bg-surface-1 z-sheet flex flex-col rounded-t-sheet border border-border shadow-e3"
           style={{ y: sheetY, touchAction: 'pan-y' }}
           drag={infoExpanded ? "y" : false}
           dragConstraints={{ top: 0, bottom: 0 }}
