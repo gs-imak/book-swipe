@@ -15,7 +15,7 @@ import { getCachedBooks, addBooksToCache, updateBooksInCache } from "@/lib/book-
 import { upgradeVisibleBooks } from "@/lib/book-enrichment"
 import { searchOpenLibrary } from "@/lib/openlibrary-api"
 import { upgradeCoversWithItunes } from "@/lib/itunes-covers"
-import { Heart, X, Undo2, RotateCcw, Settings, Library, BookOpen, Loader2 } from "lucide-react"
+import { Heart, X, Undo2, RotateCcw, Settings2, Library, BookOpen } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useGamification } from "./gamification-provider"
 import { useToast } from "./toast-provider"
@@ -587,13 +587,16 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex, isLoading, filteredBooks.length])
 
-  // Loading
+  // Loading — skeleton mirrors the real card anatomy (never a spinner)
   if (isLoading) {
     return (
-      <div className="bg-background flex items-center justify-center" style={{ minHeight: "100dvh" }}>
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 text-amber-600 animate-spin mx-auto mb-4" />
-          <p className="text-base font-medium text-stone-600 dark:text-stone-300">Finding books for you...</p>
+      <div className="bg-surface-0 flex flex-col items-center justify-center gap-5 p-4" style={{ minHeight: "100dvh" }} aria-busy="true" aria-label="Finding books for you">
+        <div className="w-[264px] h-[396px] rounded-cover shimmer" />
+        <div className="w-[300px] space-y-2.5">
+          <div className="h-3 w-24 rounded shimmer" />
+          <div className="h-6 w-full rounded shimmer" />
+          <div className="h-6 w-2/3 rounded shimmer" />
+          <div className="h-4 w-32 rounded shimmer" />
         </div>
       </div>
     )
@@ -602,28 +605,27 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   // No matches
   if (filteredBooks.length === 0) {
     return (
-      <div className="bg-background flex items-center justify-center p-6 pb-16" style={{ minHeight: "100dvh" }}>
+      <div className="bg-surface-0 flex items-center justify-center p-6 pb-16" style={{ minHeight: "100dvh" }}>
         <motion.div
           className="text-center max-w-sm"
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div className="w-16 h-16 bg-amber-50 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center mx-auto mb-5">
-            <BookOpen className="w-8 h-8 text-amber-600" />
+          <div className="w-16 h-16 bg-surface-2 rounded-card flex items-center justify-center mx-auto mb-5">
+            <BookOpen className="w-8 h-8 text-ink" strokeWidth={1.8} />
           </div>
-          <h2
-            className="text-2xl font-bold text-stone-900 dark:text-stone-100 mb-2 font-serif"
-          >
+          <h2 className="font-serif font-semibold text-[30px] leading-[1.08] text-ink mb-2">
             No matches yet
           </h2>
-          <p className="text-stone-500 dark:text-stone-400 mb-6 leading-relaxed">
+          <p className="text-ink-muted mb-6 leading-relaxed">
             We couldn&apos;t find books for your current preferences. Try adjusting your taste profile.
           </p>
           <Button
             onClick={onRestart}
-            className="h-11 px-6 bg-stone-900 hover:bg-stone-800 text-white font-medium rounded-xl"
+            className="h-11 px-6 bg-ink hover:bg-ink/90 text-surface-0 font-semibold rounded-full"
           >
-            <Settings className="w-4 h-4 mr-2" />
+            <Settings2 className="w-4 h-4 mr-2" />
             Update Preferences
           </Button>
         </motion.div>
@@ -634,53 +636,52 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   // Done swiping
   if (!hasMoreBooks) {
     return (
-      <div className="bg-background flex items-center justify-center p-6 pb-16" style={{ minHeight: "100dvh" }}>
+      <div className="bg-surface-0 flex items-center justify-center p-6 pb-16" style={{ minHeight: "100dvh" }}>
         <motion.div
           className="text-center max-w-sm w-full"
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center mx-auto mb-5">
-            <Heart className="w-8 h-8 text-emerald-600" />
+          <div className="w-16 h-16 bg-surface-2 rounded-card flex items-center justify-center mx-auto mb-5">
+            <Heart className="w-8 h-8 text-success" strokeWidth={1.8} />
           </div>
-          <h2
-            className="text-2xl font-bold text-stone-900 dark:text-stone-100 mb-2 font-serif"
-          >
+          <h2 className="font-serif font-semibold text-[30px] leading-[1.08] text-ink mb-2">
             Nice batch!
           </h2>
-          <p className="text-stone-500 dark:text-stone-400 mb-6">
+          <p className="text-ink-muted mb-6">
             You&apos;ve gone through {filteredBooks.length} books. Ready for more or head to your library?
           </p>
 
-          {/* Stats */}
-          <div className="flex justify-center gap-8 mb-6">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-emerald-600">{sessionLikedBooks.length}</p>
-              <p className="text-xs text-stone-500 dark:text-stone-400">Liked</p>
+          {/* Stats — serif numbers over a hairline, no tiles */}
+          <div className="flex justify-center divide-x divide-border border-y border-border py-3 mb-6">
+            <div className="text-center px-8">
+              <p className="font-serif font-semibold text-[26px] text-success-ink tabular-nums">{sessionLikedBooks.length}</p>
+              <p className="text-xs text-ink-muted mt-0.5">Saved</p>
             </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-stone-400 dark:text-stone-500">{passedBooks.length}</p>
-              <p className="text-xs text-stone-500 dark:text-stone-400">Passed</p>
+            <div className="text-center px-8">
+              <p className="font-serif font-semibold text-[26px] text-ink-muted tabular-nums">{passedBooks.length}</p>
+              <p className="text-xs text-ink-muted mt-0.5">Passed</p>
             </div>
           </div>
 
-          {/* Liked books list */}
+          {/* Liked books list — hairline rows */}
           {sessionLikedBooks.length > 0 && (
-            <div className="bg-white dark:bg-stone-900 rounded-xl p-4 border border-stone-200/60 dark:border-stone-700/60 shadow-sm mb-6 text-left">
-              <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-3">
+            <div className="mb-6 text-left">
+              <h3 className="text-[11px] font-bold text-ink-muted uppercase tracking-[0.12em] mb-2">
                 Your picks
               </h3>
-              <div className="max-h-32 overflow-y-auto space-y-1.5">
+              <div className="max-h-32 overflow-y-auto divide-y divide-border border-y border-border">
                 {sessionLikedBooks.map((book, index) => (
                   <motion.div
                     key={book.id}
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: Math.min(index * 0.03, 0.2) }}
-                    className="text-sm text-stone-700 dark:text-stone-300 bg-stone-50 dark:bg-stone-800/50 rounded-lg px-3 py-2"
+                    className="text-[13px] text-ink py-2"
                   >
-                    <span className="font-medium">{book.title}</span>
-                    <span className="text-stone-400 dark:text-stone-500"> by {book.author}</span>
+                    <span className="font-serif font-semibold">{book.title}</span>
+                    <span className="text-ink-muted"> by {book.author}</span>
                   </motion.div>
                 ))}
               </div>
@@ -691,7 +692,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
           <div className="flex gap-3">
             <Button
               onClick={onViewLibrary}
-              className="flex-1 h-11 bg-stone-900 hover:bg-stone-800 text-white font-medium rounded-xl"
+              className="flex-1 h-11 bg-ink hover:bg-ink/90 text-surface-0 font-semibold rounded-full"
             >
               <Library className="w-4 h-4 mr-2" />
               View Library
@@ -706,7 +707,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
                 loadBooks(seenIds)
               }}
               variant="outline"
-              className="flex-1 h-11 border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-800/50 text-stone-700 dark:text-stone-300 rounded-xl"
+              className="flex-1 h-11 border-border-strong hover:bg-surface-2 text-ink font-semibold rounded-full"
             >
               <RotateCcw className="w-4 h-4 mr-2" />
               More Books
@@ -727,48 +728,52 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
             : ""}
         </div>
 
-        {/* Header */}
-        <div className="bg-background/90 backdrop-blur-md border-b border-stone-200/60 dark:border-stone-700/60 sticky top-0 z-20">
-          <div className="px-4 sm:px-6 py-3 flex justify-between items-center max-w-md lg:max-w-2xl mx-auto">
+        {/* Header — 52px, hairline; the counter lives in the deck strand */}
+        <div className="bg-[rgba(250,247,241,.92)] dark:bg-[rgba(20,17,16,.92)] backdrop-blur-md border-b border-border sticky top-0 z-20">
+          <div className="px-4 sm:px-6 h-[52px] flex justify-between items-center max-w-md lg:max-w-[820px] mx-auto">
             <button
               onClick={onViewLibrary}
               aria-label="View library"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors tap-target touch-manipulation"
+              className="flex items-center gap-1.5 px-2 -ml-2 rounded-control text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors tap-target touch-manipulation"
             >
-              <Library className="w-4 h-4 text-stone-600 dark:text-stone-300" />
-              <span className="text-sm font-medium text-stone-700 dark:text-stone-300">{likedBooks.length}</span>
+              <BookOpen className="w-[18px] h-[18px]" strokeWidth={1.8} />
+              <span className="text-sm font-medium tabular-nums">{likedBooks.length}</span>
             </button>
 
-            <div className="text-center">
-              <h1
-                className="text-lg font-bold text-stone-900 dark:text-stone-100 tracking-tight font-serif"
-              >
-                BookSwipe
-              </h1>
-              <p className="text-xs text-stone-400 dark:text-stone-500 font-medium">
-                {currentIndex + 1} of {filteredBooks.length}
-              </p>
-            </div>
+            <h1 className="font-serif font-semibold text-[18px] text-ink tracking-tight">
+              BookSwipe
+            </h1>
 
             <button
               onClick={onRestart}
               aria-label="Update preferences"
-              className="flex items-center justify-center p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors tap-target touch-manipulation"
+              className="flex items-center justify-center p-2 -mr-2 rounded-control text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors tap-target touch-manipulation"
             >
-              <Settings className="w-5 h-5 text-stone-400 dark:text-stone-500" />
+              <Settings2 className="w-5 h-5" strokeWidth={1.8} />
             </button>
+          </div>
+          {/* Deck strand: 2px progress track + right-aligned counter */}
+          <div className="max-w-md lg:max-w-[820px] mx-auto px-4 sm:px-6 pb-1.5">
+            <div className="h-[2px] bg-surface-2 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-ink transition-[width] duration-300"
+                style={{ width: `${Math.min(100, ((currentIndex + 1) / Math.max(1, filteredBooks.length)) * 100)}%` }}
+              />
+            </div>
+            <p className="text-right font-mono text-[10.5px] text-ink-muted mt-1 tabular-nums">
+              {currentIndex + 1} / {filteredBooks.length}
+            </p>
           </div>
         </div>
 
         {/* Card stack + action buttons together */}
-        <div className="flex-1 flex flex-col items-center justify-center p-3 sm:p-4 pb-16 sm:pb-6">
-          <div className="relative w-full max-w-sm lg:max-w-md">
+        <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 pb-14 sm:pb-6">
+          <div className="relative w-full max-w-sm lg:max-w-[820px]">
             <motion.div
-              className="relative sm:h-[560px] md:h-[600px] lg:h-[640px]"
-              style={{ height: "min(500px, 60svh, 60vh)" }}
-              initial={{ scale: 0.95, opacity: 0 }}
+              className="relative h-[604px] sm:h-[620px] lg:h-[500px]"
+              initial={{ scale: 0.97, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
             >
               <AnimatePresence>
                 {nextBook && (
@@ -806,26 +811,27 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
             </motion.div>
           </div>
 
-          {/* Action buttons — directly below card */}
-          <div className="w-full max-w-sm lg:max-w-md px-4 mt-4">
-            <div className="flex justify-center items-center gap-4 mb-3">
+          {/* Action buttons — under the card (mobile) / under the caption
+              column of the magazine spread (desktop: cover 312 + gap 64) */}
+          <div className="w-full max-w-sm lg:max-w-[820px] px-4 lg:px-0 mt-3 lg:-mt-16 lg:pl-[376px]">
+            <div className="flex justify-center lg:justify-start items-center gap-4 mb-3">
               <motion.button
-                whileTap={{ scale: 0.9 }}
+                whileTap={{ scale: 0.97 }}
                 aria-label="Pass on this book"
-                className="w-14 h-14 rounded-full border-2 border-red-200 dark:border-red-800 hover:border-red-300 dark:hover:border-red-700 bg-white dark:bg-stone-900 shadow-sm flex items-center justify-center transition-colors tap-target touch-manipulation"
+                className="w-14 h-14 rounded-full border border-border-strong bg-surface-1 flex items-center justify-center transition-colors hover:border-ink-muted tap-target touch-manipulation"
                 onClick={() => handleSwipe("left")}
               >
-                <X className="w-6 h-6 text-red-400" />
+                <X className="w-6 h-6 text-destructive" />
               </motion.button>
 
               <motion.button
-                whileTap={{ scale: 0.9 }}
+                whileTap={{ scale: 0.97 }}
                 aria-label="Undo last swipe"
                 disabled={undoStack.length === 0}
-                className={`w-12 h-12 rounded-full border-2 bg-white shadow-sm flex items-center justify-center transition-all tap-target touch-manipulation ${
+                className={`w-11 h-11 rounded-full border border-border bg-surface-1 flex items-center justify-center transition-colors tap-target touch-manipulation ${
                   undoStack.length > 0
-                    ? "border-amber-200 hover:border-amber-300 text-amber-500"
-                    : "border-stone-100 text-stone-200 cursor-not-allowed"
+                    ? "text-ink-muted hover:text-ink"
+                    : "text-ink-faint cursor-not-allowed"
                 }`}
                 onClick={handleUndo}
               >
@@ -833,23 +839,23 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
               </motion.button>
 
               <motion.button
-                whileTap={{ scale: 0.9 }}
+                whileTap={{ scale: 0.97 }}
                 aria-label="Like this book"
-                className="w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-600 shadow-sm flex items-center justify-center transition-colors tap-target touch-manipulation"
+                className="w-14 h-14 rounded-full bg-success hover:bg-success/90 flex items-center justify-center transition-colors tap-target touch-manipulation"
                 onClick={() => handleSwipe("right")}
               >
-                <Heart className="w-6 h-6 text-white" />
+                <Heart className="w-6 h-6 text-on-success" />
               </motion.button>
             </div>
 
-            <p className="text-center text-xs text-stone-400">
+            <p className="text-center lg:text-left text-xs text-ink-muted">
               <span className="lg:hidden">Swipe left to pass · right to save</span>
               <span className="hidden lg:inline">
-                <kbd className="px-1.5 py-0.5 rounded bg-stone-100 dark:bg-stone-800 text-stone-500 font-mono text-[10px]">&larr;</kbd> Pass
-                <span className="mx-2 text-stone-300">·</span>
-                <kbd className="px-1.5 py-0.5 rounded bg-stone-100 dark:bg-stone-800 text-stone-500 font-mono text-[10px]">&rarr;</kbd> Save
-                <span className="mx-2 text-stone-300">·</span>
-                <kbd className="px-1.5 py-0.5 rounded bg-stone-100 dark:bg-stone-800 text-stone-500 font-mono text-[10px]">Ctrl+Z</kbd> Undo
+                <kbd className="px-1.5 py-0.5 rounded bg-surface-2 text-ink-muted font-mono text-[10.5px]">&larr;</kbd> Pass
+                <span className="mx-2 text-ink-faint">·</span>
+                <kbd className="px-1.5 py-0.5 rounded bg-surface-2 text-ink-muted font-mono text-[10.5px]">&rarr;</kbd> Save
+                <span className="mx-2 text-ink-faint">·</span>
+                <kbd className="px-1.5 py-0.5 rounded bg-surface-2 text-ink-muted font-mono text-[10.5px]">Ctrl+Z</kbd> Undo
               </span>
             </p>
           </div>

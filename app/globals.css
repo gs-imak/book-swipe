@@ -38,6 +38,47 @@
   border-radius: 0.25rem;
 }
 
+/* Skeleton shimmer (design system: sweep 1.6s; static pulse under reduced motion) */
+@layer utilities {
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+    background: var(--surface-2);
+  }
+  .shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+    animation: shimmer-sweep 1.6s linear infinite;
+  }
+  .dark .shimmer::after {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  }
+  @keyframes shimmer-sweep {
+    to {
+      transform: translateX(100%);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .shimmer::after {
+      animation: shimmer-pulse 1.6s ease-in-out infinite;
+      transform: none;
+      background: rgba(255, 255, 255, 0.18);
+    }
+    @keyframes shimmer-pulse {
+      0%,
+      100% {
+        opacity: 0;
+      }
+      50% {
+        opacity: 1;
+      }
+    }
+  }
+}
+
 /* Mobile touch optimizations */
 @layer utilities {
   .touch-pan-y {

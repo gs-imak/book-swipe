@@ -1,14 +1,15 @@
 "use client"
 
-import { motion, PanInfo, useMotionValue, useTransform, useAnimation } from "framer-motion"
+import { motion, PanInfo, useMotionValue, useTransform } from "framer-motion"
 import { Book } from "@/lib/book-data"
-import { Star, Clock, BookOpen, Info, Plus, ChevronDown, Users } from "lucide-react"
+import { Star, Clock, BookOpen, Info, Plus, ChevronDown, Heart } from "lucide-react"
 import { addBookToReading, getReadingProgress } from "@/lib/storage"
 import { hapticLight } from "@/lib/haptics"
 import { Button } from "@/components/ui/button"
 import { BookCover } from "@/components/book-cover"
+import { formatCount } from "@/lib/book-enrichment"
 import { useToast } from "./toast-provider"
-import { useState, useCallback, useRef } from "react"
+import { useState, useRef } from "react"
 
 interface BookCardProps {
   book: Book
@@ -22,6 +23,10 @@ interface BookCardProps {
   onOpenDetails?: () => void
 }
 
+// Modern Editorial deck card (design handoff §1b): the card IS the book — a
+// cover object with a caption below it, sitting directly on the page surface.
+// No card box, no blurred fill, no bottom gradient. All gesture mechanics are
+// unchanged engineering assets.
 export function BookCard({ book, onSwipe, isTop = false, showActions = true, reason, coLikeCount, onOpenDetails }: BookCardProps) {
   const [infoExpanded, setInfoExpanded] = useState(false)
   const [descExpanded, setDescExpanded] = useState(false)
@@ -29,8 +34,8 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
   const { showToast } = useToast()
   const x = useMotionValue(0)
   const rotate = useTransform(x, [-200, 0, 200], [-12, 0, 12])
-  const likeOpacity = useTransform(x, [0, 80], [0, 1])
-  const nopeOpacity = useTransform(x, [-80, 0], [1, 0])
+  const saveOpacity = useTransform(x, [0, 80], [0, 1])
+  const passOpacity = useTransform(x, [-80, 0], [1, 0])
 
   // Distinguishes a tap from a swipe: framer fires onDragStart only after real
   // movement, and the browser still emits a click on release — so the flag is
@@ -71,6 +76,9 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
     showToast(`"${book.title}" added to reading list`)
   }
 
+  const readTime = book.pages >= 60 ? `~${Math.round(book.pages / 40)} h` : `~${Math.round((book.pages / 40) * 60)} m`
+  const ratingsCount = book.metadata?.ratingsCount
+
   return (
     <motion.div
       className={`absolute inset-0 ${isTop ? "z-10" : "z-0"}`}
@@ -85,159 +93,110 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
         draggingRef.current = true
       }}
       onDragEnd={handleDragEnd}
-      initial={{ scale: isTop ? 1 : 0.96, opacity: isTop ? 1 : 0.6 }}
-      animate={{ scale: isTop ? 1 : 0.96, opacity: isTop ? 1 : 0.6 }}
+      // Next-card peek (§1b): rises 11px behind the top card, slightly
+      // smaller, half-faded and desaturated.
+      initial={{ scale: isTop ? 1 : 0.955, opacity: isTop ? 1 : 0.5, y: isTop ? 0 : -11 }}
+      animate={{
+        scale: isTop ? 1 : 0.955,
+        opacity: isTop ? 1 : 0.5,
+        y: isTop ? 0 : -11,
+        filter: isTop ? "saturate(1)" : "saturate(.85)",
+      }}
       whileDrag={{ scale: 1.02 }}
       dragElastic={0.4}
       dragTransition={{ bounceStiffness: 500, bounceDamping: 25 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
-      <div
-        className="relative h-full w-full overflow-hidden rounded-2xl shadow-lg border border-stone-200/40"
-        onClick={handleCardTap}
-      >
-        {/* Cover image with blurred background fill */}
-        <div className="absolute inset-0 bg-stone-900">
-          {/* Blurred background version to fill gaps */}
-          <BookCover
-            src={book.cover}
-            alt=""
-            fill
-            className="object-cover blur-2xl scale-110 opacity-50"
-            sizes="100px"
-          />
-          {/* Actual cover shown in full */}
-          <BookCover
-            src={book.cover}
-            fallbackSrc={book.coverFallback}
-            alt={book.title}
-            fill
-            className="object-contain"
-            sizes="(max-width: 640px) 100vw, 400px"
-            priority={isTop}
-          />
-          {/* Bottom gradient — heavier on bottom 40% for text readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 via-[40%] to-transparent" />
-        </div>
+      <div className="relative h-full w-full" onClick={handleCardTap}>
+        <div className="flex h-full w-full flex-col items-center lg:flex-row lg:items-start lg:justify-center lg:gap-16">
+          {/* Cover object — radius 5px (covers are books), object shadow */}
+          <div className="relative w-[264px] h-[396px] lg:w-[312px] lg:h-[468px] flex-shrink-0 rounded-cover shadow-cover overflow-hidden bg-surface-2">
+            <BookCover
+              src={book.cover}
+              fallbackSrc={book.coverFallback}
+              alt={book.title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 1023px) 264px, 312px"
+              priority={isTop}
+            />
+            {/* Rating badge — 22px pill over the cover, top-left */}
+            <div className="absolute top-2.5 left-2.5 h-[22px] px-2 rounded-full bg-[rgba(28,23,18,.8)] flex items-center gap-1 z-10">
+              <Star className="w-3 h-3 fill-stage-amber text-stage-amber" />
+              <span className="text-[11px] font-semibold text-white tabular-nums">{book.rating}</span>
+            </div>
 
-        {/* LIKE / NOPE stamps */}
-        {isTop && (
-          <>
-            <motion.div
-              className="absolute top-8 left-6 z-20 border-4 border-emerald-500 rounded-lg px-4 py-1 -rotate-12"
-              style={{ opacity: likeOpacity }}
-            >
-              <span className="text-emerald-500 text-3xl font-black tracking-wider">LIKE</span>
-            </motion.div>
-            <motion.div
-              className="absolute top-8 right-6 z-20 border-4 border-red-400 rounded-lg px-4 py-1 rotate-12"
-              style={{ opacity: nopeOpacity }}
-            >
-              <span className="text-red-400 text-3xl font-black tracking-wider">NOPE</span>
-            </motion.div>
-          </>
-        )}
-
-        {/* Rating badge */}
-        <div className="absolute top-5 left-5 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm z-10">
-          <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-          <span className="text-sm font-bold text-stone-800 dark:text-stone-200">{book.rating}</span>
-        </div>
-
-        {/* Recommendation reason pill */}
-        {reason && (
-          <div className="absolute top-14 left-5 z-10 max-w-[70%]">
-            <span className="inline-block bg-amber-500/25 backdrop-blur-sm border border-amber-400/30 text-amber-100 text-[11px] font-semibold px-2.5 py-1 rounded-full truncate max-w-full">
-              {reason}
-            </span>
+            {/* SAVE / PASS drag stamps (§1b), over the cover */}
+            {isTop && (
+              <>
+                <motion.div
+                  className="absolute top-6 left-4 z-20 rounded-lg border-[2.5px] border-success-ink px-3 py-0.5 -rotate-10 bg-[rgba(20,17,16,.4)]"
+                  style={{ opacity: saveOpacity, rotate: -10 }}
+                >
+                  <span className="text-success-ink dark:text-[#A3C168] text-[17px] font-extrabold tracking-[0.14em]">SAVE</span>
+                </motion.div>
+                <motion.div
+                  className="absolute top-6 right-4 z-20 rounded-lg border-[2.5px] border-ink-muted px-3 py-0.5 bg-[rgba(20,17,16,.4)]"
+                  style={{ opacity: passOpacity, rotate: 10 }}
+                >
+                  <span className="text-ink-muted text-[17px] font-extrabold tracking-[0.14em]">PASS</span>
+                </motion.div>
+              </>
+            )}
           </div>
-        )}
 
-        {/* Bottom info overlay */}
-        <motion.div
-          className="absolute bottom-0 left-0 right-0 z-10 px-5 pb-5"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          {/* Title & Author */}
-          <div className="flex items-end justify-between gap-3 mb-3">
-            <div className="flex-1 min-w-0">
-              <h3
-                className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight mb-1 drop-shadow-lg font-serif line-clamp-3"
+          {/* Caption — left-aligned column under (mobile) / beside (desktop) */}
+          <div className="w-[300px] lg:w-[420px] pt-5 lg:pt-2 text-left">
+            {reason && (
+              <p className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-ink-muted truncate mb-1.5">
+                {reason}
+              </p>
+            )}
+            <h3 className="font-serif font-semibold text-[22px] leading-[1.22] lg:text-[36px] lg:leading-[1.12] text-ink line-clamp-3">
+              {book.title}
+            </h3>
+            <div className="flex items-center justify-between gap-3 mt-1">
+              <p className="text-[15px] text-ink-muted truncate">{book.author}</p>
+              {/* Info button — opens the expanded sheet */}
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setInfoExpanded(true)}
+                aria-label="View book details"
+                className="w-9 h-9 -mr-1 rounded-full flex items-center justify-center flex-shrink-0 text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors tap-target"
               >
-                {book.title}
-              </h3>
-              <p className="text-white/85 text-base font-medium drop-shadow-md">
-                {book.author}
+                <Info className="w-[18px] h-[18px]" />
+              </motion.button>
+            </div>
+
+            <div className="border-t border-border mt-3 pt-3">
+              <p className="text-[13px] text-ink-muted tabular-nums">
+                {book.pages} pp · {readTime} · ★ {book.rating}
+                {ratingsCount ? ` · ${formatCount(ratingsCount)} ratings` : ""}
               </p>
             </div>
 
-            {/* Info button */}
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setInfoExpanded(true)}
-              aria-label="View book details"
-              className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md border border-white/25 flex items-center justify-center flex-shrink-0"
-            >
-              <Info className="w-5 h-5 text-white" />
-            </motion.button>
-          </div>
+            {isTop && typeof coLikeCount === "number" && coLikeCount > 0 && (
+              <div className="flex items-center gap-1.5 mt-2 text-success-ink text-[12.5px] font-semibold">
+                <Heart className="w-3 h-3 fill-current flex-shrink-0" />
+                <span>
+                  {coLikeCount} {coLikeCount === 1 ? "reader" : "readers"} with your taste saved this
+                </span>
+              </div>
+            )}
 
-          {/* Meta row */}
-          <div className="flex items-center gap-3 text-white/80 text-sm mb-3">
-            <div className="flex items-center gap-1">
-              <BookOpen className="w-3.5 h-3.5" />
-              <span>{book.pages}p</span>
-            </div>
-            <span className="w-1 h-1 rounded-full bg-white/40" />
-            <div className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" />
-              <span>{book.pages >= 60 ? `~${Math.round(book.pages / 40)}h` : `~${Math.round(book.pages / 40 * 60)}m`}</span>
-            </div>
-            <span className="w-1 h-1 rounded-full bg-white/40" />
-            <div className="flex items-center gap-1">
-              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-              <span>{book.rating}</span>
-            </div>
-          </div>
-
-          {/* Social proof — readers with similar taste who also saved this */}
-          {isTop && typeof coLikeCount === "number" && coLikeCount > 0 && (
-            <div className="flex items-center gap-1.5 mb-2.5 text-emerald-300 text-xs font-semibold drop-shadow">
-              <Users className="w-3.5 h-3.5 flex-shrink-0" />
-              <span>
-                {coLikeCount} {coLikeCount === 1 ? "reader" : "readers"} like you saved this
-              </span>
-            </div>
-          )}
-
-          {/* Genre tags */}
-          <div className="flex flex-wrap gap-1.5 mb-1.5">
-            {book.genre.slice(0, 3).map((genre) => (
-              <span
-                key={genre}
-                className="bg-white/15 backdrop-blur-sm border border-white/20 text-white text-xs px-3 py-1 rounded-full font-medium"
-              >
-                {genre}
-              </span>
-            ))}
-          </div>
-
-          {/* Mood pills */}
-          {book.mood.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {book.mood.slice(0, 3).map((mood) => (
+            {/* ONE chip system: hairline outline, no pastel fills */}
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              {book.genre.slice(0, 3).map((genre) => (
                 <span
-                  key={mood}
-                  className="bg-white/10 text-white/70 text-[10px] px-2 py-0.5 rounded-full font-medium"
+                  key={genre}
+                  className="h-[27px] inline-flex items-center px-3 rounded-full border border-border-strong text-[12.5px] text-ink"
                 >
-                  {mood}
+                  {genre}
                 </span>
               ))}
             </div>
-          )}
-        </motion.div>
+          </div>
+        </div>
 
         {/* Expanded info sheet — kept mounted for the spring close and
             drag-to-dismiss, so it must be inert while translated off-card
@@ -246,8 +205,8 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
           initial={false}
           inert={!infoExpanded}
           animate={{ y: infoExpanded ? 0 : '100%' }}
-          transition={{ type: "spring", damping: 30, stiffness: 300 }}
-          className="absolute inset-0 bg-background z-30 flex flex-col"
+          transition={{ type: "spring", damping: 32, stiffness: 320 }}
+          className="absolute inset-0 bg-surface-1 z-30 flex flex-col rounded-t-sheet border border-border shadow-e3"
           style={{ y: sheetY, touchAction: 'pan-y' }}
           drag={infoExpanded ? "y" : false}
           dragConstraints={{ top: 0, bottom: 0 }}
@@ -262,12 +221,12 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
           }}
         >
           {/* Handle bar */}
-          <div className="flex-shrink-0 pt-2 pb-1 flex flex-col items-center border-b border-stone-100">
-            <div className="w-10 h-1 rounded-full bg-stone-200 mb-2" />
+          <div className="flex-shrink-0 pt-2 pb-1 flex flex-col items-center border-b border-border">
+            <div className="w-10 h-1 rounded-full bg-border-strong mb-2" />
             <button
               onClick={() => setInfoExpanded(false)}
               aria-label="Close details"
-              className="flex items-center gap-1 text-stone-400 hover:text-stone-600 transition-colors px-3 py-2 min-h-[44px]"
+              className="flex items-center gap-1 text-ink-muted hover:text-ink transition-colors px-3 py-2 min-h-[44px]"
             >
               <ChevronDown className="w-5 h-5" />
               <span className="text-xs font-medium">Close</span>
@@ -277,55 +236,46 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
           {/* Scrollable content */}
           <div className="flex-1 overflow-y-auto overscroll-contain">
             <div className="p-5 space-y-5">
-              {/* Recommendation reason badge */}
               {reason && (
-                <div className="flex">
-                  <span className="inline-flex items-center gap-1.5 bg-amber-500/15 text-amber-700 dark:text-amber-400 text-xs font-semibold px-3 py-1.5 rounded-full border border-amber-200/60 dark:border-amber-700/40">
-                    <Star className="w-3 h-3 fill-amber-500 text-amber-500 flex-shrink-0" />
-                    {reason}
-                  </span>
-                </div>
+                <p className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-ink-muted">
+                  {reason}
+                </p>
               )}
 
               {/* Title and Author */}
               <div>
-                <h2
-                  className="text-xl font-bold text-stone-900 dark:text-stone-100 mb-1 font-serif"
-                >
+                <h2 className="text-xl font-semibold text-ink mb-1 font-serif">
                   {book.title}
                 </h2>
-                <p className="text-base text-stone-500">{book.author}</p>
+                <p className="text-base text-ink-muted">{book.author}</p>
               </div>
 
-              {/* Stats: rating + pages + estimated time */}
-              <div className="grid grid-cols-3 gap-2">
-                <div className="bg-white dark:bg-stone-900 rounded-xl p-3 border border-stone-200/60 dark:border-stone-700/60 shadow-sm text-center">
-                  <Star className="w-4 h-4 text-amber-500 mx-auto mb-1" />
-                  <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{book.rating}</p>
-                  <p className="text-[11px] text-stone-400">rating</p>
+              {/* Stats — serif numbers over hairlines, no tile boxes */}
+              <div className="grid grid-cols-3 divide-x divide-border border-y border-border py-3">
+                <div className="text-center px-2">
+                  <p className="font-serif font-semibold text-[21px] text-ink tabular-nums">{book.rating}</p>
+                  <p className="text-xs text-ink-muted mt-0.5">rating</p>
                 </div>
-                <div className="bg-white dark:bg-stone-900 rounded-xl p-3 border border-stone-200/60 dark:border-stone-700/60 shadow-sm text-center">
-                  <BookOpen className="w-4 h-4 text-stone-400 mx-auto mb-1" />
-                  <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{book.pages}</p>
-                  <p className="text-[11px] text-stone-400">pages</p>
+                <div className="text-center px-2">
+                  <p className="font-serif font-semibold text-[21px] text-ink tabular-nums">{book.pages}</p>
+                  <p className="text-xs text-ink-muted mt-0.5">pages</p>
                 </div>
-                <div className="bg-white dark:bg-stone-900 rounded-xl p-3 border border-stone-200/60 dark:border-stone-700/60 shadow-sm text-center">
-                  <Clock className="w-4 h-4 text-stone-400 mx-auto mb-1" />
-                  <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{book.pages >= 60 ? `~${Math.round(book.pages / 40)}h` : `~${Math.round(book.pages / 40 * 60)}m`}</p>
-                  <p className="text-[11px] text-stone-400">read time</p>
+                <div className="text-center px-2">
+                  <p className="font-serif font-semibold text-[21px] text-ink tabular-nums">{readTime}</p>
+                  <p className="text-xs text-ink-muted mt-0.5">read time</p>
                 </div>
               </div>
 
               {/* Genres */}
               <div>
-                <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
+                <h3 className="text-[11px] font-bold text-ink-muted uppercase tracking-[0.12em] mb-2">
                   Genres
                 </h3>
                 <div className="flex flex-wrap gap-1.5">
                   {book.genre.map((genre) => (
                     <span
                       key={genre}
-                      className="bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 text-xs px-3 py-1.5 rounded-full font-medium"
+                      className="h-[27px] inline-flex items-center px-3 rounded-full border border-border-strong text-[12.5px] text-ink"
                     >
                       {genre}
                     </span>
@@ -336,14 +286,14 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
               {/* Moods */}
               {book.mood.length > 0 && (
                 <div>
-                  <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
+                  <h3 className="text-[11px] font-bold text-ink-muted uppercase tracking-[0.12em] mb-2">
                     Vibes
                   </h3>
                   <div className="flex flex-wrap gap-1.5">
                     {book.mood.map((mood) => (
                       <span
                         key={mood}
-                        className="bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs px-3 py-1.5 rounded-full font-medium border border-amber-100 dark:border-amber-800/40"
+                        className="h-[27px] inline-flex items-center px-3 rounded-full border border-border text-[12.5px] text-ink-muted"
                       >
                         {mood}
                       </span>
@@ -354,28 +304,28 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
 
               {/* Description — collapsible */}
               <div>
-                <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
+                <h3 className="text-[11px] font-bold text-ink-muted uppercase tracking-[0.12em] mb-2">
                   About
                 </h3>
-                <p className={`text-sm text-stone-600 dark:text-stone-300 leading-relaxed ${descExpanded ? "" : "line-clamp-3"}`}>
+                <p className={`text-[15px] text-ink leading-[1.6] max-w-[54ch] ${descExpanded ? "" : "line-clamp-3"}`}>
                   {book.description}
                 </p>
                 {book.description.length > 150 && (
                   <button
                     onClick={() => setDescExpanded(!descExpanded)}
-                    className="text-xs text-amber-700 dark:text-amber-400 font-medium mt-1.5 hover:underline"
+                    className="text-xs text-accent-ink font-medium mt-1.5 hover:underline"
                   >
                     {descExpanded ? "Show less" : "Read more"}
                   </button>
                 )}
               </div>
 
-              {/* Action button */}
+              {/* Action button — save semantics = success */}
               {showActions && (
                 <div className="pt-1 pb-4">
                   <Button
                     onClick={handleStartReading}
-                    className="w-full bg-stone-900 hover:bg-stone-800 text-white rounded-xl h-12 text-sm font-medium"
+                    className="w-full bg-success hover:bg-success/90 text-on-success rounded-control h-12 text-[15px] font-semibold"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add to Reading List
