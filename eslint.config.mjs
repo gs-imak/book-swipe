@@ -12,7 +12,9 @@ import nextCoreWebVitals from "eslint-config-next/core-web-vitals"
 const nextConfigs = Array.isArray(nextCoreWebVitals) ? nextCoreWebVitals : [nextCoreWebVitals]
 
 const config = [
-  { ignores: [".next/**", "node_modules/**", "out/**", "next-env.d.ts"] },
+  // .claude/design-refs holds design-handoff reference bundles (preview HTML +
+  // runtime) — inspected in a browser, never shipped, not our code to lint.
+  { ignores: [".next/**", "node_modules/**", "out/**", "next-env.d.ts", ".claude/design-refs/**"] },
   ...nextConfigs,
   {
     rules: {

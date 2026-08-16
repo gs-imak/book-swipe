@@ -20,7 +20,45 @@ module.exports = {
     },
     extend: {
       colors: {
-        border: "hsl(var(--border))",
+        // ── Modern Editorial semantic system (design handoff README) ──
+        surface: {
+          0: "var(--surface-0)",
+          1: "var(--surface-1)",
+          2: "var(--surface-2)",
+        },
+        ink: {
+          DEFAULT: "var(--ink)",
+          muted: "var(--ink-muted)",
+          faint: "var(--ink-faint)",
+        },
+        accent: {
+          DEFAULT: "var(--accent)",
+          ink: "var(--accent-ink)",
+        },
+        "on-accent": "var(--on-accent)",
+        success: {
+          DEFAULT: "var(--success)",
+          ink: "var(--success-ink)",
+        },
+        "on-success": "var(--on-success)",
+        border: "var(--border)",
+        "border-strong": "var(--border-strong)",
+        scrim: "var(--scrim)",
+        focus: "var(--focus)",
+        stage: {
+          ink: "var(--stage-ink)",
+          "ink-muted": "var(--stage-ink-muted)",
+          "ink-tertiary": "var(--stage-ink-tertiary)",
+          amber: "var(--stage-amber)",
+          dock: "var(--stage-dock)",
+          hairline: "var(--stage-hairline)",
+        },
+        "on-stage-amber": "var(--on-stage-amber)",
+        destructive: {
+          DEFAULT: "var(--destructive)",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        // ── DEPRECATED legacy shadcn mappings (unmigrated components) ──
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
@@ -33,17 +71,13 @@ module.exports = {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
         },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
         },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+        "legacy-accent": {
+          DEFAULT: "hsl(var(--legacy-accent))",
+          foreground: "hsl(var(--legacy-accent-foreground))",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
@@ -55,9 +89,27 @@ module.exports = {
         },
       },
       borderRadius: {
+        // Radius has meaning: covers are books (5px), controls 10, cards 14,
+        // sheets 20. rounded-2xl is banned in migrated components.
+        cover: "var(--r-cover)",
+        control: "var(--r-control)",
+        card: "var(--r-card)",
+        sheet: "var(--r-sheet)",
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      boxShadow: {
+        e1: "var(--e-1)",
+        e2: "var(--e-2)",
+        e3: "var(--e-3)",
+        cover: "var(--shadow-cover)",
+      },
+      zIndex: {
+        nav: "var(--z-nav)",
+        sheet: "var(--z-sheet)",
+        takeover: "var(--z-takeover)",
+        toast: "var(--z-toast)",
       },
       keyframes: {
         "accordion-down": {

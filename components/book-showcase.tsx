@@ -310,7 +310,7 @@ function ShowcaseOverlay({
       <button
         onClick={requestClose}
         aria-label="Close showcase"
-        className="absolute right-4 top-4 z-10 flex h-12 w-12 items-center justify-center rounded-full border-[1.5px] border-[#F5EFE0]/40 text-[#F5EFE0] transition-colors hover:border-[#F5EFE0]/90 lg:left-1/2 lg:right-auto lg:top-7 lg:-translate-x-1/2 tap-target"
+        className="absolute right-4 top-4 z-10 flex h-12 w-12 items-center justify-center rounded-full border-[1.5px] border-[rgba(245,239,224,.4)] text-stage-ink transition-colors hover:border-[rgba(245,239,224,.9)] lg:left-1/2 lg:right-auto lg:top-7 lg:-translate-x-1/2 tap-target"
       >
         <X className="h-5 w-5" />
       </button>
@@ -323,18 +323,18 @@ function ShowcaseOverlay({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 24 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="absolute bottom-[max(env(safe-area-inset-bottom),20px)] left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full bg-[#241B13]/90 p-2.5 shadow-[0_24px_60px_rgba(0,0,0,0.45)]"
+            className="absolute bottom-[max(env(safe-area-inset-bottom),20px)] left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full bg-[rgba(23,19,15,.92)] p-2.5 shadow-[0_24px_60px_rgba(0,0,0,0.45)]"
           >
             <button
               onClick={() => (onRead ? onRead(book) : jumpToDetails())}
-              className="inline-flex h-12 items-center gap-2 rounded-full bg-amber-600 px-6 text-[15px] font-semibold text-white transition-transform hover:scale-[1.04] tap-target"
+              className="inline-flex h-12 items-center gap-2 rounded-full bg-stage-amber px-6 text-[15px] font-semibold text-on-stage-amber transition-transform hover:scale-[1.04] tap-target"
             >
               <BookOpen className="h-4 w-4" />
               Keep reading
             </button>
             <button
               onClick={exitPeek}
-              className="inline-flex h-12 items-center gap-2 rounded-full bg-white/10 px-6 text-[15px] font-semibold text-[#F5EFE0] transition-transform hover:scale-[1.04] tap-target"
+              className="inline-flex h-12 items-center gap-2 rounded-full bg-white/10 px-6 text-[15px] font-semibold text-stage-ink transition-transform hover:scale-[1.04] tap-target"
             >
               Close preview
             </button>
@@ -354,14 +354,14 @@ function ShowcaseOverlay({
           <motion.h1
             variants={item}
             id="showcase-title"
-            className="font-serif font-bold leading-[0.98] tracking-tight text-[#F5EFE0] text-[clamp(34px,8.5vw,52px)] lg:text-[clamp(48px,4.8vw,80px)]"
+            className="font-serif font-semibold leading-[1.0] tracking-[-0.02em] text-stage-ink text-[clamp(34px,9vw,40px)] lg:leading-[0.98] lg:text-[clamp(48px,4.6vw,68px)]"
           >
             {book.title}
           </motion.h1>
 
           <motion.p
             variants={item}
-            className="mt-3 text-sm text-[#D8CDB8]/80 lg:mt-5 lg:text-base"
+            className="mt-3 text-sm text-stage-ink-muted lg:mt-5 lg:text-base"
           >
             {display.author}
             {display.publishedYear ? ` · ${display.publishedYear}` : ""}
@@ -371,7 +371,7 @@ function ShowcaseOverlay({
             display.metadata?.enriched?.firstPublished) && (
             <motion.p
               variants={item}
-              className="mt-1.5 text-xs italic text-[#D8CDB8]/60 lg:text-sm"
+              className="mt-1.5 font-serif text-[13px] italic text-stage-ink-tertiary lg:text-sm"
             >
               {[
                 display.metadata.enriched.series
@@ -390,7 +390,7 @@ function ShowcaseOverlay({
 
           <motion.p
             variants={item}
-            className="mt-3 max-w-[54ch] text-[15px] leading-[1.65] text-[#D8CDB8] line-clamp-3 sm:line-clamp-4 lg:mt-6 lg:text-[17px] lg:line-clamp-[7]"
+            className="mt-3 max-w-[54ch] text-[15px] leading-[1.6] text-stage-ink-muted line-clamp-4 lg:mt-6 lg:text-[17px] lg:leading-[1.65] lg:line-clamp-[7]"
           >
             {display.description}
           </motion.p>
@@ -403,14 +403,14 @@ function ShowcaseOverlay({
               <StarRating rating={display.rating} readonly size="sm" />
             )}
             {display.metadata?.ratingsCount ? (
-              <span className="text-sm text-[#D8CDB8]/70">
+              <span className="text-sm text-stage-ink-muted tabular-nums">
                 {formatCount(display.metadata.ratingsCount)} ratings
               </span>
             ) : null}
             {display.readingTime && (
               <>
-                <div className="h-6 w-px bg-[#D8CDB8]/25" />
-                <span className="text-sm italic text-[#D8CDB8]/70">
+                <div className="h-6 w-px bg-stage-hairline" />
+                <span className="font-serif text-sm italic text-stage-ink-tertiary">
                   {display.readingTime}
                 </span>
               </>
@@ -422,7 +422,7 @@ function ShowcaseOverlay({
               {display.genre.slice(0, 3).map((g) => (
                 <span
                   key={g}
-                  className="rounded-full border border-[#F5EFE0]/20 px-3 py-1 text-xs text-[#D8CDB8]"
+                  className="h-[29px] inline-flex items-center rounded-full border border-stage-hairline px-3 text-xs text-stage-ink-muted"
                 >
                   {g}
                 </span>
@@ -432,17 +432,17 @@ function ShowcaseOverlay({
 
           <motion.div
             variants={item}
-            className="mt-4 border-t border-[#D8CDB8]/15 lg:mt-6"
+            className="mt-4 border-t border-stage-hairline lg:mt-6"
           />
 
           <motion.div
             variants={item}
-            className="mt-4 inline-flex flex-wrap items-center gap-2 rounded-[28px] bg-[#241B13]/90 p-2.5 shadow-[0_24px_60px_rgba(0,0,0,0.45)] lg:mt-7 lg:rounded-full"
+            className="mt-4 inline-flex flex-wrap items-center gap-2 rounded-[28px] bg-[rgba(23,19,15,.92)] p-2.5 shadow-[0_24px_60px_rgba(0,0,0,0.45)] lg:mt-7 lg:rounded-full"
           >
             {onRead && (
               <button
                 onClick={() => onRead(book)}
-                className="inline-flex h-12 items-center gap-2 rounded-full bg-amber-600 px-6 text-[15px] font-semibold text-white transition-transform hover:scale-[1.04] tap-target"
+                className="inline-flex h-12 items-center gap-2 rounded-full bg-stage-amber px-6 text-[15px] font-semibold text-on-stage-amber transition-transform hover:scale-[1.04] tap-target"
               >
                 <BookOpen className="h-4 w-4" />
                 Read free
@@ -452,7 +452,7 @@ function ShowcaseOverlay({
               <button
                 onClick={handlePeek}
                 disabled={peekLoading}
-                className="inline-flex h-12 items-center gap-2 rounded-full border border-amber-500/50 px-6 text-[15px] font-semibold text-amber-400 transition-transform hover:scale-[1.04] disabled:opacity-60 tap-target"
+                className="inline-flex h-12 items-center gap-2 rounded-full border-[1.5px] border-[rgba(245,239,224,.4)] px-6 text-[15px] font-semibold text-stage-ink transition-transform hover:scale-[1.04] disabled:opacity-60 tap-target"
               >
                 {peekLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -466,7 +466,7 @@ function ShowcaseOverlay({
               onClick={toggleSaved}
               className={`inline-flex h-12 items-center gap-2 rounded-full px-6 text-[15px] font-semibold transition-transform hover:scale-[1.04] tap-target ${
                 saved
-                  ? "bg-[#F5EFE0]/15 text-[#F5EFE0]"
+                  ? "bg-[rgba(245,239,224,.15)] text-stage-ink"
                   : "bg-[#F5EFE0] text-[#2B2118]"
               }`}
             >
@@ -476,7 +476,7 @@ function ShowcaseOverlay({
             {onMoreDetails && (
               <button
                 onClick={jumpToDetails}
-                className="inline-flex h-12 items-center gap-2 rounded-full bg-white/10 px-6 text-[15px] font-semibold text-[#F5EFE0] transition-transform hover:scale-[1.04] tap-target"
+                className="inline-flex h-12 items-center gap-2 rounded-full bg-white/10 px-6 text-[15px] font-semibold text-stage-ink transition-transform hover:scale-[1.04] tap-target"
               >
                 <Info className="h-4 w-4" />
                 Details

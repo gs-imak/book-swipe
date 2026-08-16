@@ -33,19 +33,21 @@ describe("MobileNav", () => {
     expect(onNavigate).toHaveBeenCalledWith("swipe")
   })
 
-  it("shows liked books count badge on Library tab", () => {
+  // Modern Editorial (design handoff, chrome section): the floating amber
+  // badge is gone — the count renders inline in the tab label.
+  it("shows the liked books count inline in the Library label", () => {
     render(
       <MobileNav currentView="swipe" onNavigate={() => {}} likedCount={5} />
     )
 
-    expect(screen.getByText("5")).toBeInTheDocument()
+    expect(screen.getByText("Library · 5")).toBeInTheDocument()
   })
 
-  it("caps badge display at 99", () => {
+  it("compacts the inline count above 999", () => {
     render(
-      <MobileNav currentView="swipe" onNavigate={() => {}} likedCount={150} />
+      <MobileNav currentView="swipe" onNavigate={() => {}} likedCount={1500} />
     )
 
-    expect(screen.getByText("99")).toBeInTheDocument()
+    expect(screen.getByText("Library · 1k")).toBeInTheDocument()
   })
 })
