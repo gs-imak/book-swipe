@@ -31,6 +31,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   // Track each toast's auto-dismiss timer so we can clear it on unmount
   // or when the toast is dismissed early, preventing setState-after-unmount.
   const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
+  // Synchronous mirror of the visible toasts. The dedupe check and timer
+  // bookkeeping must not live inside a setToasts updater (updaters have to
+  // stay pure — React may run them more than once), so showToast reads and
+  // writes this ref and pushes the computed array into state.
+  const toastsRef = useRef<Toast[]>([])
 
   const clearTimer = useCallback((id: string) => {
     const timer = timersRef.current.get(id)
@@ -40,21 +45,42 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const showToast = useCallback((message: string, type: ToastType = "success") => {
-    const id = Date.now().toString() + Math.random().toString(36).slice(2)
-    setToasts(prev => [...prev.slice(-2), { id, message, type }])
+  const commit = useCallback((next: Toast[]) => {
+    toastsRef.current = next
+    setToasts(next)
+  }, [])
 
+  const scheduleDismiss = useCallback((id: string) => {
     const timer = setTimeout(() => {
       timersRef.current.delete(id)
-      setToasts(prev => prev.filter(t => t.id !== id))
+      commit(toastsRef.current.filter(t => t.id !== id))
     }, 3000)
     timersRef.current.set(id, timer)
-  }, [])
+  }, [commit])
+
+  const showToast = useCallback((message: string, type: ToastType = "success") => {
+    // An identical toast (same message + type) is already on screen: restart
+    // its dismiss timer instead of stacking a duplicate — rapid swiping used
+    // to pile up three "Too many requests" toasts at once.
+    const existing = toastsRef.current.find(t => t.message === message && t.type === type)
+    if (existing) {
+      clearTimer(existing.id)
+      scheduleDismiss(existing.id)
+      return
+    }
+
+    const id = Date.now().toString() + Math.random().toString(36).slice(2)
+    // Cap at 3 visible toasts; drop the oldest ones' timers along with them.
+    const evicted = toastsRef.current.slice(0, -2)
+    evicted.forEach(t => clearTimer(t.id))
+    commit([...toastsRef.current.slice(-2), { id, message, type }])
+    scheduleDismiss(id)
+  }, [clearTimer, commit, scheduleDismiss])
 
   const dismiss = useCallback((id: string) => {
     clearTimer(id)
-    setToasts(prev => prev.filter(t => t.id !== id))
-  }, [clearTimer])
+    commit(toastsRef.current.filter(t => t.id !== id))
+  }, [clearTimer, commit])
 
   // Clear any pending auto-dismiss timers when the provider unmounts.
   useEffect(() => {
