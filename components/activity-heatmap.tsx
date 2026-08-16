@@ -61,24 +61,24 @@ export function ActivityHeatmap() {
   const dayLabels = ["M", "T", "W", "T", "F", "S", "S"]
 
   const getCellColor = (count: number) => {
-    if (count === 0) return "bg-stone-100 dark:bg-stone-800"
-    if (count === 1) return "bg-amber-200 dark:bg-amber-800/60"
-    if (count === 2) return "bg-amber-400 dark:bg-amber-600/80"
-    return "bg-amber-600 dark:bg-amber-500"
+    if (count === 0) return "bg-[#F1EBDF] dark:bg-[#2A2521]"
+    if (count === 1) return "bg-[#D8CDB6] dark:bg-[#4A443B]"
+    if (count === 2) return "bg-[#9C9077] dark:bg-[#7A7263]"
+    return "bg-[#3D362B] dark:bg-[#D8D2C5]"
   }
 
   return (
-    <div className="rounded-xl border border-stone-200/70 dark:border-stone-700/60 bg-stone-50/80 dark:bg-stone-800/40 p-4">
+    <div className="border-y border-border py-4">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-muted">
             {monthName} {year}
           </p>
         </div>
         {streak > 0 && (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-900/30">
-            <Flame className="w-3.5 h-3.5 text-amber-500" />
-            <span className="text-xs font-bold text-amber-700 dark:text-amber-400">{streak} day streak</span>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-border-strong">
+            <Flame className="w-3.5 h-3.5 text-accent-ink" />
+            <span className="text-xs font-bold text-ink tabular-nums">{streak} day streak</span>
           </div>
         )}
       </div>
@@ -87,7 +87,7 @@ export function ActivityHeatmap() {
         <div className="flex flex-col gap-1 mr-1.5 pt-0">
           {dayLabels.map((label, i) => (
             <div key={i} className="h-3 flex items-center" style={{ fontSize: "9px", lineHeight: "12px" }}>
-              <span className={`text-stone-400 dark:text-stone-500 font-medium ${i % 2 === 0 ? "opacity-100" : "opacity-0"}`}>
+              <span className={`text-ink-muted font-medium ${i % 2 === 0 ? "opacity-100" : "opacity-0"}`}>
                 {label}
               </span>
             </div>
@@ -105,7 +105,7 @@ export function ActivityHeatmap() {
                     key={day !== null ? `${year}-${month}-${day}` : `pad-${wi}-${di}`}
                     className={`h-3 w-full rounded-sm transition-colors ${
                       day === null ? "bg-transparent" : getCellColor(count)
-                    } ${isToday ? "ring-1 ring-stone-400 dark:ring-stone-500" : ""}`}
+                    } ${isToday ? "ring-1 ring-accent dark:ring-accent-ink" : ""}`}
                     title={day ? `${monthName} ${day}: ${count} ${count === 1 ? "activity" : "activities"}` : ""}
                   />
                 )
@@ -116,12 +116,12 @@ export function ActivityHeatmap() {
       </div>
 
       <div className="flex items-center gap-1.5 mt-2.5 justify-end">
-        <span className="text-[9px] text-stone-400 dark:text-stone-500">Less</span>
-        <div className="h-2.5 w-2.5 rounded-sm bg-stone-100 dark:bg-stone-800" />
-        <div className="h-2.5 w-2.5 rounded-sm bg-amber-200 dark:bg-amber-800/60" />
-        <div className="h-2.5 w-2.5 rounded-sm bg-amber-400 dark:bg-amber-600/80" />
-        <div className="h-2.5 w-2.5 rounded-sm bg-amber-600 dark:bg-amber-500" />
-        <span className="text-[9px] text-stone-400 dark:text-stone-500">More</span>
+        <span className="text-[9.5px] text-ink-muted">Less</span>
+        <div className="h-2.5 w-2.5 rounded-sm bg-[#F1EBDF] dark:bg-[#2A2521]" />
+        <div className="h-2.5 w-2.5 rounded-sm bg-[#D8CDB6] dark:bg-[#4A443B]" />
+        <div className="h-2.5 w-2.5 rounded-sm bg-[#9C9077] dark:bg-[#7A7263]" />
+        <div className="h-2.5 w-2.5 rounded-sm bg-[#3D362B] dark:bg-[#D8D2C5]" />
+        <span className="text-[9.5px] text-ink-muted">More</span>
       </div>
     </div>
   )

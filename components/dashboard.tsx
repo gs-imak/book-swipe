@@ -341,14 +341,14 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
               <motion.div
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-3 px-4 py-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200/60 dark:border-amber-700/60 rounded-xl"
+                className="flex items-center gap-3 px-4 py-3 bg-surface-1 border border-border rounded-card"
               >
-                <Download className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                <p className="text-xs text-amber-800 dark:text-amber-300 flex-1">
+                <Download className="w-4 h-4 text-ink-muted flex-shrink-0" strokeWidth={1.8} />
+                <p className="text-xs text-ink flex-1">
                   Your library is stored in this browser only.{' '}
                   <button
                     onClick={() => { setShowAdmin(true); setShowBackupBanner(false) }}
-                    className="font-semibold underline underline-offset-2 hover:text-amber-900"
+                    className="font-semibold text-accent-ink underline underline-offset-2"
                   >
                     Export a backup
                   </button>{' '}
@@ -357,9 +357,9 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                 <button
                   onClick={() => { dismissBackupReminder(); setShowBackupBanner(false) }}
                   aria-label="Dismiss backup reminder"
-                  className="p-1 rounded-md hover:bg-amber-100 transition-colors flex-shrink-0"
+                  className="p-1 rounded-md text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors flex-shrink-0"
                 >
-                  <XIcon className="w-3.5 h-3.5 text-amber-500" />
+                  <XIcon className="w-3.5 h-3.5" />
                 </button>
               </motion.div>
             )}
@@ -382,11 +382,11 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                 >
                   <button
                     onClick={() => handleBookClick(primary.book)}
-                    className="w-full text-left rounded-2xl border border-stone-200/70 dark:border-stone-700/60 bg-stone-50/80 dark:bg-stone-800/50 p-4 transition-all hover:border-amber-300/60 dark:hover:border-amber-600/40 hover:shadow-sm group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
+                    className="w-full text-left rounded-card border border-border bg-surface-1 p-4 transition-colors hover:border-border-strong group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
                   >
                     <div className="flex gap-4">
                       {/* Book cover */}
-                      <div className="relative w-16 h-24 sm:w-20 sm:h-[120px] flex-shrink-0 rounded-lg overflow-hidden bg-stone-100 dark:bg-stone-700 ring-1 ring-stone-200/50 dark:ring-stone-600/50 shadow-sm">
+                      <div className="relative w-[84px] h-[126px] sm:w-24 sm:h-36 flex-shrink-0 rounded-cover overflow-hidden bg-surface-2 shadow-cover">
                         <BookCover
                           src={primary.book.cover}
                           fallbackSrc={primary.book.coverFallback}
@@ -400,31 +400,31 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                       {/* Content */}
                       <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                         <div>
-                          <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-500 mb-1">
+                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-muted mb-1">
                             Continue Reading
                           </p>
-                          <h3 className="text-sm sm:text-base font-bold text-stone-900 dark:text-stone-100 leading-tight line-clamp-1 group-hover:text-amber-800 dark:group-hover:text-amber-400 transition-colors">
+                          <h3 className="font-serif font-semibold text-[19px] sm:text-[24px] text-ink leading-tight line-clamp-1">
                             {primary.book.title}
                           </h3>
-                          <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5 truncate">
+                          <p className="text-xs text-ink-muted mt-0.5 truncate">
                             {primary.book.author}
                           </p>
                         </div>
 
                         {/* Progress bar */}
                         <div className="mt-2.5 space-y-1.5">
-                          <div className="h-1.5 w-full bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
+                          <div className="h-1 w-full bg-surface-2 rounded-full overflow-hidden">
                             <motion.div
-                              className="h-full bg-amber-500 rounded-full"
+                              className="h-full bg-ink rounded-full"
                               initial={{ width: 0 }}
                               animate={{ width: `${pct}%` }}
                               transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
                             />
                           </div>
-                          <div className="flex items-center justify-between text-[11px] text-stone-500 dark:text-stone-400">
+                          <div className="flex items-center justify-between text-xs text-ink-muted tabular-nums">
                             <span>
                               Page {primary.currentPage} of {primary.totalPages}
-                              <span className="mx-1.5 text-stone-300 dark:text-stone-600">|</span>
+                              <span className="mx-1.5 text-ink-faint">·</span>
                               {pct}%
                             </span>
                             <span className="flex items-center gap-1">
@@ -450,7 +450,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                                       ? `~${daysLeft} day${daysLeft !== 1 ? "s" : ""} left`
                                       : `~${hoursLeft}h left`
                                 return (
-                                  <span className="text-amber-600 dark:text-amber-500 font-medium ml-1.5">· {estimate}</span>
+                                  <span className="font-serif italic ml-1.5">· {estimate}</span>
                                 )
                               })()}
                             </span>
@@ -460,8 +460,8 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
 
                       {/* Arrow */}
                       <div className="flex items-center flex-shrink-0 self-center">
-                        <div className="w-8 h-8 rounded-full bg-stone-900 dark:bg-stone-100 flex items-center justify-center group-hover:bg-amber-600 dark:group-hover:bg-amber-500 transition-colors shadow-sm">
-                          <ChevronRight className="w-4 h-4 text-white dark:text-stone-900" />
+                        <div className="w-8 h-8 rounded-full border border-border-strong flex items-center justify-center group-hover:bg-surface-2 transition-colors">
+                          <ChevronRight className="w-4 h-4 text-ink" strokeWidth={1.8} />
                         </div>
                       </div>
                     </div>
@@ -516,7 +516,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                                       <div className="flex items-center gap-2 mt-1">
                                         <div className="h-1 flex-1 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
                                           <div
-                                            className="h-full bg-amber-500 rounded-full"
+                                            className="h-full bg-ink rounded-full"
                                             style={{ width: `${p}%` }}
                                           />
                                         </div>
@@ -554,25 +554,26 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                     <ReadingSideDoodle />
                   </motion.div>
                   <div>
-                    <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-100 font-serif leading-tight">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-muted mb-1">My Library</p>
+                    <h2 className="text-[30px] sm:text-[40px] font-semibold text-ink font-serif leading-[1.08]">
                       {getGreeting()},<br className="sm:hidden" /> reader.
                     </h2>
-                    <div className="flex items-center gap-2 mt-1.5 text-stone-500 dark:text-stone-400 text-sm">
+                    <div className="flex items-center gap-2 mt-1.5 text-ink-muted text-[13px] tabular-nums">
                       <span className="flex items-center gap-1">
-                        <BookOpen className="w-3.5 h-3.5 text-stone-400" />
+                        <BookOpen className="w-3.5 h-3.5" strokeWidth={1.8} />
                         {stats.totalBooks} books
                       </span>
                       {stats.totalPages > 0 && (
                         <>
-                          <span className="w-0.5 h-0.5 rounded-full bg-stone-300 hidden sm:block" />
+                          <span className="w-0.5 h-0.5 rounded-full bg-border-strong hidden sm:block" />
                           <span className="hidden sm:inline">{stats.totalPages.toLocaleString()} pages</span>
                         </>
                       )}
                       {Number(stats.averageRating) > 0 && (
                         <>
-                          <span className="w-0.5 h-0.5 rounded-full bg-stone-300" />
+                          <span className="w-0.5 h-0.5 rounded-full bg-border-strong" />
                           <span className="flex items-center gap-0.5">
-                            <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                            <Star className="w-3 h-3 text-accent-ink fill-accent-ink" />
                             {stats.averageRating}
                           </span>
                         </>
@@ -581,9 +582,9 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                         const todayMin = getReadingTimeToday()
                         if (todayMin > 0) return (
                           <>
-                            <span className="w-0.5 h-0.5 rounded-full bg-stone-300" />
+                            <span className="w-0.5 h-0.5 rounded-full bg-border-strong" />
                             <span className="flex items-center gap-0.5">
-                              <Clock className="w-3 h-3 text-stone-400" />
+                              <Clock className="w-3 h-3" strokeWidth={1.8} />
                               {todayMin >= 60 ? `${Math.floor(todayMin / 60)}h ${todayMin % 60}m` : `${todayMin}m`} today
                             </span>
                           </>
@@ -592,8 +593,8 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                       })()}
                       {userStats.currentStreak > 0 && (
                         <>
-                          <span className="w-0.5 h-0.5 rounded-full bg-stone-300" />
-                          <span className="text-amber-600 dark:text-amber-400 font-medium">{userStats.currentStreak}d streak</span>
+                          <span className="w-0.5 h-0.5 rounded-full bg-border-strong" />
+                          <span className="text-ink font-bold tabular-nums">{userStats.currentStreak}d streak</span>
                         </>
                       )}
                     </div>
@@ -601,7 +602,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                 </div>
                 <Button
                   onClick={onStartDiscovery}
-                  className="h-10 px-3 sm:px-5 text-sm bg-stone-900 dark:bg-stone-100 hover:bg-stone-800 dark:hover:bg-stone-200 text-white dark:text-stone-900 font-medium rounded-xl transition-all shadow-sm flex-shrink-0 tap-target touch-manipulation"
+                  className="h-10 px-3 sm:px-5 text-sm bg-accent hover:bg-accent/90 text-on-accent font-semibold rounded-full transition-all flex-shrink-0 tap-target touch-manipulation"
                 >
                   <Sparkles className="w-4 h-4 sm:mr-2" />
                   <span className="hidden sm:inline">Discover</span>
@@ -616,17 +617,17 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, type: "spring", stiffness: 280, damping: 26 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-stone-900 to-stone-800 text-white text-left hover:from-stone-800 hover:to-stone-700 transition-all shadow-sm mb-4"
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-card bg-ink text-surface-0 dark:bg-surface-2 dark:text-ink dark:border dark:border-border-strong text-left transition-opacity hover:opacity-90 mb-4"
                 >
                   <div className="flex items-center gap-3">
-                    <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                    <Sparkles className="w-4 h-4 text-stage-amber flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-semibold leading-tight">Your {new Date().getFullYear()} Reading Wrapped</p>
-                      <p className="text-[11px] text-stone-400 mt-0.5">{likedBooks.length} books · tap to see your year</p>
+                      <p className="font-serif font-semibold text-[15px] leading-tight">Your {new Date().getFullYear()} Reading Wrapped</p>
+                      <p className="text-[11px] opacity-70 mt-0.5 tabular-nums">{likedBooks.length} books · tap to see your year</p>
                     </div>
                   </div>
-                  <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-                    <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                  <div className="w-6 h-6 rounded-full border border-stage-hairline flex items-center justify-center flex-shrink-0">
+                    <Star className="w-3 h-3 text-stage-amber fill-stage-amber" />
                   </div>
                 </motion.button>
               )}
@@ -652,34 +653,28 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
               {/* Mood-Based Quick Browse */}
               <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-0.5 lg:flex-wrap">
                 {([
-                  { mood: "Adventurous", bg: "bg-amber-50 dark:bg-amber-900/20", text: "text-amber-700 dark:text-amber-400", activeBg: "bg-amber-600", activeText: "text-white" },
-                  { mood: "Cozy", bg: "bg-orange-50 dark:bg-orange-900/20", text: "text-orange-700 dark:text-orange-400", activeBg: "bg-orange-600", activeText: "text-white" },
-                  { mood: "Intellectual", bg: "bg-blue-50 dark:bg-blue-900/20", text: "text-blue-700 dark:text-blue-400", activeBg: "bg-blue-600", activeText: "text-white" },
-                  { mood: "Romantic", bg: "bg-rose-50 dark:bg-rose-900/20", text: "text-rose-700 dark:text-rose-400", activeBg: "bg-rose-600", activeText: "text-white" },
-                  { mood: "Thrilling", bg: "bg-red-50 dark:bg-red-900/20", text: "text-red-700 dark:text-red-400", activeBg: "bg-red-600", activeText: "text-white" },
-                  { mood: "Relaxing", bg: "bg-emerald-50 dark:bg-emerald-900/20", text: "text-emerald-700 dark:text-emerald-400", activeBg: "bg-emerald-600", activeText: "text-white" },
-                  { mood: "Inspiring", bg: "bg-violet-50 dark:bg-violet-900/20", text: "text-violet-700 dark:text-violet-400", activeBg: "bg-violet-600", activeText: "text-white" },
-                  { mood: "Dark", bg: "bg-stone-100 dark:bg-stone-700/40", text: "text-stone-700 dark:text-stone-300", activeBg: "bg-stone-800 dark:bg-stone-200", activeText: "text-white dark:text-stone-900" },
-                ] as const).map((item) => {
-                  const isActive = moodFilter === item.mood
+                  "Adventurous", "Cozy", "Intellectual", "Romantic",
+                  "Thrilling", "Relaxing", "Inspiring", "Dark",
+                ] as const).map((mood) => {
+                  const isActive = moodFilter === mood
                   return (
                     <button
-                      key={item.mood}
-                      onClick={() => setMoodFilter(isActive ? null : item.mood)}
-                      className={`flex-shrink-0 rounded-full py-1 px-3 text-xs font-medium transition-all ${
+                      key={mood}
+                      onClick={() => setMoodFilter(isActive ? null : mood)}
+                      className={`flex-shrink-0 h-[27px] inline-flex items-center rounded-full px-3 text-[12.5px] font-medium transition-colors ${
                         isActive
-                          ? `${item.activeBg} ${item.activeText}`
-                          : `${item.bg} ${item.text} hover:opacity-80`
+                          ? "bg-ink text-surface-0"
+                          : "border border-border-strong text-ink hover:bg-surface-2"
                       }`}
                     >
-                      {item.mood}
+                      {mood}
                     </button>
                   )
                 })}
                 {moodFilter && (
                   <button
                     onClick={() => setMoodFilter(null)}
-                    className="flex-shrink-0 rounded-full py-1 px-2.5 text-xs font-medium text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors flex items-center gap-1"
+                    className="flex-shrink-0 rounded-full py-1 px-2.5 text-xs font-medium text-ink-muted hover:text-ink transition-colors flex items-center gap-1"
                   >
                     <XIcon className="w-3 h-3" />
                     Clear
@@ -731,7 +726,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                   {authorFilter && (
                     <button
                       onClick={() => setAuthorFilter(null)}
-                      className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/60 transition-colors"
+                      className="flex items-center gap-1 h-[27px] px-2.5 rounded-full text-[12.5px] font-medium bg-ink text-surface-0 transition-opacity hover:opacity-90"
                     >
                       by {authorFilter}
                       <XIcon className="w-3 h-3" />
@@ -740,16 +735,16 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                 </div>
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all tap-target touch-manipulation ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-control text-xs font-medium transition-all tap-target touch-manipulation ${
                     showFilters || hasActiveFilters
-                      ? "bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
-                      : "text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800/50"
+                      ? "bg-surface-2 text-ink"
+                      : "text-ink-muted hover:text-ink hover:bg-surface-2"
                   }`}
                 >
                   <SlidersHorizontal className="w-3.5 h-3.5" />
                   Filters
                   {hasActiveFilters && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                   )}
                 </button>
               </div>
@@ -758,10 +753,10 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
               <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
                 <button
                   onClick={() => setShelfFilter(null)}
-                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  className={`flex-shrink-0 h-[27px] inline-flex items-center px-3 rounded-full text-[12.5px] font-medium transition-colors ${
                     shelfFilter === null
-                      ? "bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900"
-                      : "bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700"
+                      ? "bg-ink text-surface-0"
+                      : "border border-border-strong text-ink hover:bg-surface-2"
                   }`}
                 >
                   All
@@ -772,17 +767,15 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                     <button
                       key={shelf.id}
                       onClick={() => setShelfFilter(shelfFilter === shelf.id ? null : shelf.id)}
-                      className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      className={`flex-shrink-0 h-[27px] inline-flex items-center px-3 rounded-full text-[12.5px] font-medium transition-colors ${
                         shelfFilter === shelf.id
-                          ? "bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900"
-                          : "bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700"
+                          ? "bg-ink text-surface-0"
+                          : "border border-border-strong text-ink hover:bg-surface-2"
                       }`}
                     >
-                      {shelf.emoji} {shelf.name}
+                      {shelf.name}
                       {count > 0 && (
-                        <span className={`ml-1 ${shelfFilter === shelf.id ? "text-stone-400" : "text-stone-400"}`}>
-                          {count}
-                        </span>
+                        <span className="ml-1 opacity-60 tabular-nums">· {count}</span>
                       )}
                     </button>
                   )
@@ -791,10 +784,10 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                   <button
                     key={genre}
                     onClick={() => setFilter(filter === genre ? "all" : genre)}
-                    className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    className={`flex-shrink-0 h-[27px] inline-flex items-center px-3 rounded-full text-[12.5px] font-medium transition-colors ${
                       filter === genre
-                        ? "bg-amber-600 text-white"
-                        : "bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/50"
+                        ? "bg-ink text-surface-0"
+                        : "border border-border-strong text-ink hover:bg-surface-2"
                     }`}
                   >
                     {genre}
@@ -803,7 +796,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                 <button
                   onClick={() => setShowShelfManager(true)}
                   aria-label="Manage shelves"
-                  className="flex-shrink-0 px-2.5 py-1.5 rounded-full text-xs font-medium text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all flex items-center gap-1"
+                  className="flex-shrink-0 px-2.5 py-1.5 text-xs font-medium text-accent-ink hover:underline transition-colors flex items-center gap-1"
                 >
                   <Library className="w-3 h-3" />
                   Manage
@@ -811,7 +804,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                 <button
                   onClick={() => setShowCollections(true)}
                   aria-label="Open collections"
-                  className="flex-shrink-0 px-2.5 py-1.5 rounded-full text-xs font-medium text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all flex items-center gap-1"
+                  className="flex-shrink-0 px-2.5 py-1.5 text-xs font-medium text-accent-ink hover:underline transition-colors flex items-center gap-1"
                 >
                   <FolderOpen className="w-3 h-3" />
                   Collections
@@ -958,7 +951,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                       onClick={() => handleBookClick(book)}
                     >
                       {/* Cover */}
-                      <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-stone-100 dark:bg-stone-800 mb-2.5 shadow-sm group-hover:shadow-md transition-shadow ring-1 ring-stone-200/50 dark:ring-stone-700/50">
+                      <div className="relative aspect-[2/3] rounded-cover overflow-hidden bg-surface-2 mb-2.5 shadow-cover transition-transform group-hover:-translate-y-0.5">
                         <BookCover
                           src={book.cover}
                           fallbackSrc={book.coverFallback}
@@ -969,8 +962,8 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                         />
                         {/* Rating badge */}
                         <div className="absolute top-2 right-2 bg-white/90 dark:bg-stone-800/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-0.5 shadow-sm">
-                          <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                          <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">{book.rating}</span>
+                          <Star className="w-3 h-3 text-accent-ink fill-accent-ink" />
+                          <span className="text-xs font-semibold text-ink tabular-nums">{book.rating}</span>
                         </div>
                         {/* Favorite heart */}
                         {review?.favorite && (
@@ -988,7 +981,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
 
                       {/* Info */}
                       <div className="space-y-0.5 px-0.5">
-                        <h3 className="font-semibold text-sm text-stone-900 dark:text-stone-100 line-clamp-2 leading-tight group-hover:text-amber-800 dark:group-hover:text-amber-400 transition-colors">
+                        <h3 className="font-serif font-semibold text-[12.5px] text-ink line-clamp-1 leading-tight">
                           {book.title}
                         </h3>
                         <button
@@ -996,7 +989,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                             e.stopPropagation()
                             setAuthorFilter(authorFilter === book.author ? null : book.author)
                           }}
-                          className="text-xs text-stone-500 dark:text-stone-400 truncate hover:text-amber-700 dark:hover:text-amber-400 hover:underline transition-colors text-left w-full"
+                          className="text-[11px] text-ink-muted truncate hover:text-accent-ink hover:underline transition-colors text-left w-full"
                         >
                           {book.author}
                         </button>
@@ -1013,7 +1006,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                           {book.pages ? (
                             <>
                               <span>{book.pages}p</span>
-                              <span className="w-0.5 h-0.5 rounded-full bg-stone-300" />
+                              <span className="w-0.5 h-0.5 rounded-full bg-border-strong" />
                               <span>{estimateReadingTime(book.pages, readingSpd)}</span>
                             </>
                           ) : (
@@ -1036,12 +1029,12 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.15, type: "spring", stiffness: 300, damping: 28 }}
                     whileHover={{ y: -3, transition: { type: "spring", stiffness: 400, damping: 30 } }}
-                    className="group aspect-[2/3] rounded-xl border-2 border-dashed border-stone-200 dark:border-stone-700 hover:border-amber-400 dark:hover:border-amber-600 bg-stone-50/50 dark:bg-stone-800/30 flex flex-col items-center justify-center gap-2 transition-all"
+                    className="group aspect-[2/3] rounded-cover border border-dashed border-border-strong hover:border-ink-muted bg-surface-1 flex flex-col items-center justify-center gap-2 transition-colors"
                   >
-                    <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center group-hover:bg-amber-200 dark:group-hover:bg-amber-800/40 transition-colors">
-                      <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-500" />
+                    <div className="w-10 h-10 rounded-full bg-surface-2 flex items-center justify-center transition-colors">
+                      <Sparkles className="w-5 h-5 text-ink" strokeWidth={1.8} />
                     </div>
-                    <span className="text-xs font-semibold text-stone-500 dark:text-stone-400 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">Discover more</span>
+                    <span className="text-xs font-semibold text-ink-muted group-hover:text-ink transition-colors">Discover more</span>
                   </motion.button>
                 )}
                 </div>
