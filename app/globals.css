@@ -84,6 +84,79 @@
 }
 
 @layer base {
+  /* ── Modern Editorial tokens (design_handoff_modern_editorial/README.md) ──
+     The semantic system for the redesign. Legacy shadcn channel tokens below
+     are DEPRECATED — retained until every component migrates (phase 2);
+     colliding legacy names carry a legacy- prefix. */
+  :root {
+    /* light — warm near-white paper */
+    --surface-0: #faf7f1;
+    --surface-1: #ffffff;
+    --surface-2: #f1ebdf;
+    --ink: #1c1712;
+    --ink-muted: #5d5546;
+    --ink-faint: #857b67; /* faint = disabled only */
+    --accent: #b45309;
+    --on-accent: #fff9ef;
+    --accent-ink: #8a4f04;
+    --success: #4c7a2e;
+    --on-success: #f5faee;
+    --success-ink: #46702a;
+    --destructive: #9e2f23;
+    --border: #e4dccc;
+    --border-strong: #c9bfa9;
+    --scrim: rgba(20, 16, 12, 0.5);
+    --focus: var(--accent-ink);
+  }
+  .dark {
+    /* true dark, warm-neutral */
+    --surface-0: #141110;
+    --surface-1: #1e1a17;
+    --surface-2: #2a2521;
+    --ink: #f3efe7;
+    --ink-muted: #b9b0a0;
+    --ink-faint: #8c8474;
+    --accent: #d97706;
+    --on-accent: #1b1206;
+    --accent-ink: #e9a93f;
+    --success: #6f8c3a;
+    --on-success: #141110;
+    --success-ink: #a3c168;
+    --destructive: #e08462;
+    --border: #322c26;
+    --border-strong: #4a423a;
+    --scrim: rgba(0, 0, 0, 0.55);
+    --focus: var(--accent-ink);
+  }
+  :root {
+    /* shared — stage (Showcase/Peek/Reader) + structure, both modes */
+    --stage-bg: radial-gradient(120% 100% at 50% 0%, #2b2118 0%, #1c1610 55%, #141009 100%);
+    --stage-ink: #f5efe0;
+    --stage-ink-muted: #d8cdb8;
+    --stage-ink-tertiary: #b9ac8f;
+    --stage-amber: #e8a33d;
+    --on-stage-amber: #241505;
+    --stage-dock: rgba(23, 19, 15, 0.92);
+    --stage-hairline: rgba(245, 239, 224, 0.22);
+    --r-cover: 5px;
+    --r-control: 10px;
+    --r-card: 14px;
+    --r-sheet: 20px;
+    --r-pill: 999px;
+    --e-1: 0 1px 0 var(--border);
+    --e-2: 0 2px 6px -2px rgba(30, 20, 10, 0.08), 0 12px 28px -16px rgba(30, 20, 10, 0.22);
+    --e-3: 0 24px 60px -16px rgba(20, 12, 4, 0.45);
+    --shadow-cover: 0 1px 2px rgba(20, 12, 4, 0.25), 0 10px 24px -10px rgba(20, 12, 4, 0.4);
+    --z-nav: 40;
+    --z-sheet: 60;
+    --z-takeover: 80;
+    --z-toast: 100;
+  }
+  .dark {
+    --shadow-cover: 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 22px -10px rgba(0, 0, 0, 0.6);
+  }
+
+  /* ── DEPRECATED legacy shadcn tokens — unmigrated components only ── */
   :root {
     --background: 40 60% 98%;
     --foreground: 240 10% 3.9%;
@@ -97,11 +170,9 @@
     --secondary-foreground: 240 5.9% 10%;
     --muted: 240 4.8% 95.9%;
     --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
+    --legacy-accent: 240 4.8% 95.9%;
+    --legacy-accent-foreground: 240 5.9% 10%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
     --ring: 240 5.9% 10%;
     --radius: 0.5rem;
@@ -120,11 +191,9 @@
     --secondary-foreground: 0 0% 98%;
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --legacy-accent: 240 3.7% 15.9%;
+    --legacy-accent-foreground: 0 0% 98%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
     --ring: 240 4.9% 83.9%;
   }
