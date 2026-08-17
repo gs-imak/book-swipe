@@ -475,7 +475,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                           e.stopPropagation()
                           setShowAllReading(!showAllReading)
                         }}
-                        className="text-xs font-medium text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-500 transition-colors px-1"
+                        className="text-xs font-medium text-ink-muted hover:text-accent-ink transition-colors px-1"
                       >
                         {showAllReading ? "Show less" : `Reading ${othersCount} more...`}
                       </button>
@@ -510,7 +510,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                                       />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                      <p className="text-xs font-semibold text-stone-800 dark:text-stone-200 truncate group-hover/sub:text-amber-800 dark:group-hover/sub:text-amber-400 transition-colors">
+                                      <p className="text-xs font-semibold text-ink truncate group-hover/sub:text-accent-ink transition-colors">
                                         {prog.book.title}
                                       </p>
                                       <div className="flex items-center gap-2 mt-1">
@@ -651,7 +651,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
               <ActivityHeatmap />
 
               {/* Mood-Based Quick Browse */}
-              <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-0.5 lg:flex-wrap">
+              <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar py-2 -mt-2 -mb-1.5 lg:flex-wrap">
                 {([
                   "Adventurous", "Cozy", "Intellectual", "Romantic",
                   "Thrilling", "Relaxing", "Inspiring", "Dark",
@@ -661,7 +661,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                     <button
                       key={mood}
                       onClick={() => setMoodFilter(isActive ? null : mood)}
-                      className={`flex-shrink-0 h-[27px] inline-flex items-center rounded-full px-3 text-[12.5px] font-medium transition-colors ${
+                      className={`relative before:absolute before:-inset-y-2 before:inset-x-0 before:content-[''] flex-shrink-0 h-[27px] inline-flex items-center rounded-full px-3 text-[12.5px] font-medium transition-colors ${
                         isActive
                           ? "bg-ink text-surface-0"
                           : "border border-border-strong text-ink hover:bg-surface-2"
@@ -714,7 +714,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
               {/* Section header + filter toggle */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-amber-600 hidden sm:block" />
+                  <BookOpen className="w-5 h-5 text-ink hidden sm:block" strokeWidth={1.8} />
                   <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100 font-serif">
                     Your Books
                   </h2>
@@ -726,7 +726,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                   {authorFilter && (
                     <button
                       onClick={() => setAuthorFilter(null)}
-                      className="flex items-center gap-1 h-[27px] px-2.5 rounded-full text-[12.5px] font-medium bg-ink text-surface-0 transition-opacity hover:opacity-90"
+                      className="relative before:absolute before:-inset-y-2 before:inset-x-0 before:content-[''] flex items-center gap-1 h-[27px] px-2.5 rounded-full text-[12.5px] font-medium bg-ink text-surface-0 transition-opacity hover:opacity-90"
                     >
                       by {authorFilter}
                       <XIcon className="w-3 h-3" />
@@ -750,10 +750,10 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
               </div>
 
               {/* Shelf pills — always visible, compact */}
-              <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+              <div className="flex gap-2 overflow-x-auto hide-scrollbar py-2 -mt-2 -mb-1">
                 <button
                   onClick={() => setShelfFilter(null)}
-                  className={`flex-shrink-0 h-[27px] inline-flex items-center px-3 rounded-full text-[12.5px] font-medium transition-colors ${
+                  className={`relative before:absolute before:-inset-y-2 before:inset-x-0 before:content-[''] flex-shrink-0 h-[27px] inline-flex items-center px-3 rounded-full text-[12.5px] font-medium transition-colors ${
                     shelfFilter === null
                       ? "bg-ink text-surface-0"
                       : "border border-border-strong text-ink hover:bg-surface-2"
@@ -767,7 +767,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                     <button
                       key={shelf.id}
                       onClick={() => setShelfFilter(shelfFilter === shelf.id ? null : shelf.id)}
-                      className={`flex-shrink-0 h-[27px] inline-flex items-center px-3 rounded-full text-[12.5px] font-medium transition-colors ${
+                      className={`relative before:absolute before:-inset-y-2 before:inset-x-0 before:content-[''] flex-shrink-0 h-[27px] inline-flex items-center px-3 rounded-full text-[12.5px] font-medium transition-colors ${
                         shelfFilter === shelf.id
                           ? "bg-ink text-surface-0"
                           : "border border-border-strong text-ink hover:bg-surface-2"
@@ -784,7 +784,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                   <button
                     key={genre}
                     onClick={() => setFilter(filter === genre ? "all" : genre)}
-                    className={`flex-shrink-0 h-[27px] inline-flex items-center px-3 rounded-full text-[12.5px] font-medium transition-colors ${
+                    className={`relative before:absolute before:-inset-y-2 before:inset-x-0 before:content-[''] flex-shrink-0 h-[27px] inline-flex items-center px-3 rounded-full text-[12.5px] font-medium transition-colors ${
                       filter === genre
                         ? "bg-ink text-surface-0"
                         : "border border-border-strong text-ink hover:bg-surface-2"
@@ -922,7 +922,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                   <p className="text-sm text-stone-500 dark:text-stone-400">No books match these filters</p>
                   <button
                     onClick={() => { setFilter("all"); setShelfFilter(null); setFormatFilter("all"); setAuthorFilter(null); setMoodFilter(null); setShowHidden(false) }}
-                    className="mt-2 text-xs text-amber-600 hover:text-amber-700 font-medium"
+                    className="mt-2 text-xs text-accent-ink hover:underline font-medium"
                   >
                     Clear filters
                   </button>
@@ -989,7 +989,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                             e.stopPropagation()
                             setAuthorFilter(authorFilter === book.author ? null : book.author)
                           }}
-                          className="text-[11px] text-ink-muted truncate hover:text-accent-ink hover:underline transition-colors text-left w-full"
+                          className="text-[11px] text-ink-muted truncate hover:text-accent-ink hover:underline transition-colors text-left w-full py-3 -my-[10px]"
                         >
                           {book.author}
                         </button>

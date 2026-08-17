@@ -69,7 +69,7 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
       >
         {/* Blurred cover background */}
         {pick.book.cover && (
-          <div aria-hidden="true" className="absolute inset-0 z-0">
+          <div aria-hidden="true" className="absolute inset-0 z-0 overflow-hidden rounded-2xl">
             <Image
               src={pick.book.cover}
               alt=""
@@ -160,7 +160,7 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
                     </span>
                     <button
                       onClick={() => onBookClick?.(pick.book)}
-                      className="h-9 px-3.5 bg-amber-100/80 hover:bg-amber-200/80 dark:bg-amber-800/30 dark:hover:bg-amber-700/40 text-amber-800 dark:text-amber-300 text-xs font-medium rounded-xl transition-all active:scale-[0.98]"
+                      className="h-11 px-3.5 bg-amber-100/80 hover:bg-amber-200/80 dark:bg-amber-800/30 dark:hover:bg-amber-700/40 text-amber-800 dark:text-amber-300 text-xs font-medium rounded-xl transition-all active:scale-[0.98]"
                     >
                       View Details
                     </button>
@@ -168,7 +168,7 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
                 ) : (
                   <button
                     onClick={handleLike}
-                    className="h-9 px-4 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-white text-white dark:text-stone-900 text-xs font-semibold rounded-xl transition-all active:scale-[0.98] flex items-center gap-1.5 shadow-sm"
+                    className="h-11 px-4 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-white text-white dark:text-stone-900 text-xs font-semibold rounded-xl transition-all active:scale-[0.98] flex items-center gap-1.5 shadow-sm"
                   >
                     <BookOpen className="w-3.5 h-3.5" />
                     Add to Library
@@ -176,7 +176,7 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
                 )}
                 <button
                   onClick={handleDismiss}
-                  className="h-9 px-3 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-white/40 dark:hover:bg-stone-700/40 text-xs rounded-xl transition-all active:scale-[0.98] flex items-center gap-1"
+                  className="h-11 px-3 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-white/40 dark:hover:bg-stone-700/40 text-xs rounded-xl transition-all active:scale-[0.98] flex items-center gap-1"
                 >
                   <X className="w-3.5 h-3.5" />
                   Pass
