@@ -272,7 +272,7 @@ export function FreeBooksBrowser() {
               <button
                 key={cat.id}
                 onClick={() => handleCategorySelect(cat.id)}
-                className={`flex-shrink-0 px-2.5 py-1.5 rounded-full text-[11px] font-medium transition-all ${
+                className={`relative flex-shrink-0 px-2.5 py-1.5 rounded-full text-[11px] font-medium transition-all before:absolute before:-inset-y-2 before:inset-x-0 before:content-[''] ${
                   selectedCategory === cat.id
                     ? "bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 shadow-sm"
                     : "bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700"
@@ -491,7 +491,7 @@ function BookGridCard({
         <div className="mt-auto flex gap-1.5">
           <button
             onClick={() => onRead(book)}
-            className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium bg-amber-600 text-white hover:bg-amber-700 active:scale-[0.98] transition-all"
+            className="relative before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-[''] flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium bg-amber-600 text-white hover:bg-amber-700 active:scale-[0.98] transition-all"
           >
             <BookOpen className="w-3 h-3" />
             Read
@@ -499,7 +499,7 @@ function BookGridCard({
           <button
             onClick={(e) => { e.stopPropagation(); if (!isSaved) onSave(book) }}
             disabled={isSaved}
-            className={`flex items-center justify-center gap-1 py-1.5 px-2.5 rounded-lg text-xs font-medium transition-all active:scale-[0.98] ${
+            className={`relative before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-[''] flex items-center justify-center gap-1 py-1.5 px-2.5 rounded-lg text-xs font-medium transition-all active:scale-[0.98] ${
               isSaved
                 ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
                 : "bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700"

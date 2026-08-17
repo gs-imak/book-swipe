@@ -512,6 +512,9 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   const hasMoreRef = useRef(hasMoreBooks)
   const currentBookRef = useRef(currentBook)
   const overlayOpenRef = useRef(false)
+  // Written directly by BookCard callbacks (not state): the info sheet must
+  // pause keyboard swipes the instant it opens.
+  const sheetOpenRef = useRef(false)
   // Latest-ref pattern: refs are updated AFTER each commit, never during
   // render, so the stable keyboard handler below always sees current values.
   useEffect(() => {
@@ -531,6 +534,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
       const el = document.activeElement
       if (
         overlayOpenRef.current ||
+        sheetOpenRef.current ||
         (el instanceof HTMLElement &&
           (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable))
       ) {
@@ -760,7 +764,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
                 style={{ width: `${Math.min(100, ((currentIndex + 1) / Math.max(1, filteredBooks.length)) * 100)}%` }}
               />
             </div>
-            <p className="text-right font-mono text-[10.5px] text-ink-muted mt-1 tabular-nums">
+            <p className="text-right font-mono text-[10.5px] text-ink-muted mt-1 tabular-nums [@media(max-height:700px)]:hidden">
               {currentIndex + 1} / {filteredBooks.length}
             </p>
           </div>
@@ -770,7 +774,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
         <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 pb-14 sm:pb-6">
           <div className="relative w-full max-w-sm lg:max-w-[820px]">
             <motion.div
-              className="relative h-[604px] sm:h-[620px] lg:h-[500px]"
+              className="relative h-[604px] [@media(max-height:700px)]:h-[440px] sm:h-[620px] lg:h-[500px]"
               initial={{ scale: 0.97, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
@@ -793,6 +797,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
                     reason={bookReasons[currentBook.id]}
                     coLikeCount={coLikeCounts[currentBook.id]}
                     onOpenDetails={() => setShowcaseBook(currentBook)}
+                    onSheetToggle={(open) => { sheetOpenRef.current = open }}
                   />
                 )}
               </AnimatePresence>
@@ -813,7 +818,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
 
           {/* Action buttons — under the card (mobile) / under the caption
               column of the magazine spread (desktop: cover 312 + gap 64) */}
-          <div className="w-full max-w-sm lg:max-w-[820px] px-4 lg:px-0 mt-3 lg:-mt-16 lg:pl-[376px]">
+          <div className="w-full max-w-sm lg:max-w-[820px] px-4 lg:px-0 mt-3 [@media(max-height:700px)]:mt-1 lg:-mt-16 lg:pl-[376px]">
             <div className="flex justify-center lg:justify-start items-center gap-4 mb-3">
               <motion.button
                 whileTap={{ scale: 0.97 }}
@@ -848,7 +853,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
               </motion.button>
             </div>
 
-            <p className="text-center lg:text-left text-xs text-ink-muted">
+            <p className="text-center lg:text-left text-xs text-ink-muted [@media(max-height:700px)]:hidden lg:[@media(max-height:700px)]:block">
               <span className="lg:hidden">Swipe left to pass · right to save</span>
               <span className="hidden lg:inline">
                 <kbd className="px-1.5 py-0.5 rounded bg-surface-2 text-ink-muted font-mono text-[10.5px]">&larr;</kbd> Pass

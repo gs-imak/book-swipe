@@ -245,7 +245,7 @@ export function SmartNextRead({ onBookClick, onStartReading }: SmartNextReadProp
               ) : (
                 <button
                   onClick={handleStartReading}
-                  className="h-8 px-4 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-white text-white dark:text-stone-900 text-xs font-semibold rounded-xl transition-all active:scale-[0.97] flex items-center gap-1.5 shadow-sm"
+                  className="relative before:absolute before:-inset-y-1 before:inset-x-0 before:content-[''] h-8 px-4 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-white text-white dark:text-stone-900 text-xs font-semibold rounded-xl transition-all active:scale-[0.97] flex items-center gap-1.5 shadow-sm"
                 >
                   <BookOpen className="w-3.5 h-3.5" />
                   Start Reading
@@ -255,7 +255,7 @@ export function SmartNextRead({ onBookClick, onStartReading }: SmartNextReadProp
               <button
                 onClick={handlePickAnother}
                 disabled={isShuffling}
-                className="h-8 px-3 flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700/50 rounded-xl transition-all active:scale-[0.97] disabled:opacity-50"
+                className="relative before:absolute before:-inset-y-1 before:inset-x-0 before:content-[''] h-8 px-3 flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700/50 rounded-xl transition-all active:scale-[0.97] disabled:opacity-50"
               >
                 <RefreshCw className={`w-3 h-3 ${isShuffling ? "animate-spin" : ""}`} />
                 Pick another

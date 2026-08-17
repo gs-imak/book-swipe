@@ -21,13 +21,15 @@ interface BookCardProps {
   coLikeCount?: number
   /** Clean tap on the top card (not a drag, not a button) — opens the Showcase. */
   onOpenDetails?: () => void
+  /** Lets the deck know the info sheet is open, so keyboard swipes pause. */
+  onSheetToggle?: (open: boolean) => void
 }
 
 // Modern Editorial deck card (design handoff §1b): the card IS the book — a
 // cover object with a caption below it, sitting directly on the page surface.
 // No card box, no blurred fill, no bottom gradient. All gesture mechanics are
 // unchanged engineering assets.
-export function BookCard({ book, onSwipe, isTop = false, showActions = true, reason, coLikeCount, onOpenDetails }: BookCardProps) {
+export function BookCard({ book, onSwipe, isTop = false, showActions = true, reason, coLikeCount, onOpenDetails, onSheetToggle }: BookCardProps) {
   const [infoExpanded, setInfoExpanded] = useState(false)
   const [descExpanded, setDescExpanded] = useState(false)
   const sheetY = useMotionValue(0)
@@ -111,8 +113,10 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
           below the card now that there is no clipping card box anymore. */}
       <div className="relative h-full w-full overflow-hidden" onClick={handleCardTap}>
         <div className="flex h-full w-full flex-col items-center lg:flex-row lg:items-start lg:justify-center lg:gap-16">
-          {/* Cover object — radius 5px (covers are books), object shadow */}
-          <div className="relative w-[264px] h-[396px] lg:w-[312px] lg:h-[468px] flex-shrink-0 rounded-cover shadow-cover overflow-hidden bg-surface-2">
+          {/* Cover object — radius 5px (covers are books), object shadow.
+              Short-viewport variant keeps the whole deck on one screen for
+              ≤700px-tall phones (spec sizes assume ~812px tall). */}
+          <div className="relative w-[264px] h-[396px] [@media(max-height:700px)]:w-[176px] [@media(max-height:700px)]:h-[264px] lg:w-[312px] lg:h-[468px] flex-shrink-0 rounded-cover shadow-cover overflow-hidden bg-surface-2">
             <BookCover
               src={book.cover}
               fallbackSrc={book.coverFallback}
@@ -152,13 +156,13 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
               the page surface, so the peeking card's copy would superimpose.
               invisible (not conditional render) keeps both cards' geometry
               identical for the stack transform. */}
-          <div className={`w-[300px] lg:w-[420px] pt-5 lg:pt-2 text-left ${isTop ? "" : "invisible"}`}>
+          <div className={`w-[300px] lg:w-[420px] pt-5 [@media(max-height:700px)]:pt-3 lg:pt-2 text-left ${isTop ? "" : "invisible"}`}>
             {reason && (
               <p className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-ink-muted truncate mb-1.5">
                 {reason}
               </p>
             )}
-            <h3 className="font-serif font-semibold text-[22px] leading-[1.22] lg:text-[36px] lg:leading-[1.12] text-ink line-clamp-3">
+            <h3 className="font-serif font-semibold text-[22px] leading-[1.22] [@media(max-height:700px)]:text-[19px] [@media(max-height:700px)]:line-clamp-2 lg:text-[36px] lg:leading-[1.12] text-ink line-clamp-3">
               {book.title}
             </h3>
             <div className="flex items-center justify-between gap-3 mt-1">
@@ -166,12 +170,23 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
               {/* Info button — opens the expanded sheet */}
               <motion.button
                 whileTap={{ scale: 0.97 }}
-                onClick={() => setInfoExpanded(true)}
+                onClick={() => { setInfoExpanded(true); onSheetToggle?.(true) }}
                 aria-label="View book details"
                 className="w-9 h-9 -mr-1 rounded-full flex items-center justify-center flex-shrink-0 text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors tap-target"
               >
                 <Info className="w-[18px] h-[18px]" />
               </motion.button>
+            </div>
+
+            {/* Description inline on the desktop spread — the deck's whole job
+                is selling the book, and the column has the room. Mobile keeps
+                the info sheet (its height budget is spoken for). Clamped
+                defensively: the pipeline bands new copy to 180-300 chars, but
+                pre-band cached books can still carry long text. */}
+            <div className="hidden lg:block mt-3">
+              <p className="text-[15px] leading-[1.6] text-ink line-clamp-4 max-w-[54ch]">
+                {book.description}
+              </p>
             </div>
 
             <div className="border-t border-border mt-3 pt-3">
@@ -182,7 +197,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
             </div>
 
             {isTop && typeof coLikeCount === "number" && coLikeCount > 0 && (
-              <div className="flex items-center gap-1.5 mt-2 text-success-ink text-[12.5px] font-semibold">
+              <div className="flex items-center gap-1.5 mt-2 text-success-ink text-[12.5px] font-semibold [@media(max-height:700px)]:hidden">
                 <Heart className="w-3 h-3 fill-current flex-shrink-0" />
                 <span>
                   {coLikeCount} {coLikeCount === 1 ? "reader" : "readers"} with your taste saved this
@@ -221,6 +236,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
             if (info.offset.y > 80 || info.velocity.y > 400) {
               sheetY.set(0)
               setInfoExpanded(false)
+              onSheetToggle?.(false)
             } else {
               sheetY.set(0)
             }
@@ -230,7 +246,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
           <div className="flex-shrink-0 pt-2 pb-1 flex flex-col items-center border-b border-border">
             <div className="w-10 h-1 rounded-full bg-border-strong mb-2" />
             <button
-              onClick={() => setInfoExpanded(false)}
+              onClick={() => { setInfoExpanded(false); onSheetToggle?.(false) }}
               aria-label="Close details"
               className="flex items-center gap-1 text-ink-muted hover:text-ink transition-colors px-3 py-2 min-h-[44px]"
             >
@@ -239,9 +255,12 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
             </button>
           </div>
 
-          {/* Scrollable content */}
+          {/* Scrollable content. Bottom clearance = nav height + safe area:
+              the sheet lives inside the card's transformed stacking context,
+              so it can never paint above the fixed bottom nav — its content
+              must scroll clear of it instead (360x640 overlapped by 26px). */}
           <div className="flex-1 overflow-y-auto overscroll-contain">
-            <div className="p-5 space-y-5">
+            <div className="p-5 space-y-5 pb-[calc(80px+env(safe-area-inset-bottom))] lg:pb-5">
               {reason && (
                 <p className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-ink-muted">
                   {reason}

@@ -54,6 +54,17 @@ export function BookSearch({ isOpen, onClose, onSaveBook, onBookClick, savedBook
     if (debounceRef.current) clearTimeout(debounceRef.current)
   }, [isOpen])
 
+  // Close on Escape — parity with GlobalSearch: a full-screen takeover must be
+  // keyboard-dismissable even while the search input holds focus.
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [isOpen, onClose])
+
   // Lock body scroll when open
   useEffect(() => {
     if (isOpen) {
@@ -121,7 +132,7 @@ export function BookSearch({ isOpen, onClose, onSaveBook, onBookClick, savedBook
                   onChange={(e) => handleInputChange(e.target.value)}
                   placeholder="Search books or authors..."
                   aria-label="Search books or authors"
-                  className="flex-1 bg-transparent text-stone-900 dark:text-stone-100 text-base placeholder:text-stone-400 dark:placeholder:text-stone-500 outline-none"
+                  className="flex-1 min-h-[40px] bg-transparent text-stone-900 dark:text-stone-100 text-base placeholder:text-stone-400 dark:placeholder:text-stone-500 outline-none"
                 />
                 {query && (
                   <button
@@ -136,7 +147,7 @@ export function BookSearch({ isOpen, onClose, onSaveBook, onBookClick, savedBook
                 <button
                   type="button"
                   onClick={onClose}
-                  className="text-sm font-medium text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300 pl-2"
+                  className="relative before:absolute before:-inset-y-2.5 before:inset-x-0 before:content-[''] text-sm font-medium text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300 pl-2"
                 >
                   Cancel
                 </button>
@@ -191,7 +202,7 @@ export function BookSearch({ isOpen, onClose, onSaveBook, onBookClick, savedBook
                     <button
                       key={term}
                       onClick={() => { setQuery(term); doSearch(term) }}
-                      className="px-3 py-1.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 text-xs font-medium hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+                      className="relative before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-[''] px-3 py-1.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 text-xs font-medium hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
                     >
                       {term}
                     </button>
