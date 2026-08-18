@@ -779,10 +779,18 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
             >
+              {/* Keyed by book.id, NOT by deck position: a role-based key
+                  (`${id}-next` / `${id}-current`) gave the same book a different
+                  key depending on where it sat, so the card the user was already
+                  peeking at was destroyed and rebuilt the instant it was promoted
+                  — remounting its BookCover, which then replayed its placeholder
+                  and 300ms fade for art that was already painted and cached.
+                  Stacking is z-index driven (isTop ? z-10 : z-0), so the DOM
+                  reorder React does instead is visually inert. */}
               <AnimatePresence>
                 {nextBook && (
                   <BookCard
-                    key={`${nextBook.id}-next`}
+                    key={nextBook.id}
                     book={nextBook}
                     onSwipe={() => {}}
                     isTop={false}
@@ -790,7 +798,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
                 )}
                 {currentBook && (
                   <BookCard
-                    key={`${currentBook.id}-current`}
+                    key={currentBook.id}
                     book={currentBook}
                     onSwipe={handleSwipe}
                     isTop={true}

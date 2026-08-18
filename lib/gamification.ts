@@ -137,7 +137,12 @@ export function checkAchievements(): GamificationEvent[] {
     weeklyReadingTime: calculateWeeklyReadingTime()
   }
 
-  // Check each achievement
+  // Check each achievement.
+  // Persisting happens ONCE after the loop: this runs on the synchronous swipe
+  // path, and saving per achievement meant every like re-serialized the whole
+  // array 25 times (~99.5 KB), including achievements whose progress had not
+  // moved at all.
+  let dirty = false
   for (const achievement of achievements) {
     if (achievement.unlockedAt) continue // Already unlocked
 
@@ -145,6 +150,12 @@ export function checkAchievements(): GamificationEvent[] {
     const shouldUnlock = achievement.maxProgress ? currentValue >= achievement.maxProgress : false
 
     if (shouldUnlock) {
+      // Flush pending progress first — unlockAchievement writes and we re-read
+      // below, which would otherwise discard it.
+      if (dirty) {
+        saveUserAchievements(achievements)
+        dirty = false
+      }
       const unlocked = unlockAchievement(achievement.id)
       if (unlocked) {
         achievements = getUserAchievements()
@@ -158,15 +169,16 @@ export function checkAchievements(): GamificationEvent[] {
           achievement: achievements.find(a => a.id === achievement.id) || achievement
         })
       }
-    } else if (achievement.maxProgress) {
-      // Update progress
-      const updatedAchievements = achievements.map(a => 
+    } else if (achievement.maxProgress && achievement.progress !== currentValue) {
+      // Progress actually moved — patch in memory, persist after the loop.
+      achievements = achievements.map(a =>
         a.id === achievement.id ? { ...a, progress: currentValue } : a
       )
-      saveUserAchievements(updatedAchievements)
-      achievements = updatedAchievements
+      dirty = true
     }
   }
+
+  if (dirty) saveUserAchievements(achievements)
 
   return events
 }
