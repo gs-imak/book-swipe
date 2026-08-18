@@ -12,6 +12,7 @@ import { scoreBooks, applyMMR } from "@/lib/scoring-engine"
 import { getRecommendedBooks } from "@/lib/recommend-client"
 import { getBooksByCategory, bookSearchQueries, fetchPersonalizedBooks } from "@/lib/books-api"
 import { getCachedBooks, addBooksToCache, updateBooksInCache } from "@/lib/book-cache"
+import { saveDeckSession, loadDeckSession } from "@/lib/deck-session"
 import { upgradeVisibleBooks } from "@/lib/book-enrichment"
 import { searchOpenLibrary } from "@/lib/openlibrary-api"
 import { upgradeCoversWithItunes } from "@/lib/itunes-covers"
@@ -407,14 +408,36 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   }
 
   useEffect(() => {
+    // Leaving Discover unmounts this whole component, so first try to resume
+    // the deck the user was actually on. Only when there is no usable snapshot
+    // do we pay for a fetch — that round trip used to cost 114 requests and
+    // land the user on a different book.
+    /* eslint-disable react-hooks/set-state-in-effect */
+    const resumed = loadDeckSession(preferences)
+    if (resumed) {
+      setFilteredBooks(resumed.books)
+      setCurrentIndex(resumed.currentIndex)
+      setUndoStack(resumed.undoStack)
+      setBatchCount(resumed.batchCount)
+      setIsLoading(false)
+      return
+    }
     // Deck fetch. loadBooks flips the loading flag synchronously before its
     // first await — the canonical "start async work" trigger — and it is
     // intentionally re-run only when preferences change, not on every render
     // (the function closes over fresh state each time it is called).
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadBooks()
+    /* eslint-enable react-hooks/set-state-in-effect */
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preferences])
+
+  // Mirror deck position into the session snapshot. Writing on change (rather
+  // than on unmount) survives a tab close, a crash and a hard navigation, none
+  // of which run cleanup reliably.
+  useEffect(() => {
+    if (isLoading || filteredBooks.length === 0) return
+    saveDeckSession(filteredBooks, currentIndex, undoStack, batchCount, preferences)
+  }, [filteredBooks, currentIndex, undoStack, batchCount, preferences, isLoading])
 
   // Fetch collaborative-filtering co-like counts (social proof) for signed-in
   // users. Keyed on the user's liked books; the RPC returns counts for books

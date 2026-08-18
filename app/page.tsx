@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
+import { clearDeckSession } from "@/lib/deck-session"
 import dynamic from "next/dynamic"
 import { Loader2 } from "lucide-react"
 import { useLikedCount } from "@/lib/use-liked-count"
@@ -312,6 +313,9 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   }
 
   const handleRestart = () => {
+    // An explicit restart must not resume the old deck, even if the user picks
+    // the very same preferences again (which would otherwise hash-match).
+    clearDeckSession()
     setUserPreferences(null)
     navigateTo("questionnaire")
   }
