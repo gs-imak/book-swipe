@@ -31,6 +31,9 @@ interface BookCardProps {
 // unchanged engineering assets.
 export function BookCard({ book, onSwipe, isTop = false, showActions = true, reason, coLikeCount, onOpenDetails, onSheetToggle }: BookCardProps) {
   const [infoExpanded, setInfoExpanded] = useState(false)
+  // Latched on first open so the sheet stays mounted for its spring-close and
+  // drag-to-dismiss animations after being closed.
+  const [sheetEverOpened, setSheetEverOpened] = useState(false)
   const [descExpanded, setDescExpanded] = useState(false)
   const sheetY = useMotionValue(0)
   const { showToast } = useToast()
@@ -170,7 +173,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
               {/* Info button — opens the expanded sheet */}
               <motion.button
                 whileTap={{ scale: 0.97 }}
-                onClick={() => { setInfoExpanded(true); onSheetToggle?.(true) }}
+                onClick={() => { setSheetEverOpened(true); setInfoExpanded(true); onSheetToggle?.(true) }}
                 aria-label="View book details"
                 className="w-9 h-9 -mr-1 rounded-full flex items-center justify-center flex-shrink-0 text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors tap-target"
               >
@@ -221,7 +224,12 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
 
         {/* Expanded info sheet — kept mounted for the spring close and
             drag-to-dismiss, so it must be inert while translated off-card
-            or its Close/Read-more/Add buttons stay in the tab order. */}
+            or its Close/Read-more/Add buttons stay in the tab order.
+            Only mounted for the top card, and only once it has actually been
+            opened: the peek card can never open it, so it was shipping a full
+            second copy of this subtree (its own drag config and a second
+            BookCover) on every render for nothing. */}
+        {isTop && (infoExpanded || sheetEverOpened) && (
         <motion.div
           initial={false}
           inert={!infoExpanded}
@@ -360,6 +368,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
             </div>
           </div>
         </motion.div>
+        )}
       </div>
     </motion.div>
   )

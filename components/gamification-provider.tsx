@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useCallback, ReactNode } from "react"
+import { createContext, useContext, useState, useCallback, useMemo, ReactNode } from "react"
 import { GamificationEvent, handleUserActivity } from "@/lib/gamification"
 import { hapticSuccess, hapticMedium, hapticLevelUp } from "@/lib/haptics"
 import { GamificationToast } from "./gamification-toast"
@@ -79,6 +79,13 @@ export function GamificationProvider({ children, onShowAchievements }: Gamificat
     onShowAchievements?.()
   }, [onShowAchievements])
 
+  // Stable identity — see the note in toast-provider: a fresh object here
+  // re-rendered every consumer on each celebration event.
+  const ctx = useMemo(
+    () => ({ triggerActivity, showAchievementsPanel }),
+    [triggerActivity, showAchievementsPanel],
+  )
+
   const handleEventShown = useCallback((event: GamificationEvent) => {
     setEvents(prev => prev.filter(e => e !== event))
   }, [])
@@ -92,7 +99,7 @@ export function GamificationProvider({ children, onShowAchievements }: Gamificat
   }, [])
 
   return (
-    <GamificationContext.Provider value={{ triggerActivity, showAchievementsPanel }}>
+    <GamificationContext.Provider value={ctx}>
       {children}
       
       {/* Toast notifications */}

@@ -3,7 +3,10 @@
 import { motion } from "framer-motion"
 import { Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { SittingReadingDoodle } from "./illustrations"
+import dynamic from "next/dynamic"
+// Doodles are decorative and below the fold — dynamic() keeps them out of the
+// hydration payload (they were 104KB gzip, 24.5% of the entire cold download).
+const SittingReadingDoodle = dynamic(() => import("./illustrations").then(m => ({ default: m.SittingReadingDoodle })))
 
 /** Empty-library state shown when the user has no liked books yet. */
 export function DashboardEmpty({ onStartDiscovery }: { onStartDiscovery: () => void }) {

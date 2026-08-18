@@ -3,17 +3,48 @@
 import { useState, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ArrowRight, X } from "lucide-react"
-import { GroovyDoodle, SittingReadingDoodle, LovingDoodle, ReadingSideDoodle, MeditatingDoodle, FloatDoodle } from "@/components/illustrations"
+import dynamic from "next/dynamic"
+// Doodles are decorative and below the fold — dynamic() keeps them out of the
+// hydration payload (they were 104KB gzip, 24.5% of the entire cold download).
+const GroovyDoodle = dynamic(() => import("@/components/illustrations").then(m => ({ default: m.GroovyDoodle })))
+const SittingReadingDoodle = dynamic(() => import("@/components/illustrations").then(m => ({ default: m.SittingReadingDoodle })))
+const LovingDoodle = dynamic(() => import("@/components/illustrations").then(m => ({ default: m.LovingDoodle })))
+const ReadingSideDoodle = dynamic(() => import("@/components/illustrations").then(m => ({ default: m.ReadingSideDoodle })))
+const MeditatingDoodle = dynamic(() => import("@/components/illustrations").then(m => ({ default: m.MeditatingDoodle })))
+const FloatDoodle = dynamic(() => import("@/components/illustrations").then(m => ({ default: m.FloatDoodle })))
 
 interface OnboardingGuideProps {
-  onComplete: () => void
+  /** Genres are optional: skipping the guide must never block discovery. */
+  onComplete: (genres?: string[]) => void
 }
+
+// The one question worth asking a brand-new user. Kept to a single tap-grid
+// inside the guide that already runs, rather than a questionnaire in front of
+// the deck — gating discovery behind a form is what got the old one skipped.
+const GENRE_CHOICES = [
+  "Fantasy",
+  "Science Fiction",
+  "Mystery",
+  "Romance",
+  "Thriller",
+  "Historical Fiction",
+  "Biography",
+  "Self-Help",
+  "Philosophy",
+  "Horror",
+] as const
 
 const STEPS = [
   {
     title: "Welcome to BookSwipe",
     description: "Discover your next favorite book by swiping \u2014 like Tinder, but for books. Let\u2019s show you around!",
     Doodle: GroovyDoodle,
+  },
+  {
+    title: "What do you read?",
+    description: "Pick a few. This aims your very first deck \u2014 you can change it any time, and swiping teaches it more.",
+    Doodle: SittingReadingDoodle,
+    picker: true,
   },
   {
     title: "Your Library",
@@ -44,6 +75,7 @@ const STEPS = [
 
 export function OnboardingGuide({ onComplete }: OnboardingGuideProps) {
   const [currentStep, setCurrentStep] = useState(0)
+  const [picked, setPicked] = useState<string[]>([])
 
   const step = STEPS[currentStep]
   const isLast = currentStep === STEPS.length - 1
@@ -51,15 +83,21 @@ export function OnboardingGuide({ onComplete }: OnboardingGuideProps) {
 
   const handleNext = useCallback(() => {
     if (isLast) {
-      onComplete()
+      onComplete(picked)
     } else {
       setCurrentStep((s) => s + 1)
     }
-  }, [isLast, onComplete])
+  }, [isLast, onComplete, picked])
 
   const handleSkip = useCallback(() => {
-    onComplete()
-  }, [onComplete])
+    // Keep anything already tapped — skipping means "stop explaining", not
+    // "discard what I told you".
+    onComplete(picked)
+  }, [onComplete, picked])
+
+  const togglePick = useCallback((genre: string) => {
+    setPicked((prev) => (prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]))
+  }, [])
 
   return (
     <motion.div
@@ -98,19 +136,44 @@ export function OnboardingGuide({ onComplete }: OnboardingGuideProps) {
               transition={{ duration: 0.2 }}
               className="flex flex-col items-center text-center"
             >
-              {/* Doodle illustration */}
-              <motion.div
-                className="w-44 h-36 mb-4"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1, type: "spring", stiffness: 200, damping: 20 }}
-              >
-                <Doodle className="w-full h-full" />
-              </motion.div>
+              {/* Doodle illustration — the picker step trades it for the grid */}
+              {!("picker" in step && step.picker) && (
+                <motion.div
+                  className="w-44 h-36 mb-4"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.1, type: "spring", stiffness: 200, damping: 20 }}
+                >
+                  <Doodle className="w-full h-full" />
+                </motion.div>
+              )}
 
               {/* Text */}
               <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-2">{step.title}</h2>
               <p className="text-sm text-stone-500 leading-relaxed max-w-[280px]">{step.description}</p>
+
+              {"picker" in step && step.picker && (
+                <div role="group" aria-label="Favourite genres" className="mt-4 flex flex-wrap justify-center gap-2">
+                  {GENRE_CHOICES.map((genre) => {
+                    const on = picked.includes(genre)
+                    return (
+                      <button
+                        key={genre}
+                        type="button"
+                        onClick={() => togglePick(genre)}
+                        aria-pressed={on}
+                        className={`min-h-[40px] px-3.5 rounded-full text-[13px] font-medium border transition-colors ${
+                          on
+                            ? "bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 border-transparent"
+                            : "border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:border-stone-500"
+                        }`}
+                      >
+                        {genre}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </motion.div>
           </AnimatePresence>
         </div>

@@ -9,13 +9,23 @@ import { ReadingProgressTracker } from "./reading-progress"
 import { DashboardHeader } from "./dashboard-header"
 import { DashboardEmpty } from "./dashboard-empty"
 import { ActivityHeatmap } from "./activity-heatmap"
-import { BookDetailModal } from "./book-detail-modal"
-import { BookShowcase } from "./book-showcase"
 import { StarRating } from "./star-rating"
 import { getUserStats } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
 import { BookOpen, Star, Clock, Trash2, Settings, Sparkles, Heart, Search, Library, SlidersHorizontal, Download, X as XIcon, FolderOpen, ChevronRight } from "lucide-react"
-import { ReadingSideDoodle, ReadingDoodle, FloatDoodle, GroovyDoodle, LovingDoodle } from "./illustrations"
+// Doodles are decorative and below the fold — dynamic() keeps them out of the
+// hydration payload (they were 104KB gzip, 24.5% of the entire cold download).
+const ReadingSideDoodle = dynamic(() => import("./illustrations").then(m => ({ default: m.ReadingSideDoodle })))
+const ReadingDoodle = dynamic(() => import("./illustrations").then(m => ({ default: m.ReadingDoodle })))
+const FloatDoodle = dynamic(() => import("./illustrations").then(m => ({ default: m.FloatDoodle })))
+const GroovyDoodle = dynamic(() => import("./illustrations").then(m => ({ default: m.GroovyDoodle })))
+const LovingDoodle = dynamic(() => import("./illustrations").then(m => ({ default: m.LovingDoodle })))
+
+// These two static imports were what dragged BookDetailModal and BookShowcase
+// into the root chunk, silently defeating the dynamic() declarations in
+// app/page.tsx — a bundler re-merge that no source-level lint rule can catch.
+const BookDetailModal = dynamic(() => import("./book-detail-modal").then(m => ({ default: m.BookDetailModal })))
+const BookShowcase = dynamic(() => import("./book-showcase").then(m => ({ default: m.BookShowcase })))
 import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
 import { useToast } from "./toast-provider"

@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from "react"
+import { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef, ReactNode } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { CheckCircle, AlertCircle, Info, X } from "lucide-react"
 
@@ -103,6 +103,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     info: "bg-blue-50 border-blue-200",
   }
 
+  // Stable identity: showToast is already a stable useCallback, so without this
+  // every toast add and every 3s auto-dismiss re-rendered all 11 consumers of
+  // the context — the deck included, mid-gesture.
+  const ctx = useMemo(() => ({ showToast }), [showToast])
+
   const textColors = {
     success: "text-emerald-800",
     error: "text-red-800",
@@ -110,7 +115,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={ctx}>
       {children}
       <div
         aria-live="polite"

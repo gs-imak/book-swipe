@@ -12,6 +12,7 @@ import { scoreBooks, applyMMR } from "@/lib/scoring-engine"
 import { getRecommendedBooks } from "@/lib/recommend-client"
 import { getBooksByCategory, bookSearchQueries, fetchPersonalizedBooks } from "@/lib/books-api"
 import { getCachedBooks, addBooksToCache, updateBooksInCache } from "@/lib/book-cache"
+import { saveDeckSession, loadDeckSession } from "@/lib/deck-session"
 import { upgradeVisibleBooks } from "@/lib/book-enrichment"
 import { searchOpenLibrary } from "@/lib/openlibrary-api"
 import { upgradeCoversWithItunes } from "@/lib/itunes-covers"
@@ -196,14 +197,39 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   const dedupeById = (deck: Book[]): Book[] =>
     Array.from(new Map(deck.map(b => [b.id, b])).values())
 
+  /**
+   * The genres the user's likes actually point at, most-liked first, or null
+   * when there is not enough signal to beat a broad fetch. Matched against the
+   * fetchable query set so a stray subject string can never become a query.
+   */
+  const derivedGenres = (): string[] | null => {
+    const liked = getLikedBooks()
+    if (liked.length < 2) return null
+    const fetchable = new Set(Object.keys(bookSearchQueries).map(g => g.toLowerCase()))
+    const counts = new Map<string, number>()
+    for (const book of liked) {
+      for (const genre of book.genre || []) {
+        const key = genre.toLowerCase().trim()
+        if (fetchable.has(key)) counts.set(key, (counts.get(key) || 0) + 1)
+      }
+    }
+    if (counts.size === 0) return null
+    const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6)
+    // Map back to the canonical casing the query table uses.
+    const canonical = new Map(Object.keys(bookSearchQueries).map(g => [g.toLowerCase(), g]))
+    return ranked.map(([key]) => canonical.get(key)!).filter(Boolean)
+  }
+
   // NETWORK stage, extracted pure (no state writes): fetch fresh candidates
   // into the shared cache and return how many landed. Callers decide what the
   // user sees — this function never gates a paint.
   const fetchFreshIntoCache = async (): Promise<number> => {
-    // Fetch books specifically from user's selected genres (not all genres)
-    const userGenres = preferences.favoriteGenres.length > 0
-      ? preferences.favoriteGenres
-      : Object.keys(bookSearchQueries) // fallback to all if none selected
+    // Fetch from the user's stated genres; failing that, from the genres
+    // their likes reveal. Only a user with neither gets the full 17-genre
+    // fan-out — which used to be everyone, because "Start Discovering" writes
+    // favoriteGenres: [] and the questionnaire is never shown.
+    const statedGenres = preferences.favoriteGenres
+    const userGenres = statedGenres.length > 0 ? statedGenres : (derivedGenres() ?? Object.keys(bookSearchQueries))
     const booksPerGenre = Math.ceil(DECK_FETCH_BUDGET / userGenres.length)
 
     // Fetch from Google Books + Open Library in parallel, only for user's genres.
@@ -267,12 +293,15 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
     // profile is 1-2 books — similarity ranking tunnels on them, so keep the
     // genre-match / rating order instead.
     const liked = getLikedBooks()
-    const candidatePool = filtered.length > 0 ? filtered : books
+    const likedIdSet = new Set(liked.map(b => b.id))
+    // Unconditional: a book already in the library must not come back around,
+    // regardless of which ranking branch runs below.
+    const withoutLiked = (list: Book[]) => list.filter(b => !likedIdSet.has(b.id))
+    const candidatePool = withoutLiked(filtered.length > 0 ? filtered : books)
     const reasons: Record<string, string> = {}
     let deck: Book[]
     if (liked.length >= 3 && candidatePool.length > 0) {
-      const likedIds = new Set(liked.map(b => b.id))
-      const scored = scoreBooks(candidatePool, liked, { communityBoost: true, excludeIds: likedIds })
+      const scored = scoreBooks(candidatePool, liked, { communityBoost: true, excludeIds: likedIdSet })
       deck = scored.length > 0
         ? applyMMR(scored, MAX_DECK_SIZE, 0.7).map(s => s.book)
         : [...candidatePool].sort((a, b) => b.rating - a.rating).slice(0, MAX_DECK_SIZE)
@@ -280,7 +309,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
         if (s.reasons.length > 0) reasons[s.book.id] = s.reasons[0].description
       })
     } else {
-      deck = (filtered.length > 0 ? filtered : [...candidatePool].sort((a, b) => b.rating - a.rating)).slice(0, MAX_DECK_SIZE)
+      deck = (filtered.length > 0 ? withoutLiked(filtered) : [...candidatePool].sort((a, b) => b.rating - a.rating)).slice(0, MAX_DECK_SIZE)
     }
     return { deck: dedupeById(deck), reasons }
   }
@@ -407,14 +436,36 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   }
 
   useEffect(() => {
+    // Leaving Discover unmounts this whole component, so first try to resume
+    // the deck the user was actually on. Only when there is no usable snapshot
+    // do we pay for a fetch — that round trip used to cost 114 requests and
+    // land the user on a different book.
+    /* eslint-disable react-hooks/set-state-in-effect */
+    const resumed = loadDeckSession(preferences)
+    if (resumed) {
+      setFilteredBooks(resumed.books)
+      setCurrentIndex(resumed.currentIndex)
+      setUndoStack(resumed.undoStack)
+      setBatchCount(resumed.batchCount)
+      setIsLoading(false)
+      return
+    }
     // Deck fetch. loadBooks flips the loading flag synchronously before its
     // first await — the canonical "start async work" trigger — and it is
     // intentionally re-run only when preferences change, not on every render
     // (the function closes over fresh state each time it is called).
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadBooks()
+    /* eslint-enable react-hooks/set-state-in-effect */
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preferences])
+
+  // Mirror deck position into the session snapshot. Writing on change (rather
+  // than on unmount) survives a tab close, a crash and a hard navigation, none
+  // of which run cleanup reliably.
+  useEffect(() => {
+    if (isLoading || filteredBooks.length === 0) return
+    saveDeckSession(filteredBooks, currentIndex, undoStack, batchCount, preferences)
+  }, [filteredBooks, currentIndex, undoStack, batchCount, preferences, isLoading])
 
   // Fetch collaborative-filtering co-like counts (social proof) for signed-in
   // users. Keyed on the user's liked books; the RPC returns counts for books
@@ -457,9 +508,41 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
 
     setUndoStack(prev => [...prev, { book: currentBook, direction }])
     setCurrentIndex(prev => prev + 1)
+    rerankTail(currentIndex + 1)
 
     // Record swipe to cloud for collaborative filtering (fire-and-forget)
     recordSwipe(currentBook.id, direction, currentBook)
+  }
+
+  /**
+   * Re-order the part of the queue the user cannot see yet, so a like or a pass
+   * changes what comes next inside this session instead of only affecting the
+   * next batch.
+   *
+   * Everything up to nextIndex + 2 is left exactly as it is: those are the top
+   * card, the card peeking behind it, and one card of slack. Cards are keyed by
+   * book.id, so reordering a visible slot would visibly swap a card mid-swipe.
+   */
+  const rerankTail = (nextIndex: number) => {
+    const liked = getLikedBooks()
+    // Same gate as the initial rank: a 1-2 book profile makes similarity
+    // ranking tunnel, which is worse than the order we already have.
+    if (liked.length < 3) return
+    const frozenUntil = nextIndex + 3
+    setFilteredBooks(prev => {
+      if (prev.length - frozenUntil < 4) return prev
+      const head = prev.slice(0, frozenUntil)
+      const tail = prev.slice(frozenUntil)
+      const likedIds = new Set(liked.map(b => b.id))
+      const scored = scoreBooks(tail, liked, { communityBoost: true, excludeIds: likedIds })
+      if (scored.length === 0) return prev
+      const reordered = applyMMR(scored, tail.length, 0.7).map(s => s.book)
+      // MMR can drop candidates; keep any it left behind at the back rather
+      // than shortening the queue under the user.
+      const seen = new Set(reordered.map(b => b.id))
+      const leftovers = tail.filter(b => !seen.has(b.id))
+      return [...head, ...reordered, ...leftovers]
+    })
   }
 
   const handleUndo = () => {
@@ -779,10 +862,18 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
             >
+              {/* Keyed by book.id, NOT by deck position: a role-based key
+                  (`${id}-next` / `${id}-current`) gave the same book a different
+                  key depending on where it sat, so the card the user was already
+                  peeking at was destroyed and rebuilt the instant it was promoted
+                  — remounting its BookCover, which then replayed its placeholder
+                  and 300ms fade for art that was already painted and cached.
+                  Stacking is z-index driven (isTop ? z-10 : z-0), so the DOM
+                  reorder React does instead is visually inert. */}
               <AnimatePresence>
                 {nextBook && (
                   <BookCard
-                    key={`${nextBook.id}-next`}
+                    key={nextBook.id}
                     book={nextBook}
                     onSwipe={() => {}}
                     isTop={false}
@@ -790,7 +881,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
                 )}
                 {currentBook && (
                   <BookCard
-                    key={`${currentBook.id}-current`}
+                    key={currentBook.id}
                     book={currentBook}
                     onSwipe={handleSwipe}
                     isTop={true}

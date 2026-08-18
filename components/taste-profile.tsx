@@ -3,7 +3,11 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, BookOpen, Star, Clock, Heart, TrendingUp, Share2, BarChart3 } from "lucide-react"
-import { ReadingDoodle, SittingReadingDoodle } from "./illustrations"
+import dynamic from "next/dynamic"
+// Doodles are decorative and below the fold — dynamic() keeps them out of the
+// hydration payload (they were 104KB gzip, 24.5% of the entire cold download).
+const ReadingDoodle = dynamic(() => import("./illustrations").then(m => ({ default: m.ReadingDoodle })))
+const SittingReadingDoodle = dynamic(() => import("./illustrations").then(m => ({ default: m.SittingReadingDoodle })))
 import { getLikedBooks, getBookReviews, getBookNotes, getReadingProgress, getUserStats, type BookReview } from "@/lib/storage"
 import { Book } from "@/lib/book-data"
 import { DedicationOverlay } from "./dedication-overlay"
