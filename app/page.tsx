@@ -285,9 +285,26 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
     handleStartDiscovery()
   }
 
-  const handleGuideComplete = () => {
+  const handleGuideComplete = (genres?: string[]) => {
     setShowGuide(false)
     try { localStorage.setItem(GUIDE_SEEN_KEY, "1") } catch { /* ignore */ }
+    // The guide runs over an already-started deck, so genres arrive after
+    // preferences exist. Writing them here re-keys the deck fetch (and
+    // invalidates the session snapshot, which is hashed on preferences) so the
+    // very next deck reflects the answer.
+    if (!genres || genres.length === 0) return
+    setUserPreferences((prev) => {
+      const base: UserPreferences = prev ?? {
+        favoriteGenres: [],
+        currentMood: [],
+        readingTime: "30-60 minutes",
+        preferredLength: "No preference",
+        contentPreferences: [],
+      }
+      const next = { ...base, favoriteGenres: genres }
+      savePreferences(next)
+      return next
+    })
   }
 
   const handleStartDiscovery = () => {
