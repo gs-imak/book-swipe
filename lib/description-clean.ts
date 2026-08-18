@@ -410,7 +410,7 @@ export function splitSentences(text: string): string[] {
  *  ellipsis mid-clause. Keeps whole sentences while they fit. */
 export function trimToSentenceBand(
   text: string,
-  opts: { maxChars?: number; minChars?: number } = {},
+  opts: { maxChars?: number; minChars?: number; idealChars?: number } = {},
 ): TrimResult {
   const maxChars = opts.maxChars ?? DESC_MAX_CHARS
   const minChars = opts.minChars ?? DESC_MIN_CHARS
@@ -425,6 +425,35 @@ export function trimToSentenceBand(
     if (next.length > maxChars) break
     acc = next
   }
+
+  // The greedy prefix can land UNDER the floor when a long sentence follows a
+  // short hook. Real case: Atomic Habits opens with an 86-char hook followed by
+  // a 229-char sentence — the pair is 315 against a 300 ceiling, so the loop
+  // kept only the hook and the whole candidate was then thrown away as
+  // too-short, leaving the book with no description at all.
+  //
+  // So when the prefix is too short, search the windows of consecutive
+  // sentences for the one that best fits the band. Earlier windows win ties, so
+  // the natural opening is preserved whenever it can be; dropping the hook is a
+  // last resort, not a preference.
+  if (acc.length < minChars && sentences.length > 1) {
+    const ideal = opts.idealChars ?? DESC_IDEAL_CHARS
+    let best: { text: string; delta: number } | null = null
+    for (let i = 0; i < sentences.length; i++) {
+      let window = ""
+      for (let j = i; j < sentences.length; j++) {
+        const next = window ? `${window} ${sentences[j]}` : sentences[j]
+        if (next.length > maxChars) break
+        window = next
+        if (window.length >= minChars) {
+          const delta = Math.abs(window.length - ideal)
+          if (!best || delta < best.delta) best = { text: window, delta }
+        }
+      }
+    }
+    if (best) acc = best.text
+  }
+
   // A single opening sentence longer than the band: cut at the last clause
   // break that fits so the result still ends on punctuation; failing that,
   // cut on a word boundary with an ellipsis. Never return empty here — an

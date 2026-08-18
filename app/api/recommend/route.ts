@@ -44,12 +44,16 @@ interface LikedInput {
 
 export async function POST(request: NextRequest) {
   // No possible gateway auth → no-op. Client treats an empty list as "use the
-  // local engine". VERCEL is set on all Vercel deployments, where OIDC auth is
-  // available without a key.
+  // local engine".
+  //
+  // Tests for a real credential, never for the host. `process.env.VERCEL` is
+  // always "1" on Vercel, so including it made this true on every Vercel
+  // deployment whether or not the gateway was actually reachable — and false
+  // everywhere else regardless of a key being present. Wrong on both sides of
+  // a platform move, and on Vercel it meant a paid-path attempt per request
+  // that could only fail.
   const hasGatewayAuth = !!(
-    process.env.AI_GATEWAY_API_KEY ||
-    process.env.VERCEL_OIDC_TOKEN ||
-    process.env.VERCEL
+    process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN
   )
   if (!hasGatewayAuth) {
     return NextResponse.json({ recommendations: [], reason: "not configured" })

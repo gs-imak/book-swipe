@@ -22,8 +22,11 @@ import {
 
 // Quota-proof book facts (ADR-0006). One server round-trip per book, ever:
 // - Google Books / Open Library fetches carry `next.revalidate` (30 days) so
-//   Vercel's data cache serves every repeat globally — external quota is
-//   spent roughly once per unique book, not once per user.
+//   the framework data cache serves every repeat globally — external quota is
+//   spent roughly once per unique book, not once per user. That cache is a
+//   Next.js feature, not a Vercel one, so it survives a move to any Node host;
+//   `memo` below adds a per-instance layer so the quota story still holds even
+//   on a platform where the data cache is unavailable or disabled.
 // - The LLM supplies STABLE literary facts first (description, genres,
 //   series, first-published), gated on `known:false` for unrecognized books
 //   and writing only original prose. LIVE METRICS (ratings) are API-only.
@@ -34,6 +37,11 @@ import {
 const MODEL = process.env.ENRICH_MODEL || "anthropic/claude-haiku-4.5"
 const GENERATION_TIMEOUT_MS = 12_000
 const API_TIMEOUT_MS = 6_000
+// Open Library is materially slower than Google and needs two hops (resolve a
+// work, then read it). Measured: the /isbn/ endpoint answers a redirect in
+// ~24s, far past any sane budget — which is why we resolve via search.json
+// instead. The client allows 20s for the whole route, so two 7s hops fit.
+const OL_TIMEOUT_MS = 9_000
 // Book facts don't change; a month matches the cover-cache TTL.
 const FACTS_REVALIDATE_SECONDS = 2_592_000
 
@@ -61,24 +69,56 @@ const llmSchema = z.object({
 // is in flight — cache hits return before it can fire. If a future Next
 // version treated a custom signal as a cache opt-out, behavior degrades to
 // uncached fetches (the pre-ADR-0006 status quo), never to an error.
-async function cachedJson(url: string): Promise<unknown> {
+// Per-instance memo in front of the framework data cache. On Vercel this is a
+// small win; off Vercel — where the data cache may be absent, or reset on every
+// deploy — it is what keeps repeat lookups from spending external quota. Bounded
+// so a long-lived instance cannot grow without limit.
+const MEMO_MAX_ENTRIES = 500
+const memo = new Map<string, { value: unknown; expiresAt: number }>()
+
+function memoGet(url: string): { hit: boolean; value?: unknown } {
+  const entry = memo.get(url)
+  if (!entry) return { hit: false }
+  if (Date.now() > entry.expiresAt) {
+    memo.delete(url)
+    return { hit: false }
+  }
+  return { hit: true, value: entry.value }
+}
+
+function memoSet(url: string, value: unknown): void {
+  if (memo.size >= MEMO_MAX_ENTRIES) {
+    // Oldest insertion first — Map preserves insertion order.
+    const oldest = memo.keys().next().value
+    if (oldest !== undefined) memo.delete(oldest)
+  }
+  memo.set(url, { value, expiresAt: Date.now() + FACTS_REVALIDATE_SECONDS * 1000 })
+}
+
+async function cachedJson(url: string, timeoutMs: number = API_TIMEOUT_MS): Promise<unknown> {
+  const cached = memoGet(url)
+  if (cached.hit) return cached.value
   try {
     const res = await fetch(url, {
       next: { revalidate: FACTS_REVALIDATE_SECONDS },
-      signal: AbortSignal.timeout(API_TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs),
     })
     if (!res.ok) return null
-    return await res.json()
+    const json = await res.json()
+    memoSet(url, json)
+    return json
   } catch {
     return null
   }
 }
 
 async function llmFacts(title: string, author: string): Promise<LlmFacts | null> {
+  // Test for a real credential, never for the host. `process.env.VERCEL` is
+  // always "1" on Vercel, so including it made this guard always true there
+  // (every enrichment attempted a generation that could not authenticate) and
+  // always false anywhere else — exactly backwards on both sides of a move.
   const hasGatewayAuth = !!(
-    process.env.AI_GATEWAY_API_KEY ||
-    process.env.VERCEL_OIDC_TOKEN ||
-    process.env.VERCEL
+    process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN
   )
   if (!hasGatewayAuth) return null
   const prompt = `You are a sharp literary editor for a book-discovery app.
@@ -141,10 +181,12 @@ async function copyDesk(
   author: string,
   sourceMaterial: string,
 ): Promise<string | null> {
+  // Test for a real credential, never for the host. `process.env.VERCEL` is
+  // always "1" on Vercel, so including it made this guard always true there
+  // (every enrichment attempted a generation that could not authenticate) and
+  // always false anywhere else — exactly backwards on both sides of a move.
   const hasGatewayAuth = !!(
-    process.env.AI_GATEWAY_API_KEY ||
-    process.env.VERCEL_OIDC_TOKEN ||
-    process.env.VERCEL
+    process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN
   )
   if (!hasGatewayAuth) return null
 
@@ -209,23 +251,105 @@ async function gbFacts(volumeId: string, title: string): Promise<GbFacts | null>
   }
 }
 
-async function olFacts(isbn: string, title: string): Promise<OlFacts | null> {
-  const edition = (await cachedJson(
-    `https://openlibrary.org/isbn/${encodeURIComponent(isbn)}.json`,
-  )) as Record<string, unknown> | null
-  if (!edition || !titlesOverlap(title, edition.title)) return null
+/**
+ * Google Books for a book we hold no volume id for — which is every book that
+ * reached us from Open Library. Without this, that entire population could
+ * never be enriched from Google at all.
+ */
+async function gbFactsBySearch(title: string, author: string): Promise<GbFacts | null> {
+  if (!title || !author) return null
+  const key = process.env.GOOGLE_BOOKS_API_KEY
+  const q = `intitle:"${title}" inauthor:"${author}"`
+  const url =
+    `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}` +
+    `&maxResults=3&printType=books${key ? `&key=${key}` : ""}`
+  const data = (await cachedJson(url)) as
+    | { items?: { volumeInfo?: Record<string, unknown> }[] }
+    | null
+  const items = Array.isArray(data?.items) ? data!.items! : []
+  // Title overlap is the same guard the volume-id path uses: a search can
+  // return companions, study guides and box sets alongside the real book.
+  const match = items.find((it) => it.volumeInfo && titlesOverlap(title, it.volumeInfo.title))
+  const info = match?.volumeInfo
+  if (!info) return null
+  return {
+    description: typeof info.description === "string" ? info.description : undefined,
+    ratingsCount: typeof info.ratingsCount === "number" ? info.ratingsCount : undefined,
+    averageRating:
+      typeof info.averageRating === "number" ? info.averageRating : undefined,
+    categories: Array.isArray(info.categories)
+      ? info.categories.filter((c): c is string => typeof c === "string")
+      : undefined,
+    publishedYear: yearFrom(info.publishedDate),
+  }
+}
 
+/**
+ * The Open Library work key for a book, or null.
+ *
+ * Deliberately via search.json rather than /isbn/{isbn}.json: the ISBN
+ * endpoint answers with a redirect that measured ~24s, blowing any budget the
+ * client is willing to wait for, and the edition record it eventually returns
+ * carries no description anyway — the text lives on the work. search.json
+ * answers in a few seconds and hands back the work key directly, so this is
+ * both faster and one hop shorter.
+ */
+async function olResolveWorkKey(
+  title: string,
+  author: string,
+  isbn: string,
+): Promise<{ key: string; series?: unknown } | null> {
+  const fields = "key,title,author_name,series"
+  const base = `https://openlibrary.org/search.json?fields=${fields}&limit=3&`
+  // Ordered by measured latency, not by precision. Free-text q= answers in
+  // ~3.5s; the fielded title=&author= form took 6-20s for the identical
+  // result, and a fielded q=title:(..) AND author:(..) query did not return
+  // at all inside 21s. The fielded form stays as a fallback for titles too
+  // generic to survive free text.
+  const attempts: string[] = []
+  if (isbn) attempts.push(base + `q=${encodeURIComponent(isbn)}`)
+  if (title && author) {
+    attempts.push(base + `q=${encodeURIComponent(`${title} ${author}`)}`)
+    attempts.push(
+      base + `title=${encodeURIComponent(title)}&author=${encodeURIComponent(author)}`,
+    )
+  } else if (title) {
+    attempts.push(base + `q=${encodeURIComponent(title)}`)
+  }
+  for (const url of attempts) {
+    const data = (await cachedJson(url, OL_TIMEOUT_MS)) as
+      | { docs?: { key?: unknown; title?: unknown; series?: unknown }[] }
+      | null
+    const docs = Array.isArray(data?.docs) ? data!.docs! : []
+    const hit = docs.find(
+      (d) => typeof d.key === "string" && d.key.startsWith("/works/") && titlesOverlap(title, d.title),
+    )
+    if (hit) {
+      const series = Array.isArray(hit.series) ? hit.series[0] : hit.series
+      return { key: hit.key as string, series }
+    }
+  }
+  return null
+}
+
+async function olFacts(
+  title: string,
+  author: string,
+  isbn: string,
+): Promise<OlFacts | null> {
+  const resolved = await olResolveWorkKey(title, author, isbn)
+  if (!resolved) return null
+  return olFactsByWork(resolved.key, resolved.series)
+}
+
+async function olFactsByWork(workKey: string, seriesRaw?: unknown): Promise<OlFacts | null> {
   const out: OlFacts = {}
-  const seriesRaw = Array.isArray(edition.series) ? edition.series[0] : undefined
+  // Series now rides along from the search result rather than costing an extra
+  // edition fetch — search.json exposes it directly.
   const series = parseSeries(seriesRaw)
   if (series) out.series = series
 
-  const works = Array.isArray(edition.works) ? edition.works : []
-  const workKey =
-    works[0] && typeof (works[0] as Record<string, unknown>).key === "string"
-      ? ((works[0] as Record<string, unknown>).key as string)
-      : null
-  if (workKey) {
+  {
     const [work, ratings] = await Promise.all([
       cachedJson(`https://openlibrary.org${workKey}.json`) as Promise<Record<
         string,
@@ -280,10 +404,14 @@ export async function GET(request: NextRequest) {
   const isbn = (params.get("isbn") ?? "").replace(/[^0-9Xx]/g, "").slice(0, 13)
   if (!title) return NextResponse.json({ found: false })
 
+  // Neither source is gated on holding an id any more: a book that reached us
+  // from Open Library has no Google volume id, and one that reached us from
+  // Google search often has no ISBN. Both now fall back to title+author, which
+  // is the only identifier every book in the deck actually has.
   const [llm, gb, ol] = await Promise.all([
     author ? llmFacts(title, author) : Promise.resolve(null),
-    volumeId ? gbFacts(volumeId, title) : Promise.resolve(null),
-    isbn ? olFacts(isbn, title) : Promise.resolve(null),
+    volumeId ? gbFacts(volumeId, title) : gbFactsBySearch(title, author),
+    olFacts(title, author, isbn),
   ])
 
   const facts = mergeBookFacts(llm, gb, ol)
