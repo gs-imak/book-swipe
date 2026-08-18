@@ -3,7 +3,15 @@
 import { useState, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ArrowRight, X } from "lucide-react"
-import { GroovyDoodle, SittingReadingDoodle, LovingDoodle, ReadingSideDoodle, MeditatingDoodle, FloatDoodle } from "@/components/illustrations"
+import dynamic from "next/dynamic"
+// Doodles are decorative and below the fold — dynamic() keeps them out of the
+// hydration payload (they were 104KB gzip, 24.5% of the entire cold download).
+const GroovyDoodle = dynamic(() => import("@/components/illustrations").then(m => ({ default: m.GroovyDoodle })))
+const SittingReadingDoodle = dynamic(() => import("@/components/illustrations").then(m => ({ default: m.SittingReadingDoodle })))
+const LovingDoodle = dynamic(() => import("@/components/illustrations").then(m => ({ default: m.LovingDoodle })))
+const ReadingSideDoodle = dynamic(() => import("@/components/illustrations").then(m => ({ default: m.ReadingSideDoodle })))
+const MeditatingDoodle = dynamic(() => import("@/components/illustrations").then(m => ({ default: m.MeditatingDoodle })))
+const FloatDoodle = dynamic(() => import("@/components/illustrations").then(m => ({ default: m.FloatDoodle })))
 
 interface OnboardingGuideProps {
   onComplete: () => void

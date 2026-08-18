@@ -6,7 +6,10 @@ import { ReadingProgress, ReadingGoals, getReadingProgress, updateReadingProgres
 import { BookOpen, Clock, Target, Flame, Plus, Minus, Play, Pause, CheckCircle, X, Ban, RotateCcw } from "lucide-react"
 import { motion } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
-import { MeditatingDoodle } from "./illustrations"
+import dynamic from "next/dynamic"
+// Doodles are decorative and below the fold — dynamic() keeps them out of the
+// hydration payload (they were 104KB gzip, 24.5% of the entire cold download).
+const MeditatingDoodle = dynamic(() => import("./illustrations").then(m => ({ default: m.MeditatingDoodle })))
 
 interface ReadingProgressProps {
   onStartReading?: (bookId: string) => void
