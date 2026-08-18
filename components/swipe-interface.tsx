@@ -817,8 +817,12 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
           </div>
 
           {/* Action buttons — under the card (mobile) / under the caption
-              column of the magazine spread (desktop: cover 312 + gap 64) */}
-          <div className="w-full max-w-sm lg:max-w-[820px] px-4 lg:px-0 mt-3 [@media(max-height:700px)]:mt-1 lg:-mt-16 lg:pl-[376px]">
+              column of the magazine spread (desktop: cover 312 + gap 64).
+              relative z-10 is load-bearing on desktop: lg:-mt-16 pulls this row
+              back inside the card stack's box, and the stack is a transformed
+              motion.div (its own stacking context) that would otherwise paint
+              over the buttons and swallow every click. */}
+          <div className="relative z-10 w-full max-w-sm lg:max-w-[820px] px-4 lg:px-0 mt-3 [@media(max-height:700px)]:mt-1 lg:-mt-16 lg:pl-[376px]">
             <div className="flex justify-center lg:justify-start items-center gap-4 mb-3">
               <motion.button
                 whileTap={{ scale: 0.97 }}
