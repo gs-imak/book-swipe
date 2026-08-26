@@ -32,6 +32,8 @@ const BookShowcase = dynamic(() => import("@/components/book-showcase").then(m =
 const OnboardingGuide = dynamic(() => import("@/components/onboarding-guide").then(m => ({ default: m.OnboardingGuide })))
 const WhatsNewModal = dynamic(() => import("@/components/whats-new-modal").then(m => ({ default: m.WhatsNewModal })))
 const AuthModal = dynamic(() => import("@/components/auth-modal").then(m => ({ default: m.AuthModal })))
+// Rarely visited — keep it off the cold path.
+const SettingsPage = dynamic(() => import("@/components/settings-page").then(m => ({ default: m.SettingsPage })))
 import { onAuthChange, syncBidirectional, getUser } from "@/lib/supabase-sync"
 import { isSupabaseConfigured } from "@/lib/supabase"
 
@@ -78,32 +80,36 @@ type AppState = "login" | "dashboard" | "questionnaire" | "swipe" | "read"
 // Hash routing helpers
 // ---------------------------------------------------------------------------
 
-type NavHash = "#/library" | "#/discover" | "#/read" | "#/profile" | "#/achievements" | "#/"
+type NavHash = "#/library" | "#/discover" | "#/read" | "#/profile" | "#/achievements" | "#/settings" | "#/"
 
 interface HashState {
   view: AppState
   showTasteProfile: boolean
   showAchievements: boolean
+  showSettings: boolean
 }
 
 function hashToState(hash: string): HashState {
   switch (hash) {
     case "#/discover":
-      return { view: "swipe", showTasteProfile: false, showAchievements: false }
+      return { view: "swipe", showTasteProfile: false, showAchievements: false, showSettings: false }
     case "#/read":
-      return { view: "read", showTasteProfile: false, showAchievements: false }
+      return { view: "read", showTasteProfile: false, showAchievements: false, showSettings: false }
     case "#/profile":
-      return { view: "dashboard", showTasteProfile: true, showAchievements: false }
+      return { view: "dashboard", showTasteProfile: true, showAchievements: false, showSettings: false }
     case "#/achievements":
-      return { view: "dashboard", showTasteProfile: false, showAchievements: true }
+      return { view: "dashboard", showTasteProfile: false, showAchievements: true, showSettings: false }
+    case "#/settings":
+      return { view: "dashboard", showTasteProfile: false, showAchievements: false, showSettings: true }
     case "#/library":
     case "#/":
     default:
-      return { view: "dashboard", showTasteProfile: false, showAchievements: false }
+      return { view: "dashboard", showTasteProfile: false, showAchievements: false, showSettings: false }
   }
 }
 
-function stateToHash(view: AppState, showTasteProfile: boolean, showAchievements: boolean): NavHash {
+function stateToHash(view: AppState, showTasteProfile: boolean, showAchievements: boolean, showSettings: boolean): NavHash {
+  if (showSettings) return "#/settings"
   if (showTasteProfile) return "#/profile"
   if (showAchievements) return "#/achievements"
   if (view === "swipe" || view === "questionnaire") return "#/discover"
@@ -126,6 +132,8 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   // state, no mount effect, and it stays correct across tabs.
   const likedBooksCount = useLikedCount()
   const [showTasteProfile, setShowTasteProfile] = useState(false)
+  // Routed like the other panels so Back closes it instead of leaving the app.
+  const [showSettings, setShowSettings] = useState(false)
   const [showGuide, setShowGuide] = useState(false)
   const [showGlobalSearch, setShowGlobalSearch] = useState(false)
   const [globalSearchBook, setGlobalSearchBook] = useState<Book | null>(null)
@@ -150,11 +158,12 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   // ---------------------------------------------------------------------------
   const navigateTo = useCallback((
     view: AppState,
-    opts: { tasteProfile?: boolean; achievements?: boolean } = {}
+    opts: { tasteProfile?: boolean; achievements?: boolean; settings?: boolean } = {}
   ) => {
     const tasteProfile = opts.tasteProfile ?? false
     const achievements = opts.achievements ?? false
-    const hash = stateToHash(view, tasteProfile, achievements)
+    const settings = opts.settings ?? false
+    const hash = stateToHash(view, tasteProfile, achievements, settings)
 
     if (!applyingPopstate.current) {
       // Only push when not responding to a popstate (which already moved the pointer).
@@ -163,6 +172,7 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
 
     setCurrentView(view)
     setShowTasteProfile(tasteProfile)
+    setShowSettings(settings)
     onShowAchievements(achievements)
   }, [onShowAchievements])
 
@@ -185,6 +195,7 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
       navigateTo(view, {
         tasteProfile: resolved.showTasteProfile,
         achievements: resolved.showAchievements,
+        settings: resolved.showSettings,
       })
       applyingPopstate.current = false
     }
@@ -274,9 +285,10 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
         // Apply state without pushing (URL is already correct)
         setCurrentView(view)
         setShowTasteProfile(resolved.showTasteProfile)
+        setShowSettings(resolved.showSettings)
         onShowAchievements(resolved.showAchievements)
         // Normalise the hash in case it was something unrecognised
-        history.replaceState(null, "", stateToHash(view, resolved.showTasteProfile, resolved.showAchievements))
+        history.replaceState(null, "", stateToHash(view, resolved.showTasteProfile, resolved.showAchievements, resolved.showSettings))
       } else {
         // No meaningful hash — land on library and set canonical hash
         setCurrentView("dashboard")
@@ -528,7 +540,18 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
       <TasteProfile
         isOpen={showTasteProfile}
         onClose={handleCloseTasteProfile}
+        onOpenSettings={() => navigateTo("dashboard", { settings: true })}
       />
+
+      {/* Settings. Reachable on a phone for the first time: the sidebar that
+          held the theme toggle and sign-in is `hidden lg:flex`, and this
+          component existed but was rendered from nowhere. */}
+      {showSettings && (
+        <SettingsPage
+          onBack={() => navigateTo("dashboard")}
+          onSignIn={() => setShowAuthModal(true)}
+        />
+      )}
 
       {/* Global Search */}
       <GlobalSearch
