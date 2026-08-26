@@ -99,6 +99,23 @@ function ShowcaseOverlay({
   const { showToast } = useToast()
   useFocusTrap(dialogRef, true)
 
+  // Lock the page behind the takeover. Measured at 1280x900: a wheel over the
+  // open Showcase scrolled the library underneath from 400 to 1582 while the
+  // Showcase stayed put. The scrollbar's width is compensated so the page does
+  // not shift sideways as it locks.
+  useEffect(() => {
+    const { body } = document
+    const prevOverflow = body.style.overflow
+    const prevPadding = body.style.paddingRight
+    const gutter = window.innerWidth - document.documentElement.clientWidth
+    body.style.overflow = "hidden"
+    if (gutter > 0) body.style.paddingRight = `${gutter}px`
+    return () => {
+      body.style.overflow = prevOverflow
+      body.style.paddingRight = prevPadding
+    }
+  }, [])
+
   useEffect(() => {
     let cancelled = false
     enrichBook(book).then((b) => {
