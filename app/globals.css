@@ -338,3 +338,52 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Boot mask.
+
+   The landing hero is server-rendered so crawlers and first-time visitors get
+   real content at first paint. A RETURNING user must never see it. That
+   decision is made BEFORE first paint by the inline script in app/layout.tsx
+   (which stamps data-app-state on <html>), never by React — this stylesheet is
+   render-blocking, so the very first style resolution that touches the hero
+   already computes display:none on it. There is no frame in which the hero has
+   a box.
+
+   [data-shell-phase] is written by app/page.tsx and flips "pre" -> "live" in
+   the same commit the app mounts, so these rules expire on their own. No
+   attribute has to be removed, and no timing has to be got right.
+   --------------------------------------------------------------------------- */
+[data-shell="skeleton"] { display: none; }
+
+html[data-app-state="returning"] [data-shell-phase="pre"],
+html[data-app-state="entering"]  [data-shell-phase="pre"] { display: none; }
+
+html[data-app-state="returning"] [data-shell="skeleton"],
+html[data-app-state="entering"]  [data-shell="skeleton"] { display: block; }
+
+/* Which silhouette, picked from location.hash by the same script. */
+[data-shell="skeleton"] [data-skel] { display: none; }
+html[data-app-view="deck"]  [data-skel="deck"],
+html[data-app-view="read"]  [data-skel="shelf"],
+html[data-app-view="shelf"] [data-skel="shelf"],
+html:not([data-app-view])   [data-skel="shelf"] { display: block; }
+
+/* Hero entrance, CSS-only so it starts at first paint with no JS on the
+   critical path. It deliberately does NOT go on the h1, sub-headline or CTA:
+   animation-fill-mode holds `from { opacity: 0 }` through the delay, which is
+   the exact defect this whole change exists to remove. */
+@keyframes hero-rise {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: none; }
+}
+.hero-rise {
+  animation: hero-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--rise-delay, 0ms);
+}
+/* Not optional: the global reduced-motion block zeroes animation-duration but
+   not animation-delay, and fill-mode `both` would hold opacity 0 for the whole
+   delay — leaving staggered elements invisible. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-rise { animation: none; --rise-delay: 0ms; }
+}

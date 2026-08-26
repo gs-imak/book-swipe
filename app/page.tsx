@@ -6,6 +6,7 @@ import dynamic from "next/dynamic"
 import { Loader2 } from "lucide-react"
 import { useLikedCount } from "@/lib/use-liked-count"
 import { LoginScreen } from "@/components/login-screen"
+import { AppShellSkeleton } from "@/components/app-shell-skeleton"
 import { Dashboard } from "@/components/dashboard"
 import { GamificationProvider } from "@/components/gamification-provider"
 import { ToastProvider, useToast } from "@/components/toast-provider"
@@ -45,11 +46,9 @@ const BarcodeScanner = dynamic(() => import("@/components/barcode-scanner").then
 // none of which the dashboard landing view needs. Lazy-load it so it's a
 // separate chunk fetched only when the user enters discovery.
 const SwipeInterface = dynamic(() => import("@/components/swipe-interface").then(m => ({ default: m.SwipeInterface })), {
-  loading: () => (
-    <div className="bg-background flex items-center justify-center" style={{ minHeight: "100dvh" }}>
-      <Loader2 className="w-8 h-8 text-amber-600 animate-spin" />
-    </div>
-  ),
+  // The same shell the boot mask shows, so a returning deck user sees one
+  // continuous placeholder instead of skeleton -> spinner -> cards.
+  loading: () => <AppShellSkeleton variant="deck" />,
 })
 
 // Questionnaire is only shown on the questionnaire route, never on landing.
@@ -136,6 +135,10 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [cloudUser, setCloudUser] = useState<any>(null)
   const [ready, setReady] = useState(false)
+  // The boot skeleton outlives `ready` by one AnimatePresence exit: mode="wait"
+  // withholds the app branch for 100ms while the hero exits, so unmounting on
+  // `ready` alone would leave a blank <main> for exactly that window.
+  const [shellVisible, setShellVisible] = useState(true)
   const { showToast } = useToast()
 
   // Track whether we are currently applying a popstate so we don't re-push.
@@ -236,8 +239,27 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   // is masked by the `ready` gate below.
   // ---------------------------------------------------------------------------
   useEffect(() => {
-    if (isOnboarded()) {
+    // Tell the boot script hydration has happened and retire its capture
+    // listener, so it cannot fight login-screen own entering state.
+    const w = window as unknown as {
+      __bsHydrated?: boolean
+      __bsBootClick?: (e: MouseEvent) => void
+      __bsPendingStart?: boolean
+    }
+    w.__bsHydrated = true
+    if (w.__bsBootClick) document.removeEventListener("click", w.__bsBootClick, true)
+    if (w.__bsPendingStart) {
+      // The user tapped "Start Discovering" before this bundle was live.
+      // Both calls stay in one synchronous block so React batches them into a
+      // single commit, which is what keeps the exiting hero masked.
+      delete w.__bsPendingStart
       // eslint-disable-next-line react-hooks/set-state-in-effect
+      setReady(true)
+      handleLogin()
+      return
+    }
+
+    if (isOnboarded()) {
       setIsLoggedIn(true)
       const saved = getSavedPreferences()
       if (saved) setUserPreferences(saved)
@@ -274,7 +296,7 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
   // Handlers
   // ---------------------------------------------------------------------------
 
-  const handleLogin = () => {
+  function handleLogin() {
     setIsLoggedIn(true)
     setOnboarded()
     setShowGuide(true)
@@ -307,7 +329,7 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
     })
   }
 
-  const handleStartDiscovery = () => {
+  function handleStartDiscovery() {
     // Skip questionnaire — start swiping immediately with broad defaults
     if (!userPreferences) {
       const defaults: UserPreferences = {
@@ -409,18 +431,30 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
 
   const showNav = isLoggedIn && currentView !== "questionnaire"
 
-  // Prevent flash of login screen while checking localStorage
-  if (!ready) {
-    return <div className="min-h-screen bg-background" />
-  }
+  // The landing renders while storage is still being read AND while logged
+  // out, from the same element position — so a first-time visitor's hero never
+  // remounts (and never re-animates) when `ready` flips.
+  //
+  // Flash suppression for RETURNING users is deliberately not done here: it is
+  // the boot mask in globals.css, driven by the <head> script in layout.tsx.
+  // React cannot make that decision before hydration, which is the whole
+  // problem this change exists to solve.
+  const showLanding = !ready || !isLoggedIn
 
   return (
     <>
-      <AnimatePresence mode="wait">
-        {!isLoggedIn ? (
+      <AnimatePresence
+        mode="wait"
+        onExitComplete={() => setShellVisible((v) => (v ? false : v))}
+      >
+        {showLanding ? (
           <motion.div
             key="login"
-            initial={{ opacity: 0 }}
+            data-shell-phase={ready ? "live" : "pre"}
+            // initial={false} is load-bearing: it stops framer serialising
+            // opacity:0 into the server HTML, and stops the already-painted
+            // hero fading in again on hydration.
+            initial={false}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.1 } }}
             transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
@@ -478,6 +512,12 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Boot shell. Hidden by default; the mask in globals.css reveals it only
+          when the <head> script decided this is a returning user. It outlives
+          `ready` until the hero's exit completes, so there is no blank frame
+          between the two. */}
+      {shellVisible && <AppShellSkeleton />}
 
       {/* Onboarding Guide */}
       <AnimatePresence>

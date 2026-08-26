@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bookswipe-v6'
+const CACHE_NAME = 'bookswipe-v7'
 const API_CACHE_NAME = 'bookswipe-api-v1'
 // v2: purges covers cached during the Next-16 broken-quality era (q=85 400s,
 // fixed in next.config images.qualities) — the old cache-first entries would
