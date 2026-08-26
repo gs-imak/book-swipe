@@ -102,9 +102,11 @@ function filterBooks(books: Book[], preferences: UserPreferences): Book[] {
     let score = 2
     if (moodMatch) score += 1
 
-    // Length/rating are tiebreakers only (never standalone)
+    // Length/rating are tiebreakers only (never standalone).
+    // pages === 0 means "no source reported one" — an unknown length must stay
+    // neutral rather than counting as short (0 < 300 was matching "Short").
     let matchesLength = true
-    if (preferences.preferredLength !== "No preference") {
+    if (preferences.preferredLength !== "No preference" && book.pages > 0) {
       switch (preferences.preferredLength) {
         case "Short (under 250 pages)": matchesLength = book.pages < 300; break
         case "Medium (250-400 pages)": matchesLength = book.pages >= 200 && book.pages <= 450; break
@@ -113,7 +115,8 @@ function filterBooks(books: Book[], preferences: UserPreferences): Book[] {
       }
     }
     if (matchesLength) score += 0.5
-    score += book.rating / 10
+    // Only a rating real readers produced earns ranking weight.
+    if (!book.metadata?.ratingEstimated) score += book.rating / 10
 
     // Content preferences scoring
     if (hasContentPrefs) {

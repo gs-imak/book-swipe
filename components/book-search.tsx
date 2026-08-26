@@ -6,6 +6,7 @@ import { searchAllBooks } from "@/lib/books-api"
 import { Search, X, Heart, Star, Loader2, WifiOff } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
+import { hasVerifiedRating } from "@/lib/book-truth"
 
 interface BookSearchProps {
   isOpen: boolean
@@ -243,11 +244,13 @@ export function BookSearch({ isOpen, onClose, onSaveBook, onBookClick, savedBook
                           <h4 className="font-semibold text-sm text-stone-900 dark:text-stone-100 line-clamp-1">{book.title}</h4>
                           <p className="text-xs text-stone-500 dark:text-stone-400 mb-1">{book.author}</p>
                           <div className="flex items-center gap-2 text-xs text-stone-400 dark:text-stone-500 mb-2">
-                            <div className="flex items-center gap-0.5">
-                              <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                              <span>{book.rating}</span>
-                            </div>
-                            <span>{book.pages}p</span>
+                            {hasVerifiedRating(book) && (
+                              <div className="flex items-center gap-0.5">
+                                <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                                <span>{book.rating}</span>
+                              </div>
+                            )}
+                            {book.pages > 0 && <span>{book.pages}p</span>}
                             {book.genre[0] !== "General" && (
                               <span className="text-stone-400 dark:text-stone-500">{book.genre[0]}</span>
                             )}

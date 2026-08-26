@@ -8,6 +8,7 @@ import { hapticLight } from "@/lib/haptics"
 import { Button } from "@/components/ui/button"
 import { BookCover } from "@/components/book-cover"
 import { formatCount } from "@/lib/book-enrichment"
+import { displayRating, displayPages, metaSegments } from "@/lib/book-truth"
 import { useToast } from "./toast-provider"
 import { useState, useRef } from "react"
 
@@ -81,6 +82,9 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
     showToast(`"${book.title}" added to reading list`)
   }
 
+  const shownRating = displayRating(book)
+  const shownPages = displayPages(book)
+  const metaLine = metaSegments(book, { readTime: book.pages >= 60 ? `~${Math.round(book.pages / 40)} h` : null }).join(" · ")
   const readTime = book.pages >= 60 ? `~${Math.round(book.pages / 40)} h` : `~${Math.round((book.pages / 40) * 60)} m`
   const ratingsCount = book.metadata?.ratingsCount
 
@@ -129,11 +133,15 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
               sizes="(max-width: 1023px) 264px, 312px"
               priority={isTop}
             />
-            {/* Rating badge — 22px pill over the cover, top-left */}
-            <div className="absolute top-2.5 left-2.5 h-[22px] px-2 rounded-full bg-[rgba(28,23,18,.8)] flex items-center gap-1 z-10">
-              <Star className="w-3 h-3 fill-stage-amber text-stage-amber" />
-              <span className="text-[11px] font-semibold text-white tabular-nums">{book.rating}</span>
-            </div>
+            {/* Rating badge — 22px pill over the cover, top-left. Rendered only
+                for a rating real readers produced: roughly half of these were a
+                hash of the title and read as fact. */}
+            {shownRating !== null && (
+              <div className="absolute top-2.5 left-2.5 h-[22px] px-2 rounded-full bg-[rgba(28,23,18,.8)] flex items-center gap-1 z-10">
+                <Star className="w-3 h-3 fill-stage-amber text-stage-amber" />
+                <span className="text-[11px] font-semibold text-white tabular-nums">{shownRating}</span>
+              </div>
+            )}
 
             {/* SAVE / PASS drag stamps (§1b), over the cover */}
             {isTop && (
@@ -192,12 +200,16 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
               </p>
             </div>
 
-            <div className="border-t border-border mt-3 pt-3">
-              <p className="text-[13px] text-ink-muted tabular-nums">
-                {book.pages} pp · {readTime} · ★ {book.rating}
-                {ratingsCount ? ` · ${formatCount(ratingsCount)} ratings` : ""}
-              </p>
-            </div>
+            {metaLine && (
+              <div className="border-t border-border mt-3 pt-3">
+                <p className="text-[13px] text-ink-muted tabular-nums">
+                  {metaLine}
+                  {shownRating !== null && ratingsCount
+                    ? ` · ${formatCount(ratingsCount)} ratings`
+                    : ""}
+                </p>
+              </div>
+            )}
 
             {isTop && typeof coLikeCount === "number" && coLikeCount > 0 && (
               <div className="flex items-center gap-1.5 mt-2 text-success-ink text-[12.5px] font-semibold [@media(max-height:700px)]:hidden">
@@ -286,11 +298,11 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
               {/* Stats — serif numbers over hairlines, no tile boxes */}
               <div className="grid grid-cols-3 divide-x divide-border border-y border-border py-3">
                 <div className="text-center px-2">
-                  <p className="font-serif font-semibold text-[21px] text-ink tabular-nums">{book.rating}</p>
+                  <p className="font-serif font-semibold text-[21px] text-ink tabular-nums">{shownRating ?? "—"}</p>
                   <p className="text-xs text-ink-muted mt-0.5">rating</p>
                 </div>
                 <div className="text-center px-2">
-                  <p className="font-serif font-semibold text-[21px] text-ink tabular-nums">{book.pages}</p>
+                  <p className="font-serif font-semibold text-[21px] text-ink tabular-nums">{shownPages ?? "—"}</p>
                   <p className="text-xs text-ink-muted mt-0.5">pages</p>
                 </div>
                 <div className="text-center px-2">

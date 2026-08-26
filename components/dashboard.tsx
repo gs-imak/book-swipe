@@ -48,6 +48,7 @@ const BookCollections = dynamic(() => import("./book-collections").then(m => ({ 
 import { getShelves, getBooksForShelf, shouldShowBackupReminder, dismissBackupReminder, getHiddenBookIds, hideBook, unhideBook, type Shelf } from "@/lib/storage"
 import { estimateReadingTime, getReadingSpeed, setReadingSpeed, getAllSpeeds, type ReadingSpeed } from "@/lib/reading-time"
 import { upgradeLikedBookCovers } from "@/lib/itunes-covers"
+import { hasVerifiedRating } from "@/lib/book-truth"
 
 // Module scope: a constant lookup table, so it isn't rebuilt on every render
 // (and doesn't need to be a memo dependency).
@@ -280,7 +281,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
     totalBooks: likedBooks.length,
     totalPages: likedBooks.reduce((sum, book) => sum + (book.pages || 0), 0),
     averageRating: likedBooks.length > 0
-      ? (likedBooks.filter(b => b.rating).reduce((sum, book) => sum + (book.rating || 0), 0) / (likedBooks.filter(b => b.rating).length || 1)).toFixed(1)
+      ? (likedBooks.filter(hasVerifiedRating).reduce((sum, book) => sum + book.rating, 0) / (likedBooks.filter(hasVerifiedRating).length || 1)).toFixed(1)
       : "0",
     favoriteGenre: genres.length > 0
       ? genres.reduce((a, b) =>
@@ -971,10 +972,12 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                         />
                         {/* Rating badge */}
-                        <div className="absolute top-2 right-2 bg-white/90 dark:bg-stone-800/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-0.5 shadow-sm">
-                          <Star className="w-3 h-3 text-accent-ink fill-accent-ink" />
-                          <span className="text-xs font-semibold text-ink tabular-nums">{book.rating}</span>
-                        </div>
+                        {hasVerifiedRating(book) && (
+                          <div className="absolute top-2 right-2 bg-white/90 dark:bg-stone-800/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-0.5 shadow-sm">
+                            <Star className="w-3 h-3 text-accent-ink fill-accent-ink" />
+                            <span className="text-xs font-semibold text-ink tabular-nums">{book.rating}</span>
+                          </div>
+                        )}
                         {/* Favorite heart */}
                         {review?.favorite && (
                           <div className="absolute top-2 left-2">

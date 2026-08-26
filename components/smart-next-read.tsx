@@ -6,6 +6,7 @@ import { Wand2, BookOpen, RefreshCw, Star } from "lucide-react"
 import { Book } from "@/lib/book-data"
 import { getLikedBooks, getReadingProgress, getBookReviews, ReadingProgress, BookReview } from "@/lib/storage"
 import { BookCover } from "@/components/book-cover"
+import { hasVerifiedRating } from "@/lib/book-truth"
 
 interface SmartNextReadProps {
   onBookClick: (book: Book) => void
@@ -209,7 +210,7 @@ export function SmartNextRead({ onBookClick, onStartReading }: SmartNextReadProp
                 </p>
 
                 {/* Rating pill */}
-                {book.rating > 0 && (
+                {hasVerifiedRating(book) && (
                   <div className="flex items-center gap-1 mt-0.5">
                     <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
                     <span className="text-[11px] font-semibold text-stone-600 dark:text-stone-300">

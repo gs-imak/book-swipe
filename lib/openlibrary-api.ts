@@ -130,7 +130,7 @@ export function transformToBook(doc: OpenLibraryDoc, searchedSubject: string): B
   if (!doc.title || !doc.author_name?.[0] || !doc.cover_i) return null
 
   const subjects = doc.subject || []
-  const pages = doc.number_of_pages_median || 250
+  const pages = doc.number_of_pages_median || 0
   const genres = mapSubjectsToGenres(subjects)
   if (genres.length === 0) {
     const mapped = SUBJECT_TO_GENRE[searchedSubject.toLowerCase()]
@@ -166,7 +166,7 @@ export function transformToBook(doc: OpenLibraryDoc, searchedSubject: string): B
     genre: genres,
     mood: moods,
     description: "Discover this book on your reading journey.",
-    publishedYear: doc.first_publish_year || 2020,
+    publishedYear: doc.first_publish_year || 0,
     readingTime: estimateReadingTimeRange(pages),
     metadata: {
       subjects: subjects.slice(0, 20),
@@ -328,7 +328,7 @@ export async function fetchSubjectBooks(
           genre: genres,
           mood: moods,
           description: "Discover this book on your reading journey.",
-          publishedYear: w.first_publish_year || 2000,
+          publishedYear: w.first_publish_year || 0,
           readingTime: estimateReadingTimeRange(pages),
           metadata: {
             subjects: subjects.slice(0, 20),

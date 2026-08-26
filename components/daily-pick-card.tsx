@@ -8,6 +8,7 @@ import { Book } from "@/lib/book-data"
 import { type DailyPick, addLikedBook } from "@/lib/storage"
 import { generateDailyPick, dismissDailyPick, saveDailyPickToLibrary } from "@/lib/daily-pick"
 import { BookCover } from "@/components/book-cover"
+import { hasVerifiedRating } from "@/lib/book-truth"
 
 interface DailyPickCardProps {
   onBookClick?: (book: Book) => void
@@ -131,10 +132,14 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
 
                 {/* Rating */}
                 <div className="flex items-center gap-1 mt-1.5">
-                  <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                  <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">
-                    {pick.book.rating}
-                  </span>
+                  {hasVerifiedRating(pick.book) && (
+                    <>
+                      <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                      <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">
+                        {pick.book.rating}
+                      </span>
+                    </>
+                  )}
                   {pick.reasons.length > 0 && (
                     <span className="ml-1.5 text-xs px-2 py-0.5 rounded-full bg-white/60 dark:bg-stone-700/50 text-amber-800 dark:text-amber-300 border border-amber-200/40 dark:border-amber-700/30">
                       {pick.reasons[0].description}
