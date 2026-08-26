@@ -8,6 +8,7 @@ import { hapticLight } from "@/lib/haptics"
 import { Button } from "@/components/ui/button"
 import { BookCover } from "@/components/book-cover"
 import { formatCount } from "@/lib/book-enrichment"
+import { DECK_COVER_SIZES } from "@/lib/config"
 import { displayRating, displayPages, metaSegments } from "@/lib/book-truth"
 import { useToast } from "./toast-provider"
 import { useState, useRef } from "react"
@@ -130,7 +131,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
               alt={book.title}
               fill
               className="object-cover"
-              sizes="(max-width: 1023px) 264px, 312px"
+              sizes={DECK_COVER_SIZES}
               priority={isTop}
             />
             {/* Rating badge — 22px pill over the cover, top-left. Rendered only

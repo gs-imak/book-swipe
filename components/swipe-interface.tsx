@@ -163,7 +163,7 @@ function filterBooks(books: Book[], preferences: UserPreferences): Book[] {
   return filtered
 }
 
-import { MAX_DECK_SIZE, DECK_FETCH_BUDGET } from "@/lib/config"
+import { MAX_DECK_SIZE, DECK_FETCH_BUDGET, DECK_COVER_SIZES } from "@/lib/config"
 
 export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeInterfaceProps) {
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([])
@@ -903,7 +903,10 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
               <div aria-hidden className="pointer-events-none absolute h-px w-px overflow-hidden opacity-0">
                 {filteredBooks.slice(currentIndex + 2, currentIndex + 5).map((b, i) => (
                   <div key={`preload-${currentIndex + 2 + i}-${b.id}`} className="relative h-px w-px">
-                    <Image src={b.cover} alt="" fill sizes="(max-width: 640px) 100vw, 400px" quality={85} priority />
+                    {/* Same sizes as the card, or this warms a URL the card
+                        never asks for. priority is deliberately absent: these
+                        are offscreen and must not load eagerly. */}
+                    <Image src={b.cover} alt="" fill sizes={DECK_COVER_SIZES} quality={85} />
                   </div>
                 ))}
               </div>

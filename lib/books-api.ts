@@ -50,6 +50,9 @@ export interface GoogleBook {
   }
 }
 
+/** Ceiling for a single catalog request; the route itself allows longer. */
+const API_TIMEOUT_MS = 12_000
+
 export async function searchGoogleBooks(query: string, maxResults = 20, lang?: string, startIndex = 0): Promise<Book[]> {
   try {
     // Call our own API route (keeps API key server-side)
@@ -57,7 +60,9 @@ export async function searchGoogleBooks(query: string, maxResults = 20, lang?: s
     const idxParam = startIndex > 0 ? `&startIndex=${startIndex}` : ""
     const url = `/api/books?q=${encodeURIComponent(query)}&maxResults=${maxResults}${idxParam}&lang=${encodeURIComponent(resolvedLang)}`
 
-    const response = await fetch(url)
+    // The only one of the three clients with no timeout: without it a stalled
+    // request left the end-of-batch skeleton up indefinitely.
+    const response = await fetch(url, { signal: AbortSignal.timeout(API_TIMEOUT_MS) })
 
     if (response.status === 429) {
       if (typeof window !== 'undefined') {

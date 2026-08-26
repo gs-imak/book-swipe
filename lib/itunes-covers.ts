@@ -16,6 +16,12 @@ const ITUNES_FETCH_CONCURRENCY = 6
 // Resolved book-key -> iTunes cover URL (or null). Session cache so we never refetch.
 const _itunesCoverCache = new Map<string, string | null>()
 
+// Requests in flight, keyed the same way. Without this the deck, the library
+// grid and the prefetch pass each start their own request for the same book —
+// measured at ~5 per distinct book. Removed on settle so a failed lookup can
+// be retried rather than pinned null for the whole session.
+const _itunesInFlight = new Map<string, Promise<string | null>>()
+
 function coverCacheKey(book: Book): string {
   return book.isbn || `${book.title}::${book.author}`
 }
@@ -29,7 +35,17 @@ async function resolveItunesCover(book: Book): Promise<string | null> {
   const key = coverCacheKey(book)
   const cached = _itunesCoverCache.get(key)
   if (cached !== undefined) return cached
+  const inFlight = _itunesInFlight.get(key)
+  if (inFlight) return inFlight
 
+  const run = fetchItunesCover(book, key).finally(() => {
+    _itunesInFlight.delete(key)
+  })
+  _itunesInFlight.set(key, run)
+  return run
+}
+
+async function fetchItunesCover(book: Book, key: string): Promise<string | null> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), ITUNES_FETCH_TIMEOUT_MS)
   try {

@@ -8,6 +8,9 @@ export interface BookMetadata {
    *  source API). Estimated ratings must not earn quality boosts in scoring or
    *  "highly rated" claims in the UI. */
   ratingEstimated?: boolean
+  /** ISO timestamp of an enrichment lookup that found nothing. Suppresses
+   *  re-asking for a week — see needsEnrichment. */
+  enrichMissAt?: string
   /** Written once the enrichment pipeline has run (ADR-0005). Facts here come
    *  from Google Books / Open Library only — never from the LLM. */
   enriched?: {
