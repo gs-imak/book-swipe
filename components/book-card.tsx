@@ -11,7 +11,7 @@ import { formatCount } from "@/lib/book-enrichment"
 import { DECK_COVER_SIZES } from "@/lib/config"
 import { displayRating, displayPages, metaSegments } from "@/lib/book-truth"
 import { useToast } from "./toast-provider"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 
 interface BookCardProps {
   book: Book
@@ -72,6 +72,27 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
       onSwipe("left")
     }
   }
+
+  // One way to close the sheet, so the Escape handler, the drag-dismiss and
+  // the Close button cannot drift apart.
+  const closeSheet = useCallback(() => {
+    setInfoExpanded(false)
+    onSheetToggle?.(false)
+  }, [onSheetToggle])
+
+  // Escape closes the sheet. While it is open the deck's own key handler
+  // deliberately bails (so arrows do not swipe a card you cannot see), which
+  // left the sheet with no keyboard exit at all.
+  useEffect(() => {
+    if (!isTop || !infoExpanded) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return
+      e.stopPropagation()
+      closeSheet()
+    }
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [isTop, infoExpanded, closeSheet])
 
   const handleStartReading = () => {
     const alreadyReading = getReadingProgress().some(p => p.bookId === book.id)
@@ -183,7 +204,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => { setSheetEverOpened(true); setInfoExpanded(true); onSheetToggle?.(true) }}
-                aria-label="View book details"
+                aria-label="More info"
                 className="w-9 h-9 -mr-1 rounded-full flex items-center justify-center flex-shrink-0 text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors tap-target"
               >
                 <Info className="w-[18px] h-[18px]" />
@@ -256,8 +277,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
           onDragEnd={(_e, info) => {
             if (info.offset.y > 80 || info.velocity.y > 400) {
               sheetY.set(0)
-              setInfoExpanded(false)
-              onSheetToggle?.(false)
+              closeSheet()
             } else {
               sheetY.set(0)
             }
@@ -267,7 +287,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
           <div className="flex-shrink-0 pt-2 pb-1 flex flex-col items-center border-b border-border">
             <div className="w-10 h-1 rounded-full bg-border-strong mb-2" />
             <button
-              onClick={() => { setInfoExpanded(false); onSheetToggle?.(false) }}
+              onClick={closeSheet}
               aria-label="Close details"
               className="flex items-center gap-1 text-ink-muted hover:text-ink transition-colors px-3 py-2 min-h-[44px]"
             >

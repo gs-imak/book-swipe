@@ -256,7 +256,13 @@ export function ProfileShareCard({ isOpen, onClose }: ProfileShareCardProps) {
     const file = new File([blobRef.current], "bookswipe-profile.png", { type: "image/png" })
     if (navigator.share) {
       try {
-        await navigator.share({ files: [file], title: "My BookSwipe Reading Profile" })
+        // Without a url the shared image is a dead end — nobody who sees it
+        // can find the app.
+        await navigator.share({
+          files: [file],
+          title: "My BookSwipe Reading Profile",
+          url: typeof window !== "undefined" ? window.location.origin : undefined,
+        })
       } catch {
         handleDownload()
       }
