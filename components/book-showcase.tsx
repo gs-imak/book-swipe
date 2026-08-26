@@ -17,6 +17,7 @@ import { StarRating } from "@/components/star-rating"
 import { useToast } from "@/components/toast-provider"
 import { useFocusTrap } from "@/lib/use-focus-trap"
 import type { ShowcaseSceneHandle } from "@/lib/showcase-scene"
+import { hasVerifiedRating } from "@/lib/book-truth"
 
 export interface BookShowcaseProps {
   /** The showcased book, or null when the showcase is closed. */
@@ -399,7 +400,7 @@ function ShowcaseOverlay({
             variants={item}
             className="mt-4 flex items-center gap-4 lg:mt-7"
           >
-            {display.rating > 0 && (
+            {hasVerifiedRating(display) && (
               <StarRating rating={display.rating} readonly size="sm" />
             )}
             {display.metadata?.ratingsCount ? (

@@ -1,3 +1,4 @@
+import { normalizeGenres } from "./genre-normalize"
 import { Book } from "./book-data"
 import { getCachedBooks, addBooksToCache, isQueryCached, markQueryCompleted, queryCache } from "./book-cache"
 import { searchOpenLibrary, searchOpenLibraryByQuery } from "./openlibrary-api"
@@ -49,6 +50,9 @@ export interface GoogleBook {
   }
 }
 
+/** Ceiling for a single catalog request; the route itself allows longer. */
+const API_TIMEOUT_MS = 12_000
+
 export async function searchGoogleBooks(query: string, maxResults = 20, lang?: string, startIndex = 0): Promise<Book[]> {
   try {
     // Call our own API route (keeps API key server-side)
@@ -56,7 +60,9 @@ export async function searchGoogleBooks(query: string, maxResults = 20, lang?: s
     const idxParam = startIndex > 0 ? `&startIndex=${startIndex}` : ""
     const url = `/api/books?q=${encodeURIComponent(query)}&maxResults=${maxResults}${idxParam}&lang=${encodeURIComponent(resolvedLang)}`
 
-    const response = await fetch(url)
+    // The only one of the three clients with no timeout: without it a stalled
+    // request left the end-of-batch skeleton up indefinitely.
+    const response = await fetch(url, { signal: AbortSignal.timeout(API_TIMEOUT_MS) })
 
     if (response.status === 429) {
       if (typeof window !== 'undefined') {
@@ -173,13 +179,18 @@ function transformGoogleBookToBook(googleBook: unknown): Book | null {
     return Array.from(moods).slice(0, 3) // Limit to 3 moods
   }
   
-  const pages = volumeInfo.pageCount || 200
+  // 0 is the "unknown" sentinel — the UI omits the segment rather than
+  // stating a page count no source reported (it used to claim 200).
+  const pages = volumeInfo.pageCount || 0
   const hasRealRating = typeof volumeInfo.averageRating === "number" && volumeInfo.averageRating > 0
   const rating = hasRealRating
     ? volumeInfo.averageRating!
     : stableRating(`${volumeInfo.title}:${volumeInfo.authors?.[0] || ""}`)
-  const publishedYear = volumeInfo.publishedDate ? 
-    parseInt(volumeInfo.publishedDate.split('-')[0]) : 2020
+  // Likewise 0 rather than a fabricated 2020, which also used to earn the
+  // book a recency bonus in scoring it had not earned.
+  const publishedYear = volumeInfo.publishedDate
+    ? parseInt(volumeInfo.publishedDate.split('-')[0]) || 0
+    : 0
   
   // Get the best quality image available, with fallback chain
   const getBestCoverImage = (imageLinks?: GoogleBook['volumeInfo']['imageLinks']): string => {
@@ -225,7 +236,7 @@ function transformGoogleBookToBook(googleBook: unknown): Book | null {
     coverFallback: coverFallback !== cover ? coverFallback : undefined,
     rating: Math.round(rating * 10) / 10,
     pages,
-    genre: volumeInfo.categories || ['General'],
+    genre: normalizeGenres(volumeInfo.categories),
     mood: mapCategoriesToMoods(volumeInfo.categories || []),
     description: sanitizeDescription(volumeInfo.description),
     publishedYear,
@@ -270,9 +281,9 @@ export async function getBooksByCategory(category: string, count = 10, startInde
   // Merge searched genre with Google's existing categories (don't overwrite)
   const taggedBooks = books.map(book => ({
     ...book,
-    genre: book.genre[0] === 'General'
-      ? [category]
-      : Array.from(new Set([category, ...book.genre]))
+    // Case-insensitive merge: a plain Set produced pairs like
+    // ["Science Fiction", "Science fiction"] on a single card.
+    genre: normalizeGenres([category, ...book.genre], category)
   }))
 
   return taggedBooks.slice(0, count)

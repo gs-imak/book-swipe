@@ -22,6 +22,7 @@ import { estimateReadingTime } from "@/lib/reading-time"
 import { useFocusTrap } from "@/lib/use-focus-trap"
 import dynamic from "next/dynamic"
 import { searchGutenberg, type GutenbergBook } from "@/lib/gutenberg-api"
+import { hasVerifiedRating } from "@/lib/book-truth"
 
 // Code-split the reader (1,666 lines) — only loaded when user opens a book to read
 const BookReader = dynamic(() => import("./book-reader"), {
@@ -301,6 +302,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                     <Clock className="w-3.5 h-3.5 text-stone-400 dark:text-stone-500" />
                     <span>{estimateReadingTime(book.pages)}</span>
                   </div>
+                  {hasVerifiedRating(enrichedBook ?? book) && (
                   <div className="flex items-center gap-1">
                     <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                     <span className="font-medium text-stone-700 dark:text-stone-300">{(enrichedBook ?? book).rating}</span>
@@ -310,6 +312,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                       return <span className="text-stone-400 dark:text-stone-500">· {formatCount(m.ratingsCount)} ratings</span>
                     })()}
                   </div>
+                  )}
                   {(() => {
                     const e = (enrichedBook ?? book).metadata?.enriched
                     if (!e?.series && !e?.firstPublished) return null

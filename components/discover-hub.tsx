@@ -39,6 +39,7 @@ import { BookCover } from "@/components/book-cover"
 import { useGamification } from "./gamification-provider"
 import { useToast } from "./toast-provider"
 import { upgradeVisibleBooks, formatCount } from "@/lib/book-enrichment"
+import { hasVerifiedRating } from "@/lib/book-truth"
 
 // ---------------------------------------------------------------------------
 // Props
@@ -92,12 +93,14 @@ function ExploreBookCard({
           className="object-cover"
           sizes="280px"
         />
-        <div className="absolute top-1.5 right-1.5 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
-          <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
-          <span className="text-[10px] font-bold text-stone-700 dark:text-stone-300">
-            {book.rating}
-          </span>
-        </div>
+        {hasVerifiedRating(book) && (
+          <div className="absolute top-1.5 right-1.5 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
+            <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+            <span className="text-[10px] font-bold text-stone-700 dark:text-stone-300">
+              {book.rating}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="px-0.5">
@@ -470,10 +473,14 @@ export function DiscoverHub({
                     {surprise.book.author}
                   </p>
                   <div className="flex items-center gap-1 mt-1">
-                    <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                    <span className="text-xs font-medium text-stone-600">
-                      {surprise.book.rating}
-                    </span>
+                    {hasVerifiedRating(surprise.book) && (
+                      <>
+                        <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                        <span className="text-xs font-medium text-stone-600">
+                          {surprise.book.rating}
+                        </span>
+                      </>
+                    )}
                     <span className="text-[10px] text-stone-300 mx-1">
                       \u00B7
                     </span>

@@ -20,6 +20,8 @@ import {
 } from "./description-clean"
 
 // The route may wait on its LLM stage (~12s worst case) before answering.
+/** A dead-end lookup is not re-asked for a week. */
+const ENRICH_MISS_TTL_MS = 7 * 24 * 60 * 60 * 1000
 const FACTS_TIMEOUT_MS = 20_000
 const ENRICH_CONCURRENCY = 2
 
@@ -32,8 +34,18 @@ const _inFlight = new Map<string, Promise<Book>>()
  *  already persisted in a user's library from before ADR-0007. */
 export function needsEnrichment(book: Book): boolean {
   const e = book.metadata?.enriched
-  if (!e) return true
-  return (e.pipelineVersion ?? 1) < DESCRIPTION_PIPELINE_VERSION
+  if (e) return (e.pipelineVersion ?? 1) < DESCRIPTION_PIPELINE_VERSION
+  // A book the sources had nothing for is not re-asked for a week. Without
+  // this, every session re-issued the same dead-end lookup forever (measured:
+  // 9 swipes produced 18 requests for 10 unique books), and each one is a real
+  // serverless invocation. Deliberately a TTL rather than permanent, so a
+  // pipeline-version bump or a newly-enabled source re-opens the book.
+  const missedAt = book.metadata?.enrichMissAt
+  if (missedAt) {
+    const age = Date.now() - new Date(missedAt).getTime()
+    if (age >= 0 && age < ENRICH_MISS_TTL_MS) return false
+  }
+  return true
 }
 
 async function fetchFacts(book: Book): Promise<BookFactsPayload | null> {
@@ -64,7 +76,16 @@ export function enrichBook(book: Book): Promise<Book> {
 
   const run = (async (): Promise<Book> => {
     const facts = await fetchFacts(book)
-    if (!facts?.found) return book
+    if (!facts?.found) {
+      // Stamp the miss so needsEnrichment can skip it for a week.
+      return {
+        ...book,
+        metadata: {
+          ...(book.metadata ?? { source: "google" as const }),
+          enrichMissAt: new Date().toISOString(),
+        },
+      }
+    }
 
     // The route already selected and cleaned the winner by quality score and
     // trimmed it to the house band, so the client simply takes it. Length

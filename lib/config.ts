@@ -1,6 +1,18 @@
 /** Centralized app configuration constants */
 
 // Swipe interface
+/**
+ * The `sizes` attribute for a deck cover.
+ *
+ * Shared by the card and by the look-ahead preload on purpose: they used to
+ * declare different values, so next/image resolved the card to w=640 and the
+ * preload to w=828 at DPR2 — 5 of 5 preloaded covers were fetched at BOTH
+ * widths over six swipes. Every preload was dead weight and every cover the
+ * user actually reached cost twice its bytes. A test asserts the two call
+ * sites still use this constant.
+ */
+export const DECK_COVER_SIZES = "(max-width: 1023px) 264px, 312px"
+
 export const MAX_DECK_SIZE = 15
 // Books fetched per deck load, split across the user's genres. Each genre's
 // Google request is capped at 40 (Google's page max) — the per-genre cursor
