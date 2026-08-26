@@ -63,17 +63,31 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/*
-          No-FOUC theme script. Runs before paint and mirrors lib/theme.ts:
-          key "bookswipe_theme", dark = add the "dark" class to <html> only
-          when the stored value is exactly "dark" (default light). The
-          useEffect-based logic remains the source of truth post-hydration.
+          Boot script. Parser-blocking and in <head>, so everything it decides
+          is on <html> before <body> is parsed — a cascade guarantee, never a
+          timing race. It owns three things:
+
+          1. Theme (mirrors lib/theme.ts): key "bookswipe_theme", dark only when
+             the stored value is exactly "dark". Post-hydration, the effect in
+             app/page.tsx remains the source of truth.
+          2. Boot state: the landing hero is now server-rendered so crawlers and
+             first-time visitors get real content at first paint. A RETURNING
+             user must never see it, so this stamps data-app-state/-view and the
+             mask in globals.css hides the hero before it can paint.
+          3. A tap on the hero CTA that lands before hydration: recorded on
+             window.__bsPendingStart and replayed by app/page.tsx, so the button
+             is never a dead control during the pre-hydration window.
+
+          Every failure path (storage throws, private mode, JS off, crawler,
+          first-time visitor) sets no attribute and falls through to the hero —
+          fail-open toward the audience that needs it.
         */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{if(localStorage.getItem("bookswipe_theme")==="dark"){document.documentElement.classList.add("dark");var m=document.querySelector('meta[name="theme-color"]');if(m){m.setAttribute("content","#0a0a0a");}}}catch(e){}})();`,
+            __html: `(function(){try{var d=document.documentElement;if(localStorage.getItem("bookswipe_theme")==="dark"){d.classList.add("dark");var m=document.querySelector('meta[name="theme-color"]');if(m){m.setAttribute("content","#0a0a0a");}}if(localStorage.getItem("bookswipe_onboarded")==="true"){d.setAttribute("data-app-state","returning");var h=location.hash;d.setAttribute("data-app-view",h==="#/discover"?"deck":h==="#/read"?"read":"shelf");}var c=function(e){if(window.__bsHydrated)return;var t=e.target&&e.target.closest&&e.target.closest("[data-hero-cta]");if(!t)return;window.__bsPendingStart=true;d.setAttribute("data-app-state","entering");d.setAttribute("data-app-view","deck");document.removeEventListener("click",c,true);};window.__bsBootClick=c;document.addEventListener("click",c,true);}catch(e){}})();`,
           }}
         />
         {PLAUSIBLE_DOMAIN && (

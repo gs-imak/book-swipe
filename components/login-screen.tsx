@@ -10,22 +10,6 @@ interface LoginScreenProps {
   onLogin: () => void
 }
 
-const stagger = {
-  hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.12, delayChildren: 0.1 },
-  },
-}
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
-  },
-}
-
 const fadeIn = {
   hidden: { opacity: 0 },
   visible: {
@@ -87,17 +71,17 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
       <FloatingBooks />
 
       {/* Header */}
-      <motion.header
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative z-10 px-6 sm:px-8"
+      <header
+        className="hero-rise relative z-10 px-6 sm:px-8"
         style={{ paddingTop: "max(32px, env(safe-area-inset-top, 32px))" }}
       >
         <div className="max-w-6xl mx-auto flex items-center gap-3">
           <Image
             src="/logo/bookswipe_logo.png"
             alt="BookSwipe Logo"
+            /* No priority: this is server-rendered on every document now, and a
+               head preload is not cancelled by display:none — it would sit on
+               every returning user's critical path for a 44px asset. */
             width={44}
             height={44}
             className="w-9 h-9 sm:w-11 sm:h-11"
@@ -107,22 +91,19 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             BookSwipe
           </span>
         </div>
-      </motion.header>
+      </header>
 
       {/* Main content */}
       <div className="relative z-10 flex-1 flex items-center">
         <div className="w-full max-w-6xl mx-auto px-6 sm:px-8 py-12 sm:py-20">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             {/* Left: Copy */}
-            <motion.div
-              variants={stagger}
-              initial="hidden"
-              animate="visible"
-              className="space-y-8 sm:space-y-10 text-center lg:text-left order-2 lg:order-1"
-            >
+            {/* Left column. No stagger container any more: the copy it used
+                to orchestrate is now static (so it is opaque in the server
+                HTML) and the surrounding pieces rise via CSS. */}
+            <div className="space-y-8 sm:space-y-10 text-center lg:text-left order-2 lg:order-1">
               <div className="space-y-5">
-                <motion.h1
-                  variants={fadeUp}
+                <h1
                   className="text-[2.75rem] sm:text-6xl md:text-7xl font-bold leading-[1.05] text-stone-900 dark:text-stone-100 tracking-tight font-serif"
                 >
                   Find your next
@@ -146,22 +127,24 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                       }}
                     />
                   </span>
-                </motion.h1>
-                <motion.p
-                  variants={fadeUp}
+                </h1>
+                <p
                   className="text-lg sm:text-xl md:text-[1.375rem] text-stone-500 dark:text-stone-400 leading-relaxed max-w-xl mx-auto lg:mx-0"
                 >
                   Swipe through personalized recommendations matched to your
                   taste. No accounts, no fuss — just great books.
-                </motion.p>
+                </p>
               </div>
 
-              {/* CTA */}
-              <motion.div variants={fadeUp} className="space-y-5">
+              {/* CTA — static, never animated: it must be clickable at first
+                  paint, and the boot script captures a tap that lands before
+                  hydration so it is never a dead control. */}
+              <div className="space-y-5">
                 <div className="flex flex-col sm:flex-row items-center gap-4 lg:justify-start justify-center">
                   <button
                     onClick={handleGetStarted}
                     disabled={isEntering}
+                    data-hero-cta
                     className="group relative h-14 sm:h-16 px-10 sm:px-12 text-base sm:text-lg bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 font-semibold rounded-2xl transition-all duration-300 tap-target touch-manipulation disabled:opacity-50 disabled:pointer-events-none overflow-hidden"
                     style={{
                       boxShadow: "0 0 0 0 rgba(180, 83, 9, 0), 0 4px 20px -4px rgba(28, 25, 23, 0.3)",
@@ -198,12 +181,15 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 <p className="text-sm text-stone-400 dark:text-stone-500">
                   Free forever. Your data stays on your device.
                 </p>
-              </motion.div>
+              </div>
 
               {/* Social proof */}
               {/* Truthful trust row — every claim here is verifiable (no
                   fabricated ratings/user counts on a public project) */}
-              <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center gap-4 lg:justify-start justify-center">
+              <div
+                className="hero-rise flex flex-col sm:flex-row items-center gap-4 lg:justify-start justify-center"
+                style={{ "--rise-delay": "120ms" } as React.CSSProperties}
+              >
                 <div className="flex items-center gap-1.5">
                   <BookMarked className="w-4 h-4 text-amber-600 dark:text-amber-500" />
                   <p className="text-sm text-stone-500 dark:text-stone-400">
@@ -217,38 +203,35 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                     Free &amp; <a href="https://github.com/gs-imak/book-swipe" target="_blank" rel="noopener noreferrer" className="font-semibold text-stone-700 dark:text-stone-300 underline decoration-stone-300 dark:decoration-stone-600 underline-offset-2 hover:decoration-amber-500">open source</a>
                   </p>
                 </div>
-              </motion.div>
-            </motion.div>
+              </div>
+            </div>
 
-            {/* Right: Phone mockup */}
-            <motion.div
-              initial={{ opacity: 0, y: 32, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
-              className="relative order-1 lg:order-2 flex justify-center"
+            {/* Right: phone mockup. aria-hidden — its demo copy is a visual
+                anchor, not page content, and must not be indexed as such. */}
+            <div
+              aria-hidden="true"
+              className="hero-rise relative order-1 lg:order-2 flex justify-center"
+              style={{ "--rise-delay": "200ms" } as React.CSSProperties}
             >
               <PhoneMockup />
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Features section */}
-      <motion.div
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-40px" }}
-        variants={stagger}
-        className="relative z-10 w-full max-w-6xl mx-auto px-6 sm:px-8 pb-16 sm:pb-24"
+      <div
+        className="hero-rise relative z-10 w-full max-w-6xl mx-auto px-6 sm:px-8 pb-16 sm:pb-24"
+        style={{ "--rise-delay": "280ms" } as React.CSSProperties}
       >
-        <motion.div variants={fadeUp} className="mb-10 text-center">
+        <div className="mb-10 text-center">
           <p className="text-xs uppercase tracking-[0.2em] text-amber-700 dark:text-amber-400 font-semibold mb-2">
             How it works
           </p>
           <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-100 font-serif">
             Your reading journey, simplified
           </h2>
-        </motion.div>
+        </div>
         <div className="grid sm:grid-cols-2 gap-4 sm:gap-5">
           {[
             {
@@ -273,10 +256,10 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             },
           ].map((feature, i) => {
             return (
-              <motion.div
+              <div
                 key={feature.title}
-                variants={fadeUp}
-                className="group flex items-start gap-4 sm:gap-5 p-5 sm:p-6 rounded-2xl border border-stone-200/60 dark:border-stone-700/60 bg-white dark:bg-stone-900 transition-all duration-300 hover:shadow-md"
+                className="hero-rise group flex items-start gap-4 sm:gap-5 p-5 sm:p-6 rounded-2xl border border-stone-200/60 dark:border-stone-700/60 bg-white dark:bg-stone-900 transition-all duration-300 hover:shadow-md"
+                style={{ "--rise-delay": `${340 + i * 80}ms` } as React.CSSProperties}
               >
                 <div className="shrink-0 w-11 h-11 rounded-xl bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
                   <feature.icon className="w-5 h-5 text-amber-700 dark:text-amber-400" />
@@ -289,11 +272,11 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                     {feature.description}
                   </p>
                 </div>
-              </motion.div>
+              </div>
             )
           })}
         </div>
-      </motion.div>
+      </div>
 
       {/* Footer */}
       <footer className="relative z-10 px-6 sm:px-8 pb-8 pt-4 border-t border-stone-200/60 dark:border-stone-800/60">
