@@ -58,6 +58,10 @@ const SUPPORT_EMAIL = "hello@bookswipe.app"
 
 interface SettingsPageProps {
   onBack: () => void
+  /** Opens the auth modal. Settings only knew how to sign OUT, so on a phone —
+   *  where the sidebar's sign-in control is `hidden lg:flex` — there was no
+   *  route into an account at all. */
+  onSignIn?: () => void
 }
 
 const sectionVariants = {
@@ -69,7 +73,7 @@ const sectionVariants = {
   }),
 }
 
-export function SettingsPage({ onBack }: SettingsPageProps) {
+export function SettingsPage({ onBack, onSignIn }: SettingsPageProps) {
   // Subscribed to the theme store — shares one source of truth with the nav.
   const currentTheme = useTheme()
   const [speed, setSpeed] = useState<ReadingSpeed>(() => getReadingSpeed())
@@ -242,6 +246,59 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
       </motion.header>
 
       <div className="max-w-lg mx-auto px-4 pt-5 pb-20 space-y-4">
+
+        {/* ─── Appearance ───
+            handleThemeToggle existed here with no control wired to it, so the
+            theme could only be changed from the desktop sidebar — which is
+            `hidden lg:flex`. On a phone there was no way to switch theme at
+            all. */}
+        <motion.section
+          custom={0}
+          initial="hidden"
+          animate="visible"
+          variants={sectionVariants}
+          className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200/60 dark:border-stone-700/60 shadow-sm overflow-hidden"
+        >
+          <div className="px-5 pt-4 pb-2">
+            <h2 className="text-base font-serif font-semibold text-stone-900 dark:text-stone-100 flex items-center gap-2.5">
+              {currentTheme === "dark" ? (
+                <Moon className="w-[18px] h-[18px] text-amber-600 dark:text-amber-500" />
+              ) : (
+                <Sun className="w-[18px] h-[18px] text-amber-600 dark:text-amber-500" />
+              )}
+              Appearance
+            </h2>
+          </div>
+
+          <div className="px-5 pb-4">
+            <button
+              onClick={handleThemeToggle}
+              aria-pressed={currentTheme === "dark"}
+              className="w-full min-h-[44px] flex items-center justify-between gap-4 rounded-xl px-4 py-2.5 border border-stone-200/70 dark:border-stone-700/70 hover:bg-stone-50 dark:hover:bg-stone-800/60 transition-colors"
+            >
+              <span className="text-left">
+                <span className="block text-sm font-medium text-stone-800 dark:text-stone-200">
+                  Dark mode
+                </span>
+                <span className="block text-xs text-stone-500 dark:text-stone-400">
+                  {currentTheme === "dark" ? "On" : "Off"}
+                </span>
+              </span>
+              <span
+                aria-hidden="true"
+                className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors ${
+                  currentTheme === "dark" ? "bg-amber-600" : "bg-stone-300 dark:bg-stone-600"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                    currentTheme === "dark" ? "translate-x-[22px]" : "translate-x-0.5"
+                  }`}
+                />
+              </span>
+            </button>
+          </div>
+        </motion.section>
 
         {/* ─── Reading ─── */}
         <motion.section
@@ -577,6 +634,36 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
             </div>
           </div>
         </motion.section>
+
+        {/* ─── Sync (signed out) ─── */}
+        {!userEmail && isSupabaseConfigured() && onSignIn && (
+          <motion.section
+            custom={4}
+            initial="hidden"
+            animate="visible"
+            variants={sectionVariants}
+            className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200/60 dark:border-stone-700/60 shadow-sm overflow-hidden"
+          >
+            <div className="px-5 pt-4 pb-2">
+              <h2 className="text-base font-serif font-semibold text-stone-900 dark:text-stone-100 flex items-center gap-2.5">
+                <UserX className="w-[18px] h-[18px] text-amber-600 dark:text-amber-500" />
+                Sync
+              </h2>
+            </div>
+            <div className="px-5 pb-4 space-y-3">
+              <p className="text-xs text-stone-500 dark:text-stone-400">
+                Your library lives on this device. Sign in to keep it in step
+                across your phone and laptop.
+              </p>
+              <button
+                onClick={onSignIn}
+                className="w-full min-h-[44px] px-4 rounded-xl bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 text-sm font-semibold transition-opacity hover:opacity-90"
+              >
+                Sign in to sync
+              </button>
+            </div>
+          </motion.section>
+        )}
 
         {/* ─── Account (only when signed in) ─── */}
         {userEmail && (

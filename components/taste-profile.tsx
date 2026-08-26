@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, BookOpen, Star, Clock, Heart, TrendingUp, Share2, BarChart3 } from "lucide-react"
+import { X, BookOpen, Star, Clock, Heart, TrendingUp, Share2, BarChart3, Settings as SettingsIcon } from "lucide-react"
 import dynamic from "next/dynamic"
 // Doodles are decorative and below the fold — dynamic() keeps them out of the
 // hydration payload (they were 104KB gzip, 24.5% of the entire cold download).
@@ -19,6 +19,9 @@ import { NotificationSettings } from "./notification-settings"
 interface TasteProfileProps {
   isOpen: boolean
   onClose: () => void
+  /** Opens Settings. Profile is the only tab a phone user can reach it from —
+   *  the sidebar that used to hold theme + sign-in is `hidden lg:flex`. */
+  onOpenSettings?: () => void
 }
 
 interface GenreData {
@@ -64,7 +67,7 @@ function getArchetype(topGenre: string, topMood: string): string {
   return "Curious Reader"
 }
 
-export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
+export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfileProps) {
   const [likedBooks, setLikedBooks] = useState<Book[]>([])
   const [reviews, setReviews] = useState<BookReview[]>([])
   const [showDedication, setShowDedication] = useState(false)
@@ -258,12 +261,23 @@ export function TasteProfile({ isOpen, onClose }: TasteProfileProps) {
         <div className="bg-background/90 backdrop-blur-md border-b border-stone-200/60 dark:border-stone-700/60 sticky top-0 z-10">
           <div className="max-w-2xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
             <h1 className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100 font-serif">Your Profile</h1>
+            <div className="flex items-center gap-1">
+            {onOpenSettings && (
+              <button
+                onClick={onOpenSettings}
+                aria-label="Settings"
+                className="p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors tap-target touch-manipulation"
+              >
+                <SettingsIcon className="w-5 h-5 text-stone-400" />
+              </button>
+            )}
             <button
               onClick={onClose}
               className="p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors tap-target touch-manipulation"
             >
               <X className="w-5 h-5 text-stone-400" />
             </button>
+            </div>
           </div>
         </div>
 
