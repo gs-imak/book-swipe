@@ -6,6 +6,7 @@ import { getLikedBooks, getBookNotes, getBookReviews, BookNote, BookReview } fro
 import { Search, X, Loader2, BookOpen, StickyNote, MessageSquare } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
+import { useOverlayHistory } from "@/lib/use-overlay-history"
 
 interface GlobalSearchProps {
   isOpen: boolean
@@ -66,6 +67,8 @@ function extractMatchContext(text: string, query: string, maxLen = 120): string 
 }
 
 export function GlobalSearch({ isOpen, onClose, onBookClick }: GlobalSearchProps) {
+  // Back closes this overlay instead of tearing down the view behind it.
+  useOverlayHistory("global-search", isOpen, onClose)
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<SearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)

@@ -11,6 +11,7 @@ import {
   getBooksForShelf,
   type Shelf,
 } from "@/lib/storage"
+import { useOverlayHistory } from "@/lib/use-overlay-history"
 
 interface ShelfManagerProps {
   isOpen: boolean
@@ -21,6 +22,8 @@ interface ShelfManagerProps {
 const SHELF_EMOJIS = ["\u{1F4DA}", "\u{1F4D6}", "\u2705", "\u2764\uFE0F", "\u{1F31F}", "\u{1F525}", "\u{1F3AF}", "\u{1F48E}", "\u{1F381}", "\u{1F30D}", "\u{1F5A4}", "\u{1F4A1}"]
 
 export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManagerProps) {
+  // Back closes this overlay instead of tearing down the view behind it.
+  useOverlayHistory("shelf-manager", isOpen, onClose)
   const [shelves, setShelves] = useState<Shelf[]>([])
   const [isAdding, setIsAdding] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)

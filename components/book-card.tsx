@@ -55,6 +55,18 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
     onOpenDetails()
   }
 
+  // Keyboard equivalent of handleCardTap. Without this the 3D Showcase — and
+  // therefore Peek inside and the full details behind it — had no keyboard or
+  // screen-reader entry point at all.
+  const handleCardKey = (e: React.KeyboardEvent) => {
+    if (e.key !== "Enter" && e.key !== " ") return
+    if (!isTop || !onOpenDetails || infoExpanded) return
+    // Let the real controls inside the card handle their own keys.
+    if ((e.target as HTMLElement) !== e.currentTarget) return
+    e.preventDefault()
+    onOpenDetails()
+  }
+
   const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     setTimeout(() => {
       draggingRef.current = false
@@ -140,7 +152,15 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
     >
       {/* overflow-hidden keeps the parked info sheet (y:100%) from painting
           below the card now that there is no clipping card box anymore. */}
-      <div className="relative h-full w-full overflow-hidden" onClick={handleCardTap}>
+      <div
+        className="relative h-full w-full overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink"
+        onClick={handleCardTap}
+        onKeyDown={handleCardKey}
+        // Only the top card is reachable; the peek card is inert anyway.
+        role={isTop && onOpenDetails ? "button" : undefined}
+        tabIndex={isTop && onOpenDetails ? 0 : -1}
+        aria-label={isTop && onOpenDetails ? `Preview "${book.title}" in 3D` : undefined}
+      >
         <div className="flex h-full w-full flex-col items-center lg:flex-row lg:items-start lg:justify-center lg:gap-16">
           {/* Cover object — radius 5px (covers are books), object shadow.
               Short-viewport variant keeps the whole deck on one screen for

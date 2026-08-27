@@ -18,6 +18,7 @@ import { useToast } from "@/components/toast-provider"
 import { useFocusTrap } from "@/lib/use-focus-trap"
 import type { ShowcaseSceneHandle } from "@/lib/showcase-scene"
 import { hasVerifiedRating } from "@/lib/book-truth"
+import { useOverlayHistory } from "@/lib/use-overlay-history"
 
 export interface BookShowcaseProps {
   /** The showcased book, or null when the showcase is closed. */
@@ -49,6 +50,11 @@ const BACKDROP =
   "radial-gradient(120% 100% at 50% 0%, #2B2118 0%, #1C1610 55%, #141009 100%)"
 
 export function BookShowcase(props: BookShowcaseProps) {
+  // Gated on props.book, NOT on mount: this component stays mounted with a
+  // null book while the deck is open, so a constant `true` pushed the history
+  // entry at app start and the deck own navigation then buried it. Back closes
+  // the Showcase instead of destroying the deck underneath it.
+  useOverlayHistory("showcase", Boolean(props.book), props.onClose)
   // Portal to <body>: the surfaces that mount this sit inside framer-motion
   // wrappers whose transforms create stacking contexts, which would trap the
   // overlay's z-index under the app nav no matter how high it goes.

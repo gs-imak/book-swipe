@@ -23,6 +23,7 @@ import { useFocusTrap } from "@/lib/use-focus-trap"
 import dynamic from "next/dynamic"
 import { searchGutenberg, type GutenbergBook } from "@/lib/gutenberg-api"
 import { hasVerifiedRating } from "@/lib/book-truth"
+import { useOverlayHistory } from "@/lib/use-overlay-history"
 
 // Code-split the reader (1,666 lines) — only loaded when user opens a book to read
 const BookReader = dynamic(() => import("./book-reader"), {
@@ -44,6 +45,8 @@ interface BookDetailModalProps {
 }
 
 export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemoveBook, onHideBook, onBookClick }: BookDetailModalProps) {
+  // Back closes this overlay instead of tearing down the view behind it.
+  useOverlayHistory("book-detail", isOpen, onClose)
   const [activeTab, setActiveTab] = useState<"overview" | "review" | "notes">("overview")
   const [existingReview, setExistingReview] = useState<BookReview | null>(null)
   const [isEditingReview, setIsEditingReview] = useState(false)

@@ -32,6 +32,10 @@ export interface BookFormats {
 
 export interface Book {
   id: string
+  /** Ids of duplicate records folded into this one (see lib/book-identity.ts).
+   *  Liked/passed lists store ids, so a merged-away duplicate must still
+   *  resolve or the user loses a book they saved. */
+  aliasIds?: string[]
   title: string
   author: string
   cover: string

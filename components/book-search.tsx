@@ -7,6 +7,7 @@ import { Search, X, Heart, Star, Loader2, WifiOff } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
 import { hasVerifiedRating } from "@/lib/book-truth"
+import { useOverlayHistory } from "@/lib/use-overlay-history"
 
 interface BookSearchProps {
   isOpen: boolean
@@ -17,6 +18,8 @@ interface BookSearchProps {
 }
 
 export function BookSearch({ isOpen, onClose, onSaveBook, onBookClick, savedBookIds }: BookSearchProps) {
+  // Back closes this overlay instead of tearing down the view behind it.
+  useOverlayHistory("book-search", isOpen, onClose)
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<Book[]>([])
   const [isSearching, setIsSearching] = useState(false)
