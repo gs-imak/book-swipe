@@ -9,6 +9,7 @@ import { useFocusTrap } from "@/lib/use-focus-trap"
 import { generateRecap, type RecapSection } from "@/lib/story-recap"
 import { addVocabWord } from "@/lib/vocabulary"
 import { VocabFlashcards } from "./vocab-flashcards"
+import { useOverlayHistory } from "@/lib/use-overlay-history"
 
 type ReaderTheme = "light" | "sepia" | "dark"
 
@@ -300,6 +301,8 @@ function RenderInlineText({ text, skipTypography }: { text: string; skipTypograp
 }
 
 export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, onClose }: BookReaderProps) {
+  // Back closes this overlay instead of tearing down the view behind it.
+  useOverlayHistory("reader", isOpen, onClose)
   // The reader is lazy-loaded and only ever mounts from a user interaction —
   // never during the initial hydration pass — so reading the stored theme in
   // the initializer is hydration-safe and avoids a flash of the default.

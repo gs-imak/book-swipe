@@ -6,6 +6,7 @@ import { Camera, X, Loader2, Check, AlertCircle } from "lucide-react"
 import { Book } from "@/lib/book-data"
 import { addLikedBook } from "@/lib/storage"
 import { BookCover } from "@/components/book-cover"
+import { useOverlayHistory } from "@/lib/use-overlay-history"
 
 interface BarcodeScannerProps {
   isOpen: boolean
@@ -13,6 +14,8 @@ interface BarcodeScannerProps {
 }
 
 export function BarcodeScanner({ isOpen, onClose }: BarcodeScannerProps) {
+  // Back closes this overlay instead of tearing down the view behind it.
+  useOverlayHistory("scanner", isOpen, onClose)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [scanning, setScanning] = useState(false)
   const [error, setError] = useState<string | null>(null)

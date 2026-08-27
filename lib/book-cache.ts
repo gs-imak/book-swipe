@@ -2,6 +2,7 @@
 
 import { Book, sampleBooks } from "./book-data"
 import { getLikedBooks } from "./storage"
+import { mergeDuplicates, idsFor } from "./book-identity"
 
 const BOOK_CACHE_KEY = "bookswipe_book_cache"
 const CACHE_METADATA_KEY = "bookswipe_cache_metadata"
@@ -89,19 +90,25 @@ function seedCache(): void {
 export function addBooksToCache(books: Book[]): void {
   if (typeof window === "undefined" || books.length === 0) return
   const existing = getCachedBooks()
-  const existingIds = new Set(existing.map((b) => b.id))
+  // Ids cannot identify a work: the same novel arrives with a Google volume
+  // id, an Open Library work key and a seed id. Filtering on id alone left 36%
+  // of a live 150-book cache duplicated (Project Hail Mary four times), which
+  // reads as a broken deck. mergeDuplicates folds them by title+author and
+  // keeps the richest record, carrying absorbed ids in aliasIds.
+  const existingIds = new Set(existing.flatMap(idsFor))
 
   const newBooks = books.filter((b) => !existingIds.has(b.id))
   if (newBooks.length === 0) return
 
-  let merged = [...existing, ...newBooks]
+  let merged = mergeDuplicates([...existing, ...newBooks])
 
   // Evict if over limit: keep liked books + most recent additions
   if (merged.length > MAX_CACHE_SIZE) {
     const likedIds = new Set(getLikedBooks().map((b: Book) => b.id))
-    const liked = merged.filter((b) => likedIds.has(b.id))
+    const isLiked = (b: Book) => idsFor(b).some((id) => likedIds.has(id))
+    const liked = merged.filter(isLiked)
     const rest = merged
-      .filter((b) => !likedIds.has(b.id))
+      .filter((b) => !isLiked(b))
       .slice(-(MAX_CACHE_SIZE - liked.length))
     merged = [...liked, ...rest]
   }

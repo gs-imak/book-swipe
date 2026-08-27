@@ -12,6 +12,7 @@ import { scoreBooks, applyMMR } from "@/lib/scoring-engine"
 import { getRecommendedBooks } from "@/lib/recommend-client"
 import { getBooksByCategory, bookSearchQueries, fetchPersonalizedBooks } from "@/lib/books-api"
 import { getCachedBooks, addBooksToCache, updateBooksInCache } from "@/lib/book-cache"
+import { mergeDuplicates, idsFor } from "@/lib/book-identity"
 import { saveDeckSession, loadDeckSession } from "@/lib/deck-session"
 import { upgradeVisibleBooks } from "@/lib/book-enrichment"
 import { searchOpenLibrary } from "@/lib/openlibrary-api"
@@ -197,8 +198,9 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
     }
   }, [])
 
-  const dedupeById = (deck: Book[]): Book[] =>
-    Array.from(new Map(deck.map(b => [b.id, b])).values())
+  // Identity, not id: two records of one novel from different sources have
+  // different ids and would both reach the deck.
+  const dedupeById = (deck: Book[]): Book[] => mergeDuplicates(deck)
 
   /**
    * The genres the user's likes actually point at, most-liked first, or null
@@ -296,10 +298,12 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
     // profile is 1-2 books — similarity ranking tunnels on them, so keep the
     // genre-match / rating order instead.
     const liked = getLikedBooks()
-    const likedIdSet = new Set(liked.map(b => b.id))
+    // Aliases included: a book merged away still answers to its old id, and
+    // the liked/passed lists were written with whichever id was current then.
+    const likedIdSet = new Set(liked.flatMap(idsFor))
     // Unconditional: a book already in the library must not come back around,
     // regardless of which ranking branch runs below.
-    const withoutLiked = (list: Book[]) => list.filter(b => !likedIdSet.has(b.id))
+    const withoutLiked = (list: Book[]) => list.filter(b => !idsFor(b).some(id => likedIdSet.has(id)))
     const candidatePool = withoutLiked(filtered.length > 0 ? filtered : books)
     const reasons: Record<string, string> = {}
     let deck: Book[]
