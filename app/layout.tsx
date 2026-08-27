@@ -7,6 +7,9 @@ import './globals.css'
 // NEXT_PUBLIC_PLAUSIBLE_DOMAIN is set — so no tracker loads, and because it sets
 // no cookies and stores no personal identifiers, no cookie-consent banner is
 // required. Point _SRC at your Plausible/self-hosted script.
+import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
+
 const PLAUSIBLE_DOMAIN = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN
 const PLAUSIBLE_SRC =
   process.env.NEXT_PUBLIC_PLAUSIBLE_SRC || 'https://plausible.io/js/script.js'
@@ -106,6 +109,13 @@ export default function RootLayout({
         <main id="main-content" className="min-h-screen bg-background">
           {children}
         </main>
+        {/* Web Analytics + Speed Insights were already provisioned on the
+            Vercel project but no client was installed, so nothing was being
+            collected. Both load after hydration and stay off the cold path we
+            spent PR #73 shrinking. Plausible above remains supported and is
+            simply inert while NEXT_PUBLIC_PLAUSIBLE_DOMAIN is unset. */}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )
