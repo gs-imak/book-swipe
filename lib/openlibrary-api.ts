@@ -132,11 +132,17 @@ export function transformToBook(doc: OpenLibraryDoc, searchedSubject: string): B
   const subjects = doc.subject || []
   const pages = doc.number_of_pages_median || 0
   const genres = mapSubjectsToGenres(subjects)
-  if (genres.length === 0) {
-    const mapped = SUBJECT_TO_GENRE[searchedSubject.toLowerCase()]
-    if (mapped) genres.push(mapped)
-    else genres.push("General")
+  // The subject we SEARCHED is the source own classification of this book, so
+  // it leads — previously it was only used when nothing else mapped, which is
+  // why a book fetched by the Fantasy query could reach a Fantasy reader
+  // labelled only "Young Adult | Classics | Adventure" and then fail their own
+  // genre filter.
+  const searchedGenre = SUBJECT_TO_GENRE[searchedSubject.toLowerCase()]
+  if (searchedGenre && !genres.some(g => g.toLowerCase() === searchedGenre.toLowerCase())) {
+    genres.unshift(searchedGenre)
   }
+  if (genres.length === 0) genres.push("General")
+  genres.splice(3)
 
   const moods = mapSubjectsToMoods(subjects)
   if (moods.length === 0) moods.push("Interesting")
