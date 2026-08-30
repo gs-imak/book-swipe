@@ -13,6 +13,7 @@
  *  route zeroes it and the merge ignores it (both sides share the floor). */
 export const MIN_HOOK_CHARS = 80
 
+import { normalizeGenres } from "./genre-normalize"
 import { chooseDescription } from "./description-clean"
 
 export interface SeriesFacts {
@@ -155,13 +156,20 @@ export function mergeBookFacts(
   const description = choice.kind === "accept" ? choice.text : undefined
   const descriptionSource = choice.kind === "accept" ? choice.source : undefined
 
-  const genres =
+  // Normalised, not raw. splitGenres only splits and dedupes, so Google's
+  // literal headings used to travel all the way to the card — and because
+  // enrichment OVERWRITES a book's genre with this, a curated "Fantasy" was
+  // being replaced by "Juvenile Fiction" or "Orphans & Foster Homes". A user
+  // who picked Fantasy then stopped matching their own Harry Potter.
+  const rawGenres =
     (gb?.categories && splitGenres(gb.categories).length > 0
       ? splitGenres(gb.categories)
       : undefined) ??
     (llm?.known && llm.genres && llm.genres.length > 0
       ? llm.genres.slice(0, 4)
       : undefined)
+  const normalised = rawGenres ? normalizeGenres(rawGenres) : undefined
+  const genres = normalised && normalised.length > 0 ? normalised : undefined
 
   return {
     // `found` is a CONTENT test, not a "some API answered" test: a payload

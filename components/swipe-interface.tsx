@@ -304,7 +304,14 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
     // Unconditional: a book already in the library must not come back around,
     // regardless of which ranking branch runs below.
     const withoutLiked = (list: Book[]) => list.filter(b => !idsFor(b).some(id => likedIdSet.has(id)))
-    const candidatePool = withoutLiked(filtered.length > 0 ? filtered : books)
+    // When the reader has STATED genres, never fall back to the unfiltered
+    // pool. That fallback existed to guarantee a full deck, but it silently
+    // served books from genres they did not pick — the single loudest piece of
+    // feedback on the app. A short deck is honest; a wrong one is not, and the
+    // background fetch refills it within seconds anyway.
+    const hasStatedGenres = preferences.favoriteGenres.length > 0
+    const pool = filtered.length > 0 ? filtered : (hasStatedGenres ? [] : books)
+    const candidatePool = withoutLiked(pool)
     const reasons: Record<string, string> = {}
     let deck: Book[]
     if (liked.length >= 3 && candidatePool.length > 0) {

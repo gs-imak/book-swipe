@@ -102,8 +102,40 @@ function ShowcaseOverlay({
   // Enrich-on-open (ADR-0005): the panel upgrades to Goodreads-parity fields
   // as they land — `book` stays the scene's identity, `display` feeds text.
   const [display, setDisplay] = useState(book)
+  // Whether the description is actually cut off. Measured after paint rather
+  // than guessed from length: the clamp is line-based and the panel width
+  // changes between phone and desktop, so a character count would be wrong at
+  // one of them.
+  const [descExpanded, setDescExpanded] = useState(false)
+  const [descClamped, setDescClamped] = useState(false)
+  // A new book starts collapsed. Adjusted during render rather than in an
+  // effect, so there is no extra commit and no expanded flash on book change.
+  const [descBookId, setDescBookId] = useState(book.id)
+  if (descBookId !== book.id) {
+    setDescBookId(book.id)
+    setDescExpanded(false)
+  }
+  const descRef = useRef<HTMLParagraphElement | null>(null)
   const { showToast } = useToast()
   useFocusTrap(dialogRef, true)
+
+  // Re-measure whenever the text or the width could have changed.
+  useEffect(() => {
+    const el = descRef.current
+    if (!el) return
+    const measure = () => {
+      // Only meaningful while collapsed: once expanded the element grows to fit,
+      // so scrollHeight === clientHeight and a naive re-measure would decide
+      // there is nothing to expand and remove the control the user needs to
+      // collapse again.
+      if (descExpanded) return
+      setDescClamped(el.scrollHeight > el.clientHeight + 2)
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [display.description, descExpanded])
 
   // Lock the page behind the takeover. Measured at 1280x900: a wheel over the
   // open Showcase scrolled the library underneath from 400 to 1582 while the
@@ -412,12 +444,46 @@ function ShowcaseOverlay({
             </motion.p>
           )}
 
-          <motion.p
-            variants={item}
-            className="mt-3 max-w-[54ch] text-[15px] leading-[1.6] text-stage-ink-muted line-clamp-4 lg:mt-6 lg:text-[17px] lg:leading-[1.65] lg:line-clamp-[7]"
-          >
-            {display.description}
-          </motion.p>
+          {/* Clamped copy that can be opened. The ellipsis was previously a
+              dead end: it promised more and offered no way to get it. The
+              paragraph is only interactive when it is actually overflowing —
+              measured, not assumed — so a short description carries no
+              misleading affordance. */}
+          <motion.div variants={item} className="mt-3 max-w-[54ch] lg:mt-6">
+            <p
+              ref={descRef}
+              id="showcase-description"
+              className={`text-[15px] leading-[1.6] text-stage-ink-muted lg:text-[17px] lg:leading-[1.65] ${
+                descExpanded ? "" : "line-clamp-4 lg:line-clamp-[7]"
+              }`}
+            >
+              {display.description}
+            </p>
+            {descClamped && (
+              <button
+                type="button"
+                onClick={() => setDescExpanded((v) => !v)}
+                aria-expanded={descExpanded}
+                aria-controls="showcase-description"
+                className="mt-1.5 inline-flex min-h-[40px] items-center gap-1 text-[14px] font-medium text-stage-amber transition-opacity hover:opacity-80"
+              >
+                {descExpanded ? "Show less" : "Read more"}
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ transform: descExpanded ? "rotate(180deg)" : "none" }}
+                >
+                  <path d="M6 9l6 6 6-6"></path>
+                </svg>
+              </button>
+            )}
+          </motion.div>
 
           <motion.div
             variants={item}
@@ -426,7 +492,11 @@ function ShowcaseOverlay({
             {hasVerifiedRating(display) && (
               <StarRating rating={display.rating} readonly size="sm" />
             )}
-            {display.metadata?.ratingsCount ? (
+            {/* Only alongside a rating we are willing to show. "8 ratings"
+                on its own, with the stars hidden for being under the
+                confidence floor, reads as a missing number rather than a
+                deliberate omission. */}
+            {hasVerifiedRating(display) && display.metadata?.ratingsCount ? (
               <span className="text-sm text-stage-ink-muted tabular-nums">
                 {formatCount(display.metadata.ratingsCount)} ratings
               </span>

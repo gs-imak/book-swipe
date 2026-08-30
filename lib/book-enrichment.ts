@@ -32,6 +32,23 @@ const _inFlight = new Map<string, Promise<Book>>()
 /** A book needs (re)processing when it was never enriched, or was enriched by
  *  an older pipeline — the version bump is what re-cleans the descriptions
  *  already persisted in a user's library from before ADR-0007. */
+/**
+ * Union of what the book already claimed and what enrichment found, keeping
+ * the record's own labels first and capping at the card's 3 chips.
+ */
+function mergeGenres(existing: string[] | undefined, incoming: string[] | undefined): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
+  for (const g of [...(existing ?? []), ...(incoming ?? [])]) {
+    const key = g.toLowerCase().trim()
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    out.push(g)
+    if (out.length >= 3) break
+  }
+  return out
+}
+
 export function needsEnrichment(book: Book): boolean {
   const e = book.metadata?.enriched
   if (e) return (e.pipelineVersion ?? 1) < DESCRIPTION_PIPELINE_VERSION
@@ -131,7 +148,12 @@ export function enrichBook(book: Book): Promise<Book> {
       ...book,
       description,
       rating,
-      genre: facts.genres && facts.genres.length > 0 ? facts.genres : book.genre,
+      // Merge, never replace. Enrichment arrives with whatever the source
+      // called the book; the record may already carry better, curated genres
+      // (the seed set does). Replacing outright is how Circe — seeded as
+      // Fantasy/Mythology — became "Young Adult Fiction" and dropped out of a
+      // Fantasy reader's deck.
+      genre: mergeGenres(book.genre, facts.genres),
       metadata: {
         ...book.metadata,
         source: book.metadata?.source ?? "sample",
