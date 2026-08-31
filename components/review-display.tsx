@@ -118,7 +118,7 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
                 onClick={() => setShowFullReview(!showFullReview)}
                 className="mt-2 p-0 h-auto text-amber-700 dark:text-amber-400 hover:text-amber-800"
               >
-                {showFullReview ? 'Show less' : 'Show more'}
+                {showFullReview ? t("book_card.show_less") : t("review_display.show_more")}
               </Button>
             )}
           </div>

@@ -443,7 +443,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
           setPassedBooks([])
           setUndoStack([])
         }
-        showToast("Couldn't load new books. Showing cached results.", "error")
+        showToast(t("swipe_interface.couldn_t_load_new_books_showing"), "error")
       }
     } finally {
       setIsLoading(false)
@@ -562,7 +562,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
 
   const handleUndo = () => {
     if (undoStack.length === 0 || currentIndex === 0) {
-      showToast("Nothing to undo", "info")
+      showToast(t("swipe_interface.nothing_to_undo"), "info")
       return
     }
     hapticMedium()
@@ -578,7 +578,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
 
     setUndoStack(prev => prev.slice(0, -1))
     setCurrentIndex(prev => prev - 1)
-    showToast("Undo — back to previous book", "info")
+    showToast(t("swipe_interface.undo_back_to_previous_book"), "info")
   }
 
   const currentBook = filteredBooks[currentIndex]

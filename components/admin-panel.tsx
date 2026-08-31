@@ -134,7 +134,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
     a.click()
     URL.revokeObjectURL(url)
     markBackupExported()
-    showToast("Backup downloaded successfully")
+    showToast(t("admin_panel.backup_downloaded_successfully"))
   }
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -147,7 +147,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
       const parsed = JSON.parse(text) as ExportData
 
       if (!parsed.version || !parsed.data) {
-        showToast("Invalid backup file format", "error")
+        showToast(t("admin_panel.invalid_backup_file_format"), "error")
         return
       }
 
@@ -248,14 +248,14 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
       if (parts.length > 0) {
         showToast(`Imported ${parts.join(", ")}`)
       } else {
-        showToast("Everything was already up to date", "info")
+        showToast(t("admin_panel.everything_was_already_up_to_date"), "info")
       }
 
       // Trigger a reload
       onBooksLoaded(getLikedBooks())
       refreshCounts()
     } catch {
-      showToast("Failed to read backup file", "error")
+      showToast(t("admin_panel.failed_to_read_backup_file"), "error")
     } finally {
       setImporting(false)
       if (fileInputRef.current) fileInputRef.current.value = ""
@@ -267,7 +267,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
     const date = new Date().toISOString().split("T")[0]
     downloadJSON(json, `bookswipe-full-backup-${date}.json`)
     markBackupExported()
-    showToast("Full backup downloaded")
+    showToast(t("admin_panel.full_backup_downloaded"))
   }
 
   const handleFullBackupFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -285,7 +285,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
 
       setFullBackupPreview({ json: text, stats: preview.stats })
     } catch {
-      showToast("Failed to read file", "error")
+      showToast(t("admin_panel.failed_to_read_file"), "error")
     } finally {
       if (fullBackupInputRef.current) fullBackupInputRef.current.value = ""
     }
@@ -374,7 +374,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
           className="flex-1 h-10 border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 dark:text-stone-300 rounded-xl text-sm"
         >
           <Upload className="w-4 h-4 mr-2" />
-          {importing ? "Importing..." : "Import Backup"}
+          {importing ? t("admin_panel.importing") : t("admin_panel.import_backup")}
         </Button>
         <input
           ref={fileInputRef}
@@ -424,7 +424,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
               className="flex-1 h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl text-sm"
             >
               <Check className="w-4 h-4 mr-1.5" />
-              {importingFull ? "Restoring..." : "Confirm Restore"}
+              {importingFull ? t("admin_panel.restoring") : t("admin_panel.confirm_restore")}
             </Button>
             <Button
               onClick={() => setFullBackupPreview(null)}
@@ -453,7 +453,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
               const csv = exportToGoodreadsCSV()
               const date = new Date().toISOString().split("T")[0]
               downloadCSV(csv, `goodreads-export-${date}.csv`)
-              showToast("Goodreads CSV exported")
+              showToast(t("admin_panel.goodreads_csv_exported"))
             }}
             variant="outline"
             className="h-10 border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 dark:text-stone-300 rounded-xl text-sm"
@@ -465,7 +465,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
             const csv = exportToNotionCSV()
             const date = new Date().toISOString().split("T")[0]
             downloadCSV(csv, `notion-books-${date}.csv`)
-            showToast("Notion CSV exported")
+            showToast(t("admin_panel.notion_csv_exported"))
           }}
           variant="outline"
           className="w-full h-10 border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 dark:text-stone-300 rounded-xl text-sm"

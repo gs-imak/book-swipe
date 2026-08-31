@@ -203,7 +203,7 @@ export function OnboardingGuide({ onComplete }: OnboardingGuideProps) {
             className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold bg-stone-900 text-white hover:bg-stone-800 active:scale-[0.98] transition-all"
           >
             {isLast ? (
-              "Start Exploring"
+              t("onboarding_guide.start_exploring")
             ) : (
               <> {t("common.next")} <ArrowRight className="w-4 h-4" />
               </>

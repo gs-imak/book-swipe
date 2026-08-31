@@ -140,7 +140,7 @@ export function BookCollections({ isOpen, onClose, onBookClick }: BookCollection
               <h1 className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100 font-serif">
                 {view === "list" && "Collections"}
                 {view === "detail" && (activeCollection ? `${activeCollection.emoji} ${activeCollection.name}` : "Collection")}
-                {view === "create" && "New Collection"}
+                {view === "create" && t("book_collections.new_collection")}
               </h1>
             </div>
             <button

@@ -340,7 +340,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
           className="flex items-center gap-2"
         >
           <Heart className={`w-4 h-4 ${favorite ? "fill-current" : ""}`} />
-          {favorite ? "Remove from favorites" : "Add to favorites"}
+          {favorite ? t("quick_review.remove_from_favorites") : t("quick_review.add_to_favorites")}
         </Button>
       </div>
 
@@ -357,7 +357,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
           disabled={rating === 0 || isSubmitting}
           className="px-6"
         >
-          {isSubmitting ? "Saving..." : existingReview ? "Update Review" : "Save Review"}
+          {isSubmitting ? t("quick_review.saving") : existingReview ? t("quick_review.update_review") : t("quick_review.save_review")}
         </Button>
       </div>
     </motion.div>

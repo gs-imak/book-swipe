@@ -116,7 +116,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
             <div className="flex items-center gap-2">
               <Cloud className="w-5 h-5 text-amber-600" />
               <h3 id="auth-modal-title" className="font-bold text-stone-900 dark:text-stone-100 font-serif">
-                {mode === "signin" ? "Sign In" : mode === "signup" ? "Create Account" : "Reset Password"}
+                {mode === "signin" ? t("auth_modal.sign_in_2") : mode === "signup" ? t("auth_modal.create_account") : t("auth_modal.reset_password")}
               </h3>
             </div>
             <button
@@ -131,10 +131,10 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
           <div className="px-5 pb-5 space-y-4">
             <p className="text-xs text-stone-500">
               {mode === "signin"
-                ? "Sign in to sync your library across devices."
+                ? t("auth_modal.sign_in_to_sync_your_library")
                 : mode === "signup"
-                ? "Create an account to backup and sync your data."
-                : "Enter your email and we'll send a password reset link."}
+                ? t("auth_modal.create_an_account_to_backup_and")
+                : t("auth_modal.enter_your_email_and_we_ll")}
             </p>
 
             {success || resetSent ? (
@@ -142,8 +142,8 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                 <Check className="w-10 h-10 text-emerald-500" />
                 <p className="text-sm text-stone-600 dark:text-stone-400 text-center">
                   {resetSent
-                    ? "If that email has an account, a reset link is on its way."
-                    : "Check your email for a confirmation link."}
+                    ? t("auth_modal.if_that_email_has_an_account")
+                    : t("auth_modal.check_your_email_for_a_confirmation")}
                 </p>
               </div>
             ) : mode === "reset" ? (
@@ -225,7 +225,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                     className="w-full h-10 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 rounded-xl text-sm font-medium hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {mode === "signin" ? "Sign In" : "Create Account"}
+                    {mode === "signin" ? t("auth_modal.sign_in_2") : t("auth_modal.create_account")}
                   </button>
                 </form>
 

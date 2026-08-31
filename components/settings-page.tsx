@@ -101,7 +101,7 @@ export function SettingsPage({ onBack, onSignIn }: SettingsPageProps) {
 
   const handleSignOut = async () => {
     await signOut()
-    showToast("Signed out")
+    showToast(t("settings_page.signed_out"))
     setUserEmail(null)
   }
 
@@ -116,7 +116,7 @@ export function SettingsPage({ onBack, onSignIn }: SettingsPageProps) {
         if (key && key.startsWith("bookswipe_")) keys.push(key)
       }
       keys.forEach((key) => localStorage.removeItem(key))
-      showToast("Account deleted")
+      showToast(t("settings_page.account_deleted"))
       setTimeout(() => window.location.reload(), 800)
     } else {
       showToast(result.reason || "Could not delete account", "error")
@@ -146,14 +146,14 @@ export function SettingsPage({ onBack, onSignIn }: SettingsPageProps) {
     const csv = exportToGoodreadsCSV()
     const date = new Date().toISOString().split("T")[0]
     downloadCSV(csv, `goodreads-export-${date}.csv`)
-    showToast("Goodreads CSV exported")
+    showToast(t("admin_panel.goodreads_csv_exported"))
   }
 
   const handleNotionExport = () => {
     const csv = exportToNotionCSV()
     const date = new Date().toISOString().split("T")[0]
     downloadCSV(csv, `notion-books-${date}.csv`)
-    showToast("Notion CSV exported")
+    showToast(t("admin_panel.notion_csv_exported"))
   }
 
   const handleFullBackup = () => {
@@ -161,7 +161,7 @@ export function SettingsPage({ onBack, onSignIn }: SettingsPageProps) {
     const date = new Date().toISOString().split("T")[0]
     downloadJSON(json, `bookswipe-full-backup-${date}.json`)
     markBackupExported()
-    showToast("Full backup downloaded")
+    showToast(t("admin_panel.full_backup_downloaded"))
   }
 
   const handleImportFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -179,7 +179,7 @@ export function SettingsPage({ onBack, onSignIn }: SettingsPageProps) {
 
       setBackupPreview({ json: text, stats: preview.stats })
     } catch {
-      showToast("Failed to read file", "error")
+      showToast(t("admin_panel.failed_to_read_file"), "error")
     } finally {
       if (fullBackupInputRef.current) fullBackupInputRef.current.value = ""
     }
@@ -287,7 +287,7 @@ export function SettingsPage({ onBack, onSignIn }: SettingsPageProps) {
               >
                 <span
                   className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                    currentTheme === "dark" ? "translate-x-[22px]" : "translate-x-0.5"
+                    currentTheme === "dark" ? t("settings_page.translate_x_22px") : t("settings_page.translate_x_0_5")
                   }`}
                 />
               </span>
@@ -331,7 +331,7 @@ export function SettingsPage({ onBack, onSignIn }: SettingsPageProps) {
                     <span className={`block text-center text-[10px] mt-0.5 ${
                       speed === s.value ? "text-amber-100" : "text-stone-400 dark:text-stone-500"
                     }`}>
-                      {s.value === "slow" ? "150 wpm" : s.value === "average" ? "250 wpm" : "400 wpm"}
+                      {s.value === "slow" ? t("settings_page.150_wpm") : s.value === "average" ? t("settings_page.250_wpm") : t("settings_page.400_wpm")}
                     </span>
                   </button>
                 ))}
@@ -481,7 +481,7 @@ export function SettingsPage({ onBack, onSignIn }: SettingsPageProps) {
                         disabled={importingFull}
                         className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors disabled:opacity-50"
                       >
-                        {importingFull ? "Restoring..." : "Confirm restore"}
+                        {importingFull ? t("admin_panel.restoring") : t("settings_page.confirm_restore")}
                       </button>
                       <button
                         onClick={() => setBackupPreview(null)}
@@ -698,7 +698,7 @@ export function SettingsPage({ onBack, onSignIn }: SettingsPageProps) {
                         className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                       >
                         {deletingAccount && <Loader2 className="w-4 h-4 animate-spin" />}
-                        {deletingAccount ? "Deleting…" : "Yes, delete my account"}
+                        {deletingAccount ? t("settings_page.deleting") : t("settings_page.yes_delete_my_account")}
                       </button>
                       <button
                         onClick={() => setShowDeleteConfirm(false)}

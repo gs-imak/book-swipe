@@ -243,7 +243,7 @@ function HighlightedText({ text, highlights, blockIndex, skipTypography, highlig
               padding: "0 1px",
               color: "inherit",
             }}
-            title={seg.hasNote ? "Has note" : undefined}
+            title={seg.hasNote ? t("book_reader.has_note") : undefined}
           >
             <RenderInlineText text={seg.text} skipTypography={skipTypography} />
             {seg.hasNote && (
@@ -1550,7 +1550,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                   onClick={() => { if (focusMode) stopAmbientSound(); toggleFocusMode(); setFocusMinimized(false) }}
                   className="tap-target flex items-center justify-center rounded-lg p-1.5 sm:p-2 transition-colors"
                   style={{ color: focusMode ? currentTheme.progressFill : currentTheme.text }}
-                  aria-label={focusMode ? "Exit focus mode" : "Enter focus mode"}
+                  aria-label={focusMode ? t("book_reader.exit_focus_mode") : t("book_reader.enter_focus_mode")}
                 >
                   <Timer className="w-5 h-5" />
                 </motion.button>
@@ -1568,7 +1568,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                   onClick={handleToggleBookmark}
                   className="tap-target flex items-center justify-center rounded-lg p-1.5 sm:p-2 transition-colors"
                   style={{ color: isBookmarked ? currentTheme.progressFill : currentTheme.text }}
-                  aria-label={isBookmarked ? "Remove bookmark" : "Bookmark this page"}
+                  aria-label={isBookmarked ? t("book_reader.remove_bookmark") : t("book_reader.bookmark_this_page")}
                 >
                   {isBookmarked ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
                 </motion.button>
@@ -2459,7 +2459,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                       className="w-full flex items-center justify-center gap-1.5 py-1 rounded-lg transition-opacity hover:opacity-80"
                     >
                       <p className="text-xs truncate opacity-70 font-medium">
-                        {currentChapter ? currentChapter.title : "Select Chapter"}
+                        {currentChapter ? currentChapter.title : t("book_reader.select_chapter")}
                         {currentChapter?.subtitle ? ` — ${currentChapter.subtitle}` : ""}
                       </p>
                       <ChevronDown className="w-3 h-3 opacity-60 flex-shrink-0" style={{ transform: showChapterDropdown ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
@@ -2581,14 +2581,14 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           backgroundColor: autoScrollEnabled ? `${currentTheme.progressFill}20` : "transparent",
                           color: autoScrollEnabled ? currentTheme.progressFill : `${currentTheme.text}60`,
                         }}
-                        aria-label={autoScrollEnabled ? "Pause auto-scroll" : "Start auto-scroll"}
+                        aria-label={autoScrollEnabled ? t("book_reader.pause_auto_scroll") : t("book_reader.start_auto_scroll")}
                       >
                         {autoScrollEnabled ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                       </motion.button>
                       <span className="text-[9px] opacity-60 -mt-0.5">{t("book_reader.auto")}</span>
                     </div>
                     <span className="text-xs tabular-nums opacity-70">
-                      {progress >= 98 ? "Done!" : `~${minsRemaining < 60 ? `${minsRemaining}m` : `${Math.floor(minsRemaining / 60)}h ${minsRemaining % 60}m`}`}
+                      {progress >= 98 ? t("book_reader.done") : `~${minsRemaining < 60 ? `${minsRemaining}m` : `${Math.floor(minsRemaining / 60)}h ${minsRemaining % 60}m`}`}
                     </span>
                   </div>
                 </div>

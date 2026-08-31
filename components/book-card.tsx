@@ -110,7 +110,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
   const handleStartReading = () => {
     const alreadyReading = getReadingProgress().some(p => p.bookId === book.id)
     if (alreadyReading) {
-      showToast("Already in your reading list", "info")
+      showToast(t("book_card.already_in_your_reading_list"), "info")
       return
     }
     addBookToReading(book)
@@ -395,7 +395,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
                     onClick={() => setDescExpanded(!descExpanded)}
                     className="text-xs text-accent-ink font-medium mt-1.5 hover:underline"
                   >
-                    {descExpanded ? "Show less" : "Read more"}
+                    {descExpanded ? t("book_card.show_less") : t("book_card.read_more")}
                   </button>
                 )}
               </div>

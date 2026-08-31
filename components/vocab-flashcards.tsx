@@ -92,7 +92,7 @@ export function VocabFlashcards({ isOpen, onClose }: VocabFlashcardsProps) {
               onClick={() => { setMode(mode === "review" ? "browse" : "review"); setCurrentIdx(0); setShowAnswer(false); setSessionComplete(false) }}
               className="px-3 py-1.5 text-xs font-medium rounded-lg bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300"
             >
-              {mode === "review" ? "Browse All" : "Review Due"}
+              {mode === "review" ? t("vocab_flashcards.browse_all") : t("vocab_flashcards.review_due")}
             </button>
             <button onClick={onClose} aria-label={t("vocab_flashcards.close_flashcards")} className="p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800">
               <X className="w-5 h-5 text-stone-400" />

@@ -215,7 +215,7 @@ function ShowcaseOverlay({
     setPeekLoading(false)
     if (closingRef.current) return
     if (!text) {
-      showToast("Preview unavailable right now", "info")
+      showToast(t("book_showcase.preview_unavailable_right_now"), "info")
       return
     }
     const page = document.createElement("canvas")
@@ -404,7 +404,7 @@ function ShowcaseOverlay({
           first page is open so nothing competes with the text. */}
       <div
         ref={panelRef}
-        className={`absolute bottom-[max(env(safe-area-inset-bottom),16px)] left-1/2 w-[min(560px,92vw)] -translate-x-1/2 transition-opacity duration-300 lg:bottom-auto lg:left-auto lg:right-[7vw] lg:top-1/2 lg:w-[min(560px,42vw)] lg:-translate-y-1/2 lg:translate-x-0 ${peeking ? "pointer-events-none opacity-0" : "opacity-100"}`}
+        className={`absolute bottom-[max(env(safe-area-inset-bottom),16px)] left-1/2 w-[min(560px,92vw)] -translate-x-1/2 transition-opacity duration-300 lg:bottom-auto lg:left-auto lg:right-[7vw] lg:top-1/2 lg:w-[min(560px,42vw)] lg:-translate-y-1/2 lg:translate-x-0 ${peeking ? t("book_showcase.pointer_events_none_opacity_0") : "opacity-100"}`}
       >
         <motion.div variants={stagger} initial="hidden" animate={panelState}>
           <motion.h1
@@ -454,7 +454,7 @@ function ShowcaseOverlay({
               ref={descRef}
               id="showcase-description"
               className={`text-[15px] leading-[1.6] text-stage-ink-muted lg:text-[17px] lg:leading-[1.65] ${
-                descExpanded ? "" : "line-clamp-4 lg:line-clamp-[7]"
+                descExpanded ? "" : t("book_showcase.line_clamp_4_lg_line_clamp")
               }`}
             >
               {display.description}
@@ -467,7 +467,7 @@ function ShowcaseOverlay({
                 aria-controls="showcase-description"
                 className="mt-1.5 inline-flex min-h-[40px] items-center gap-1 text-[14px] font-medium text-stage-amber transition-opacity hover:opacity-80"
               >
-                {descExpanded ? "Show less" : "Read more"}
+                {descExpanded ? t("book_card.show_less") : t("book_card.read_more")}
                 <svg
                   width="15"
                   height="15"

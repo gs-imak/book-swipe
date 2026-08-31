@@ -407,7 +407,7 @@ export function GlobalSearch({ isOpen, onClose, onBookClick }: GlobalSearchProps
                           )}
                           <div className="flex-1 min-w-0 py-0.5">
                             <p className="font-semibold text-sm text-stone-900 dark:text-stone-100 line-clamp-1 group-hover:text-amber-800 dark:group-hover:text-amber-300 transition-colors">
-                              {result.book?.title || "Unknown Book"}
+                              {result.book?.title || t("global_search.unknown_book")}
                             </p>
                             <span className="inline-flex items-center gap-1 text-[10px] font-medium text-stone-400 dark:text-stone-500 mt-0.5">
                               <span className="capitalize">{result.note.type}</span>
@@ -462,7 +462,7 @@ export function GlobalSearch({ isOpen, onClose, onBookClick }: GlobalSearchProps
                           )}
                           <div className="flex-1 min-w-0 py-0.5">
                             <p className="font-semibold text-sm text-stone-900 dark:text-stone-100 line-clamp-1 group-hover:text-amber-800 dark:group-hover:text-amber-300 transition-colors">
-                              {result.book?.title || "Unknown Book"}
+                              {result.book?.title || t("global_search.unknown_book")}
                             </p>
                             <div className="flex items-center gap-1 mt-0.5">
                               {Array.from({ length: 5 }).map((_, i) => (

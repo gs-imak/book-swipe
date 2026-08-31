@@ -159,12 +159,12 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
     clearLikedBooks()
     setLikedBooks([])
     setShowClearConfirm(false)
-    showToast("Library cleared", "info")
+    showToast(t("dashboard.library_cleared"), "info")
   }
 
   const handleSearchSave = (book: Book) => {
     if (!addLikedBook(book)) {
-      showToast("Already in your library", "info")
+      showToast(t("dashboard.already_in_your_library"), "info")
       return
     }
     setLikedBooks(getLikedBooks())
@@ -175,7 +175,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
   const handleStartReading = (book: Book) => {
     const alreadyReading = getReadingProgress().some(p => p.bookId === book.id)
     if (alreadyReading) {
-      showToast("Already in your reading list", "info")
+      showToast(t("book_card.already_in_your_reading_list"), "info")
       return
     }
     addBookToReading(book)
@@ -480,7 +480,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                         }}
                         className="text-xs font-medium text-ink-muted hover:text-accent-ink transition-colors px-1"
                       >
-                        {showAllReading ? "Show less" : `Reading ${othersCount} more...`}
+                        {showAllReading ? t("book_card.show_less") : `Reading ${othersCount} more...`}
                       </button>
                       <AnimatePresence>
                         {showAllReading && (

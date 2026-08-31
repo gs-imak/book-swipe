@@ -400,7 +400,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                           onClick={() => setDescExpanded(!descExpanded)}
                           className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium mt-1 transition-colors"
                         >
-                          {descExpanded ? "Show less" : "...more"}
+                          {descExpanded ? t("book_card.show_less") : "...more"}
                         </button>
                       )}
                     </div>

@@ -136,7 +136,7 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
                 />
               </div>
               <p className="text-xs text-stone-400 dark:text-stone-500 mt-1.5">
-                {pointsToNext > 0 ? `${pointsToNext} XP to level ${currentLevel + 1}` : "Max level reached!"}
+                {pointsToNext > 0 ? `${pointsToNext} XP to level ${currentLevel + 1}` : t("achievements_panel.max_level_reached")}
               </p>
             </motion.div>
 

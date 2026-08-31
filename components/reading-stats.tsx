@@ -291,7 +291,7 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1"> {t("reading_stats.books_this_year")}{computed.completedLastYear > 0 ? " vs last" : ""}
+                      <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1"> {t("reading_stats.books_this_year")}{computed.completedLastYear > 0 ? t("reading_stats.vs_last") : ""}
                       </p>
                     </div>
                     <div className="text-center p-3 bg-stone-50 dark:bg-stone-800/60 rounded-xl">
@@ -431,7 +431,7 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                           ? `${computed.monthlyChange}% more this month`
                           : computed.monthlyChange < 0
                             ? `${Math.abs(computed.monthlyChange)}% less this month`
-                            : "Same as last month"
+                            : t("reading_stats.same_as_last_month")
                       }
                       positive={computed.monthlyChange >= 0}
                     />
@@ -458,7 +458,7 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                           value={`~${paceInsights.avgPagesPerHour} pages/hour`}
                         />
                       )}
-                      {paceInsights.bestDay !== "N/A" && (
+                      {paceInsights.bestDay !== t("reading_stats.n_a") && (
                         <InsightCard
                           icon={<Calendar className="w-4 h-4 text-amber-600" />}
                           label={t("reading_stats.most_active_day")}

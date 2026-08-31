@@ -166,7 +166,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
           <div className="lg:flex lg:items-center lg:justify-center lg:py-1">
             <button
               onClick={() => toggleTheme()}
-              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              aria-label={isDark ? t("mobile_nav.switch_to_light_mode") : t("mobile_nav.switch_to_dark_mode")}
               className="flex flex-col items-center gap-0.5 py-2 px-1 rounded-control text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors duration-150 w-[calc(100%-8px)]"
             >
               {isDark ? <Sun className="w-[20px] h-[20px]" strokeWidth={1.8} /> : <Moon className="w-[20px] h-[20px]" strokeWidth={1.8} />}
@@ -177,7 +177,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
             <div className="lg:flex lg:items-center lg:justify-center lg:pb-2">
               <button
                 onClick={onSignIn}
-                aria-label={isSignedIn ? "Account synced" : "Sign in to sync"}
+                aria-label={isSignedIn ? t("mobile_nav.account_synced") : t("settings_page.sign_in_to_sync")}
                 className={`flex flex-col items-center gap-0.5 py-2 px-1 rounded-lg transition-colors duration-150 w-[calc(100%-8px)] ${
                   isSignedIn
                     ? "text-success-ink"

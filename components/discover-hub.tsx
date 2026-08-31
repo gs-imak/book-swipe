@@ -547,7 +547,7 @@ export function DiscoverHub({
             title={
               authorData
                 ? `More by ${authorData.author}`
-                : "Author Spotlight"
+                : t("discover_hub.author_spotlight")
             }
             subtitle={
               authorData
