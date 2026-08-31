@@ -308,8 +308,8 @@ function FloatingBooks() {
             left: book.left,
             top: book.top,
             opacity: book.opacity,
-            ["--rotate" as string]: t("login_screen.deg", { v0: book.rotate }),
-            animation: t("login_screen.float_s_ease_in_out_s", { v0: book.duration, v1: book.delay }),
+            ["--rotate" as string]: `${book.rotate}deg`,
+            animation: `float ${book.duration}s ease-in-out ${book.delay}s infinite`,
           }}
         >
           <BookOpen style={{ width: book.size, height: book.size }} />

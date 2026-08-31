@@ -210,7 +210,7 @@ async function matchBookToAPI(row: GoodreadsRow): Promise<Book | null> {
 
   // Fallback: title + author
   try {
-    const query = t("goodreads_import.intitle_inauthor", { v0: row.title, v1: row.author })
+    const query = `intitle:${row.title} inauthor:${row.author}`
     const res = await fetch(`/api/books?q=${encodeURIComponent(query)}&maxResults=1&lang=all`)
     const data = await res.json()
     if (data.items && data.items.length > 0) {

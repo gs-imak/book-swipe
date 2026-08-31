@@ -1901,7 +1901,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                             fontSize: `${fontSize}px`,
                             lineHeight: "1.6",
                             color: currentTheme.text,
-                            borderLeft: t("book_reader.3px_solid", { v0: currentTheme.progressFill }),
+                            borderLeft: `3px solid ${currentTheme.progressFill}`,
                             opacity: 0.85,
                             margin: "0 auto",
                             marginBottom: "0.5em",

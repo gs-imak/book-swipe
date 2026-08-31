@@ -89,7 +89,7 @@ export function WhereToRead({ book }: WhereToReadProps) {
             <div>
               {priceInfo.saleability === t("free_books_browser.free") ? (
                 <span className="text-sm font-bold text-green-600">{t("where_to_read.free")}</span>
-              ) : priceInfo.saleability === t("where_to_read.for_sale") ? (
+              ) : priceInfo.saleability === "FOR_SALE" ? (
                 <div className="flex items-center gap-2">
                   {priceInfo.retailPrice && (
                     <span className="text-sm font-bold text-stone-900 dark:text-stone-100">

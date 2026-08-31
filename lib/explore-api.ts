@@ -207,7 +207,7 @@ export async function getAuthorBooks(
   excludeIds: Set<string> = new Set()
 ): Promise<Book[]> {
   try {
-    const books = await searchGoogleBooks(t("books_api.inauthor", { v0: authorName }), 15)
+    const books = await searchGoogleBooks(`inauthor:"${authorName}"`, 15)
     const filtered = books.filter((b) => !excludeIds.has(b.id))
     addBooksToCache(filtered)
     return filtered.slice(0, 10)

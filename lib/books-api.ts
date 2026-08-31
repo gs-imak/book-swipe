@@ -371,7 +371,7 @@ export async function fetchPersonalizedBooks(likedBooks: Book[]): Promise<Book[]
   // Fetch in parallel: Google genre + Google author + Open Library genre
   const promises: Promise<Book[]>[] = [
     ...topGenres.map(g => getBooksByCategory(g, 8)),
-    ...topAuthors.map(a => searchGoogleBooks(t("books_api.inauthor", { v0: a }), 8)),
+    ...topAuthors.map(a => searchGoogleBooks(`inauthor:"${a}"`, 8)),
     ...topGenres.slice(0, 2).map(g => searchOpenLibrary(g, 8)),
   ]
 

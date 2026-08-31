@@ -296,7 +296,7 @@ export function SettingsPage({ onBack, onSignIn }: SettingsPageProps) {
               >
                 <span
                   className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                    currentTheme === "dark" ? t("settings_page.translate_x_22px") : t("settings_page.translate_x_0_5")
+                    currentTheme === "dark" ? "translate-x-[22px]" : "translate-x-0.5"
                   }`}
                 />
               </span>

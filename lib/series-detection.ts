@@ -2,7 +2,6 @@
 
 import { Book } from "./book-data"
 import { searchGoogleBooks } from "./books-api"
-import { t } from "@/lib/i18n"
 
 const SERIES_CACHE_KEY = "bookswipe_series_cache"
 const SERIES_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
@@ -214,7 +213,7 @@ export async function findNextInSeries(
 
   try {
     // Search for series books using the series name
-    const query = t("series_detection.intitle", { v0: seriesName, v1: seriesName })
+    const query = `"${seriesName}" intitle:"${seriesName}"`
     const results = await searchGoogleBooks(query, 10)
 
     // Filter to likely series matches: same series name in title or same author

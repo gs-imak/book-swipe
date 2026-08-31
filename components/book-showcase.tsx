@@ -404,7 +404,7 @@ function ShowcaseOverlay({
           first page is open so nothing competes with the text. */}
       <div
         ref={panelRef}
-        className={`absolute bottom-[max(env(safe-area-inset-bottom),16px)] left-1/2 w-[min(560px,92vw)] -translate-x-1/2 transition-opacity duration-300 lg:bottom-auto lg:left-auto lg:right-[7vw] lg:top-1/2 lg:w-[min(560px,42vw)] lg:-translate-y-1/2 lg:translate-x-0 ${peeking ? t("book_showcase.pointer_events_none_opacity_0") : "opacity-100"}`}
+        className={`absolute bottom-[max(env(safe-area-inset-bottom),16px)] left-1/2 w-[min(560px,92vw)] -translate-x-1/2 transition-opacity duration-300 lg:bottom-auto lg:left-auto lg:right-[7vw] lg:top-1/2 lg:w-[min(560px,42vw)] lg:-translate-y-1/2 lg:translate-x-0 ${peeking ? "pointer-events-none opacity-0" : "opacity-100"}`}
       >
         <motion.div variants={stagger} initial="hidden" animate={panelState}>
           <motion.h1
@@ -454,7 +454,7 @@ function ShowcaseOverlay({
               ref={descRef}
               id="showcase-description"
               className={`text-[15px] leading-[1.6] text-stage-ink-muted lg:text-[17px] lg:leading-[1.65] ${
-                descExpanded ? "" : t("book_showcase.line_clamp_4_lg_line_clamp")
+                descExpanded ? "" : "line-clamp-4 lg:line-clamp-[7]"
               }`}
             >
               {display.description}
