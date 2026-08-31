@@ -4,7 +4,7 @@ import { useState, useSyncExternalStore } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Target, Check } from "lucide-react"
 import { updateReadingGoals } from "@/lib/storage"
-import { t } from "@/lib/i18n"
+import { t, tv } from "@/lib/i18n"
 
 const GOAL_CONFIGURED_KEY = "bookswipe_goal_configured"
 
@@ -94,7 +94,7 @@ export function ReadingGoalSetter({ onGoalSet }: ReadingGoalSetterProps) {
                     <p className={`text-sm font-semibold ${
                       selected === opt.value ? "text-amber-800 dark:text-amber-300" : "text-stone-800 dark:text-stone-200"
                     }`}>
-                      {opt.label}
+                      {tv(opt.label)}
                     </p>
                     <p className={`text-[11px] mt-0.5 ${
                       selected === opt.value ? "text-amber-600" : "text-stone-400"

@@ -49,7 +49,7 @@ import { getShelves, getBooksForShelf, shouldShowBackupReminder, dismissBackupRe
 import { estimateReadingTime, getReadingSpeed, setReadingSpeed, getAllSpeeds, type ReadingSpeed } from "@/lib/reading-time"
 import { upgradeLikedBookCovers } from "@/lib/itunes-covers"
 import { hasVerifiedRating } from "@/lib/book-truth"
-import { t } from "@/lib/i18n"
+import { t, tv } from "@/lib/i18n"
 
 // Module scope: a constant lookup table, so it isn't rebuilt on every render
 // (and doesn't need to be a memo dependency).
@@ -820,7 +820,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                                 : "bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700"
                             }`}
                           >
-                            {opt.label}
+                            {tv(opt.label)}
                           </button>
                         ))}
                       </div>
@@ -842,7 +842,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                                 : "bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700"
                             }`}
                           >
-                            {f.label}
+                            {tv(f.label)}
                           </button>
                         ))}
                       </div>
@@ -882,7 +882,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                         className="text-[11px] text-stone-500 dark:text-stone-400 bg-transparent border-none cursor-pointer hover:text-stone-700 dark:hover:text-stone-300"
                       >
                         {getAllSpeeds().map(s => (
-                          <option key={s.value} value={s.value}>{s.label}</option>
+                          <option key={s.value} value={s.value}>{tv(s.label)}</option>
                         ))}
                       </select>
                     </div>

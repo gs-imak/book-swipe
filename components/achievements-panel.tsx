@@ -9,7 +9,7 @@ import { ACHIEVEMENTS, getAchievementsByCategory } from "@/lib/achievements"
 import { AchievementBadge } from "./achievement-badge"
 import { IconBadge } from "./icon-badge"
 import type { LucideIcon } from "lucide-react"
-import { t } from "@/lib/i18n"
+import { t, tv } from "@/lib/i18n"
 
 interface AchievementsPanelProps {
   isOpen: boolean
@@ -110,7 +110,7 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
                   <Trophy className="w-5 h-5 text-amber-600" />
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-medium text-stone-500 dark:text-stone-400"> {t("achievements_panel.level")} {currentLevel} {t("achievements_panel.text")} {unlockedCount}/{totalAchievements} {t("achievements_panel.unlocked")} </p>
+                  <p className="text-sm font-medium text-stone-500 dark:text-stone-400"> {t("achievements_panel.level")} {currentLevel} &middot; {unlockedCount}/{totalAchievements} {t("achievements_panel.unlocked")} </p>
                 </div>
               </div>
             </motion.div>
@@ -154,7 +154,7 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
                       : 'text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300'
                   }`}
                 >
-                  {tab.label}
+                  {tv(tab.label)}
                 </button>
               ))}
             </div>
@@ -261,8 +261,8 @@ function OverviewTab({ stats, achievements, completionPercentage }: OverviewTabP
               <div key={achievement.id} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-stone-200/60 shadow-sm">
                 <AchievementBadge iconKey={achievement.icon} tier={achievement.type as "bronze" | "silver" | "gold" | "platinum"} unlocked={true} />
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-sm text-stone-900">{achievement.name}</h4>
-                  <p className="text-xs text-stone-500 truncate">{achievement.description}</p>
+                  <h4 className="font-medium text-sm text-stone-900">{tv(achievement.name)}</h4>
+                  <p className="text-xs text-stone-500 truncate">{tv(achievement.description)}</p>
                 </div>
                 <span className="text-[11px] text-stone-400 flex-shrink-0">
                   {achievement.unlockedAt ? new Date(achievement.unlockedAt).toLocaleDateString() : ""}
@@ -305,7 +305,7 @@ function AchievementsTab({ categorizedAchievements }: AchievementsTabProps) {
           <div key={category.key}>
             <h3 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
               <IconBadge icon={catIcon.icon} color={catIcon.color} size="sm" />
-              {category.name}
+              {tv(category.name)}
             </h3>
             <div className="space-y-2">
               {categorizedAchievements[category.key]?.map((achievement: Achievement) => (
@@ -341,14 +341,14 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-0.5">
             <h4 className={`font-medium text-sm ${isUnlocked ? 'text-stone-900' : 'text-stone-400'}`}>
-              {achievement.name}
+              {tv(achievement.name)}
             </h4>
             {isUnlocked && (
               <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 whitespace-nowrap flex-shrink-0"> {t("common.done")} </span>
             )}
           </div>
           <p className={`text-xs leading-relaxed ${isUnlocked ? 'text-stone-500' : 'text-stone-400'}`}>
-            {achievement.description}
+            {tv(achievement.description)}
           </p>
 
           {achievement.maxProgress && !isUnlocked && (
@@ -418,7 +418,7 @@ function StatsTab({ stats }: { stats: UserStats }) {
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
       {statIconMap.map((item, index) => (
         <motion.div
-          key={item.label}
+          key={tv(item.label)}
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: Math.min(index * 0.03, 0.2) }}
@@ -427,7 +427,7 @@ function StatsTab({ stats }: { stats: UserStats }) {
           <IconBadge icon={item.icon} color={item.color} />
           <div>
             <p className="text-base font-bold text-stone-900">{statValues[index]}</p>
-            <p className="text-xs text-stone-500">{item.label}</p>
+            <p className="text-xs text-stone-500">{tv(item.label)}</p>
           </div>
         </motion.div>
       ))}

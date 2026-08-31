@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { BookOpen, ArrowRight, Bookmark, Library, Star, Heart, Clock, Sparkles, BookMarked } from "lucide-react"
 import { motion } from "framer-motion"
 import Image from "next/image"
-import { t } from "@/lib/i18n"
+import { t, tv } from "@/lib/i18n"
 
 interface LoginScreenProps {
   onLogin: () => void
@@ -237,7 +237,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
           ].map((feature, i) => {
             return (
               <div
-                key={feature.title}
+                key={tv(feature.title)}
                 className="hero-rise group flex items-start gap-4 sm:gap-5 p-5 sm:p-6 rounded-2xl border border-stone-200/60 dark:border-stone-700/60 bg-white dark:bg-stone-900 transition-all duration-300 hover:shadow-md"
                 style={{ "--rise-delay": `${340 + i * 80}ms` } as React.CSSProperties}
               >
@@ -246,10 +246,10 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 </div>
                 <div>
                   <h3 className="text-base font-semibold text-stone-800 dark:text-stone-200 mb-1">
-                    {feature.title}
+                    {tv(feature.title)}
                   </h3>
                   <p className="text-sm leading-relaxed text-stone-500 dark:text-stone-400">
-                    {feature.description}
+                    {tv(feature.description)}
                   </p>
                 </div>
               </div>

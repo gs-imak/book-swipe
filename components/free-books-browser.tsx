@@ -18,7 +18,7 @@ import {
   getCoverUrl,
 } from "@/lib/gutenberg-browser-api"
 import Image from "next/image"
-import { t } from "@/lib/i18n"
+import { t, tv } from "@/lib/i18n"
 
 // Lazy: the reader is ~2800 lines and only needed once a book is opened —
 // keeps it out of the browse chunk (book-detail-modal lazy-loads it the same way).
@@ -277,7 +277,7 @@ export function FreeBooksBrowser() {
                     : "bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700"
                 }`}
               >
-                {cat.label}
+                {tv(cat.label)}
               </button>
             ))}
           </div>

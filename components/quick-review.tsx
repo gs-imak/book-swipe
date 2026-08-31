@@ -9,7 +9,7 @@ import { BookCover } from "@/components/book-cover"
 import { Book } from "@/lib/book-data"
 import { BookReview, saveBookReview } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
-import { t } from "@/lib/i18n"
+import { t, tv } from "@/lib/i18n"
 
 interface QuickReviewProps {
   book: Book
@@ -216,7 +216,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
               className="h-auto p-2 flex flex-col gap-1 text-center"
             >
               {(() => { const MIcon = moodIconMap[mood.icon]; return MIcon ? <MIcon className="w-5 h-5" /> : null })()}
-              <span className="text-xs">{mood.label}</span>
+              <span className="text-xs">{tv(mood.label)}</span>
             </Button>
           ))}
         </div>

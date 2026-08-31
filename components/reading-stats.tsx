@@ -19,7 +19,7 @@ import {
   type ReadingGoals,
 } from "@/lib/storage"
 import { Book } from "@/lib/book-data"
-import { t } from "@/lib/i18n"
+import { t, tv } from "@/lib/i18n"
 
 interface ReadingStatsProps {
   isOpen: boolean
@@ -338,9 +338,9 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                     </div>
                     <div className="space-y-3">
                       {computed.genreData.map((genre, i) => (
-                        <div key={genre.name}>
+                        <div key={tv(genre.name)}>
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm text-stone-700 dark:text-stone-300 font-medium">{genre.name}</span>
+                            <span className="text-sm text-stone-700 dark:text-stone-300 font-medium">{tv(genre.name)}</span>
                             <span className="text-xs text-stone-400 tabular-nums">{genre.percentage}%</span>
                           </div>
                           <div className="h-3.5 bg-stone-100 dark:bg-stone-800 rounded-full overflow-hidden">

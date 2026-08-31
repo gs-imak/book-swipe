@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef, ReactNode } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { CheckCircle, AlertCircle, Info, X } from "lucide-react"
-import { t } from "@/lib/i18n"
+import { t, tv } from "@/lib/i18n"
 
 type ToastType = "success" | "error" | "info"
 
@@ -135,7 +135,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             >
               {icons[toast.type]}
               <span className={`text-sm font-medium flex-1 ${textColors[toast.type]}`}>
-                {toast.message}
+                {tv(toast.message)}
               </span>
               <button
                 onClick={() => dismiss(toast.id)}

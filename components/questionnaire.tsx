@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { UserPreferences } from "@/lib/book-data"
 import { motion, AnimatePresence } from "framer-motion"
 import { ArrowLeft, ChevronRight, Sparkles } from "lucide-react"
-import { t } from "@/lib/i18n"
+import { t, tv } from "@/lib/i18n"
 
 interface QuestionnaireProps {
   onComplete: (preferences: UserPreferences) => void
@@ -185,10 +185,10 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
               className="bg-white dark:bg-stone-900 rounded-2xl shadow-sm border border-stone-200/60 dark:border-stone-700/60 p-5 sm:p-8"
             >
               <h2 className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100 mb-1.5 leading-tight font-serif">
-                {question.title}
+                {tv(question.title)}
               </h2>
               <p className="text-sm sm:text-base text-stone-500 mb-6 sm:mb-8">
-                {question.subtitle}
+                {tv(question.subtitle)}
               </p>
 
               <div className={`grid gap-2 sm:gap-3 mb-6 sm:mb-8 ${currentQuestion <= 1 ? 'grid-cols-2' : t("questionnaire.grid_cols_1_sm_grid_cols")}`}>

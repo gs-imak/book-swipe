@@ -4,7 +4,7 @@ import { motion } from "framer-motion"
 import { Home, Sparkles, Trophy, BarChart3, BookOpen, Search, Sun, Moon, Camera, Cloud, User } from "lucide-react"
 import { toggleTheme } from "@/lib/theme"
 import { useTheme } from "@/lib/use-theme"
-import { t } from "@/lib/i18n"
+import { t, tv } from "@/lib/i18n"
 
 type NavView = "dashboard" | "swipe" | "read" | "achievements" | "profile"
 
@@ -82,7 +82,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
       >
         {/* Desktop: branding area at top of sidebar */}
         <div className="hidden lg:flex lg:items-center lg:justify-center lg:h-14 lg:border-b lg:border-border lg:shrink-0">
-          <span className="font-serif font-semibold text-[17px] text-ink">{t("mobile_nav.b")}</span>
+          <span className="font-serif font-semibold text-[17px] text-ink">B.</span>
         </div>
 
         {/* Nav items container */}
@@ -95,7 +95,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
                 <motion.button
                   key={item.id}
                   onClick={() => onNavigate(item.id)}
-                  aria-label={item.label}
+                  aria-label={tv(item.label)}
                   aria-current={isActive ? "page" : undefined}
                   className={[
                     // Base (mobile)
@@ -127,7 +127,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
                     ].join(" ")}
                   >
                     {item.id === "dashboard" && likedCount > 0
-                      ? `${item.label} · ${likedCount > 999 ? "1k" : likedCount}`
+                      ? `${tv(item.label)} · ${likedCount > 999 ? "1k" : likedCount}`
                       : item.label}
                   </span>
 

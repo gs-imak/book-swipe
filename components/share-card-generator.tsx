@@ -7,7 +7,7 @@ import { Book } from "@/lib/book-data"
 import { getBookReview, type BookReview } from "@/lib/storage"
 import { generateShareCard, copyImageToClipboard, downloadImage, type ShareTemplate } from "@/lib/share-card"
 import { useFocusTrap } from "@/lib/use-focus-trap"
-import { t } from "@/lib/i18n"
+import { t, tv } from "@/lib/i18n"
 
 interface ShareCardGeneratorProps {
   book: Book
@@ -204,7 +204,7 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
                     }`}
                   >
                     <div className={`w-full aspect-[4/5] rounded-lg ${t.preview} border border-stone-200/30`} />
-                    <span className="text-xs font-medium text-stone-700 dark:text-stone-300">{t.label}</span>
+                    <span className="text-xs font-medium text-stone-700 dark:text-stone-300">{tv(t.label)}</span>
                   </button>
                 ))}
               </div>

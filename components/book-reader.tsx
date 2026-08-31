@@ -10,7 +10,7 @@ import { generateRecap, type RecapSection } from "@/lib/story-recap"
 import { addVocabWord } from "@/lib/vocabulary"
 import { VocabFlashcards } from "./vocab-flashcards"
 import { useOverlayHistory } from "@/lib/use-overlay-history"
-import { t } from "@/lib/i18n"
+import { t, tv } from "@/lib/i18n"
 
 type ReaderTheme = "light" | "sepia" | "dark"
 
@@ -2116,7 +2116,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                     <div className="max-w-2xl mx-auto">
                       <div className="flex items-start gap-2 mb-3">
                         <Highlighter className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: currentTheme.progressFill }} />
-                        <p className="text-xs italic opacity-60 line-clamp-2">{t("common.text")}{noteInputFor.text}{t("common.text_2")}</p>
+                        <p className="text-xs italic opacity-60 line-clamp-2">&ldquo;{noteInputFor.text}&rdquo;</p>
                       </div>
                       <textarea
                         ref={noteInputRef}
@@ -2397,7 +2397,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                                             </span>
                                           </div>
                                           {note.selectedText && (
-                                            <p className="text-xs italic opacity-70 line-clamp-2 mb-1"> {t("common.text")}{note.selectedText}{t("common.text_2")} </p>
+                                            <p className="text-xs italic opacity-70 line-clamp-2 mb-1"> &ldquo;{note.selectedText}&rdquo; </p>
                                           )}
                                           {note.content && (
                                             <p className="text-xs opacity-70 line-clamp-2">
@@ -2637,7 +2637,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                         backgroundColor: readerFont === opt.id ? `${currentTheme.progressFill}15` : "transparent",
                       }}
                     >
-                      <span>{opt.label}</span>
+                      <span>{tv(opt.label)}</span>
                       {readerFont === opt.id && <span className="text-xs opacity-70">{t("book_reader.active")}</span>}
                     </button>
                   ))}
@@ -2802,7 +2802,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           opacity: ambientSound === sound.id ? 1 : 0.6,
                         }}
                       >
-                        {sound.label}
+                        {tv(sound.label)}
                       </button>
                     ))}
                     <button
@@ -2882,7 +2882,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                     <div className="flex items-center gap-2 py-4 opacity-70 text-sm">
                       <Loader2 className="w-4 h-4 animate-spin" /> {t("book_reader.looking_it_up")} </div>
                   ) : definition.error ? (
-                    <p className="text-sm opacity-70 py-2">{t("book_reader.no_definition_found_for")}{definition.word}{t("book_reader.text")}</p>
+                    <p className="text-sm opacity-70 py-2">{t("book_reader.no_definition_found_for")}{definition.word}&rdquo;.</p>
                   ) : (
                     <ol className="space-y-2.5 list-decimal list-inside">
                       {definition.defs.map((d, i) => (

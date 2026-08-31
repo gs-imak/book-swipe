@@ -73,3 +73,31 @@ export function formatDate(value: Date | number, options?: Intl.DateTimeFormatOp
 export { en, fr }
 export * from "./types"
 export * from "./locale"
+
+// ---------------------------------------------------------------------------
+// Translation by English text, for copy that lives in module-scope tables.
+//
+// Achievements, challenge definitions, mood descriptions and the like are
+// declared as `const X = [{ title: "First Discovery" }]` at module scope. A
+// t("key") call there would run at IMPORT time — before the reader's language
+// is known — and freeze English into the table for the session. Keeping the
+// English text as the identifier and translating at the point of render is the
+// gettext model, and it means the tables themselves need no edit at all.
+//
+// The index is built on first use from en.ts, so a string reachable this way is
+// exactly a string that was extracted. Anything unknown is returned as written,
+// which is visible in a French screenshot rather than silently blank.
+// ---------------------------------------------------------------------------
+let reverseIndex: Map<string, string> | null = null
+
+export function tv(text: string | null | undefined, vars?: TranslationVars): string {
+  if (!text) return ""
+  if (reverseIndex === null) {
+    reverseIndex = new Map()
+    for (const [key, value] of Object.entries(en)) {
+      if (!reverseIndex.has(value)) reverseIndex.set(value, key)
+    }
+  }
+  const key = reverseIndex.get(text)
+  return key ? t(key, vars) : text
+}

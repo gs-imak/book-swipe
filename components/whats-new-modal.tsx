@@ -10,7 +10,7 @@ import {
   CURRENT_FEATURE_VERSION,
   isOnboarded,
 } from "@/lib/storage"
-import { t } from "@/lib/i18n"
+import { t, tv } from "@/lib/i18n"
 
 interface FeatureEntry {
   id: string
@@ -134,10 +134,10 @@ export function WhatsNewModal() {
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-stone-900 dark:text-stone-100 leading-tight">
-                          {feature.title}
+                          {tv(feature.title)}
                         </p>
                         <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5 leading-relaxed">
-                          {feature.description}
+                          {tv(feature.description)}
                         </p>
                       </div>
                     </motion.li>

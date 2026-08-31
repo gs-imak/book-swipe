@@ -951,8 +951,8 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
             <p className="text-center lg:text-left text-xs text-ink-muted [@media(max-height:700px)]:hidden lg:[@media(max-height:700px)]:block">
               <span className="lg:hidden">{t("swipe_interface.swipe_left_to_pass_right_to")}</span>
               <span className="hidden lg:inline">
-                <kbd className="px-1.5 py-0.5 rounded bg-surface-2 text-ink-muted font-mono text-[10.5px]">{t("swipe_interface.text")}</kbd> {t("swipe_interface.pass")} <span className="mx-2 text-ink-faint">·</span>
-                <kbd className="px-1.5 py-0.5 rounded bg-surface-2 text-ink-muted font-mono text-[10.5px]">{t("swipe_interface.text_2")}</kbd> {t("common.save")} <span className="mx-2 text-ink-faint">·</span>
+                <kbd className="px-1.5 py-0.5 rounded bg-surface-2 text-ink-muted font-mono text-[10.5px]">&larr;</kbd> {t("swipe_interface.pass")} <span className="mx-2 text-ink-faint">·</span>
+                <kbd className="px-1.5 py-0.5 rounded bg-surface-2 text-ink-muted font-mono text-[10.5px]">&rarr;</kbd> {t("common.save")} <span className="mx-2 text-ink-faint">·</span>
                 <kbd className="px-1.5 py-0.5 rounded bg-surface-2 text-ink-muted font-mono text-[10.5px]">{t("swipe_interface.ctrl_z")}</kbd> {t("swipe_interface.undo")} </span>
             </p>
           </div>

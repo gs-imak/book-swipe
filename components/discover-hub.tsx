@@ -40,7 +40,7 @@ import { useGamification } from "./gamification-provider"
 import { useToast } from "./toast-provider"
 import { upgradeVisibleBooks, formatCount } from "@/lib/book-enrichment"
 import { hasVerifiedRating } from "@/lib/book-truth"
-import { t } from "@/lib/i18n"
+import { t, tv } from "@/lib/i18n"
 
 // ---------------------------------------------------------------------------
 // Props
@@ -475,7 +475,7 @@ export function DiscoverHub({
                         </span>
                       </>
                     )}
-                    <span className="text-[10px] text-stone-300 mx-1"> {t("discover_hub.u00b7")} </span>
+                    <span className="text-[10px] text-stone-300 mx-1"> &middot; </span>
                     <span className="text-[10px] text-stone-400">
                       {surprise.book.pages}p
                     </span>
@@ -602,7 +602,7 @@ export function DiscoverHub({
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-stone-900 dark:text-stone-100">
-                      {list.name}
+                      {tv(list.name)}
                     </p>
                     <p className="text-[11px] text-stone-400">
                       {list.description}
@@ -687,7 +687,7 @@ export function DiscoverHub({
                   <div className="flex items-center gap-2">
                     {(() => { const GIcon = subGenreIconMap[genre.emoji]; return GIcon ? <GIcon className="w-4 h-4" /> : null })()}
                     <span className="text-xs font-semibold truncate">
-                      {genre.name}
+                      {tv(genre.name)}
                     </span>
                     {isExpanded && (
                       <ChevronDown className="w-3.5 h-3.5 text-stone-400 ml-auto flex-shrink-0" />
@@ -713,10 +713,10 @@ export function DiscoverHub({
                         <div
                           className={`rounded-lg p-3 mb-3 ${colorMap[genre.color] || "bg-stone-50"}`}
                         >
-                          <p className="text-xs font-semibold mb-1"> {t("discover_hub.what_is")} {genre.name}?
+                          <p className="text-xs font-semibold mb-1"> {t("discover_hub.what_is")} {tv(genre.name)}?
                           </p>
                           <p className="text-[11px] opacity-80 leading-relaxed">
-                            {genre.description}
+                            {tv(genre.description)}
                           </p>
                         </div>
 

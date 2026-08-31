@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Trophy, Star, Zap, Award } from "lucide-react"
+import { tv } from "@/lib/i18n"
 import { GamificationEvent } from "@/lib/gamification"
 
 interface GamificationToastProps {
@@ -74,10 +75,10 @@ export function GamificationToast({ events, onEventShown, onOpenAchievements }: 
             
             <div className="flex-1">
               <h3 className="font-bold text-white text-lg leading-tight">
-                {currentEvent.title}
+                {tv(currentEvent.title)}
               </h3>
               <p className="text-white/90 text-sm">
-                {currentEvent.description}
+                {tv(currentEvent.description)}
               </p>
               
               {currentEvent.type === 'achievement_unlocked' && currentEvent.achievement && (

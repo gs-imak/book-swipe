@@ -25,7 +25,7 @@ import { searchGutenberg, type GutenbergBook } from "@/lib/gutenberg-api"
 import { hasVerifiedRating } from "@/lib/book-truth"
 import { RatingBreakdownPanel } from "@/components/rating-breakdown-panel"
 import { useOverlayHistory } from "@/lib/use-overlay-history"
-import { t } from "@/lib/i18n"
+import { t, tv } from "@/lib/i18n"
 
 // Code-split the reader (1,666 lines) — only loaded when user opens a book to read
 const BookReader = dynamic(() => import("./book-reader"), {
@@ -510,7 +510,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                       : "text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300"
                   }`}
                 >
-                  {tab.label}
+                  {tv(tab.label)}
                   {tab.hasDot && (
                     <span className="ml-1.5 w-1.5 h-1.5 bg-amber-500 rounded-full inline-block" />
                   )}

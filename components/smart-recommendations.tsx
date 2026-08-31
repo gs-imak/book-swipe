@@ -16,7 +16,7 @@ import { motion } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
 import { useGamification } from "./gamification-provider"
 import { useToast } from "./toast-provider"
-import { t } from "@/lib/i18n"
+import { t, tv } from "@/lib/i18n"
 
 interface SmartRecommendationsProps {
   onBookLike?: (book: Book) => void
@@ -206,7 +206,7 @@ export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }
               }`}
             >
               {(() => { const MIcon = moodIconMap[mood.emoji]; return MIcon ? <MIcon className="w-3.5 h-3.5" /> : null })()}
-              {mood.name}
+              {tv(mood.name)}
             </button>
           ))}
         </div>
@@ -228,7 +228,7 @@ export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }
                 }`}
               >
                 {(() => { const TIcon = timeIconMap[time.emoji]; return TIcon ? <TIcon className="w-3 h-3" /> : null })()}
-                {time.name}
+                {tv(time.name)}
               </button>
             ))}
           </div>

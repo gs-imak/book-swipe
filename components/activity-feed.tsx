@@ -3,7 +3,7 @@
 import { useMemo } from "react"
 import { Heart, BookOpen, CheckCircle2, Star, BookMarked, FolderPlus, Trophy } from "lucide-react"
 import { getActivityLog, type ActivityEntry } from "@/lib/storage"
-import { t } from "@/lib/i18n"
+import { t, tv } from "@/lib/i18n"
 
 interface ActivityFeedProps {
   limit?: number
@@ -110,9 +110,9 @@ export function ActivityFeed({ limit = 20 }: ActivityFeedProps) {
 
       <div className="space-y-5">
         {grouped.map((group) => (
-          <div key={group.label}>
+          <div key={tv(group.label)}>
             <p className="text-[11px] font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider ml-9 mb-2">
-              {group.label}
+              {tv(group.label)}
             </p>
             <div className="space-y-1">
               {group.items.map((entry) => {

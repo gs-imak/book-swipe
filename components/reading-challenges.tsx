@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Target, BookOpen, FileText, Flame, Compass, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react"
 import { getLikedBooks, getReadingProgress, getBookReviews, getUserStats } from "@/lib/storage"
-import { t } from "@/lib/i18n"
+import { t, tv } from "@/lib/i18n"
 
 const CHALLENGES_KEY = "bookswipe_challenges"
 const PROMPT_CHALLENGES_KEY = "bookswipe_prompt_challenges"
@@ -450,10 +450,10 @@ export function ReadingChallenges({ isOpen, onClose }: ReadingChallengesProps) {
                           <h3 className={`text-sm font-semibold leading-tight ${
                             done ? "text-emerald-800 dark:text-emerald-300" : "text-stone-900 dark:text-stone-100"
                           }`}>
-                            {challenge.title}
+                            {tv(challenge.title)}
                           </h3>
                           <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5">
-                            {challenge.description}
+                            {tv(challenge.description)}
                           </p>
                         </div>
                       </div>
