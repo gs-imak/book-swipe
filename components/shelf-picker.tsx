@@ -56,11 +56,11 @@ export function ShelfPicker({ bookId, isOpen, onClose }: ShelfPickerProps) {
     if (assignedIds.includes(shelfId)) {
       removeBookFromShelf(bookId, shelfId)
       setAssignedIds(assignedIds.filter(id => id !== shelfId))
-      showToast(`Removed from ${shelf?.name || "shelf"}`, "info")
+      showToast(t("shelf_picker.removed_from", { v0: shelf?.name || "shelf" }), "info")
     } else {
       assignBookToShelf(bookId, shelfId)
       setAssignedIds([...assignedIds, shelfId])
-      showToast(`Added to ${shelf?.name || "shelf"}`)
+      showToast(t("shelf_picker.added_to", { v0: shelf?.name || "shelf" }))
     }
   }
 

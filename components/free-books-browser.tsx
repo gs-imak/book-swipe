@@ -396,8 +396,8 @@ function toLibraryBook(book: GutenbergBook): Book {
     genre: subjects.length ? subjects.slice(0, 3) : ["Classic"],
     mood: [],
     description: subjects.length
-      ? `A public-domain classic by ${author}. Themes: ${subjects.join(", ")}.`
-      : `A public-domain classic by ${author}.`,
+      ? t("free_books_browser.a_public_domain_classic_by_themes", { v0: author, v1: subjects.join(", ") })
+      : t("free_books_browser.a_public_domain_classic_by", { v0: author }),
     publishedYear: 0,
     readingTime: "",
     metadata: { source: "gutenberg", subjects },

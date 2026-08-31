@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server"
+import { t } from "@/lib/i18n"
 
 // Shared rate limiting for the API proxy routes.
 //
@@ -58,10 +59,10 @@ function checkMemory(key: string, limit: number, windowMs: number): boolean {
 async function checkUpstash(key: string, limit: number, windowMs: number): Promise<boolean> {
   // Pipeline: INCR the counter, and set its TTL only if it has none yet (NX), so
   // each fixed window expires ~windowMs after its first request.
-  const res = await fetch(`${UPSTASH_URL}/pipeline`, {
+  const res = await fetch(t("rate_limit.pipeline", { v0: UPSTASH_URL }), {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${UPSTASH_TOKEN}`,
+      Authorization: t("rate_limit.bearer", { v0: UPSTASH_TOKEN }),
       "Content-Type": "application/json",
     },
     body: JSON.stringify([
@@ -94,7 +95,7 @@ export async function checkRateLimit(
   identifier: string,
   { limit, windowMs, prefix }: RateLimitOptions,
 ): Promise<boolean> {
-  const key = `ratelimit:${prefix}:${identifier}`
+  const key = t("rate_limit.ratelimit", { v0: prefix, v1: identifier })
   if (upstashConfigured) {
     try {
       return await checkUpstash(key, limit, windowMs)

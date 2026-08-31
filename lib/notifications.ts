@@ -1,4 +1,6 @@
 "use client"
+import { t } from "@/lib/i18n"
+
 
 const NOTIFICATION_SETTINGS_KEY = "bookswipe_notification_settings"
 const LAST_NOTIFIED_KEY = "bookswipe_last_notified_date"
@@ -156,7 +158,7 @@ export function checkAndNotify(currentStreak: number, lastActivityDate: string):
   // Build the notification message
   let body: string
   if (currentStreak > 1) {
-    body = `Don't break your ${currentStreak}-day reading streak! Open BookSwipe to keep it going.`
+    body = t("notifications.don_t_break_your_day_reading", { v0: currentStreak })
   } else if (currentStreak === 1) {
     body = "You started a streak yesterday! Come back to keep it alive."
   } else {

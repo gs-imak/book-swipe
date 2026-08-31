@@ -31,4 +31,6 @@ export const DEFAULT_LOCALE: Locale = "en"
 export type Dictionary = Record<string, string>
 
 /** Values interpolated into a string: `{count} books` */
-export type TranslationVars = Record<string, string | number>
+/** Nullish is allowed and renders as empty: a caller interpolating an
+ *  optional name should not have to prove it exists at every call site. */
+export type TranslationVars = Record<string, string | number | null | undefined>

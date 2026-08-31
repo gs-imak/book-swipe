@@ -2,6 +2,7 @@
 
 import { Book } from "./book-data"
 import { searchGoogleBooks } from "./books-api"
+import { t } from "@/lib/i18n"
 
 // Client side of the LLM-direct recommender (see app/api/recommend + ADR-0003).
 // Flow: ask the route for {title, author, reason}[] based on the user's liked
@@ -85,7 +86,7 @@ export async function resolveRecommendations(
 ): Promise<{ books: Book[]; reasons: Record<string, string> }> {
   const results = await Promise.allSettled(
     recs.map((r) =>
-      searchGoogleBooks(`intitle:"${r.title}" inauthor:"${r.author}"`, 1).then((books) => ({
+      searchGoogleBooks(t("recommend_client.intitle_inauthor", { v0: r.title, v1: r.author }), 1).then((books) => ({
         book: books[0] as Book | undefined,
         reason: r.reason,
       })),

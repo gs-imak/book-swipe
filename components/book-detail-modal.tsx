@@ -313,7 +313,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                     type="button"
                     onClick={() => setRatingsOpen(true)}
                     aria-haspopup="dialog"
-                    aria-label={`See how readers rated ${book.title}`}
+                    aria-label={t("book_detail_modal.see_how_readers_rated", { v0: book.title })}
                     className="-mx-1.5 flex min-h-[40px] items-center gap-1 rounded-full px-1.5 transition-colors hover:bg-stone-100 dark:hover:bg-stone-800"
                   >
                     <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
@@ -334,7 +334,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                         {e.series && (
                           <div className="flex items-center gap-1">
                             <Library className="w-3.5 h-3.5 text-stone-400 dark:text-stone-500" />
-                            <span>{e.series.index ? `Book ${e.series.index} of ${e.series.name}` : e.series.name}</span>
+                            <span>{e.series.index ? t("book_detail_modal.book_of", { v0: e.series.index, v1: e.series.name }) : e.series.name}</span>
                           </div>
                         )}
                         {e.firstPublished && (
@@ -375,7 +375,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                       <div className="flex items-center gap-1 text-amber-600 dark:text-amber-500">
                         <TrendingUp className="w-3.5 h-3.5" />
                         <span className="text-xs font-medium">
-                          {hoursLeft < 2 ? `${minutesLeft}m to finish` : `~${hoursLeft}h to finish`}
+                          {hoursLeft < 2 ? t("book_detail_modal.m_to_finish", { v0: minutesLeft }) : t("book_detail_modal.h_to_finish", { v0: hoursLeft })}
                         </span>
                       </div>
                     ) : null
@@ -472,7 +472,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                   {onRemoveBook && (
                     <button
                       onClick={() => {
-                        if (confirm(`Remove "${book.title}" from your library?`)) {
+                        if (confirm(t("book_detail_modal.remove_from_your_library", { v0: book.title }))) {
                           onRemoveBook(book)
                           onClose()
                         }
@@ -671,7 +671,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                             setBookTagDefs(getBookTags(book.id))
                           }}
                           className="ml-0.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 p-0.5 transition-colors"
-                          aria-label={`Remove tag ${tag.name}`}
+                          aria-label={t("book_detail_modal.remove_tag", { v0: tag.name })}
                         >
                           <X className="w-3 h-3" />
                         </button>
@@ -758,7 +758,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                                         backgroundColor: c,
                                         boxShadow: newTagColor === c ? `0 0 0 2px white, 0 0 0 4px ${c}` : "none",
                                       }}
-                                      aria-label={`Select color ${c}`}
+                                      aria-label={t("book_detail_modal.select_color", { v0: c })}
                                     >
                                       {newTagColor === c && (
                                         <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>

@@ -45,7 +45,7 @@ export function translatePlural(
 export function interpolate(raw: string, vars?: TranslationVars): string {
   if (!vars) return raw
   return raw.replace(/\{(\w+)\}/g, (whole, name: string) =>
-    Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : whole,
+    Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name] ?? "") : whole,
   )
 }
 

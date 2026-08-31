@@ -157,13 +157,13 @@ export function ProfileShareCard({ isOpen, onClose }: ProfileShareCardProps) {
     ctx.fillStyle = "#d97706"
     ctx.font = "bold 14px 'system-ui', sans-serif"
     ctx.textAlign = "center"
-    ctx.fillText(`Level ${stats.level} Reader`, W / 2, H - 80)
+    ctx.fillText(t("profile_share_card.level_reader", { v0: stats.level }), W / 2, H - 80)
 
     // Streak
     if (stats.currentStreak > 0) {
       ctx.fillStyle = "#78716c"
       ctx.font = "13px 'system-ui', sans-serif"
-      ctx.fillText(`${stats.currentStreak} day reading streak`, W / 2, H - 56)
+      ctx.fillText(t("profile_share_card.day_reading_streak", { v0: stats.currentStreak }), W / 2, H - 56)
     }
 
     // Footer

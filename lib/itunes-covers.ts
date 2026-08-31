@@ -3,6 +3,7 @@
 import { Book } from "./book-data"
 import { isItunesCover } from "./covers"
 import { getLikedBooks, saveLikedBooks } from "./storage"
+import { t } from "@/lib/i18n"
 
 // Background cover upgrade: swap each book's source cover (Google / Open Library)
 // for the Goodreads-grade Apple Books artwork resolved by its ISBN, keeping the

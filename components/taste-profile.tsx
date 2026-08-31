@@ -345,7 +345,7 @@ export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfilePr
                             <div
                               key={day.date}
                               className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-sm ${getHeatColor(day.count)}`}
-                              title={`${day.date}: ${day.count} activit${day.count === 1 ? "y" : "ies"}`}
+                              title={t("reading_stats.activit", { v0: day.date, v1: day.count, v2: day.count === 1 ? "y" : "ies" })}
                             />
                           ))}
                         </div>

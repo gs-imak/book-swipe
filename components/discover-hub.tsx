@@ -113,7 +113,7 @@ function ExploreBookCard({
         </p>
         <p className="text-[10px] text-stone-400/80 mb-1.5 truncate">
           {book.metadata?.ratingsCount
-            ? `${formatCount(book.metadata.ratingsCount)} ratings`
+            ? t("discover_hub.ratings", { v0: formatCount(book.metadata.ratingsCount) })
             : " "}
         </p>
         <button
@@ -238,7 +238,7 @@ export function DiscoverHub({
     (book: Book) => {
       onSaveBook(book)
       triggerActivity("like_book")
-      showToast(`"${book.title}" saved to library`)
+      showToast(t("book_showcase.saved_to_library", { v0: book.title }))
     },
     [onSaveBook, triggerActivity, showToast]
   )
@@ -546,12 +546,12 @@ export function DiscoverHub({
             icon={<User className="w-4 h-4 text-indigo-500" />}
             title={
               authorData
-                ? `More by ${authorData.author}`
+                ? t("discover_hub.more_by", { v0: authorData.author })
                 : t("discover_hub.author_spotlight")
             }
             subtitle={
               authorData
-                ? `You liked "${authorData.bookTitle}"`
+                ? t("discover_hub.you_liked", { v0: authorData.bookTitle })
                 : undefined
             }
           />

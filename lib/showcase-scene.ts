@@ -5,6 +5,7 @@
 // interactive-book pattern (hinged cover boxes + spring physics + drag
 // orbit), reimplemented for a single book against BookSwipe's warm palette.
 import * as THREE from "three"
+import { t } from "@/lib/i18n"
 
 export interface ShowcaseBookData {
   title: string
@@ -1107,7 +1108,7 @@ export function paintFirstPage(
     x.fillText(line, w / 2, y)
     y += 58
   }
-  x.font = `italic 28px ${serif}`
+  x.font = t("showcase_scene.italic_28px", { v0: serif })
   x.globalAlpha = 0.75
   x.fillText(opts.author, w / 2, y + 8)
   x.globalAlpha = 1
@@ -1135,7 +1136,7 @@ export function paintFirstPage(
   }
 
   x.textAlign = "center"
-  x.font = `italic 24px ${serif}`
+  x.font = t("showcase_scene.italic_24px", { v0: serif })
   x.globalAlpha = 0.55
   x.fillText("1", w / 2, h - 84)
   x.globalAlpha = 1

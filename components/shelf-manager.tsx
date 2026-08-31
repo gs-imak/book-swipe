@@ -84,8 +84,8 @@ export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManager
     const shelf = shelves.find(s => s.id === shelfId)
     const count = getBooksForShelf(shelfId).length
     const msg = count > 0
-      ? `Delete "${shelf?.name}"? ${count} book${count > 1 ? "s" : ""} will be unassigned.`
-      : `Delete "${shelf?.name}"?`
+      ? t("shelf_manager.delete_book_will_be_unassigned", { v0: shelf?.name, v1: count, v2: count > 1 ? "s" : "" })
+      : t("shelf_manager.delete", { v0: shelf?.name })
     if (confirm(msg)) {
       try {
         deleteShelf(shelfId)
@@ -187,7 +187,7 @@ export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManager
                     <span className="text-xs text-stone-400">{getBooksForShelf(shelf.id).length}</span>
                     <button
                       onClick={() => startEdit(shelf)}
-                      aria-label={`Edit ${shelf.name}`}
+                      aria-label={t("shelf_manager.edit", { v0: shelf.name })}
                       className="p-1.5 rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 dark:bg-stone-800 transition-all tap-target touch-manipulation"
                     >
                       <Pencil className="w-3.5 h-3.5" />
@@ -195,7 +195,7 @@ export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManager
                     {!shelf.isDefault && (
                       <button
                         onClick={() => handleDelete(shelf.id)}
-                        aria-label={`Delete ${shelf.name}`}
+                        aria-label={t("shelf_manager.delete_2", { v0: shelf.name })}
                         className="p-1.5 rounded-lg text-stone-400 hover:text-red-500 hover:bg-red-50 transition-all tap-target touch-manipulation"
                       >
                         <Trash2 className="w-3.5 h-3.5" />

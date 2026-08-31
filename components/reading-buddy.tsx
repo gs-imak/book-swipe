@@ -265,7 +265,7 @@ export function ReadingBuddyPanel({ bookId, bookTitle, progress, isOpen, onClose
                           <button
                             onClick={() => handleRemoveBuddy(buddy.code)}
                             className="p-1.5 text-stone-300 dark:text-stone-600 hover:text-red-400 dark:hover:text-red-400 transition-colors flex-shrink-0"
-                            aria-label={`Remove ${buddy.name}`}
+                            aria-label={t("reading_buddy.remove", { v0: buddy.name })}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>

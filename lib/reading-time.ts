@@ -1,4 +1,6 @@
 "use client"
+import { t } from "@/lib/i18n"
+
 
 const READING_SPEED_KEY = "bookswipe_reading_speed"
 
@@ -78,7 +80,7 @@ export function estimateReadingTime(pages: number, speed?: ReadingSpeed): string
   if (hours < 2.5) return "~2 hrs"
 
   const roundedHours = Math.round(hours)
-  return `~${roundedHours} hrs`
+  return t("reading_time.hrs", { v0: roundedHours })
 }
 
 export function estimateReadingMinutes(pages: number, speed?: ReadingSpeed): number {
@@ -88,7 +90,7 @@ export function estimateReadingMinutes(pages: number, speed?: ReadingSpeed): num
 }
 
 export function formatMinutesToDisplay(minutes: number): string {
-  if (minutes < 60) return `${minutes} min`
+  if (minutes < 60) return t("reading_stats.min", { v0: minutes })
   const hours = Math.floor(minutes / 60)
   const mins = minutes % 60
   if (mins === 0) return `${hours} hr${hours > 1 ? "s" : ""}`

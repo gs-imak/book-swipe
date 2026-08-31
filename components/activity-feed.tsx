@@ -33,19 +33,19 @@ function describeActivity(entry: ActivityEntry): string {
   const title = entry.bookTitle ? `"${entry.bookTitle}"` : "a book"
   switch (entry.type) {
     case "liked":
-      return `Liked ${title}`
+      return t("activity_feed.liked", { v0: title })
     case "started_reading":
-      return `Started reading ${title}`
+      return t("activity_feed.started_reading", { v0: title })
     case "finished":
-      return `Finished ${title}`
+      return t("activity_feed.finished", { v0: title })
     case "reviewed":
-      return `Reviewed ${title}${entry.detail ? ` -- ${entry.detail}` : ""}`
+      return t("activity_feed.reviewed", { v0: title, v1: entry.detail ? ` -- ${entry.detail}` : "" })
     case "added_to_shelf":
-      return `Added ${title} to ${entry.detail || "a shelf"}`
+      return t("activity_feed.added_to", { v0: title, v1: entry.detail || "a shelf" })
     case "created_collection":
-      return `Created collection "${entry.detail || ""}"`
+      return t("activity_feed.created_collection", { v0: entry.detail || "" })
     case "achievement_unlocked":
-      return `Unlocked "${entry.detail || "an achievement"}"`
+      return t("activity_feed.unlocked", { v0: entry.detail || "an achievement" })
     default:
       return "Activity"
   }
@@ -60,10 +60,10 @@ function formatRelativeTime(iso: string): string {
   const diffDay = Math.floor(diffMs / 86400000)
 
   if (diffMin < 1) return "Just now"
-  if (diffMin < 60) return `${diffMin}m ago`
-  if (diffHr < 24) return `${diffHr}h ago`
+  if (diffMin < 60) return t("activity_feed.m_ago", { v0: diffMin })
+  if (diffHr < 24) return t("activity_feed.h_ago", { v0: diffHr })
   if (diffDay === 1) return "Yesterday"
-  if (diffDay < 7) return `${diffDay}d ago`
+  if (diffDay < 7) return t("activity_feed.d_ago", { v0: diffDay })
 
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
 }

@@ -1450,7 +1450,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
       deleteBookNote(existing.id)
     } else {
       const preview = getPagePreview()
-      const chapterLabel = currentChapter?.title || `Page ${currentPage}`
+      const chapterLabel = currentChapter?.title || t("book_reader.page", { v0: currentPage })
       const content = preview ? `${chapterLabel} — "${preview}..."` : chapterLabel
       saveBookNote({
         bookId,
@@ -1496,7 +1496,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
           style={{ backgroundColor: currentTheme.bg, color: currentTheme.text }}
           role="dialog"
           aria-modal="true"
-          aria-label={`Reading ${bookTitle}`}
+          aria-label={t("book_reader.reading", { v0: bookTitle })}
         >
           {/* Top bar */}
           <div
@@ -1586,7 +1586,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                   onClick={cycleTheme}
                   className="tap-target flex items-center justify-center rounded-lg p-1.5 sm:p-2 -mr-2 transition-colors"
                   style={{ color: currentTheme.text }}
-                  aria-label={`Switch theme, currently ${theme}`}
+                  aria-label={t("book_reader.switch_theme_currently", { v0: theme })}
                 >
                   <AnimatePresence mode="wait">
                     <motion.div
@@ -1901,7 +1901,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                             fontSize: `${fontSize}px`,
                             lineHeight: "1.6",
                             color: currentTheme.text,
-                            borderLeft: `3px solid ${currentTheme.progressFill}`,
+                            borderLeft: t("book_reader.3px_solid", { v0: currentTheme.progressFill }),
                             opacity: 0.85,
                             margin: "0 auto",
                             marginBottom: "0.5em",
@@ -2866,7 +2866,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                   style={{ background: currentTheme.bg, color: currentTheme.text }}
                   onClick={(e) => e.stopPropagation()}
                   role="dialog"
-                  aria-label={`Definition of ${definition.word}`}
+                  aria-label={t("book_reader.definition_of", { v0: definition.word })}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
@@ -2915,7 +2915,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                 style={{ background: "rgba(0,0,0,0.55)" }}
                 role="dialog"
                 aria-modal="true"
-                aria-label={`You finished ${bookTitle}`}
+                aria-label={t("book_reader.you_finished", { v0: bookTitle })}
                 onClick={() => setShowEndOfBook(false)}
               >
                 <motion.div

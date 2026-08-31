@@ -387,7 +387,7 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                             <div
                               key={day.date}
                               className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-sm ${getHeatColor(day.count)} transition-colors`}
-                              title={`${day.date}: ${day.count} activit${day.count === 1 ? "y" : "ies"}`}
+                              title={t("reading_stats.activit", { v0: day.date, v1: day.count, v2: day.count === 1 ? "y" : "ies" })}
                               role="presentation"
                             />
                           ))}
@@ -416,7 +416,7 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                     <InsightCard
                       icon={<BookOpen className="w-4 h-4 text-amber-600" />}
                       label={t("reading_stats.average_book_length")}
-                      value={`${computed.avgBookLength} pages`}
+                      value={t("reading_stats.pages", { v0: computed.avgBookLength })}
                     />
                     <InsightCard
                       icon={<BarChart3 className="w-4 h-4 text-amber-600" />}
@@ -428,9 +428,9 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                       label={t("reading_stats.monthly_change")}
                       value={
                         computed.monthlyChange > 0
-                          ? `${computed.monthlyChange}% more this month`
+                          ? t("reading_stats.more_this_month", { v0: computed.monthlyChange })
                           : computed.monthlyChange < 0
-                            ? `${Math.abs(computed.monthlyChange)}% less this month`
+                            ? t("reading_stats.less_this_month", { v0: Math.abs(computed.monthlyChange) })
                             : t("reading_stats.same_as_last_month")
                       }
                       positive={computed.monthlyChange >= 0}
@@ -438,7 +438,7 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                     <InsightCard
                       icon={<Flame className="w-4 h-4 text-amber-600" />}
                       label={t("reading_stats.longest_streak")}
-                      value={`${computed.longestStreak} day${computed.longestStreak !== 1 ? "s" : ""}`}
+                      value={t("reading_stats.day", { v0: computed.longestStreak, v1: computed.longestStreak !== 1 ? "s" : "" })}
                     />
                   </div>
                 </motion.div>
@@ -455,21 +455,21 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                         <InsightCard
                           icon={<Clock className="w-4 h-4 text-amber-600" />}
                           label={t("reading_stats.your_reading_speed")}
-                          value={`~${paceInsights.avgPagesPerHour} pages/hour`}
+                          value={t("reading_stats.pages_hour", { v0: paceInsights.avgPagesPerHour })}
                         />
                       )}
                       {paceInsights.bestDay !== t("reading_stats.n_a") && (
                         <InsightCard
                           icon={<Calendar className="w-4 h-4 text-amber-600" />}
                           label={t("reading_stats.most_active_day")}
-                          value={`You read most on ${paceInsights.bestDay}s`}
+                          value={t("reading_stats.you_read_most_on_s", { v0: paceInsights.bestDay })}
                         />
                       )}
                       {paceInsights.booksFinished > 0 && (
                         <InsightCard
                           icon={<Target className="w-4 h-4 text-amber-600" />}
                           label={t("reading_stats.avg_time_to_finish")}
-                          value={`${paceInsights.avgDaysPerBook} day${paceInsights.avgDaysPerBook !== 1 ? "s" : ""} per book`}
+                          value={t("reading_stats.day_per_book", { v0: paceInsights.avgDaysPerBook, v1: paceInsights.avgDaysPerBook !== 1 ? "s" : "" })}
                         />
                       )}
                       {paceInsights.totalMinutes > 0 && (
@@ -478,8 +478,8 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                           label={t("reading_stats.total_reading_time")}
                           value={
                             paceInsights.totalMinutes >= 60
-                              ? `${Math.round(paceInsights.totalMinutes / 60)} hour${Math.round(paceInsights.totalMinutes / 60) !== 1 ? "s" : ""}`
-                              : `${paceInsights.totalMinutes} min`
+                              ? t("reading_stats.hour", { v0: Math.round(paceInsights.totalMinutes / 60), v1: Math.round(paceInsights.totalMinutes / 60) !== 1 ? "s" : "" })
+                              : t("reading_stats.min", { v0: paceInsights.totalMinutes })
                           }
                         />
                       )}

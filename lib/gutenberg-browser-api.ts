@@ -1,4 +1,5 @@
 import { GutenbergBook } from "./gutenberg-api"
+import { t } from "@/lib/i18n"
 
 export interface GutenbergBrowseResult {
   count: number

@@ -114,7 +114,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
       return
     }
     addBookToReading(book)
-    showToast(`"${book.title}" added to reading list`)
+    showToast(t("book_card.added_to_reading_list", { v0: book.title }))
   }
 
   const shownRating = displayRating(book)
@@ -160,7 +160,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
         // Only the top card is reachable; the peek card is inert anyway.
         role={isTop && onOpenDetails ? "button" : undefined}
         tabIndex={isTop && onOpenDetails ? 0 : -1}
-        aria-label={isTop && onOpenDetails ? `Preview "${book.title}" in 3D` : undefined}
+        aria-label={isTop && onOpenDetails ? t("book_card.preview_in_3d", { v0: book.title }) : undefined}
       >
         <div className="flex h-full w-full flex-col items-center lg:flex-row lg:items-start lg:justify-center lg:gap-16">
           {/* Cover object — radius 5px (covers are books), object shadow.
@@ -248,7 +248,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
                 <p className="text-[13px] text-ink-muted tabular-nums">
                   {metaLine}
                   {shownRating !== null && ratingsCount
-                    ? ` · ${formatCount(ratingsCount)} ratings`
+                    ? t("book_card.ratings", { v0: formatCount(ratingsCount) })
                     : ""}
                 </p>
               </div>

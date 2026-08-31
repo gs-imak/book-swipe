@@ -10,6 +10,7 @@ import {
   assignBookToShelf,
   type BookReview,
 } from "./storage"
+import { t } from "@/lib/i18n"
 
 export interface GoodreadsRow {
   title: string
@@ -209,7 +210,7 @@ async function matchBookToAPI(row: GoodreadsRow): Promise<Book | null> {
 
   // Fallback: title + author
   try {
-    const query = `intitle:${row.title} inauthor:${row.author}`
+    const query = t("goodreads_import.intitle_inauthor", { v0: row.title, v1: row.author })
     const res = await fetch(`/api/books?q=${encodeURIComponent(query)}&maxResults=1&lang=all`)
     const data = await res.json()
     if (data.items && data.items.length > 0) {
@@ -264,7 +265,7 @@ function googleBookToBook(item: any, isbn?: string): Book {
     mood: [],
     description: info.description || "",
     publishedYear: parseInt(info.publishedDate?.substring(0, 4)) || 2000,
-    readingTime: hours <= 2 ? "< 2 hours" : `${hours - 1}-${hours + 1} hours`,
+    readingTime: hours <= 2 ? "< 2 hours" : t("goodreads_import.hours", { v0: hours - 1, v1: hours + 1 }),
   }
 }
 

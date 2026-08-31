@@ -6,6 +6,7 @@ import { searchOpenLibrary, searchOpenLibraryByQuery, fetchSubjectBooks, transfo
 import { getCachedBooks, addBooksToCache } from "./book-cache"
 import { getLikedBooks } from "./storage"
 import { getOpenLibraryLanguageCodes } from "./language-preference"
+import { t } from "@/lib/i18n"
 
 // ---------------------------------------------------------------------------
 // Sub-genre definitions
@@ -206,7 +207,7 @@ export async function getAuthorBooks(
   excludeIds: Set<string> = new Set()
 ): Promise<Book[]> {
   try {
-    const books = await searchGoogleBooks(`inauthor:"${authorName}"`, 15)
+    const books = await searchGoogleBooks(t("books_api.inauthor", { v0: authorName }), 15)
     const filtered = books.filter((b) => !excludeIds.has(b.id))
     addBooksToCache(filtered)
     return filtered.slice(0, 10)

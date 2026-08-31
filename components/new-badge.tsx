@@ -38,7 +38,7 @@ export function NewBadge({ featureId, className = "" }: NewBadgeProps) {
           }}
           className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold leading-none tracking-wide uppercase rounded-full bg-amber-400 text-amber-950 shadow-sm cursor-pointer select-none ${className}`}
           role="status"
-          aria-label={`New feature: ${featureId.replace(/_/g, " ")}`}
+          aria-label={t("new_badge.new_feature", { v0: featureId.replace(/_/g, " ") })}
         >
           <motion.span
             animate={{ opacity: [1, 0.6, 1] }}

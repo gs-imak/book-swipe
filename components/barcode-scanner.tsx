@@ -66,7 +66,7 @@ export function BarcodeScanner({ isOpen, onClose }: BarcodeScannerProps) {
         }
         setFoundBook(book)
       } else {
-        setError(`No book found for ISBN ${isbn}`)
+        setError(t("barcode_scanner.no_book_found_for_isbn", { v0: isbn }))
       }
     } catch {
       if (!mountedRef.current) return

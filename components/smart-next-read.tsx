@@ -70,7 +70,7 @@ function pickNextRead(
     const genreOverlap = book.genre.filter(g => recentGenres.includes(g)).length
     if (genreOverlap > 0) {
       score += genreOverlap * 0.5
-      reason = `Matches your recent ${book.genre[0]} streak`
+      reason = t("smart_next_read.matches_your_recent_streak", { v0: book.genre[0] })
     }
 
     // Lighter read after a dark streak

@@ -122,7 +122,7 @@ export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }
     if (!addLikedBook(book)) return // atomic add handles dedup + storage
     setLikedBooks(getLikedBooks())
     triggerActivity('like_book')
-    showToast(`"${book.title}" saved to library`)
+    showToast(t("book_showcase.saved_to_library", { v0: book.title }))
     onBookLike?.(book)
   }
 
@@ -239,8 +239,8 @@ export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }
       {filteredBooks.length > 0 && (
         <div>
           <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100 mb-3 px-0.5">
-            {selectedMood && `${moodFilters.find(m => m.id === selectedMood)?.name} Books`}
-            {selectedTime && `${timeBasedSuggestions.find(t => t.id === selectedTime)?.name} Reads`}
+            {selectedMood && t("smart_recommendations.books", { v0: moodFilters.find(m => m.id === selectedMood)?.name })}
+            {selectedTime && t("smart_recommendations.reads", { v0: timeBasedSuggestions.find(t => t.id === selectedTime)?.name })}
           </h3>
           <div className="overflow-x-auto hide-scrollbar -mx-4 px-4">
             <div className="flex gap-3 pb-2">

@@ -104,7 +104,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
   const handleLanguageChange = (lang: BookLanguage) => {
     setLanguage(lang)
     setLanguagePreference(lang)
-    showToast(`Language set to ${LANGUAGE_LABELS[lang]}. Book cache cleared.`)
+    showToast(t("admin_panel.language_set_to_book_cache_cleared", { v0: LANGUAGE_LABELS[lang] }))
   }
 
   const handleExport = () => {
@@ -240,13 +240,13 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
       }
 
       const parts: string[] = []
-      if (counts.books > 0) parts.push(`${counts.books} books`)
-      if (counts.progress > 0) parts.push(`${counts.progress} reading entries`)
-      if (counts.reviews > 0) parts.push(`${counts.reviews} reviews`)
-      if (counts.notes > 0) parts.push(`${counts.notes} notes`)
+      if (counts.books > 0) parts.push(t("admin_panel.books_2", { v0: counts.books }))
+      if (counts.progress > 0) parts.push(t("admin_panel.reading_entries", { v0: counts.progress }))
+      if (counts.reviews > 0) parts.push(t("admin_panel.reviews_3", { v0: counts.reviews }))
+      if (counts.notes > 0) parts.push(t("admin_panel.notes_2", { v0: counts.notes }))
 
       if (parts.length > 0) {
-        showToast(`Imported ${parts.join(", ")}`)
+        showToast(t("admin_panel.imported", { v0: parts.join(", ") }))
       } else {
         showToast(t("admin_panel.everything_was_already_up_to_date"), "info")
       }
@@ -298,7 +298,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
     const result = importFullBackupJSON(fullBackupPreview.json)
 
     if (result.success) {
-      showToast(`Restored ${result.stats?.totalKeys || 0} data entries`)
+      showToast(t("admin_panel.restored_data_entries", { v0: result.stats?.totalKeys || 0 }))
       setFullBackupPreview(null)
       setTimeout(() => window.location.reload(), 600)
     } else {

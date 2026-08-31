@@ -148,7 +148,7 @@ export function SettingsPage({ onBack, onSignIn }: SettingsPageProps) {
   const handleLanguageChange = (lang: BookLanguage) => {
     setLanguage(lang)
     setLanguagePreference(lang)
-    showToast(`Language set to ${LANGUAGE_LABELS[lang]}. Book cache cleared.`)
+    showToast(t("admin_panel.language_set_to_book_cache_cleared", { v0: LANGUAGE_LABELS[lang] }))
   }
 
   const handleGoodreadsExport = () => {
@@ -201,7 +201,7 @@ export function SettingsPage({ onBack, onSignIn }: SettingsPageProps) {
     const result = importFullBackupJSON(backupPreview.json)
 
     if (result.success) {
-      showToast(`Restored ${result.stats?.totalKeys || 0} data entries`)
+      showToast(t("admin_panel.restored_data_entries", { v0: result.stats?.totalKeys || 0 }))
       setBackupPreview(null)
       setTimeout(() => window.location.reload(), 600)
     } else {
@@ -224,7 +224,7 @@ export function SettingsPage({ onBack, onSignIn }: SettingsPageProps) {
       }
     }
     keys.forEach((key) => localStorage.removeItem(key))
-    showToast(`Cleared ${keys.length} data entries`)
+    showToast(t("settings_page.cleared_data_entries", { v0: keys.length }))
     setShowClearConfirm(false)
     setTimeout(() => window.location.reload(), 600)
   }

@@ -136,7 +136,7 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
                 />
               </div>
               <p className="text-xs text-stone-400 dark:text-stone-500 mt-1.5">
-                {pointsToNext > 0 ? `${pointsToNext} XP to level ${currentLevel + 1}` : t("achievements_panel.max_level_reached")}
+                {pointsToNext > 0 ? t("achievements_panel.xp_to_level", { v0: pointsToNext, v1: currentLevel + 1 }) : t("achievements_panel.max_level_reached")}
               </p>
             </motion.div>
 
@@ -408,8 +408,8 @@ function StatsTab({ stats }: { stats: UserStats }) {
     `${Math.round(stats.totalReadingTime / 60)}h`,
     stats.totalReviews,
     stats.totalNotes,
-    `${stats.currentStreak} days`,
-    `${stats.longestStreak} days`,
+    t("achievements_panel.days", { v0: stats.currentStreak }),
+    t("achievements_panel.days", { v0: stats.longestStreak }),
     stats.averageRating.toFixed(1),
     stats.favoritesCount,
   ]

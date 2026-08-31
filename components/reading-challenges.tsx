@@ -475,7 +475,7 @@ export function ReadingChallenges({ isOpen, onClose }: ReadingChallengesProps) {
                       <motion.div
                         className={`h-full rounded-full ${done ? "bg-emerald-500" : ""}`}
                         style={done ? {} : {
-                          background: `var(--challenge-fill-${challenge.id.replace(/-/g, "_")}, currentColor)`
+                          background: t("reading_challenges.var_challenge_fill_currentcolor", { v0: challenge.id.replace(/-/g, "_") })
                         }}
                         initial={{ width: 0 }}
                         animate={{ width: `${pct}%` }}

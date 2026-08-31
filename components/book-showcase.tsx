@@ -321,10 +321,10 @@ function ShowcaseOverlay({
     const next = !saved
     if (next) {
       addLikedBook(book)
-      showToast(`"${book.title}" saved to library`)
+      showToast(t("book_showcase.saved_to_library", { v0: book.title }))
     } else {
       removeLikedBook(book.id)
-      showToast(`"${book.title}" removed from library`, "info")
+      showToast(t("book_showcase.removed_from_library", { v0: book.title }), "info")
     }
     setSaved(next)
     onSavedChange?.(book, next)
@@ -432,11 +432,11 @@ function ShowcaseOverlay({
               {[
                 display.metadata.enriched.series
                   ? display.metadata.enriched.series.index
-                    ? `Book ${display.metadata.enriched.series.index} of ${display.metadata.enriched.series.name}`
+                    ? t("book_detail_modal.book_of", { v0: display.metadata.enriched.series.index, v1: display.metadata.enriched.series.name })
                     : display.metadata.enriched.series.name
                   : null,
                 display.metadata.enriched.firstPublished
-                  ? `First published ${display.metadata.enriched.firstPublished}`
+                  ? t("book_showcase.first_published", { v0: display.metadata.enriched.firstPublished })
                   : null,
               ]
                 .filter(Boolean)
@@ -498,7 +498,7 @@ function ShowcaseOverlay({
                 type="button"
                 onClick={() => setRatingsOpen(true)}
                 aria-haspopup="dialog"
-                aria-label={`See how readers rated ${display.title}`}
+                aria-label={t("book_detail_modal.see_how_readers_rated", { v0: display.title })}
                 className="-mx-2 inline-flex min-h-[44px] items-center gap-2.5 rounded-full px-2 transition-colors hover:bg-white/10"
               >
                 <StarRating rating={display.rating} readonly size="sm" />

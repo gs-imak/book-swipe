@@ -75,7 +75,7 @@ export function NotificationSettings() {
             <p className="text-sm font-medium text-stone-900 dark:text-stone-100"> {t("notification_settings.reading_reminders")} </p>
             <p className="text-xs text-stone-400">
               {isEnabled
-                ? `Daily at ${formatReminderTime(settings.reminderHour, settings.reminderMinute)}`
+                ? t("notification_settings.daily_at", { v0: formatReminderTime(settings.reminderHour, settings.reminderMinute) })
                 : t("notification_settings.get_reminded_to_keep_your_streak")}
             </p>
           </div>

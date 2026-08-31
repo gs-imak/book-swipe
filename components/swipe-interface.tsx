@@ -514,7 +514,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
       setLikedBooks(getLikedBooks())
       setSessionLikedBooks(prev => [...prev, currentBook])
       triggerActivity('like_book')
-      showToast(`"${currentBook.title}" saved to library`)
+      showToast(t("book_showcase.saved_to_library", { v0: currentBook.title }))
     } else {
       hapticLight()
       setPassedBooks(prev => [...prev, currentBook])
@@ -810,7 +810,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
         {/* Screen reader announcement */}
         <div aria-live="polite" className="sr-only">
           {currentBook
-            ? `${currentBook.title} by ${currentBook.author}, card ${currentIndex + 1} of ${filteredBooks.length}`
+            ? t("swipe_interface.by_card_of", { v0: currentBook.title, v1: currentBook.author, v2: currentIndex + 1, v3: filteredBooks.length })
             : ""}
         </div>
 

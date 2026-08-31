@@ -156,7 +156,7 @@ export function ProgressShare({
     ctx.font = "14px 'system-ui', sans-serif"
     ctx.textAlign = "left"
     if (totalPages > 0 && currentPage > 0) {
-      ctx.fillText(`Page ${currentPage} of ${totalPages}`, barX, barY + barH + 24)
+      ctx.fillText(t("progress_share.page_of", { v0: currentPage, v1: totalPages }), barX, barY + barH + 24)
     }
 
     // Footer — "Reading on BookSwipe"
@@ -244,8 +244,8 @@ export function ProgressShare({
       try {
         await navigator.share({
           files: [file],
-          title: `I'm ${Math.round(progress)}% through ${bookTitle}`,
-          text: `Reading "${bookTitle}" by ${bookAuthor} on BookSwipe`,
+          title: t("progress_share.i_m_through", { v0: Math.round(progress), v1: bookTitle }),
+          text: t("progress_share.reading_by_on_bookswipe", { v0: bookTitle, v1: bookAuthor }),
         })
         return
       } catch {
@@ -301,7 +301,7 @@ export function ProgressShare({
               // eslint-disable-next-line @next/next/no-img-element -- locally generated canvas data URL; the image optimizer can't process it
               <img
                 src={preview}
-                alt={`Reading progress for ${bookTitle}`}
+                alt={t("progress_share.reading_progress_for", { v0: bookTitle })}
                 className="w-full rounded-xl shadow-md"
               />
             )}

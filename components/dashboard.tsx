@@ -169,7 +169,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
     }
     setLikedBooks(getLikedBooks())
     triggerActivity('like_book')
-    showToast(`"${book.title}" saved to library`)
+    showToast(t("book_showcase.saved_to_library", { v0: book.title }))
   }
 
   const handleStartReading = (book: Book) => {
@@ -179,7 +179,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
       return
     }
     addBookToReading(book)
-    showToast(`"${book.title}" added to reading list`)
+    showToast(t("book_card.added_to_reading_list", { v0: book.title }))
   }
 
   const handleBookClick = (book: Book) => {
@@ -446,12 +446,12 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                                 const minutesPerDay = primary.timeSpentMinutes / daysElapsed
                                 const daysLeft = minutesPerDay > 0 ? Math.ceil(minutesLeft / minutesPerDay) : 0
                                 const estimate = hoursLeft < 2
-                                  ? `~${minutesLeft}m left`
+                                  ? t("dashboard.m_left", { v0: minutesLeft })
                                   : hoursLeft < 24
-                                    ? `~${hoursLeft}h left`
+                                    ? t("dashboard.h_left", { v0: hoursLeft })
                                     : daysLeft > 0
-                                      ? `~${daysLeft} day${daysLeft !== 1 ? "s" : ""} left`
-                                      : `~${hoursLeft}h left`
+                                      ? t("dashboard.day_left", { v0: daysLeft, v1: daysLeft !== 1 ? "s" : "" })
+                                      : t("dashboard.h_left", { v0: hoursLeft })
                                 return (
                                   <span className="font-serif italic ml-1.5">· {estimate}</span>
                                 )
@@ -480,7 +480,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                         }}
                         className="text-xs font-medium text-ink-muted hover:text-accent-ink transition-colors px-1"
                       >
-                        {showAllReading ? t("book_card.show_less") : `Reading ${othersCount} more...`}
+                        {showAllReading ? t("book_card.show_less") : t("dashboard.reading_more", { v0: othersCount })}
                       </button>
                       <AnimatePresence>
                         {showAllReading && (
@@ -639,7 +639,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                   onBookLiked={(book) => {
                     addLikedBook(book)
                     setLikedBooks(getLikedBooks())
-                    showToast(`"${book.title}" saved to library`)
+                    showToast(t("book_showcase.saved_to_library", { v0: book.title }))
                   }}
                 />
               )}
@@ -857,7 +857,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                             : "bg-stone-100 text-stone-500 hover:bg-stone-200"
                         }`}
                       >
-                        {showHidden ? `Hidden (${hiddenIds.size})` : `Hidden${hiddenIds.size > 0 ? ` (${hiddenIds.size})` : ''}`}
+                        {showHidden ? t("dashboard.hidden", { v0: hiddenIds.size }) : t("dashboard.hidden_2", { v0: hiddenIds.size > 0 ? ` (${hiddenIds.size})` : '' })}
                       </button>
 
                       <span className="w-px h-4 bg-stone-200 dark:bg-stone-700" />
@@ -1115,17 +1115,17 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
             // In hidden view, "remove" means unhide
             unhideBook(book.id)
             setHiddenIds(new Set(getHiddenBookIds()))
-            showToast(`"${book.title}" restored to library`)
+            showToast(t("dashboard.restored_to_library", { v0: book.title }))
           } else {
             const updated = removeLikedBook(book.id)
             setLikedBooks(updated)
-            showToast(`"${book.title}" removed from library`, "info")
+            showToast(t("book_showcase.removed_from_library", { v0: book.title }), "info")
           }
         }}
         onHideBook={showHidden ? undefined : (book) => {
           hideBook(book.id)
           setHiddenIds(new Set(getHiddenBookIds()))
-          showToast(`"${book.title}" hidden from library`, "info")
+          showToast(t("dashboard.hidden_from_library", { v0: book.title }), "info")
         }}
       />
 
