@@ -5,7 +5,10 @@ import Link from "next/link"
 // Edit before launch; have final copy reviewed by a lawyer.
 const ENTITY = "BookSwipe"
 const CONTACT_EMAIL = "hello@bookswipe.app"
-const GOVERNING_LAW = "[your jurisdiction]"
+// Still a placeholder, and deliberately visible as one: a governing-law
+// clause naming the wrong country is worse than one that obviously needs
+// filling in. Translated so it reads as a placeholder in both languages.
+const GOVERNING_LAW_KEY = "terms.governing_law_placeholder"
 // Stored as an instant, rendered in the reader's language — "June 21, 2026"
 // hard-coded is an English sentence hiding in a constant.
 const EFFECTIVE_DATE = new Date("2026-06-21T00:00:00Z")
@@ -66,7 +69,7 @@ export default async function TermsOfService() {
       <p> {t("terms.you_may_stop_using_the_service")} </p>
 
       <h2>{t("terms.governing_law")}</h2>
-      <p>{t("terms.these_terms_are_governed_by_the")} {GOVERNING_LAW}.</p>
+      <p>{t("terms.these_terms_are_governed_by_the")} {t(GOVERNING_LAW_KEY)}.</p>
 
       <h2>{t("privacy.contact")}</h2>
       <p>

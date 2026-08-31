@@ -127,8 +127,8 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
                     ].join(" ")}
                   >
                     {item.id === "dashboard" && likedCount > 0
-                      ? `${tv(item.label)} · ${likedCount > 999 ? "1k" : likedCount}`
-                      : item.label}
+                      ? `${tv(item.label)} · ${likedCount > 999 ? t("mobile_nav.1k") : likedCount}`
+                      : tv(item.label)}
                   </span>
 
                 </motion.button>
@@ -170,7 +170,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
               className="flex flex-col items-center gap-0.5 py-2 px-1 rounded-control text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors duration-150 w-[calc(100%-8px)]"
             >
               {isDark ? <Sun className="w-[20px] h-[20px]" strokeWidth={1.8} /> : <Moon className="w-[20px] h-[20px]" strokeWidth={1.8} />}
-              <span className="text-[10px] font-medium">{isDark ? "Light" : "Dark"}</span>
+              <span className="text-[10px] font-medium">{isDark ? t("mobile_nav.light") : t("recommendations.dark")}</span>
             </button>
           </div>
           {onSignIn && (
@@ -185,7 +185,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
                 }`}
               >
                 {isSignedIn ? <User className="w-[20px] h-[20px]" strokeWidth={1.8} /> : <Cloud className="w-[20px] h-[20px]" strokeWidth={1.8} />}
-                <span className="text-[10px] font-medium">{isSignedIn ? "Synced" : "Sync"}</span>
+                <span className="text-[10px] font-medium">{isSignedIn ? t("mobile_nav.synced") : t("settings_page.sync")}</span>
               </button>
             </div>
           )}

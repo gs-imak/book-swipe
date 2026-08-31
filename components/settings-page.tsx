@@ -285,7 +285,7 @@ export function SettingsPage({ onBack, onSignIn }: SettingsPageProps) {
               <span className="text-left">
                 <span className="block text-sm font-medium text-stone-800 dark:text-stone-200"> {t("settings_page.dark_mode")} </span>
                 <span className="block text-xs text-stone-500 dark:text-stone-400">
-                  {currentTheme === "dark" ? "On" : "Off"}
+                  {currentTheme === "dark" ? t("settings_page.on") : t("settings_page.off")}
                 </span>
               </span>
               <span
@@ -335,7 +335,7 @@ export function SettingsPage({ onBack, onSignIn }: SettingsPageProps) {
                     aria-pressed={speed === s.value}
                   >
                     <span className="block text-center leading-tight">
-                      {s.value === "slow" ? "Relaxed" : s.value === "average" ? "Average" : "Speed"}
+                      {s.value === "slow" ? t("quick_review.relaxed") : s.value === "average" ? t("settings_page.average") : t("settings_page.speed")}
                     </span>
                     <span className={`block text-center text-[10px] mt-0.5 ${
                       speed === s.value ? "text-amber-100" : "text-stone-400 dark:text-stone-500"

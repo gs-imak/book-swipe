@@ -251,7 +251,7 @@ export function BookSearch({ isOpen, onClose, onSaveBook, onBookClick, savedBook
                               </div>
                             )}
                             {book.pages > 0 && <span>{book.pages}p</span>}
-                            {book.genre[0] !== "General" && (
+                            {book.genre[0] !== t("book_search.general") && (
                               <span className="text-stone-400 dark:text-stone-500">{book.genre[0]}</span>
                             )}
                           </div>
@@ -271,7 +271,7 @@ export function BookSearch({ isOpen, onClose, onSaveBook, onBookClick, savedBook
                           }`}
                         >
                           <Heart className={`w-3 h-3 ${isSaved ? "fill-current" : ""}`} />
-                          {isSaved ? "Saved" : "Save"}
+                          {isSaved ? t("swipe_interface.saved") : t("common.save")}
                         </button>
                       </div>
                     </motion.div>

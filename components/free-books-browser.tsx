@@ -498,7 +498,7 @@ function BookGridCard({
             }`}
           >
             {isSaved ? <Check className="w-3 h-3" /> : <Heart className="w-3 h-3" />}
-            {isSaved ? "Saved" : "Save"}
+            {isSaved ? t("swipe_interface.saved") : t("common.save")}
           </button>
         </div>
       </div>

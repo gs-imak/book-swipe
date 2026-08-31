@@ -1,6 +1,7 @@
 "use client"
 
 import { Book } from "./book-data"
+import { t } from "./i18n"
 
 /**
  * What the app is allowed to state as fact about a book.
@@ -59,7 +60,7 @@ export function metaSegments(
 ): string[] {
   const out: string[] = []
   const pages = displayPages(book)
-  if (pages) out.push(`${pages} pp`)
+  if (pages) out.push(t("book.pages_short", { n: pages }))
   if (pages && opts.readTime) out.push(opts.readTime)
   const rating = displayRating(book)
   if (rating) out.push(`★ ${rating}`)

@@ -331,7 +331,7 @@ export function ProfileShareCard({ isOpen, onClose }: ProfileShareCardProps) {
               className="h-11 px-4 bg-white dark:bg-stone-900 border border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 text-sm font-medium rounded-xl transition-all flex items-center gap-2"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-              {copied ? "Copied" : "Copy"}
+              {copied ? t("profile_share_card.copied") : t("profile_share_card.copy")}
             </button>
             <button
               onClick={handleDownload}

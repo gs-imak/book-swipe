@@ -1749,7 +1749,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={block.src}
-                            alt={block.caption || "Illustration"}
+                            alt={block.caption || t("book_reader.illustration")}
                             className="max-w-full rounded-lg shadow-sm"
                             style={{ maxHeight: "50vh" }}
                             loading="lazy"
@@ -2755,7 +2755,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                           style={{ backgroundColor: pomodoroRunning ? `${currentTheme.text}15` : currentTheme.progressFill, color: pomodoroRunning ? currentTheme.text : "#fff" }}
                         >
                           {pomodoroRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                          {pomodoroRunning ? "Pause" : "Start"}
+                          {pomodoroRunning ? t("book_reader.pause") : t("book_reader.start")}
                         </button>
                         <div className="flex gap-1">
                           {POMODORO_DURATIONS.map(mins => (

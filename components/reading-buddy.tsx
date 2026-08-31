@@ -202,7 +202,7 @@ export function ReadingBuddyPanel({ bookId, bookTitle, progress, isOpen, onClose
                           className="h-11 px-3 flex-shrink-0 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-800/50 text-stone-700 dark:text-stone-300 rounded-xl transition-all flex items-center gap-1.5 text-sm"
                         >
                           {codeCopied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-                          {codeCopied ? "Copied" : "Copy"}
+                          {codeCopied ? t("profile_share_card.copied") : t("profile_share_card.copy")}
                         </button>
                       </div>
                       <p className="text-xs text-stone-400 dark:text-stone-500"> {t("reading_buddy.share_this_code_with_a_friend")} </p>

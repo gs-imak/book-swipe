@@ -20,7 +20,7 @@ import type { ShowcaseSceneHandle } from "@/lib/showcase-scene"
 import { hasVerifiedRating } from "@/lib/book-truth"
 import { useOverlayHistory } from "@/lib/use-overlay-history"
 import { RatingBreakdownPanel } from "@/components/rating-breakdown-panel"
-import { t } from "@/lib/i18n"
+import { t, tv } from "@/lib/i18n"
 
 export interface BookShowcaseProps {
   /** The showcased book, or null when the showcase is closed. */
@@ -513,7 +513,7 @@ function ShowcaseOverlay({
               <>
                 <div className="h-6 w-px bg-stage-hairline" />
                 <span className="font-serif text-sm italic text-stage-ink-tertiary">
-                  {display.readingTime}
+                  {tv(display.readingTime)}
                 </span>
               </>
             )}
@@ -526,7 +526,7 @@ function ShowcaseOverlay({
                   key={g}
                   className="h-[29px] inline-flex items-center rounded-full border border-stage-hairline px-3 text-xs text-stage-ink-muted"
                 >
-                  {g}
+                  {tv(g)}
                 </span>
               ))}
             </motion.div>
@@ -569,7 +569,7 @@ function ShowcaseOverlay({
               }`}
             >
               <Heart className={`h-4 w-4 ${saved ? "fill-current" : ""}`} />
-              {saved ? "Saved" : "Save"}
+              {saved ? t("swipe_interface.saved") : t("common.save")}
             </button>
             {onMoreDetails && (
               <button

@@ -151,7 +151,7 @@ function SlideGenre({ stats }: { stats: WrappedStats }) {
         <Heart className="w-10 h-10 text-rose-400 mx-auto mb-4" />
         <p className="text-stone-400 text-sm uppercase tracking-widest mb-4">{t("reading_wrapped.your_favourite_genre")}</p>
         <h3 className="text-4xl sm:text-5xl font-bold text-white font-serif leading-tight">
-          {stats.topGenre || "Everything"}
+          {stats.topGenre || t("reading_wrapped.everything")}
         </h3>
         {stats.topGenreCount > 1 && (
           <motion.p

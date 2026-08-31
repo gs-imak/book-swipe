@@ -126,7 +126,7 @@ function ExploreBookCard({
           }`}
         >
           <Heart className={`w-3 h-3 ${isSaved ? "fill-current" : ""}`} />
-          {isSaved ? "Saved" : "Save"}
+          {isSaved ? t("swipe_interface.saved") : t("common.save")}
         </button>
       </div>
     </motion.div>
@@ -493,7 +493,7 @@ export function DiscoverHub({
                       <Heart
                         className={`w-3 h-3 ${savedBookIds.has(surprise.book.id) ? "fill-current" : ""}`}
                       />
-                      {savedBookIds.has(surprise.book.id) ? "Saved" : "Save"}
+                      {savedBookIds.has(surprise.book.id) ? t("swipe_interface.saved") : t("common.save")}
                     </button>
                     <button
                       onClick={handleSurprise}

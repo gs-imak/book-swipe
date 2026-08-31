@@ -375,7 +375,7 @@ function MiniBookCard({
           }`}
         >
           <Heart className={`w-3 h-3 ${isLiked ? 'fill-current' : ''}`} />
-          {isLiked ? 'Saved' : 'Save'}
+          {isLiked ? t("swipe_interface.saved") : t("common.save")}
         </button>
       </div>
     </motion.div>

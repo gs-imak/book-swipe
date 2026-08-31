@@ -12,7 +12,7 @@ import { DECK_COVER_SIZES } from "@/lib/config"
 import { displayRating, displayPages, metaSegments } from "@/lib/book-truth"
 import { useToast } from "./toast-provider"
 import { useState, useRef, useEffect, useCallback } from "react"
-import { t } from "@/lib/i18n"
+import { t, tv } from "@/lib/i18n"
 
 interface BookCardProps {
   book: Book
@@ -119,7 +119,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
 
   const shownRating = displayRating(book)
   const shownPages = displayPages(book)
-  const metaLine = metaSegments(book, { readTime: book.pages >= 60 ? `~${Math.round(book.pages / 40)} h` : null }).join(" · ")
+  const metaLine = metaSegments(book, { readTime: book.pages >= 60 ? t("book.hours_short", { n: Math.round(book.pages / 40) }) : null }).join(" · ")
   const readTime = book.pages >= 60 ? `~${Math.round(book.pages / 40)} h` : `~${Math.round((book.pages / 40) * 60)} m`
   const ratingsCount = book.metadata?.ratingsCount
 
@@ -269,7 +269,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
                   key={genre}
                   className="h-[27px] inline-flex items-center px-3 rounded-full border border-border-strong text-[12.5px] text-ink"
                 >
-                  {genre}
+                  {tv(genre)}
                 </span>
               ))}
             </div>
@@ -361,7 +361,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
                       key={genre}
                       className="h-[27px] inline-flex items-center px-3 rounded-full border border-border-strong text-[12.5px] text-ink"
                     >
-                      {genre}
+                      {tv(genre)}
                     </span>
                   ))}
                 </div>
