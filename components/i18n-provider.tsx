@@ -7,6 +7,7 @@ import {
   persistLocale,
   resolveLocale,
   setActiveLocale,
+  syncLocaleCookie,
   type Locale,
 } from "@/lib/i18n"
 
@@ -41,16 +42,12 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const resolved = resolveLocale()
-    if (resolved === DEFAULT_LOCALE) {
-      // Still set it: the module variable starts at the default, but being
-      // explicit keeps the two in step if the default ever changes.
-      setActiveLocale(resolved)
-      document.documentElement.lang = localeTag(resolved).slice(0, 2)
-      return
-    }
     setActiveLocale(resolved)
     document.documentElement.lang = localeTag(resolved).slice(0, 2)
-    setLocaleState(resolved)
+    // So the next request is server-rendered in the same language: page
+    // metadata and the legal pages are produced before any of this runs.
+    syncLocaleCookie(resolved)
+    if (resolved !== DEFAULT_LOCALE) setLocaleState(resolved)
   }, [])
 
   const setLocale = useCallback((next: Locale) => {

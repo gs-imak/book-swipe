@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { getServerLocale, serverT } from "@/lib/i18n/server"
 import Link from "next/link"
 
 // Edit these before launch, then have the final copy reviewed by a lawyer.
@@ -6,106 +7,73 @@ import Link from "next/link"
 // sync if data flows change.
 const ENTITY = "BookSwipe"
 const CONTACT_EMAIL = "privacy@bookswipe.app"
-const EFFECTIVE_DATE = "June 21, 2026"
+// Stored as an instant, rendered in the reader's language — "June 21, 2026"
+// hard-coded is an English sentence hiding in a constant.
+const EFFECTIVE_DATE = new Date("2026-06-21T00:00:00Z")
 
-export const metadata: Metadata = {
-  title: "Privacy Policy — BookSwipe",
-  description: "How BookSwipe handles your data.",
-  robots: { index: true, follow: true },
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await serverT()
+  const locale = await getServerLocale()
+  const effective = new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-US", {
+    year: "numeric", month: "long", day: "numeric", timeZone: "UTC",
+  }).format(EFFECTIVE_DATE)
+  return {
+    title: t("privacy.meta_title"),
+    description: t("privacy.meta_description"),
+    robots: { index: true, follow: true },
+  }
 }
 
-export default function PrivacyPolicy() {
+export default async function PrivacyPolicy() {
+  const t = await serverT()
+  const locale = await getServerLocale()
+  const effective = new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-US", {
+    year: "numeric", month: "long", day: "numeric", timeZone: "UTC",
+  }).format(EFFECTIVE_DATE)
   return (
     <article className="mx-auto max-w-2xl px-5 py-12 prose-legal">
-      <Link href="/" className="text-sm text-amber-600 hover:underline">
-        ← Back to BookSwipe
-      </Link>
-      <h1 className="mt-6 text-3xl font-serif font-bold">Privacy Policy</h1>
-      <p className="text-sm text-stone-500">Effective {EFFECTIVE_DATE}</p>
+      <Link href="/" className="text-sm text-amber-600 hover:underline"> {t("privacy.back_to_bookswipe")} </Link>
+      <h1 className="mt-6 text-3xl font-serif font-bold">{t("auth_modal.privacy_policy")}</h1>
+      <p className="text-sm text-stone-500">{t("privacy.effective")} {effective}</p>
 
       <p>
-        {ENTITY} (&quot;we&quot;, &quot;us&quot;) is a book-discovery app. This
-        policy explains what data we handle and why. We do not sell your data and
-        we do not run advertising trackers.
-      </p>
+        {ENTITY} {t("privacy.we_us_is_a_book_discovery")} </p>
 
-      <h2>Data stored on your device</h2>
-      <p>
-        BookSwipe is local-first. By default your library, reviews, notes,
-        reading progress, shelves, preferences, and gamification stats are stored
-        in your browser&apos;s <code>localStorage</code> on your device — not on
-        our servers. Clearing your browser data or using &quot;Clear all
-        data&quot; in Settings removes it.
-      </p>
+      <h2>{t("privacy.data_stored_on_your_device")}</h2>
+      <p> {t("privacy.bookswipe_is_local_first_by_default")} <code>{t("privacy.localstorage")}</code> {t("privacy.on_your_device_not_on_our")} </p>
 
-      <h2>Optional account &amp; cloud sync</h2>
-      <p>
-        If you create an account (email + password, or Google sign-in) we use{" "}
-        <a href="https://supabase.com/privacy" rel="noopener noreferrer" target="_blank">
-          Supabase
-        </a>{" "}
-        to store: your email address, and the reading data you choose to sync
-        (your library, reviews, reading progress, and swipe history). This lets
-        you access your data across devices. You can delete your account and all
-        associated cloud data at any time from Settings.
-      </p>
+      <h2>{t("privacy.optional_account_cloud_sync")}</h2>
+      <p> {t("privacy.if_you_create_an_account_email")}{" "}
+        <a href="https://supabase.com/privacy" rel="noopener noreferrer" target="_blank"> {t("privacy.supabase")} </a>{" "} {t("privacy.to_store_your_email_address_and")} </p>
 
-      <h2>Third-party book data</h2>
-      <p>
-        To show book recommendations and content, your searches and book lookups
-        are proxied through our servers to: Google Books, Open Library, and
-        Project Gutenberg. Your IP address reaches our server; the relevant query
-        text reaches those providers under their own privacy policies. We do not
-        send them your identity.
-      </p>
+      <h2>{t("privacy.third_party_book_data")}</h2>
+      <p> {t("privacy.to_show_book_recommendations_and_content")} </p>
 
-      <h2>Analytics</h2>
-      <p>
-        If analytics is enabled, we use privacy-friendly, cookieless analytics
-        that records aggregate usage (e.g. page views) without tracking
-        individuals across sites and without storing personal identifiers. No
-        third-party advertising cookies are used.
-      </p>
+      <h2>{t("privacy.analytics")}</h2>
+      <p> {t("privacy.if_analytics_is_enabled_we_use")} </p>
 
-      <h2>Cookies &amp; local storage</h2>
-      <p>
-        When you are signed in, an authentication session token is stored to keep
-        you logged in. App data is stored in <code>localStorage</code> as
-        described above. We do not use advertising or cross-site tracking
-        cookies.
-      </p>
+      <h2>{t("privacy.cookies_local_storage")}</h2>
+      <p> {t("privacy.when_you_are_signed_in_an")} <code>{t("privacy.localstorage")}</code> {t("privacy.as_described_above_we_do_not")} </p>
 
-      <h2>Your rights</h2>
+      <h2>{t("privacy.your_rights")}</h2>
       <ul>
-        <li>Export all your data (Settings → Full backup / CSV export).</li>
-        <li>Delete your account and cloud data (Settings → Account).</li>
-        <li>Clear all on-device data (Settings → Clear all data).</li>
-        <li>
-          If you are in the EU/UK, you have rights under the GDPR including
-          access, correction, erasure, and portability. Contact us to exercise
-          them.
-        </li>
+        <li>{t("privacy.export_all_your_data_settings_full")}</li>
+        <li>{t("privacy.delete_your_account_and_cloud_data")}</li>
+        <li>{t("privacy.clear_all_on_device_data_settings")}</li>
+        <li> {t("privacy.if_you_are_in_the_eu")} </li>
       </ul>
 
-      <h2>Children</h2>
-      <p>
-        BookSwipe is not directed to children under 13 (or the minimum age in
-        your country). We do not knowingly collect data from them.
+      <h2>{t("privacy.children")}</h2>
+      <p> {t("privacy.bookswipe_is_not_directed_to_children")} </p>
+
+      <h2>{t("privacy.changes")}</h2>
+      <p> {t("privacy.we_may_update_this_policy_the")} </p>
+
+      <h2>{t("privacy.contact")}</h2>
+      <p> {t("privacy.questions_or_data_requests")} <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
       </p>
 
-      <h2>Changes</h2>
-      <p>
-        We may update this policy; the effective date above will change. Material
-        changes will be surfaced in the app.
-      </p>
-
-      <h2>Contact</h2>
-      <p>
-        Questions or data requests: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
-      </p>
-
-      <p className="mt-8 text-sm text-stone-500">
-        See also our <Link href="/terms" className="text-amber-600 hover:underline">Terms of Service</Link>.
+      <p className="mt-8 text-sm text-stone-500"> {t("privacy.see_also_our")} <Link href="/terms" className="text-amber-600 hover:underline">{t("settings_page.terms_of_service")}</Link>.
       </p>
     </article>
   )

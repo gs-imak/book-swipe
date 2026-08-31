@@ -37,6 +37,7 @@ const SettingsPage = dynamic(() => import("@/components/settings-page").then(m =
 import { onAuthChange, syncBidirectional, getUser } from "@/lib/supabase-sync"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { t } from "@/lib/i18n"
+import { I18nProvider } from "@/components/i18n-provider"
 
 // Code-split heavy components that aren't needed on initial load.
 // BarcodeScanner pulls in camera/barcode-decoding code only used on demand, so
@@ -684,6 +685,7 @@ export default function App() {
 
   return (
     <MotionConfig reducedMotion="user">
+      <I18nProvider>
       <ToastProvider>
         <GamificationProvider onShowAchievements={() => setShowAchievements(true)}>
           <ErrorBoundary>
@@ -702,6 +704,7 @@ export default function App() {
           <WhatsNewModal />
         </GamificationProvider>
       </ToastProvider>
+      </I18nProvider>
     </MotionConfig>
   )
 }

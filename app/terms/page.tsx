@@ -1,99 +1,79 @@
 import type { Metadata } from "next"
+import { getServerLocale, serverT } from "@/lib/i18n/server"
 import Link from "next/link"
 
 // Edit before launch; have final copy reviewed by a lawyer.
 const ENTITY = "BookSwipe"
 const CONTACT_EMAIL = "hello@bookswipe.app"
 const GOVERNING_LAW = "[your jurisdiction]"
-const EFFECTIVE_DATE = "June 21, 2026"
+// Stored as an instant, rendered in the reader's language — "June 21, 2026"
+// hard-coded is an English sentence hiding in a constant.
+const EFFECTIVE_DATE = new Date("2026-06-21T00:00:00Z")
 
-export const metadata: Metadata = {
-  title: "Terms of Service — BookSwipe",
-  description: "The terms for using BookSwipe.",
-  robots: { index: true, follow: true },
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await serverT()
+  const locale = await getServerLocale()
+  const effective = new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-US", {
+    year: "numeric", month: "long", day: "numeric", timeZone: "UTC",
+  }).format(EFFECTIVE_DATE)
+  return {
+    title: t("terms.meta_title"),
+    description: t("terms.meta_description"),
+    robots: { index: true, follow: true },
+  }
 }
 
-export default function TermsOfService() {
+export default async function TermsOfService() {
+  const t = await serverT()
+  const locale = await getServerLocale()
+  const effective = new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-US", {
+    year: "numeric", month: "long", day: "numeric", timeZone: "UTC",
+  }).format(EFFECTIVE_DATE)
   return (
     <article className="mx-auto max-w-2xl px-5 py-12 prose-legal">
-      <Link href="/" className="text-sm text-amber-600 hover:underline">
-        ← Back to BookSwipe
-      </Link>
-      <h1 className="mt-6 text-3xl font-serif font-bold">Terms of Service</h1>
-      <p className="text-sm text-stone-500">Effective {EFFECTIVE_DATE}</p>
+      <Link href="/" className="text-sm text-amber-600 hover:underline"> {t("privacy.back_to_bookswipe")} </Link>
+      <h1 className="mt-6 text-3xl font-serif font-bold">{t("settings_page.terms_of_service")}</h1>
+      <p className="text-sm text-stone-500">{t("privacy.effective")} {effective}</p>
 
-      <p>
-        By using {ENTITY} (&quot;the Service&quot;) you agree to these terms. If
-        you do not agree, do not use the Service.
-      </p>
+      <p> {t("terms.by_using")} {ENTITY} {t("terms.the_service_you_agree_to_these")} </p>
 
-      <h2>The Service</h2>
-      <p>
-        BookSwipe helps you discover books and track your reading. Book metadata
-        and content are provided by third parties (Google Books, Open Library,
-        Project Gutenberg) and are subject to their terms. Public-domain texts are
-        read via Project Gutenberg.
-      </p>
+      <h2>{t("terms.the_service")}</h2>
+      <p> {t("terms.bookswipe_helps_you_discover_books_and")} </p>
 
-      <h2>Accounts</h2>
-      <p>
-        An account is optional and only needed for cross-device sync. You are
-        responsible for keeping your credentials secure and for activity under
-        your account. You may delete your account at any time.
-      </p>
+      <h2>{t("terms.accounts")}</h2>
+      <p> {t("terms.an_account_is_optional_and_only")} </p>
 
-      <h2>Your content</h2>
-      <p>
-        Reviews, notes, and ratings you create remain yours. By storing them with
-        the Service you grant us only the limited permission needed to store,
-        sync, and display them back to you. Do not submit unlawful content or
-        content that infringes others&apos; rights.
-      </p>
+      <h2>{t("terms.your_content")}</h2>
+      <p> {t("terms.reviews_notes_and_ratings_you_create")} </p>
 
-      <h2>Acceptable use</h2>
+      <h2>{t("terms.acceptable_use")}</h2>
       <ul>
-        <li>Do not abuse, overload, or attempt to break the Service or its APIs.</li>
-        <li>Do not use the Service for unlawful purposes.</li>
-        <li>Do not attempt to access other users&apos; data.</li>
+        <li>{t("terms.do_not_abuse_overload_or_attempt")}</li>
+        <li>{t("terms.do_not_use_the_service_for")}</li>
+        <li>{t("terms.do_not_attempt_to_access_other")}</li>
       </ul>
 
-      <h2>Third-party content</h2>
-      <p>
-        Book covers, descriptions, ratings, and texts originate from third-party
-        sources. We do not guarantee their accuracy, availability, or licensing
-        for any particular use beyond personal reading and discovery.
-      </p>
+      <h2>{t("terms.third_party_content")}</h2>
+      <p> {t("terms.book_covers_descriptions_ratings_and_texts")} </p>
 
-      <h2>No warranty</h2>
-      <p>
-        The Service is provided &quot;as is&quot; without warranties of any kind.
-        We do not guarantee it will be uninterrupted, error-free, or that data
-        will never be lost. Keep your own backups (Settings → Full backup).
-      </p>
+      <h2>{t("terms.no_warranty")}</h2>
+      <p> {t("terms.the_service_is_provided_as_is")} </p>
 
-      <h2>Limitation of liability</h2>
-      <p>
-        To the maximum extent permitted by law, {ENTITY} is not liable for
-        indirect, incidental, or consequential damages, or for any loss of data,
-        arising from your use of the Service.
-      </p>
+      <h2>{t("terms.limitation_of_liability")}</h2>
+      <p> {t("terms.to_the_maximum_extent_permitted_by")} {ENTITY} {t("terms.is_not_liable_for_indirect_incidental")} </p>
 
-      <h2>Termination</h2>
-      <p>
-        You may stop using the Service and delete your account at any time. We may
-        suspend access for violations of these terms.
-      </p>
+      <h2>{t("terms.termination")}</h2>
+      <p> {t("terms.you_may_stop_using_the_service")} </p>
 
-      <h2>Governing law</h2>
-      <p>These terms are governed by the laws of {GOVERNING_LAW}.</p>
+      <h2>{t("terms.governing_law")}</h2>
+      <p>{t("terms.these_terms_are_governed_by_the")} {GOVERNING_LAW}.</p>
 
-      <h2>Contact</h2>
+      <h2>{t("privacy.contact")}</h2>
       <p>
         <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
       </p>
 
-      <p className="mt-8 text-sm text-stone-500">
-        See also our <Link href="/privacy" className="text-amber-600 hover:underline">Privacy Policy</Link>.
+      <p className="mt-8 text-sm text-stone-500"> {t("privacy.see_also_our")} <Link href="/privacy" className="text-amber-600 hover:underline">{t("auth_modal.privacy_policy")}</Link>.
       </p>
     </article>
   )

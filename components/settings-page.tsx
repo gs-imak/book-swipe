@@ -24,6 +24,7 @@ import {
   Mail,
   FileText,
   Loader2,
+  Languages,
 } from "lucide-react"
 import { setTheme, applyTheme } from "@/lib/theme"
 import { useTheme } from "@/lib/use-theme"
@@ -52,7 +53,8 @@ import { markBackupExported } from "@/lib/storage"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { getUser, signOut, deleteAccount } from "@/lib/supabase-sync"
 import { useToast } from "./toast-provider"
-import { t } from "@/lib/i18n"
+import { t, LOCALE_LABELS, LOCALES, type Locale } from "@/lib/i18n"
+import { useI18n } from "@/components/i18n-provider"
 
 // Update to your real support address before launch.
 const SUPPORT_EMAIL = "hello@bookswipe.app"
@@ -78,6 +80,7 @@ export function SettingsPage({ onBack, onSignIn }: SettingsPageProps) {
   // Subscribed to the theme store — shares one source of truth with the nav.
   const currentTheme = useTheme()
   const [speed, setSpeed] = useState<ReadingSpeed>(() => getReadingSpeed())
+  const { locale, setLocale } = useI18n()
   const [language, setLanguage] = useState<BookLanguage>(() => getLanguagePreference())
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [backupPreview, setBackupPreview] = useState<{
@@ -134,6 +137,12 @@ export function SettingsPage({ onBack, onSignIn }: SettingsPageProps) {
   const handleSpeedChange = (newSpeed: ReadingSpeed) => {
     setSpeed(newSpeed)
     setReadingSpeed(newSpeed)
+  }
+
+  // Changing the app language remounts the tree (see components/i18n-provider),
+  // so the toast is queued by the provider's new subtree, not this one.
+  const handleLocaleChange = (next: Locale) => {
+    setLocale(next)
   }
 
   const handleLanguageChange = (lang: BookLanguage) => {
@@ -341,7 +350,31 @@ export function SettingsPage({ onBack, onSignIn }: SettingsPageProps) {
             {/* Divider */}
             <div className="border-t border-stone-100 dark:border-stone-800" />
 
-            {/* Language preference */}
+            {/* App language */}
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Languages className="w-4 h-4 text-stone-400" />
+                <p className="text-sm font-medium text-stone-800 dark:text-stone-200">{t("settings_page.app_language")}</p>
+              </div>
+              <p className="text-xs text-stone-500 dark:text-stone-400 mb-2.5">{t("settings_page.the_language_bookswipe_speaks")}</p>
+              <select
+                value={locale}
+                onChange={(e) => handleLocaleChange(e.target.value as Locale)}
+                className="w-full h-11 px-3.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50 text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 transition-all appearance-none cursor-pointer"
+                aria-label={t("settings_page.select_app_language")}
+              >
+                {LOCALES.map((value) => (
+                  <option key={value} value={value}>
+                    {LOCALE_LABELS[value]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-stone-100 dark:border-stone-800" />
+
+            {/* Book language */}
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Globe className="w-4 h-4 text-stone-400" />

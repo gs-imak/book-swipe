@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { getServerLocale, serverT } from '@/lib/i18n/server'
 import { Source_Serif_4, DM_Sans } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
@@ -34,9 +35,13 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 }
 
-export const metadata: Metadata = {
-  title: 'BookSwipe - Discover Your Next Favorite Book',
-  description: 'Swipe through personalized book recommendations matched to your taste. No accounts, no fuss — just great books.',
+// Metadata is rendered per request, so the tab title and the share card
+// follow the reader's language the same way the page body does.
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await serverT()
+  return {
+  title: t('meta.title'),
+  description: t('meta.description'),
   metadataBase: new URL('https://book-swipe-tau.vercel.app'),
   icons: {
     icon: [
@@ -47,26 +52,31 @@ export const metadata: Metadata = {
   },
   manifest: '/manifest.json',
   openGraph: {
-    title: 'BookSwipe - Discover Your Next Favorite Book',
-    description: 'Swipe through personalized book recommendations matched to your taste.',
+    title: t('meta.title'),
+    description: t('meta.og_description'),
     type: 'website',
     images: ['/logo/bookswipe_logo.png'],
   },
   twitter: {
     card: 'summary',
     title: 'BookSwipe',
-    description: 'Swipe through personalized book recommendations matched to your taste.',
+    description: t('meta.og_description'),
   },
   robots: { index: true, follow: true },
+  }
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const locale = await getServerLocale()
+  const t = await serverT()
   return (
-    <html lang="en" suppressHydrationWarning>
+    // The client boot script may correct this attribute before hydration when
+    // the reader's stored choice differs from what the request suggested.
+    <html lang={locale} suppressHydrationWarning>
       <head>
         {/*
           Boot script. Parser-blocking and in <head>, so everything it decides
@@ -104,7 +114,7 @@ export default function RootLayout({
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-lg focus:bg-background focus:px-4 focus:py-2 focus:text-foreground focus:shadow-lg focus:ring-2 focus:ring-ring"
         >
-          Skip to content
+          {t('layout.skip_to_content')}
         </a>
         <main id="main-content" className="min-h-screen bg-background">
           {children}

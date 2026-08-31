@@ -44,6 +44,21 @@ export function resolveLocale(): Locale {
   return getStoredLocale() ?? detectBrowserLocale()
 }
 
+/**
+ * Tell the SERVER which language to render, without recording a choice the
+ * reader did not make. The cookie is what generateMetadata and the legal pages
+ * read; localStorage is reserved for an explicit pick, so a reader who changes
+ * their browser language still gets the new one.
+ */
+export function syncLocaleCookie(locale: Locale): void {
+  if (typeof document === "undefined") return
+  try {
+    document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=31536000; samesite=lax`
+  } catch {
+    /* server-rendered metadata falls back to Accept-Language */
+  }
+}
+
 export function persistLocale(locale: Locale): void {
   if (typeof window === "undefined") return
   try {
