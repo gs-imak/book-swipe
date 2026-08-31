@@ -23,6 +23,7 @@ import { useFocusTrap } from "@/lib/use-focus-trap"
 import dynamic from "next/dynamic"
 import { searchGutenberg, type GutenbergBook } from "@/lib/gutenberg-api"
 import { hasVerifiedRating } from "@/lib/book-truth"
+import { RatingBreakdownPanel } from "@/components/rating-breakdown-panel"
 import { useOverlayHistory } from "@/lib/use-overlay-history"
 
 // Code-split the reader (1,666 lines) — only loaded when user opens a book to read
@@ -52,6 +53,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
   const [isEditingReview, setIsEditingReview] = useState(false)
   const [showShelfPicker, setShowShelfPicker] = useState(false)
   const [showShareCard, setShowShareCard] = useState(false)
+  const [ratingsOpen, setRatingsOpen] = useState(false)
   const [assignedShelves, setAssignedShelves] = useState<Shelf[]>([])
   const [descExpanded, setDescExpanded] = useState(false)
   const [gutenbergBook, setGutenbergBook] = useState<GutenbergBook | null | undefined>(undefined)
@@ -306,7 +308,13 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                     <span>{estimateReadingTime(book.pages)}</span>
                   </div>
                   {hasVerifiedRating(enrichedBook ?? book) && (
-                  <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setRatingsOpen(true)}
+                    aria-haspopup="dialog"
+                    aria-label={`See how readers rated ${book.title}`}
+                    className="-mx-1.5 flex min-h-[40px] items-center gap-1 rounded-full px-1.5 transition-colors hover:bg-stone-100 dark:hover:bg-stone-800"
+                  >
                     <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                     <span className="font-medium text-stone-700 dark:text-stone-300">{(enrichedBook ?? book).rating}</span>
                     {(() => {
@@ -314,7 +322,8 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                       if (!m?.ratingsCount) return null
                       return <span className="text-stone-400 dark:text-stone-500">· {formatCount(m.ratingsCount)} ratings</span>
                     })()}
-                  </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-stone-400 dark:text-stone-500" />
+                  </button>
                   )}
                   {(() => {
                     const e = (enrichedBook ?? book).metadata?.enriched
@@ -1047,6 +1056,11 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
           onClose={() => setShowShareCard(false)}
         />
       </motion.div>
+
+      <RatingBreakdownPanel
+        book={ratingsOpen ? (enrichedBook ?? book) : null}
+        onClose={() => setRatingsOpen(false)}
+      />
 
       {book && gutenbergBook && (
         <BookReader

@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Heart, BookOpen, Info, Eye, Loader2 } from "lucide-react"
+import { X, Heart, BookOpen, Info, Eye, Loader2, ChevronRight } from "lucide-react"
 import { Book } from "@/lib/book-data"
 import { searchGutenberg, fetchBookText, type GutenbergBook } from "@/lib/gutenberg-api"
 import { addLikedBook, removeLikedBook, getLikedBooks } from "@/lib/storage"
@@ -19,6 +19,7 @@ import { useFocusTrap } from "@/lib/use-focus-trap"
 import type { ShowcaseSceneHandle } from "@/lib/showcase-scene"
 import { hasVerifiedRating } from "@/lib/book-truth"
 import { useOverlayHistory } from "@/lib/use-overlay-history"
+import { RatingBreakdownPanel } from "@/components/rating-breakdown-panel"
 
 export interface BookShowcaseProps {
   /** The showcased book, or null when the showcase is closed. */
@@ -106,6 +107,7 @@ function ShowcaseOverlay({
   // than guessed from length: the clamp is line-based and the panel width
   // changes between phone and desktop, so a character count would be wrong at
   // one of them.
+  const [ratingsOpen, setRatingsOpen] = useState(false)
   const [descExpanded, setDescExpanded] = useState(false)
   const [descClamped, setDescClamped] = useState(false)
   // A new book starts collapsed. Adjusted during render rather than in an
@@ -114,6 +116,7 @@ function ShowcaseOverlay({
   if (descBookId !== book.id) {
     setDescBookId(book.id)
     setDescExpanded(false)
+    setRatingsOpen(false)
   }
   const descRef = useRef<HTMLParagraphElement | null>(null)
   const { showToast } = useToast()
@@ -489,18 +492,27 @@ function ShowcaseOverlay({
             variants={item}
             className="mt-4 flex items-center gap-4 lg:mt-7"
           >
+            {/* The rating opens its own breakdown. "8 ratings" never appears
+                on its own: with the stars hidden for being under the
+                confidence floor, a bare count reads as a missing number
+                rather than as a deliberate omission. */}
             {hasVerifiedRating(display) && (
-              <StarRating rating={display.rating} readonly size="sm" />
+              <button
+                type="button"
+                onClick={() => setRatingsOpen(true)}
+                aria-haspopup="dialog"
+                aria-label={`See how readers rated ${display.title}`}
+                className="-mx-2 inline-flex min-h-[44px] items-center gap-2.5 rounded-full px-2 transition-colors hover:bg-white/10"
+              >
+                <StarRating rating={display.rating} readonly size="sm" />
+                {display.metadata?.ratingsCount ? (
+                  <span className="text-sm text-stage-ink-muted tabular-nums">
+                    {formatCount(display.metadata.ratingsCount)} ratings
+                  </span>
+                ) : null}
+                <ChevronRight className="h-4 w-4 text-stage-ink-tertiary" />
+              </button>
             )}
-            {/* Only alongside a rating we are willing to show. "8 ratings"
-                on its own, with the stars hidden for being under the
-                confidence floor, reads as a missing number rather than a
-                deliberate omission. */}
-            {hasVerifiedRating(display) && display.metadata?.ratingsCount ? (
-              <span className="text-sm text-stage-ink-muted tabular-nums">
-                {formatCount(display.metadata.ratingsCount)} ratings
-              </span>
-            ) : null}
             {display.readingTime && (
               <>
                 <div className="h-6 w-px bg-stage-hairline" />
@@ -579,6 +591,11 @@ function ShowcaseOverlay({
           </motion.div>
         </motion.div>
       </div>
+
+      <RatingBreakdownPanel
+        book={ratingsOpen ? display : null}
+        onClose={() => setRatingsOpen(false)}
+      />
     </motion.div>
   )
 }

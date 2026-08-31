@@ -123,10 +123,37 @@ export function StarRating({
     setHoverRating(null)
   }
 
+  if (readonly) {
+    return (
+      <div className="flex items-center gap-2">
+        <div
+          role="img"
+          aria-labelledby={ariaLabelledBy}
+          aria-label={ariaLabelledBy ? undefined : `Rated ${formatLabel(rating)} out of 5`}
+          className="flex items-center gap-1"
+        >
+          {[1, 2, 3, 4, 5].map((star) => (
+            <StarIcon
+              key={star}
+              fill={getStarFill(star, rating)}
+              className={sizeClasses[size]}
+              id={`star-${star}`}
+            />
+          ))}
+        </div>
+        {showLabel && rating > 0 && (
+          <span className="text-sm text-stone-500 font-medium">
+            {formatLabel(rating)}
+          </span>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="flex items-center gap-2">
       <div
-        role={readonly ? undefined : "group"}
+        role="group"
         aria-labelledby={ariaLabelledBy}
         className="flex items-center gap-1"
         onMouseLeave={handleMouseLeave}

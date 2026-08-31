@@ -12,6 +12,12 @@ import {
   type OlFacts,
 } from "@/lib/book-facts-shared"
 import {
+  cachedJson as olCachedJson,
+  olResolveWorkKey,
+  OL_TIMEOUT_MS,
+  OL_REVALIDATE_SECONDS,
+} from "@/lib/openlibrary-server"
+import {
   cleanDescription,
   isPublishable,
   trimToSentenceBand,
@@ -37,13 +43,7 @@ import {
 const MODEL = process.env.ENRICH_MODEL || "anthropic/claude-haiku-4.5"
 const GENERATION_TIMEOUT_MS = 12_000
 const API_TIMEOUT_MS = 6_000
-// Open Library is materially slower than Google and needs two hops (resolve a
-// work, then read it). Measured: the /isbn/ endpoint answers a redirect in
-// ~24s, far past any sane budget — which is why we resolve via search.json
-// instead. The client allows 20s for the whole route, so two 7s hops fit.
-const OL_TIMEOUT_MS = 9_000
-// Book facts don't change; a month matches the cover-cache TTL.
-const FACTS_REVALIDATE_SECONDS = 2_592_000
+const FACTS_REVALIDATE_SECONDS = OL_REVALIDATE_SECONDS
 
 const llmSchema = z.object({
   known: z
@@ -69,48 +69,11 @@ const llmSchema = z.object({
 // is in flight — cache hits return before it can fire. If a future Next
 // version treated a custom signal as a cache opt-out, behavior degrades to
 // uncached fetches (the pre-ADR-0006 status quo), never to an error.
-// Per-instance memo in front of the framework data cache. On Vercel this is a
-// small win; off Vercel — where the data cache may be absent, or reset on every
-// deploy — it is what keeps repeat lookups from spending external quota. Bounded
-// so a long-lived instance cannot grow without limit.
-const MEMO_MAX_ENTRIES = 500
-const memo = new Map<string, { value: unknown; expiresAt: number }>()
-
-function memoGet(url: string): { hit: boolean; value?: unknown } {
-  const entry = memo.get(url)
-  if (!entry) return { hit: false }
-  if (Date.now() > entry.expiresAt) {
-    memo.delete(url)
-    return { hit: false }
-  }
-  return { hit: true, value: entry.value }
-}
-
-function memoSet(url: string, value: unknown): void {
-  if (memo.size >= MEMO_MAX_ENTRIES) {
-    // Oldest insertion first — Map preserves insertion order.
-    const oldest = memo.keys().next().value
-    if (oldest !== undefined) memo.delete(oldest)
-  }
-  memo.set(url, { value, expiresAt: Date.now() + FACTS_REVALIDATE_SECONDS * 1000 })
-}
-
-async function cachedJson(url: string, timeoutMs: number = API_TIMEOUT_MS): Promise<unknown> {
-  const cached = memoGet(url)
-  if (cached.hit) return cached.value
-  try {
-    const res = await fetch(url, {
-      next: { revalidate: FACTS_REVALIDATE_SECONDS },
-      signal: AbortSignal.timeout(timeoutMs),
-    })
-    if (!res.ok) return null
-    const json = await res.json()
-    memoSet(url, json)
-    return json
-  } catch {
-    return null
-  }
-}
+// Cache policy, the memo in front of it and the Open Library work-key
+// resolution all live in lib/openlibrary-server so the ratings route shares
+// them instead of growing a second copy that drifts.
+const cachedJson = (url: string, timeoutMs: number = API_TIMEOUT_MS) =>
+  olCachedJson(url, timeoutMs)
 
 async function llmFacts(title: string, author: string): Promise<LlmFacts | null> {
   // Test for a real credential, never for the host. `process.env.VERCEL` is
@@ -294,44 +257,6 @@ async function gbFactsBySearch(title: string, author: string): Promise<GbFacts |
  * answers in a few seconds and hands back the work key directly, so this is
  * both faster and one hop shorter.
  */
-async function olResolveWorkKey(
-  title: string,
-  author: string,
-  isbn: string,
-): Promise<{ key: string; series?: unknown } | null> {
-  const fields = "key,title,author_name,series"
-  const base = `https://openlibrary.org/search.json?fields=${fields}&limit=3&`
-  // Ordered by measured latency, not by precision. Free-text q= answers in
-  // ~3.5s; the fielded title=&author= form took 6-20s for the identical
-  // result, and a fielded q=title:(..) AND author:(..) query did not return
-  // at all inside 21s. The fielded form stays as a fallback for titles too
-  // generic to survive free text.
-  const attempts: string[] = []
-  if (isbn) attempts.push(base + `q=${encodeURIComponent(isbn)}`)
-  if (title && author) {
-    attempts.push(base + `q=${encodeURIComponent(`${title} ${author}`)}`)
-    attempts.push(
-      base + `title=${encodeURIComponent(title)}&author=${encodeURIComponent(author)}`,
-    )
-  } else if (title) {
-    attempts.push(base + `q=${encodeURIComponent(title)}`)
-  }
-  for (const url of attempts) {
-    const data = (await cachedJson(url, OL_TIMEOUT_MS)) as
-      | { docs?: { key?: unknown; title?: unknown; series?: unknown }[] }
-      | null
-    const docs = Array.isArray(data?.docs) ? data!.docs! : []
-    const hit = docs.find(
-      (d) => typeof d.key === "string" && d.key.startsWith("/works/") && titlesOverlap(title, d.title),
-    )
-    if (hit) {
-      const series = Array.isArray(hit.series) ? hit.series[0] : hit.series
-      return { key: hit.key as string, series }
-    }
-  }
-  return null
-}
-
 async function olFacts(
   title: string,
   author: string,
