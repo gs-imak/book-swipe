@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Heart } from "lucide-react"
+import { t } from "@/lib/i18n"
 
 interface DedicationOverlayProps {
   isOpen: boolean
@@ -38,7 +39,7 @@ export function DedicationOverlay({ isOpen, onClose }: DedicationOverlayProps) {
         >
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("common.close")}
             className="absolute top-5 right-5 p-2 rounded-full text-stone-600 hover:text-stone-300 transition-colors"
             style={{ top: "max(20px, env(safe-area-inset-top, 20px))" }}
           >
@@ -72,9 +73,7 @@ export function DedicationOverlay({ isOpen, onClose }: DedicationOverlayProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.55 }}
               className="text-amber-500/70 text-[10px] uppercase tracking-[0.35em] font-semibold"
-            >
-              For Lycia
-            </motion.p>
+            > {t("dedication_overlay.for_lycia")} </motion.p>
 
             {/* Pull quote */}
             <motion.p
@@ -82,9 +81,7 @@ export function DedicationOverlay({ isOpen, onClose }: DedicationOverlayProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.65 }}
               className="text-white/90 text-xl font-serif leading-relaxed italic font-light"
-            >
-              &ldquo;Every dream begins with someone who believes in it.&rdquo;
-            </motion.p>
+            > {t("dedication_overlay.every_dream_begins_with_someone_who")} </motion.p>
 
             {/* Body */}
             <motion.div
@@ -93,20 +90,9 @@ export function DedicationOverlay({ isOpen, onClose }: DedicationOverlayProps) {
               transition={{ delay: 0.78 }}
               className="space-y-4 text-stone-400 text-sm leading-loose text-left"
             >
-              <p>
-                This app began as your idea, a simple spark you shared, and probably never thought
-                it would go this far. Somehow, that spark turned into something real, and now something
-                that I hope you can use, and that brings you joy, just as much as making this for you did for me.
-              </p>
-              <p>
-                You have a rare way of making the people around you want to build things, create things,
-                and believe a little more in what&apos;s possible. Thank you for being an angel and for
-                inspiring, as you always have been.
-              </p>
-              <p>
-                I hope that every book you discover here feels like it was waiting quietly for you to find it,
-                where you can always find peace and calm.
-              </p>
+              <p> {t("dedication_overlay.this_app_began_as_your_idea")} </p>
+              <p> {t("dedication_overlay.you_have_a_rare_way_of")} </p>
+              <p> {t("dedication_overlay.i_hope_that_every_book_you")} </p>
             </motion.div>
 
             {/* Bottom ornament */}
@@ -128,8 +114,8 @@ export function DedicationOverlay({ isOpen, onClose }: DedicationOverlayProps) {
               transition={{ delay: 1 }}
               className="space-y-2 pb-2"
             >
-              <p className="text-stone-500 text-xs tracking-wide">Happy International Women&apos;s Day</p>
-              <p className="text-amber-600/80 text-sm font-serif">With love ♥ your Georgie</p>
+              <p className="text-stone-500 text-xs tracking-wide">{t("dedication_overlay.happy_international_women_s_day")}</p>
+              <p className="text-amber-600/80 text-sm font-serif">{t("dedication_overlay.with_love_your_georgie")}</p>
             </motion.div>
           </motion.div>
         </motion.div>

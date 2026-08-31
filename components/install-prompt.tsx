@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Download, X } from "lucide-react"
+import { t } from "@/lib/i18n"
 
 const INSTALL_DISMISSED_KEY = "bookswipe_install_dismissed"
 
@@ -109,18 +110,16 @@ export function InstallPrompt() {
           <div className="flex items-center gap-3 bg-stone-900 text-white rounded-xl px-4 py-3 shadow-xl">
             <Download className="w-5 h-5 text-stage-amber flex-shrink-0" strokeWidth={1.8} />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">Add BookSwipe to home screen</p>
-              <p className="text-xs text-stone-400">Quick access, works offline</p>
+              <p className="text-sm font-medium">{t("install_prompt.add_bookswipe_to_home_screen")}</p>
+              <p className="text-xs text-stone-400">{t("install_prompt.quick_access_works_offline")}</p>
             </div>
             <button
               onClick={handleInstall}
               className="px-3 py-2 min-h-[40px] bg-stage-amber hover:opacity-90 text-on-stage-amber text-xs font-semibold rounded-control transition-opacity flex-shrink-0"
-            >
-              Install
-            </button>
+            > {t("install_prompt.install")} </button>
             <button
               onClick={handleDismiss}
-              aria-label="Dismiss install prompt"
+              aria-label={t("install_prompt.dismiss_install_prompt")}
               className="p-1 rounded-md hover:bg-stone-800 transition-colors flex-shrink-0"
             >
               <X className="w-4 h-4 text-stone-400" />

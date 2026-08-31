@@ -12,6 +12,7 @@ import {
 import { getLikedBooks } from "@/lib/storage"
 import { Book } from "@/lib/book-data"
 import { BookCover } from "@/components/book-cover"
+import { t } from "@/lib/i18n"
 
 const PRESET_EMOJIS = ["📚", "⭐", "🔥", "❤️", "🌙", "🌿", "🎭", "🗺️", "🧠", "🏆", "✨", "🎯"]
 
@@ -131,7 +132,7 @@ export function BookCollections({ isOpen, onClose, onBookClick }: BookCollection
                 <button
                   onClick={() => { setView("list"); setActiveCollection(null) }}
                   className="p-2 -ml-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
-                  aria-label="Back"
+                  aria-label={t("common.back")}
                 >
                   <ArrowLeft className="w-5 h-5 text-stone-500 dark:text-stone-400" />
                 </button>
@@ -165,16 +166,12 @@ export function BookCollections({ isOpen, onClose, onBookClick }: BookCollection
                   onClick={() => setView("create")}
                   className="w-full flex items-center justify-center gap-2 h-12 border-2 border-dashed border-stone-300 dark:border-stone-700 rounded-xl text-stone-500 dark:text-stone-400 hover:border-amber-400 hover:text-amber-600 dark:hover:border-amber-600 dark:hover:text-amber-400 transition-all text-sm font-medium"
                 >
-                  <Plus className="w-4 h-4" />
-                  Create Collection
-                </button>
+                  <Plus className="w-4 h-4" /> {t("book_collections.create_collection")} </button>
 
                 {collections.length === 0 && (
                   <div className="text-center py-16">
                     <BookOpen className="w-12 h-12 text-stone-300 dark:text-stone-600 mx-auto mb-3" />
-                    <p className="text-stone-500 dark:text-stone-400 text-sm">
-                      No collections yet. Create one to organize your books.
-                    </p>
+                    <p className="text-stone-500 dark:text-stone-400 text-sm"> {t("book_collections.no_collections_yet_create_one_to")} </p>
                   </div>
                 )}
 
@@ -215,28 +212,22 @@ export function BookCollections({ isOpen, onClose, onBookClick }: BookCollection
                       <div className="border-t border-stone-100 dark:border-stone-800 px-4 py-2 flex items-center justify-end">
                         {confirmDeleteId === collection.id ? (
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-stone-500 dark:text-stone-400">Delete collection?</span>
+                            <span className="text-xs text-stone-500 dark:text-stone-400">{t("book_collections.delete_collection")}</span>
                             <button
                               onClick={() => handleDeleteCollection(collection.id)}
                               className="text-xs text-red-500 font-semibold hover:text-red-600 transition-colors px-2 py-1 rounded"
-                            >
-                              Yes, delete
-                            </button>
+                            > {t("book_collections.yes_delete")} </button>
                             <button
                               onClick={() => setConfirmDeleteId(null)}
                               className="text-xs text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors px-2 py-1 rounded"
-                            >
-                              Cancel
-                            </button>
+                            > {t("common.cancel")} </button>
                           </div>
                         ) : (
                           <button
                             onClick={() => setConfirmDeleteId(collection.id)}
                             className="flex items-center gap-1 text-xs text-stone-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                           >
-                            <Trash2 className="w-3 h-3" />
-                            Delete
-                          </button>
+                            <Trash2 className="w-3 h-3" /> {t("book_collections.delete")} </button>
                         )}
                       </div>
                     </motion.div>
@@ -255,12 +246,8 @@ export function BookCollections({ isOpen, onClose, onBookClick }: BookCollection
                 {getBooksForCollection(activeCollection).length === 0 ? (
                   <div className="text-center py-16">
                     <BookOpen className="w-12 h-12 text-stone-300 dark:text-stone-600 mx-auto mb-3" />
-                    <p className="text-stone-500 dark:text-stone-400 text-sm">
-                      No books in this collection yet.
-                    </p>
-                    <p className="text-xs text-stone-400 dark:text-stone-500 mt-1">
-                      Open a book and add it to this collection from the detail view.
-                    </p>
+                    <p className="text-stone-500 dark:text-stone-400 text-sm"> {t("book_collections.no_books_in_this_collection_yet")} </p>
+                    <p className="text-xs text-stone-400 dark:text-stone-500 mt-1"> {t("book_collections.open_a_book_and_add_it")} </p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
@@ -289,9 +276,7 @@ export function BookCollections({ isOpen, onClose, onBookClick }: BookCollection
               <div className="space-y-5">
                 {/* Emoji picker */}
                 <div>
-                  <label className="block text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-3">
-                    Choose an Emoji
-                  </label>
+                  <label className="block text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-3"> {t("book_collections.choose_an_emoji")} </label>
                   <div className="flex flex-wrap gap-2">
                     {PRESET_EMOJIS.map(emoji => (
                       <button
@@ -311,14 +296,12 @@ export function BookCollections({ isOpen, onClose, onBookClick }: BookCollection
 
                 {/* Name */}
                 <div>
-                  <label className="block text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2">
-                    Collection Name
-                  </label>
+                  <label className="block text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2"> {t("book_collections.collection_name")} </label>
                   <input
                     type="text"
                     value={newName}
                     onChange={e => setNewName(e.target.value)}
-                    placeholder="e.g. Summer Reads"
+                    placeholder={t("book_collections.e_g_summer_reads")}
                     maxLength={60}
                     className="w-full h-11 px-4 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-600 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-400 transition-all"
                     autoFocus
@@ -327,13 +310,12 @@ export function BookCollections({ isOpen, onClose, onBookClick }: BookCollection
 
                 {/* Description */}
                 <div>
-                  <label className="block text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2">
-                    Description <span className="normal-case font-normal">(optional)</span>
+                  <label className="block text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2"> {t("book_collections.description")} <span className="normal-case font-normal">{t("common.optional")}</span>
                   </label>
                   <textarea
                     value={newDescription}
                     onChange={e => setNewDescription(e.target.value)}
-                    placeholder="A short note about this collection..."
+                    placeholder={t("book_collections.a_short_note_about_this_collection")}
                     maxLength={200}
                     rows={3}
                     className="w-full px-4 py-3 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-600 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-400 transition-all resize-none"
@@ -344,16 +326,12 @@ export function BookCollections({ isOpen, onClose, onBookClick }: BookCollection
                   <button
                     onClick={() => setView("list")}
                     className="flex-1 h-11 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 text-sm font-medium hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-all"
-                  >
-                    Cancel
-                  </button>
+                  > {t("common.cancel")} </button>
                   <button
                     onClick={handleCreateCollection}
                     disabled={!newName.trim()}
                     className="flex-1 h-11 rounded-xl bg-stone-900 dark:bg-stone-100 hover:bg-stone-800 dark:hover:bg-stone-200 text-white dark:text-stone-900 text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    Create
-                  </button>
+                  > {t("common.create")} </button>
                 </div>
               </div>
             )}

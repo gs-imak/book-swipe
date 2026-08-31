@@ -3,6 +3,7 @@
 import { useMemo } from "react"
 import { Heart, BookOpen, CheckCircle2, Star, BookMarked, FolderPlus, Trophy } from "lucide-react"
 import { getActivityLog, type ActivityEntry } from "@/lib/storage"
+import { t } from "@/lib/i18n"
 
 interface ActivityFeedProps {
   limit?: number
@@ -87,7 +88,7 @@ export function ActivityFeed({ limit = 20 }: ActivityFeedProps) {
     return (
       <div className="text-center py-8">
         <BookOpen className="w-8 h-8 text-stone-300 dark:text-stone-600 mx-auto mb-2" />
-        <p className="text-sm text-stone-400 dark:text-stone-500">Your reading journey starts here</p>
+        <p className="text-sm text-stone-400 dark:text-stone-500">{t("activity_feed.your_reading_journey_starts_here")}</p>
       </div>
     )
   }

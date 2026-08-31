@@ -7,6 +7,7 @@ import { BookOpen, Clock, Target, Flame, Plus, Minus, Play, Pause, CheckCircle, 
 import { motion } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
 import dynamic from "next/dynamic"
+import { t } from "@/lib/i18n"
 // Doodles are decorative and below the fold — dynamic() keeps them out of the
 // hydration payload (they were 104KB gzip, 24.5% of the entire cold download).
 const MeditatingDoodle = dynamic(() => import("./illustrations").then(m => ({ default: m.MeditatingDoodle })))
@@ -132,13 +133,13 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
         <div className="bg-white dark:bg-stone-900 rounded-xl p-4 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <Target className="w-4 h-4 text-amber-600" />
-            <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100">Reading Goals {goals.currentYear}</h3>
+            <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100">{t("reading_progress.reading_goals")} {goals.currentYear}</h3>
           </div>
 
           <div className="grid grid-cols-4 gap-3">
             <div className="text-center">
               <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{goals.booksCompleted}</p>
-              <p className="text-[11px] text-stone-400">of {goals.yearlyTarget}</p>
+              <p className="text-[11px] text-stone-400">{t("common.of")} {goals.yearlyTarget}</p>
               <div className="w-full bg-stone-100 dark:bg-stone-800 rounded-full h-1 mt-1.5">
                 <div
                   className="bg-amber-500 h-1 rounded-full transition-all"
@@ -148,18 +149,18 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
             </div>
             <div className="text-center">
               <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{goals.pagesRead}</p>
-              <p className="text-[11px] text-stone-400">pages</p>
+              <p className="text-[11px] text-stone-400">{t("common.pages")}</p>
             </div>
             <div className="text-center">
               <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{formatTimeSpent(goals.timeSpentMinutes)}</p>
-              <p className="text-[11px] text-stone-400">read time</p>
+              <p className="text-[11px] text-stone-400">{t("reading_progress.read_time")}</p>
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center gap-1">
                 <Flame className="w-4 h-4 text-amber-500" />
                 <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{goals.streak}</p>
               </div>
-              <p className="text-[11px] text-stone-400">streak</p>
+              <p className="text-[11px] text-stone-400">{t("reading_progress.streak")}</p>
             </div>
           </div>
         </div>
@@ -170,7 +171,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
         <div className="bg-white dark:bg-stone-900 rounded-xl p-4 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <BookOpen className="w-4 h-4 text-emerald-600" />
-            <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100">Currently Reading</h3>
+            <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100">{t("reading_progress.currently_reading")}</h3>
             <span className="text-[11px] bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded-full font-medium">
               {currentlyReading.length}
             </span>
@@ -225,7 +226,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                             setPageInput(String(book.currentPage))
                           }}
                           className="hover:text-stone-600 transition-colors"
-                          title="Tap to enter page number"
+                          title={t("reading_progress.tap_to_enter_page_number")}
                         >
                           {book.currentPage} / {book.totalPages}p
                         </button>
@@ -249,21 +250,21 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                     <div className="flex items-center gap-1.5 mt-2">
                       <button
                         onClick={() => handleProgressUpdate(book.bookId, Math.max(0, book.currentPage - 10))}
-                        aria-label="Go back 10 pages"
+                        aria-label={t("reading_progress.go_back_10_pages")}
                         className="w-7 h-7 rounded-md bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 flex items-center justify-center hover:bg-stone-50 dark:bg-stone-800/50 transition-colors"
                       >
                         <Minus className="w-3 h-3 text-stone-500" />
                       </button>
                       <button
                         onClick={() => handleProgressUpdate(book.bookId, Math.min(book.totalPages, book.currentPage + 10))}
-                        aria-label="Advance 10 pages"
+                        aria-label={t("reading_progress.advance_10_pages")}
                         className="w-7 h-7 rounded-md bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 flex items-center justify-center hover:bg-stone-50 dark:bg-stone-800/50 transition-colors"
                       >
                         <Plus className="w-3 h-3 text-stone-500" />
                       </button>
                       <button
                         onClick={() => handleStatusToggle(book.bookId)}
-                        aria-label="Pause reading"
+                        aria-label={t("reading_progress.pause_reading")}
                         className="w-7 h-7 rounded-md bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 flex items-center justify-center hover:bg-stone-50 dark:bg-stone-800/50 transition-colors"
                       >
                         <Pause className="w-3 h-3 text-stone-500" />
@@ -272,18 +273,14 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                         onClick={() => handleProgressUpdate(book.bookId, book.totalPages)}
                         className="h-7 px-2 rounded-md bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 flex items-center gap-1 hover:bg-stone-50 dark:bg-stone-800/50 transition-colors text-xs text-stone-600"
                       >
-                        <CheckCircle className="w-3 h-3" />
-                        Done
-                      </button>
+                        <CheckCircle className="w-3 h-3" /> {t("common.done")} </button>
                       <button
                         onClick={() => handleMarkDNF(book.bookId)}
-                        aria-label="Did not finish"
-                        title="Did Not Finish"
+                        aria-label={t("reading_progress.did_not_finish")}
+                        title={t("reading_progress.did_not_finish_2")}
                         className="h-7 px-2 rounded-md bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 flex items-center gap-1 hover:bg-red-50 hover:border-red-200 transition-colors text-xs text-stone-500 hover:text-red-500 ml-auto"
                       >
-                        <Ban className="w-3 h-3" />
-                        DNF
-                      </button>
+                        <Ban className="w-3 h-3" /> {t("reading_progress.dnf")} </button>
                     </div>
                   </div>
                 </div>
@@ -298,7 +295,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
         <div className="bg-white dark:bg-stone-900 rounded-xl p-4 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <Pause className="w-4 h-4 text-amber-600" />
-            <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100">Paused</h3>
+            <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100">{t("reading_progress.paused")}</h3>
           </div>
 
           <div className="space-y-2">
@@ -318,19 +315,17 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium text-xs text-stone-900 dark:text-stone-100 line-clamp-1">{book.book.title}</h4>
-                    <p className="text-[11px] text-stone-400">{Math.round(progressPercent)}% done</p>
+                    <p className="text-[11px] text-stone-400">{Math.round(progressPercent)}{t("reading_progress.done")}</p>
                   </div>
                   <div className="flex gap-1">
                     <button
                       onClick={() => handleStatusToggle(book.bookId)}
                       className="h-7 px-2 rounded-md bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 flex items-center gap-1 hover:bg-stone-50 dark:bg-stone-800/50 transition-colors text-xs text-stone-600"
                     >
-                      <Play className="w-2.5 h-2.5" />
-                      Resume
-                    </button>
+                      <Play className="w-2.5 h-2.5" /> {t("reading_progress.resume")} </button>
                     <button
                       onClick={() => handleRemoveBook(book.bookId)}
-                      aria-label="Remove from reading"
+                      aria-label={t("reading_progress.remove_from_reading")}
                       className="w-7 h-7 rounded-md bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 flex items-center justify-center hover:bg-red-50 transition-colors"
                     >
                       <X className="w-3 h-3 text-stone-400" />
@@ -348,7 +343,7 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
         <div className="bg-white dark:bg-stone-900 rounded-xl p-4 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <Ban className="w-4 h-4 text-stone-400" />
-            <h3 className="text-sm font-semibold text-stone-500">Did Not Finish</h3>
+            <h3 className="text-sm font-semibold text-stone-500">{t("reading_progress.did_not_finish_2")}</h3>
             <span className="text-[11px] bg-stone-100 dark:bg-stone-800 text-stone-500 px-1.5 py-0.5 rounded-full font-medium">
               {dnfBooks.length}
             </span>
@@ -375,12 +370,10 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
                     onClick={() => handleRestoreFromDNF(book.bookId)}
                     className="h-7 px-2 rounded-md bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 flex items-center gap-1 hover:bg-stone-50 dark:bg-stone-800/50 transition-colors text-xs text-stone-500"
                   >
-                    <RotateCcw className="w-2.5 h-2.5" />
-                    Restart
-                  </button>
+                    <RotateCcw className="w-2.5 h-2.5" /> {t("reading_progress.restart")} </button>
                   <button
                     onClick={() => handleRemoveBook(book.bookId)}
-                    aria-label="Remove"
+                    aria-label={t("common.remove")}
                     className="w-7 h-7 rounded-md bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 flex items-center justify-center hover:bg-red-50 transition-colors"
                   >
                     <X className="w-3 h-3 text-stone-400" />
@@ -398,14 +391,12 @@ export function ReadingProgressTracker({ onStartReading }: ReadingProgressProps)
           <div className="w-32 h-24 mx-auto mb-2 opacity-60">
             <MeditatingDoodle />
           </div>
-          <h3 className="text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1">No books in progress</h3>
-          <p className="text-xs text-stone-400 mb-4">Start tracking your reading journey</p>
+          <h3 className="text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1">{t("reading_progress.no_books_in_progress")}</h3>
+          <p className="text-xs text-stone-400 mb-4">{t("reading_progress.start_tracking_your_reading_journey")}</p>
           <button
             onClick={() => onStartReading?.("")}
             className="h-9 px-5 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium rounded-xl transition-colors"
-          >
-            Find Books to Read
-          </button>
+          > {t("reading_progress.find_books_to_read")} </button>
         </div>
       )}
     </div>

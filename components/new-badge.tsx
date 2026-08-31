@@ -4,6 +4,7 @@ import { useState, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { isFeatureSeen, markFeatureSeen } from "@/lib/storage"
 import { useClientValue } from "@/lib/use-client-value"
+import { t } from "@/lib/i18n"
 
 interface NewBadgeProps {
   featureId: string
@@ -42,9 +43,7 @@ export function NewBadge({ featureId, className = "" }: NewBadgeProps) {
           <motion.span
             animate={{ opacity: [1, 0.6, 1] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          >
-            New
-          </motion.span>
+          > {t("new_badge.new")} </motion.span>
         </motion.span>
       )}
     </AnimatePresence>

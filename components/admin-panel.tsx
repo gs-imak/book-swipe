@@ -42,6 +42,7 @@ import {
   previewFullBackupJSON,
   downloadJSON,
 } from "@/lib/export-utils"
+import { t } from "@/lib/i18n"
 
 interface AdminPanelProps {
   onBooksLoaded: (books: Book[]) => void
@@ -316,12 +317,8 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
       {/* Book Language */}
       <div>
         <h3 className="text-base font-semibold text-stone-900 dark:text-stone-100 flex items-center gap-2 mb-1">
-          <Globe className="w-4 h-4 text-stone-500" />
-          Book Language
-        </h3>
-        <p className="text-xs text-stone-500 mb-2">
-          Choose the language for book recommendations and search results.
-        </p>
+          <Globe className="w-4 h-4 text-stone-500" /> {t("admin_panel.book_language")} </h3>
+        <p className="text-xs text-stone-500 mb-2"> {t("admin_panel.choose_the_language_for_book_recommendations")} </p>
         <select
           value={language}
           onChange={(e) => handleLanguageChange(e.target.value as BookLanguage)}
@@ -339,31 +336,27 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
 
       <div>
         <h3 className="text-base font-semibold text-stone-900 dark:text-stone-100 flex items-center gap-2 mb-1">
-          <Shield className="w-4 h-4 text-stone-500" />
-          Data & Backup
-        </h3>
-        <p className="text-xs text-stone-500">
-          Export your data to keep a backup, or import from a previous backup.
-        </p>
+          <Shield className="w-4 h-4 text-stone-500" /> {t("admin_panel.data_backup")} </h3>
+        <p className="text-xs text-stone-500"> {t("admin_panel.export_your_data_to_keep_a")} </p>
       </div>
 
       {/* Current data summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <div className="bg-stone-50 dark:bg-stone-800/50 rounded-xl px-3 py-2">
           <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{likedCount}</p>
-          <p className="text-[11px] text-stone-500">Books</p>
+          <p className="text-[11px] text-stone-500">{t("common.books")}</p>
         </div>
         <div className="bg-stone-50 dark:bg-stone-800/50 rounded-xl px-3 py-2">
           <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{progressCount}</p>
-          <p className="text-[11px] text-stone-500">Reading</p>
+          <p className="text-[11px] text-stone-500">{t("admin_panel.reading")}</p>
         </div>
         <div className="bg-stone-50 dark:bg-stone-800/50 rounded-xl px-3 py-2">
           <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{reviewCount}</p>
-          <p className="text-[11px] text-stone-500">Reviews</p>
+          <p className="text-[11px] text-stone-500">{t("admin_panel.reviews")}</p>
         </div>
         <div className="bg-stone-50 dark:bg-stone-800/50 rounded-xl px-3 py-2">
           <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{noteCount}</p>
-          <p className="text-[11px] text-stone-500">Notes</p>
+          <p className="text-[11px] text-stone-500">{t("common.notes")}</p>
         </div>
       </div>
 
@@ -373,9 +366,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
           onClick={handleExport}
           className="flex-1 h-10 bg-stone-900 hover:bg-stone-800 text-white font-medium rounded-xl text-sm"
         >
-          <Download className="w-4 h-4 mr-2" />
-          Export Backup
-        </Button>
+          <Download className="w-4 h-4 mr-2" /> {t("admin_panel.export_backup")} </Button>
         <Button
           onClick={() => fileInputRef.current?.click()}
           disabled={importing}
@@ -396,24 +387,20 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
 
       {/* Full Backup (JSON) */}
       <div className="pt-2 border-t border-stone-200/60 dark:border-stone-700/60 space-y-2">
-        <p className="text-xs text-stone-500 font-medium">Full Backup (all data)</p>
+        <p className="text-xs text-stone-500 font-medium">{t("admin_panel.full_backup_all_data")}</p>
         <div className="grid grid-cols-2 gap-2">
           <Button
             onClick={handleFullBackupExport}
             variant="outline"
             className="h-10 border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 dark:text-stone-300 rounded-xl text-sm"
           >
-            <HardDrive className="w-4 h-4 mr-1.5" />
-            Export Full
-          </Button>
+            <HardDrive className="w-4 h-4 mr-1.5" /> {t("admin_panel.export_full")} </Button>
           <Button
             onClick={() => fullBackupInputRef.current?.click()}
             variant="outline"
             className="h-10 border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 dark:text-stone-300 rounded-xl text-sm"
           >
-            <Upload className="w-4 h-4 mr-1.5" />
-            Import Full
-          </Button>
+            <Upload className="w-4 h-4 mr-1.5" /> {t("admin_panel.import_full")} </Button>
           <input
             ref={fullBackupInputRef}
             type="file"
@@ -427,14 +414,9 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
       {/* Full Backup Import Confirmation */}
       {fullBackupPreview && (
         <div className="p-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30 space-y-2">
-          <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
-            Confirm full restore
-          </p>
-          <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
-            This will overwrite your current data with: {fullBackupPreview.stats.books} books,{" "}
-            {fullBackupPreview.stats.reviews} reviews, {fullBackupPreview.stats.notes} notes
-            ({fullBackupPreview.stats.totalKeys} total entries).
-          </p>
+          <p className="text-sm font-medium text-blue-900 dark:text-blue-200"> {t("admin_panel.confirm_full_restore")} </p>
+          <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed"> {t("admin_panel.this_will_overwrite_your_current_data")} {fullBackupPreview.stats.books} {t("admin_panel.books")}{" "}
+            {fullBackupPreview.stats.reviews} {t("admin_panel.reviews_2")} {fullBackupPreview.stats.notes} {t("admin_panel.notes")}{fullBackupPreview.stats.totalKeys} {t("admin_panel.total_entries")} </p>
           <div className="flex gap-2">
             <Button
               onClick={handleFullBackupConfirm}
@@ -458,16 +440,14 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
 
       {/* Goodreads / Notion */}
       <div className="pt-2 border-t border-stone-200/60 dark:border-stone-700/60 space-y-2">
-        <p className="text-xs text-stone-500 font-medium">Goodreads & Notion</p>
+        <p className="text-xs text-stone-500 font-medium">{t("admin_panel.goodreads_notion")}</p>
         <div className="grid grid-cols-2 gap-2">
           <Button
             onClick={() => setShowGoodreadsImport(true)}
             variant="outline"
             className="h-10 border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 dark:text-stone-300 rounded-xl text-sm"
           >
-            <Upload className="w-4 h-4 mr-1.5" />
-            Import GR
-          </Button>
+            <Upload className="w-4 h-4 mr-1.5" /> {t("admin_panel.import_gr")} </Button>
           <Button
             onClick={() => {
               const csv = exportToGoodreadsCSV()
@@ -478,9 +458,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
             variant="outline"
             className="h-10 border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 dark:text-stone-300 rounded-xl text-sm"
           >
-            <BookOpen className="w-4 h-4 mr-1.5" />
-            Export GR
-          </Button>
+            <BookOpen className="w-4 h-4 mr-1.5" /> {t("admin_panel.export_gr")} </Button>
         </div>
         <Button
           onClick={() => {
@@ -492,18 +470,13 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
           variant="outline"
           className="w-full h-10 border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 dark:text-stone-300 rounded-xl text-sm"
         >
-          <FileSpreadsheet className="w-4 h-4 mr-2" />
-          Export for Notion
-        </Button>
+          <FileSpreadsheet className="w-4 h-4 mr-2" /> {t("admin_panel.export_for_notion")} </Button>
       </div>
 
       {/* Warning */}
       <div className="flex gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/30 border border-amber-100">
         <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-        <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
-          Your data is stored in this browser only. Clearing browser data will erase it.
-          Export backups regularly to avoid data loss.
-        </p>
+        <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed"> {t("admin_panel.your_data_is_stored_in_this")} </p>
       </div>
 
       {/* Goodreads Import Modal */}

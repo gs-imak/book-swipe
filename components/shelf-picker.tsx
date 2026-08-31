@@ -12,6 +12,7 @@ import {
 } from "@/lib/storage"
 import { useToast } from "./toast-provider"
 import { useFocusTrap } from "@/lib/use-focus-trap"
+import { t } from "@/lib/i18n"
 
 interface ShelfPickerProps {
   bookId: string
@@ -86,10 +87,10 @@ export function ShelfPicker({ bookId, isOpen, onClose }: ShelfPickerProps) {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between p-4 pb-2">
-            <h3 id="shelf-picker-title" className="text-base font-bold text-stone-900 dark:text-stone-100 font-serif">Add to Shelf</h3>
+            <h3 id="shelf-picker-title" className="text-base font-bold text-stone-900 dark:text-stone-100 font-serif">{t("shelf_picker.add_to_shelf")}</h3>
             <button
               onClick={onClose}
-              aria-label="Close shelf picker"
+              aria-label={t("shelf_picker.close_shelf_picker")}
               className="p-2 -mr-1 rounded-lg hover:bg-stone-100 dark:bg-stone-800 transition-colors tap-target touch-manipulation"
             >
               <X className="w-4 h-4 text-stone-400" />

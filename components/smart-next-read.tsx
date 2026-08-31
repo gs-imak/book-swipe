@@ -7,6 +7,7 @@ import { Book } from "@/lib/book-data"
 import { getLikedBooks, getReadingProgress, getBookReviews, ReadingProgress, BookReview } from "@/lib/storage"
 import { BookCover } from "@/components/book-cover"
 import { hasVerifiedRating } from "@/lib/book-truth"
+import { t } from "@/lib/i18n"
 
 interface SmartNextReadProps {
   onBookClick: (book: Book) => void
@@ -170,9 +171,7 @@ export function SmartNextRead({ onBookClick, onStartReading }: SmartNextReadProp
         {/* Header bar */}
         <div className="flex items-center gap-2 px-4 pt-4 pb-0">
           <Wand2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-          <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-amber-700 dark:text-amber-400">
-            What to Read Next
-          </span>
+          <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-amber-700 dark:text-amber-400"> {t("smart_next_read.what_to_read_next")} </span>
         </div>
 
         {/* Book row */}
@@ -220,8 +219,7 @@ export function SmartNextRead({ onBookClick, onStartReading }: SmartNextReadProp
                       <>
                         <span className="text-stone-300 dark:text-stone-600 text-[11px]">·</span>
                         <span className="text-[11px] text-stone-400 dark:text-stone-500">
-                          {book.pages} pages
-                        </span>
+                          {book.pages} {t("common.pages")} </span>
                       </>
                     )}
                   </div>
@@ -240,17 +238,13 @@ export function SmartNextRead({ onBookClick, onStartReading }: SmartNextReadProp
             <div className="flex items-center gap-2 px-4 pb-4">
               {isStarted ? (
                 <span className="flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-400 font-medium">
-                  <BookOpen className="w-3.5 h-3.5" />
-                  Added to reading list
-                </span>
+                  <BookOpen className="w-3.5 h-3.5" /> {t("smart_next_read.added_to_reading_list")} </span>
               ) : (
                 <button
                   onClick={handleStartReading}
                   className="relative before:absolute before:-inset-y-1 before:inset-x-0 before:content-[''] h-8 px-4 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-white text-white dark:text-stone-900 text-xs font-semibold rounded-xl transition-all active:scale-[0.97] flex items-center gap-1.5 shadow-sm"
                 >
-                  <BookOpen className="w-3.5 h-3.5" />
-                  Start Reading
-                </button>
+                  <BookOpen className="w-3.5 h-3.5" /> {t("smart_next_read.start_reading")} </button>
               )}
 
               <button
@@ -258,9 +252,7 @@ export function SmartNextRead({ onBookClick, onStartReading }: SmartNextReadProp
                 disabled={isShuffling}
                 className="relative before:absolute before:-inset-y-1 before:inset-x-0 before:content-[''] h-8 px-3 flex items-center gap-1.5 text-xs text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700/50 rounded-xl transition-all active:scale-[0.97] disabled:opacity-50"
               >
-                <RefreshCw className={`w-3 h-3 ${isShuffling ? "animate-spin" : ""}`} />
-                Pick another
-              </button>
+                <RefreshCw className={`w-3 h-3 ${isShuffling ? "animate-spin" : ""}`} /> {t("smart_next_read.pick_another")} </button>
             </div>
           </motion.div>
         </AnimatePresence>

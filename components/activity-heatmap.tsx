@@ -2,6 +2,7 @@
 
 import { Flame } from "lucide-react"
 import { getReadingProgress, getBookReviews, getBookNotes } from "@/lib/storage"
+import { t } from "@/lib/i18n"
 
 /**
  * Current-month reading-activity calendar + day streak. Self-contained: reads
@@ -78,7 +79,7 @@ export function ActivityHeatmap() {
         {streak > 0 && (
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-border-strong">
             <Flame className="w-3.5 h-3.5 text-accent-ink" />
-            <span className="text-xs font-bold text-ink tabular-nums">{streak} day streak</span>
+            <span className="text-xs font-bold text-ink tabular-nums">{streak} {t("activity_heatmap.day_streak")}</span>
           </div>
         )}
       </div>
@@ -116,12 +117,12 @@ export function ActivityHeatmap() {
       </div>
 
       <div className="flex items-center gap-1.5 mt-2.5 justify-end">
-        <span className="text-[9.5px] text-ink-muted">Less</span>
+        <span className="text-[9.5px] text-ink-muted">{t("common.less")}</span>
         <div className="h-2.5 w-2.5 rounded-sm bg-[#F1EBDF] dark:bg-[#2A2521]" />
         <div className="h-2.5 w-2.5 rounded-sm bg-[#D8CDB6] dark:bg-[#4A443B]" />
         <div className="h-2.5 w-2.5 rounded-sm bg-[#9C9077] dark:bg-[#7A7263]" />
         <div className="h-2.5 w-2.5 rounded-sm bg-[#3D362B] dark:bg-[#D8D2C5]" />
-        <span className="text-[9.5px] text-ink-muted">More</span>
+        <span className="text-[9.5px] text-ink-muted">{t("common.more")}</span>
       </div>
     </div>
   )

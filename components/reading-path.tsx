@@ -6,6 +6,7 @@ import { ArrowRight, RefreshCw } from "lucide-react"
 import { Book } from "@/lib/book-data"
 import { generateChainFromLiked, type BookChain } from "@/lib/book-chains"
 import { BookCover } from "@/components/book-cover"
+import { t } from "@/lib/i18n"
 
 interface ReadingPathProps {
   onBookClick?: (book: Book) => void
@@ -45,11 +46,11 @@ export function ReadingPath({ onBookClick }: ReadingPathProps) {
       transition={{ duration: 0.4, delay: 0.15 }}
     >
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100 font-serif">Reading Paths</h2>
+        <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100 font-serif">{t("reading_path.reading_paths")}</h2>
         <button
           onClick={loadChains}
           className="p-1.5 rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 dark:bg-stone-800 transition-all"
-          title="Refresh paths"
+          title={t("reading_path.refresh_paths")}
         >
           <RefreshCw className="w-4 h-4" />
         </button>
@@ -59,8 +60,7 @@ export function ReadingPath({ onBookClick }: ReadingPathProps) {
         {chains.map((chain, ci) => (
           <div key={`${chain.startBook.id}-${ci}`} className="bg-white dark:bg-stone-900 rounded-2xl p-4 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
             <p className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-3">
-              {chain.theme} journey
-            </p>
+              {chain.theme} {t("reading_path.journey")} </p>
 
             <div className="flex items-center gap-1 overflow-x-auto hide-scrollbar pb-1">
               {/* Start book */}

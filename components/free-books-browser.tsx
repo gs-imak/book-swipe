@@ -18,6 +18,7 @@ import {
   getCoverUrl,
 } from "@/lib/gutenberg-browser-api"
 import Image from "next/image"
+import { t } from "@/lib/i18n"
 
 // Lazy: the reader is ~2800 lines and only needed once a book is opened —
 // keeps it out of the browse chunk (book-detail-modal lazy-loads it the same way).
@@ -246,16 +247,14 @@ export function FreeBooksBrowser() {
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-2 mb-3">
             <BookOpen className="w-5 h-5 text-amber-600" />
-            <h1 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">Free Books</h1>
-            <span className="text-[10px] text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 border border-amber-100 px-2 py-0.5 rounded-full font-medium">
-              70k+ classics
-            </span>
+            <h1 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">{t("free_books_browser.free_books")}</h1>
+            <span className="text-[10px] text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 border border-amber-100 px-2 py-0.5 rounded-full font-medium"> {t("free_books_browser.70k_classics")} </span>
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 dark:text-stone-500 pointer-events-none" />
             <input
               type="search"
-              placeholder="Search by title or author..."
+              placeholder={t("free_books_browser.search_by_title_or_author")}
               value={searchInput}
               onChange={e => handleSearchChange(e.target.value)}
               className="w-full pl-9 pr-4 py-2.5 bg-stone-100 dark:bg-stone-800 rounded-xl text-sm text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 outline-none focus:ring-2 focus:ring-amber-500/50"
@@ -297,7 +296,7 @@ export function FreeBooksBrowser() {
                   className="flex items-center justify-center gap-2 py-3 mb-4 text-sm text-stone-500 dark:text-stone-400"
                 >
                   <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
-                  <span>The book server is slow — hang tight...</span>
+                  <span>{t("free_books_browser.the_book_server_is_slow_hang")}</span>
                 </motion.div>
               )}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-4">
@@ -317,27 +316,24 @@ export function FreeBooksBrowser() {
             <div className="flex flex-col items-center justify-center h-64 text-stone-400 gap-3">
               <AlertCircle className="w-8 h-8 opacity-40" />
               <div className="text-center">
-                <p className="text-sm font-medium text-stone-500 dark:text-stone-400">Couldn&apos;t load books</p>
-                <p className="text-xs text-stone-400 dark:text-stone-500 mt-1">The Gutenberg server may be temporarily down.</p>
+                <p className="text-sm font-medium text-stone-500 dark:text-stone-400">{t("free_books_browser.couldn_t_load_books")}</p>
+                <p className="text-xs text-stone-400 dark:text-stone-500 mt-1">{t("free_books_browser.the_gutenberg_server_may_be_temporarily")}</p>
               </div>
               <button
                 onClick={() => handleCategorySelect(selectedCategory)}
                 className="px-4 py-2 rounded-lg text-xs font-semibold bg-amber-600 text-white hover:bg-amber-700 transition-colors"
-              >
-                Try again
-              </button>
+              > {t("free_books_browser.try_again")} </button>
             </div>
           ) : books.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-stone-400 gap-2">
               <BookOpen className="w-8 h-8 opacity-40" />
-              <p className="text-sm">No books found</p>
+              <p className="text-sm">{t("free_books_browser.no_books_found")}</p>
             </div>
           ) : (
             <div>
               {loading && books.length > 0 && (
                 <div className="flex items-center justify-center gap-2 py-2 mb-3 text-xs text-stone-400">
-                  <div className="w-3 h-3 rounded-full animate-pulse bg-stone-300 dark:bg-stone-600" /> Refreshing...
-                </div>
+                  <div className="w-3 h-3 rounded-full animate-pulse bg-stone-300 dark:bg-stone-600" /> {t("free_books_browser.refreshing")} </div>
               )}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-4">
                 {books.map((book, i) => (
@@ -478,9 +474,7 @@ function BookGridCard({
             </p>
           </div>
         )}
-        <div className="absolute top-1.5 left-1.5 bg-amber-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md">
-          FREE
-        </div>
+        <div className="absolute top-1.5 left-1.5 bg-amber-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md"> {t("free_books_browser.free")} </div>
       </div>
 
       <div className="flex flex-col min-h-[5rem]">
@@ -493,9 +487,7 @@ function BookGridCard({
             onClick={() => onRead(book)}
             className="relative before:absolute before:-inset-y-1.5 before:inset-x-0 before:content-[''] flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium bg-amber-600 text-white hover:bg-amber-700 active:scale-[0.98] transition-all"
           >
-            <BookOpen className="w-3 h-3" />
-            Read
-          </button>
+            <BookOpen className="w-3 h-3" /> {t("free_books_browser.read")} </button>
           <button
             onClick={(e) => { e.stopPropagation(); if (!isSaved) onSave(book) }}
             disabled={isSaved}

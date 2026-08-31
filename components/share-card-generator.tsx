@@ -7,6 +7,7 @@ import { Book } from "@/lib/book-data"
 import { getBookReview, type BookReview } from "@/lib/storage"
 import { generateShareCard, copyImageToClipboard, downloadImage, type ShareTemplate } from "@/lib/share-card"
 import { useFocusTrap } from "@/lib/use-focus-trap"
+import { t } from "@/lib/i18n"
 
 interface ShareCardGeneratorProps {
   book: Book
@@ -146,7 +147,7 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
           ref={modalRef}
           role="dialog"
           aria-modal="true"
-          aria-label="Share Card"
+          aria-label={t("share_card_generator.share_card")}
           initial={{ opacity: 0, y: 30, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 30, scale: 0.97 }}
@@ -156,10 +157,10 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
         >
           {/* Header */}
           <div className="flex items-center justify-between p-5 pb-3">
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">Share Card</h2>
+            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">{t("share_card_generator.share_card")}</h2>
             <button
               onClick={onClose}
-              aria-label="Close share card"
+              aria-label={t("share_card_generator.close_share_card")}
               className="p-2 -mr-2 rounded-lg hover:bg-stone-100 dark:bg-stone-800 transition-colors tap-target touch-manipulation"
             >
               <X className="w-5 h-5 text-stone-400" />
@@ -175,7 +176,7 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
                 </div>
               ) : preview ? (
                 // eslint-disable-next-line @next/next/no-img-element -- locally generated canvas data URL; the image optimizer can't process it
-                <img src={preview} alt="Share card preview" className="w-full h-full object-contain" />
+                <img src={preview} alt={t("share_card_generator.share_card_preview")} className="w-full h-full object-contain" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <div className="w-6 h-6 border-2 border-stone-300 border-t-stone-600 rounded-full animate-spin" />
@@ -190,7 +191,7 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
 
             {/* Template picker */}
             <div>
-              <label className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2 block">Template</label>
+              <label className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2 block">{t("share_card_generator.template")}</label>
               <div className="flex gap-2">
                 {TEMPLATES.map((t) => (
                   <button
@@ -211,13 +212,11 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
 
             {/* Quote input */}
             <div>
-              <label className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2 block">
-                Custom Quote (optional)
-              </label>
+              <label className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2 block"> {t("share_card_generator.custom_quote_optional")} </label>
               <textarea
                 value={quote}
                 onChange={(e) => setQuote(e.target.value)}
-                placeholder="Add a favorite quote or your thoughts..."
+                placeholder={t("share_card_generator.add_a_favorite_quote_or_your")}
                 maxLength={200}
                 rows={2}
                 className="w-full px-3 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-sm bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 resize-none"
@@ -233,14 +232,10 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
               >
                 {copied ? (
                   <>
-                    <Check className="w-4 h-4" />
-                    Copied!
-                  </>
+                    <Check className="w-4 h-4" /> {t("share_card_generator.copied")} </>
                 ) : (
                   <>
-                    <Copy className="w-4 h-4" />
-                    Copy Image
-                  </>
+                    <Copy className="w-4 h-4" /> {t("share_card_generator.copy_image")} </>
                 )}
               </button>
               <button
@@ -248,9 +243,7 @@ export function ShareCardGenerator({ book, isOpen, onClose }: ShareCardGenerator
                 disabled={!preview || generating}
                 className="flex-1 h-10 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:bg-stone-800/50 disabled:opacity-40 text-stone-700 dark:text-stone-300 text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
               >
-                <Download className="w-4 h-4" />
-                Download
-              </button>
+                <Download className="w-4 h-4" /> {t("share_card_generator.download")} </button>
             </div>
 
             {copyError && (

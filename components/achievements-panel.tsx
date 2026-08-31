@@ -9,6 +9,7 @@ import { ACHIEVEMENTS, getAchievementsByCategory } from "@/lib/achievements"
 import { AchievementBadge } from "./achievement-badge"
 import { IconBadge } from "./icon-badge"
 import type { LucideIcon } from "lucide-react"
+import { t } from "@/lib/i18n"
 
 interface AchievementsPanelProps {
   isOpen: boolean
@@ -80,9 +81,7 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
             <h2
               id="achievements-title"
               className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100 font-serif"
-            >
-              Awards
-            </h2>
+            > {t("achievements_panel.awards")} </h2>
             <button
               onClick={onClose}
               className="p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors tap-target touch-manipulation"
@@ -111,9 +110,7 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
                   <Trophy className="w-5 h-5 text-amber-600" />
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-medium text-stone-500 dark:text-stone-400">
-                    Level {currentLevel} &middot; {unlockedCount}/{totalAchievements} unlocked
-                  </p>
+                  <p className="text-sm font-medium text-stone-500 dark:text-stone-400"> {t("achievements_panel.level")} {currentLevel} {t("achievements_panel.text")} {unlockedCount}/{totalAchievements} {t("achievements_panel.unlocked")} </p>
                 </div>
               </div>
             </motion.div>
@@ -126,8 +123,8 @@ export function AchievementsPanel({ isOpen, onClose }: AchievementsPanelProps) {
               className="bg-white dark:bg-stone-900 rounded-xl p-4 border border-stone-200/60 dark:border-stone-700/60 shadow-sm"
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Level {currentLevel}</span>
-                <span className="text-xs text-stone-400 dark:text-stone-500">{currentPoints} / {pointsForNext} XP</span>
+                <span className="text-sm font-medium text-stone-700 dark:text-stone-300">{t("achievements_panel.level")} {currentLevel}</span>
+                <span className="text-xs text-stone-400 dark:text-stone-500">{currentPoints} / {pointsForNext} {t("achievements_panel.xp")}</span>
               </div>
               <div className="w-full bg-stone-100 dark:bg-stone-800 rounded-full h-2">
                 <motion.div
@@ -206,7 +203,7 @@ function OverviewTab({ stats, achievements, completionPercentage }: OverviewTabP
             <IconBadge icon={Star} color="teal" />
             <div className="min-w-0">
               <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{stats.totalPoints}</p>
-              <p className="text-xs text-stone-500 dark:text-stone-400">Points</p>
+              <p className="text-xs text-stone-500 dark:text-stone-400">{t("achievements_panel.points")}</p>
             </div>
           </div>
         </div>
@@ -216,7 +213,7 @@ function OverviewTab({ stats, achievements, completionPercentage }: OverviewTabP
             <IconBadge icon={TrendingUp} color="emerald" />
             <div className="min-w-0">
               <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{stats.currentStreak}</p>
-              <p className="text-xs text-stone-500 dark:text-stone-400">Day streak</p>
+              <p className="text-xs text-stone-500 dark:text-stone-400">{t("achievements_panel.day_streak")}</p>
             </div>
           </div>
         </div>
@@ -226,7 +223,7 @@ function OverviewTab({ stats, achievements, completionPercentage }: OverviewTabP
             <IconBadge icon={Trophy} color="amber" />
             <div className="min-w-0">
               <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{achievements.filter((a: Achievement) => a.unlockedAt).length}</p>
-              <p className="text-xs text-stone-500 dark:text-stone-400">Unlocked</p>
+              <p className="text-xs text-stone-500 dark:text-stone-400">{t("achievements_panel.unlocked_2")}</p>
             </div>
           </div>
         </div>
@@ -236,7 +233,7 @@ function OverviewTab({ stats, achievements, completionPercentage }: OverviewTabP
             <IconBadge icon={Target} color="rose" />
             <div className="min-w-0">
               <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{stats.totalBooksRead}</p>
-              <p className="text-xs text-stone-500 dark:text-stone-400">Books read</p>
+              <p className="text-xs text-stone-500 dark:text-stone-400">{t("achievements_panel.books_read")}</p>
             </div>
           </div>
         </div>
@@ -245,21 +242,20 @@ function OverviewTab({ stats, achievements, completionPercentage }: OverviewTabP
       {/* Achievement Progress */}
       <div className="bg-white rounded-xl p-4 border border-stone-200/60 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-stone-900">Achievement Progress</h3>
+          <h3 className="text-sm font-semibold text-stone-900">{t("achievements_panel.achievement_progress")}</h3>
           <span className="text-sm font-medium text-amber-600">
             {Math.round(completionPercentage)}%
           </span>
         </div>
         <Progress value={completionPercentage} className="h-2" />
         <p className="text-xs text-stone-400 mt-2">
-          {achievements.filter((a: Achievement) => a.unlockedAt).length} of {ACHIEVEMENTS.length} achievements unlocked
-        </p>
+          {achievements.filter((a: Achievement) => a.unlockedAt).length} {t("common.of")} {ACHIEVEMENTS.length} {t("achievements_panel.achievements_unlocked")} </p>
       </div>
 
       {/* Recent Achievements */}
       {recentAchievements.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-stone-900 mb-3">Recently Unlocked</h3>
+          <h3 className="text-sm font-semibold text-stone-900 mb-3">{t("achievements_panel.recently_unlocked")}</h3>
           <div className="space-y-2">
             {recentAchievements.map((achievement: Achievement) => (
               <div key={achievement.id} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-stone-200/60 shadow-sm">
@@ -348,9 +344,7 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
               {achievement.name}
             </h4>
             {isUnlocked && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 whitespace-nowrap flex-shrink-0">
-                Done
-              </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 whitespace-nowrap flex-shrink-0"> {t("common.done")} </span>
             )}
           </div>
           <p className={`text-xs leading-relaxed ${isUnlocked ? 'text-stone-500' : 'text-stone-400'}`}>
@@ -360,7 +354,7 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
           {achievement.maxProgress && !isUnlocked && (
             <div className="mt-2">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[11px] text-stone-400">Progress</span>
+                <span className="text-[11px] text-stone-400">{t("achievements_panel.progress")}</span>
                 <span className="text-[11px] text-stone-400">{progress}/{maxProgress}</span>
               </div>
               <div className="w-full bg-stone-100 rounded-full h-1.5">

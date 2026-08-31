@@ -20,6 +20,7 @@ import type { ShowcaseSceneHandle } from "@/lib/showcase-scene"
 import { hasVerifiedRating } from "@/lib/book-truth"
 import { useOverlayHistory } from "@/lib/use-overlay-history"
 import { RatingBreakdownPanel } from "@/components/rating-breakdown-panel"
+import { t } from "@/lib/i18n"
 
 export interface BookShowcaseProps {
   /** The showcased book, or null when the showcase is closed. */
@@ -368,7 +369,7 @@ function ShowcaseOverlay({
 
       <button
         onClick={requestClose}
-        aria-label="Close showcase"
+        aria-label={t("book_showcase.close_showcase")}
         className="absolute right-4 top-4 z-10 flex h-12 w-12 items-center justify-center rounded-full border-[1.5px] border-[rgba(245,239,224,.4)] text-stage-ink transition-colors hover:border-[rgba(245,239,224,.9)] lg:left-1/2 lg:right-auto lg:top-7 lg:-translate-x-1/2 tap-target"
       >
         <X className="h-5 w-5" />
@@ -388,15 +389,11 @@ function ShowcaseOverlay({
               onClick={() => (onRead ? onRead(book) : jumpToDetails())}
               className="inline-flex h-12 items-center gap-2 rounded-full bg-stage-amber px-6 text-[15px] font-semibold text-on-stage-amber transition-transform hover:scale-[1.04] tap-target"
             >
-              <BookOpen className="h-4 w-4" />
-              Keep reading
-            </button>
+              <BookOpen className="h-4 w-4" /> {t("book_showcase.keep_reading")} </button>
             <button
               onClick={exitPeek}
               className="inline-flex h-12 items-center gap-2 rounded-full bg-white/10 px-6 text-[15px] font-semibold text-stage-ink transition-transform hover:scale-[1.04] tap-target"
-            >
-              Close preview
-            </button>
+            > {t("book_showcase.close_preview")} </button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -507,8 +504,7 @@ function ShowcaseOverlay({
                 <StarRating rating={display.rating} readonly size="sm" />
                 {display.metadata?.ratingsCount ? (
                   <span className="text-sm text-stage-ink-muted tabular-nums">
-                    {formatCount(display.metadata.ratingsCount)} ratings
-                  </span>
+                    {formatCount(display.metadata.ratingsCount)} {t("common.ratings")} </span>
                 ) : null}
                 <ChevronRight className="h-4 w-4 text-stage-ink-tertiary" />
               </button>
@@ -550,9 +546,7 @@ function ShowcaseOverlay({
                 onClick={() => onRead(book)}
                 className="inline-flex h-12 items-center gap-2 rounded-full bg-stage-amber px-6 text-[15px] font-semibold text-on-stage-amber transition-transform hover:scale-[1.04] tap-target"
               >
-                <BookOpen className="h-4 w-4" />
-                Read free
-              </button>
+                <BookOpen className="h-4 w-4" /> {t("book_showcase.read_free")} </button>
             )}
             {gutenberg ? (
               <button
@@ -564,9 +558,7 @@ function ShowcaseOverlay({
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Eye className="h-4 w-4" />
-                )}
-                Peek inside
-              </button>
+                )} {t("book_showcase.peek_inside")} </button>
             ) : null}
             <button
               onClick={toggleSaved}
@@ -584,9 +576,7 @@ function ShowcaseOverlay({
                 onClick={jumpToDetails}
                 className="inline-flex h-12 items-center gap-2 rounded-full bg-white/10 px-6 text-[15px] font-semibold text-stage-ink transition-transform hover:scale-[1.04] tap-target"
               >
-                <Info className="h-4 w-4" />
-                Details
-              </button>
+                <Info className="h-4 w-4" /> {t("book_showcase.details")} </button>
             )}
           </motion.div>
         </motion.div>

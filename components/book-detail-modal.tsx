@@ -25,6 +25,7 @@ import { searchGutenberg, type GutenbergBook } from "@/lib/gutenberg-api"
 import { hasVerifiedRating } from "@/lib/book-truth"
 import { RatingBreakdownPanel } from "@/components/rating-breakdown-panel"
 import { useOverlayHistory } from "@/lib/use-overlay-history"
+import { t } from "@/lib/i18n"
 
 // Code-split the reader (1,666 lines) — only loaded when user opens a book to read
 const BookReader = dynamic(() => import("./book-reader"), {
@@ -290,7 +291,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
 
                   <button
                     onClick={onClose}
-                    aria-label="Close book details"
+                    aria-label={t("book_detail_modal.close_book_details")}
                     className="p-2 -mr-2 -mt-1 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors flex-shrink-0 tap-target touch-manipulation"
                   >
                     <X className="w-5 h-5 text-stone-400 dark:text-stone-500" />
@@ -320,7 +321,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                     {(() => {
                       const m = (enrichedBook ?? book).metadata
                       if (!m?.ratingsCount) return null
-                      return <span className="text-stone-400 dark:text-stone-500">· {formatCount(m.ratingsCount)} ratings</span>
+                      return <span className="text-stone-400 dark:text-stone-500">· {formatCount(m.ratingsCount)} {t("common.ratings")}</span>
                     })()}
                     <ChevronRight className="w-3.5 h-3.5 text-stone-400 dark:text-stone-500" />
                   </button>
@@ -339,7 +340,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                         {e.firstPublished && (
                           <div className="flex items-center gap-1">
                             <Calendar className="w-3.5 h-3.5 text-stone-400 dark:text-stone-500" />
-                            <span>First published {e.firstPublished}</span>
+                            <span>{t("book_detail_modal.first_published")} {e.firstPublished}</span>
                           </div>
                         )}
                       </>
@@ -348,17 +349,17 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                   {book.metadata?.readinglogCount && book.metadata.readinglogCount > 0 && (
                     <div className="flex items-center gap-1">
                       <Users className="w-3.5 h-3.5 text-stone-400 dark:text-stone-500" />
-                      <span>{book.metadata.readinglogCount.toLocaleString()} readers</span>
+                      <span>{book.metadata.readinglogCount.toLocaleString()} {t("book_detail_modal.readers")}</span>
                     </div>
                   )}
                   {/* Format badges */}
                   {book.formats && (
                     <>
                       {book.formats.ebook && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-medium">eBook</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-medium">{t("common.ebook")}</span>
                       )}
                       {book.formats.audiobook && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-purple-600 font-medium">Audio</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-purple-600 font-medium">{t("book_detail_modal.audio")}</span>
                       )}
                     </>
                   )}
@@ -413,9 +414,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                       onClick={() => onStartReading(book)}
                       className="h-9 px-4 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium rounded-xl transition-all active:scale-[0.98] flex items-center gap-1.5"
                     >
-                      <Plus className="w-3.5 h-3.5" />
-                      Add to List
-                    </button>
+                      <Plus className="w-3.5 h-3.5" /> {t("book_detail_modal.add_to_list")} </button>
                   )}
 
                   {!existingReview && (
@@ -426,9 +425,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                       }}
                       className="h-9 px-4 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-800/50 text-stone-700 dark:text-stone-300 text-sm font-medium rounded-xl transition-all active:scale-[0.98] shadow-sm flex items-center gap-1.5"
                     >
-                      <MessageSquare className="w-3.5 h-3.5" />
-                      Review
-                    </button>
+                      <MessageSquare className="w-3.5 h-3.5" /> {t("book_detail_modal.review")} </button>
                   )}
 
                   {/* Show Read Free when Gutenberg match found */}
@@ -437,9 +434,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                       onClick={() => setShowReader(true)}
                       className="h-9 px-4 bg-amber-700 hover:bg-amber-800 text-white text-sm font-medium rounded-xl transition-all active:scale-[0.98] flex items-center gap-1.5"
                     >
-                      <BookOpen className="w-3.5 h-3.5" />
-                      Read Free
-                    </button>
+                      <BookOpen className="w-3.5 h-3.5" /> {t("book_detail_modal.read_free")} </button>
                   )}
                   {/* Subtle spinner while search is in progress */}
                   {gutenbergBook === undefined && (
@@ -455,17 +450,13 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                     onClick={() => setShowShelfPicker(true)}
                     className="h-10 px-3 bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-600 dark:text-stone-300 text-sm font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1"
                   >
-                    <Library className="w-3 h-3" />
-                    Shelves
-                  </button>
+                    <Library className="w-3 h-3" /> {t("book_detail_modal.shelves")} </button>
 
                   <button
                     onClick={() => setShowShareCard(true)}
                     className="h-10 px-3 bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-600 dark:text-stone-300 text-sm font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1"
                   >
-                    <Share2 className="w-3 h-3" />
-                    Share
-                  </button>
+                    <Share2 className="w-3 h-3" /> {t("common.share")} </button>
 
                   {onHideBook && (
                     <button
@@ -475,9 +466,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                       }}
                       className="h-10 px-3 bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:border-amber-200 text-stone-400 dark:text-stone-500 hover:text-amber-600 text-sm font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1 ml-2"
                     >
-                      <EyeOff className="w-3 h-3" />
-                      Hide
-                    </button>
+                      <EyeOff className="w-3 h-3" /> {t("book_detail_modal.hide")} </button>
                   )}
 
                   {onRemoveBook && (
@@ -490,9 +479,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                       }}
                       className="h-10 px-3 bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 hover:bg-red-50 hover:border-red-200 text-stone-400 dark:text-stone-500 hover:text-red-500 text-sm font-medium rounded-lg transition-all active:scale-[0.98] flex items-center gap-1"
                     >
-                      <Trash2 className="w-3 h-3" />
-                      Remove
-                    </button>
+                      <Trash2 className="w-3 h-3" /> {t("common.remove")} </button>
                   )}
                 </div>
 
@@ -550,8 +537,8 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                       <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-stone-800 leading-snug">Looks like you&apos;ve finished this book!</p>
-                      <p className="text-xs text-stone-500 mt-0.5">Mark it as completed?</p>
+                      <p className="text-sm font-medium text-stone-800 leading-snug">{t("book_detail_modal.looks_like_you_ve_finished_this")}</p>
+                      <p className="text-xs text-stone-500 mt-0.5">{t("book_detail_modal.mark_it_as_completed")}</p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <button
@@ -561,18 +548,14 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                           dismissSuggestion(book.id, "finished")
                         }}
                         className="h-8 px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors active:scale-[0.97]"
-                      >
-                        Yes, I&apos;m done
-                      </button>
+                      > {t("book_detail_modal.yes_i_m_done")} </button>
                       <button
                         onClick={() => {
                           setShowFinishedSuggestion(false)
                           dismissSuggestion(book.id, "finished")
                         }}
                         className="text-[11px] text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 font-medium transition-colors px-1"
-                      >
-                        Dismiss
-                      </button>
+                      > {t("book_detail_modal.dismiss")} </button>
                     </div>
                   </div>
                 </motion.div>
@@ -592,8 +575,8 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                       <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-stone-800 dark:text-stone-200 leading-snug">You keep coming back to this one.</p>
-                      <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Ready to start reading?</p>
+                      <p className="text-sm font-medium text-stone-800 dark:text-stone-200 leading-snug">{t("book_detail_modal.you_keep_coming_back_to_this")}</p>
+                      <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">{t("book_detail_modal.ready_to_start_reading")}</p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <button
@@ -603,18 +586,14 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                           dismissSuggestion(book.id, "start-reading")
                         }}
                         className="h-8 px-3.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors active:scale-[0.97]"
-                      >
-                        Start Reading
-                      </button>
+                      > {t("book_detail_modal.start_reading")} </button>
                       <button
                         onClick={() => {
                           setShowStartReadingSuggestion(false)
                           dismissSuggestion(book.id, "start-reading")
                         }}
                         className="text-[11px] text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 font-medium transition-colors px-1"
-                      >
-                        Dismiss
-                      </button>
+                      > {t("book_detail_modal.dismiss")} </button>
                     </div>
                   </div>
                 </motion.div>
@@ -637,9 +616,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                   return (
                     <div className="space-y-2">
                       <p className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider flex items-center gap-1.5">
-                        <AlertTriangle className="w-3 h-3" />
-                        Content Warnings
-                      </p>
+                        <AlertTriangle className="w-3 h-3" /> {t("book_detail_modal.content_warnings")} </p>
                       <div className="flex flex-wrap gap-1.5">
                         {warnings.map(w => (
                           <span key={w} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-700/40">
@@ -653,9 +630,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
 
                 {/* Genres & Moods */}
                 <div>
-                  <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2.5">
-                    Genres & Moods
-                  </h3>
+                  <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2.5"> {t("book_detail_modal.genres_moods")} </h3>
                   <div className="flex flex-wrap gap-1.5">
                     {book.genre.map((genre) => (
                       <span
@@ -678,9 +653,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
 
                 {/* Tags / Labels */}
                 <div>
-                  <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2.5">
-                    Tags
-                  </h3>
+                  <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2.5"> {t("book_detail_modal.tags")} </h3>
                   <div className="flex flex-wrap items-center gap-1.5">
                     {bookTagDefs.map((tag) => (
                       <span
@@ -713,9 +686,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                         }}
                         className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700 hover:text-stone-700 dark:hover:text-stone-200 transition-colors"
                       >
-                        <Tag className="w-3 h-3" />
-                        Add tag
-                      </button>
+                        <Tag className="w-3 h-3" /> {t("book_detail_modal.add_tag")} </button>
                       <AnimatePresence>
                         {showTagDropdown && (
                           <motion.div
@@ -754,15 +725,13 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                                   }}
                                   className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-left border-t border-stone-100 dark:border-stone-800 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors text-amber-700 dark:text-amber-400 font-medium"
                                 >
-                                  <Plus className="w-3.5 h-3.5" />
-                                  Create new tag
-                                </button>
+                                  <Plus className="w-3.5 h-3.5" /> {t("book_detail_modal.create_new_tag")} </button>
                               </div>
                             ) : (
                               <div className="p-3 space-y-2.5">
                                 <input
                                   type="text"
-                                  placeholder="Tag name..."
+                                  placeholder={t("book_detail_modal.tag_name")}
                                   value={newTagName}
                                   onChange={(e) => setNewTagName(e.target.value)}
                                   onKeyDown={(e) => {
@@ -803,9 +772,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                                   <button
                                     onClick={() => setCreatingTag(false)}
                                     className="flex-1 text-xs px-2.5 py-1.5 rounded-lg bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
-                                  >
-                                    Cancel
-                                  </button>
+                                  > {t("common.cancel")} </button>
                                   <button
                                     onClick={() => {
                                       if (newTagName.trim()) {
@@ -819,9 +786,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                                     }}
                                     disabled={!newTagName.trim()}
                                     className="flex-1 text-xs px-2.5 py-1.5 rounded-lg bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-medium"
-                                  >
-                                    Create
-                                  </button>
+                                  > {t("common.create")} </button>
                                 </div>
                               </div>
                             )}
@@ -834,9 +799,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
 
                 {/* Where to Read */}
                 <div>
-                  <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2.5">
-                    Where to Read
-                  </h3>
+                  <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2.5"> {t("book_detail_modal.where_to_read")} </h3>
                   <WhereToRead book={book} />
                 </div>
 
@@ -844,15 +807,11 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                 {existingReview && (
                   <div>
                     <div className="flex items-center justify-between mb-2.5">
-                      <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider">
-                        Your Review
-                      </h3>
+                      <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider"> {t("book_detail_modal.your_review")} </h3>
                       <button
                         onClick={handleEditReview}
                         className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium transition-colors"
-                      >
-                        Edit
-                      </button>
+                      > {t("book_detail_modal.edit")} </button>
                     </div>
                     <ReviewDisplay
                       review={existingReview}
@@ -865,9 +824,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
 
                 {/* Notes Preview */}
                 <div>
-                  <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2.5">
-                    Notes & Highlights
-                  </h3>
+                  <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2.5"> {t("book_detail_modal.notes_highlights")} </h3>
                   <BookNotes bookId={book.id} compact />
                 </div>
 
@@ -875,18 +832,15 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                 {seriesInfo && (
                   <div>
                     <div className="flex items-center gap-2 mb-2.5">
-                      <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider">
-                        Continue the Series
-                      </h3>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 font-semibold border border-amber-200/60 dark:border-amber-800/40">
-                        Book {seriesInfo.bookNumber} of {seriesInfo.seriesName}
+                      <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider"> {t("book_detail_modal.continue_the_series")} </h3>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 font-semibold border border-amber-200/60 dark:border-amber-800/40"> {t("book_detail_modal.book")} {seriesInfo.bookNumber} {t("common.of")} {seriesInfo.seriesName}
                       </span>
                     </div>
 
                     {seriesLoading ? (
                       <div className="flex items-center gap-2 py-4">
                         <Loader2 className="w-4 h-4 text-amber-500 animate-spin" />
-                        <span className="text-xs text-stone-400 dark:text-stone-500">Finding series books...</span>
+                        <span className="text-xs text-stone-400 dark:text-stone-500">{t("book_detail_modal.finding_series_books")}</span>
                       </div>
                     ) : seriesBooks.length > 0 ? (
                       <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1">
@@ -928,17 +882,13 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                                 }}
                                 className="text-[9px] px-2 py-0.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-amber-100 dark:hover:bg-amber-900/40 hover:text-amber-700 dark:hover:text-amber-400 transition-colors font-medium flex items-center gap-0.5"
                               >
-                                <Plus className="w-2.5 h-2.5" />
-                                Add
-                              </button>
+                                <Plus className="w-2.5 h-2.5" /> {t("book_detail_modal.add")} </button>
                             </div>
                           )
                         })}
                       </div>
                     ) : (
-                      <p className="text-xs text-stone-400 dark:text-stone-500 italic py-2">
-                        No other books found in this series.
-                      </p>
+                      <p className="text-xs text-stone-400 dark:text-stone-500 italic py-2"> {t("book_detail_modal.no_other_books_found_in_this")} </p>
                     )}
                   </div>
                 )}
@@ -946,9 +896,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                 {/* Similar Books */}
                 {similarBooks.length > 0 && (
                   <div>
-                    <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2.5">
-                      More Like This
-                    </h3>
+                    <h3 className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2.5"> {t("book_detail_modal.more_like_this")} </h3>
                     <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1">
                       {similarBooks.map((similar) => (
                         <button
@@ -979,9 +927,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                 {/* If You Liked This — from user's library */}
                 {likedSimilarBooks.length > 0 && (
                   <div className="space-y-3 pt-2">
-                    <p className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider">
-                      If you liked this
-                    </p>
+                    <p className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider"> {t("book_detail_modal.if_you_liked_this")} </p>
                     <div className="grid grid-cols-4 gap-2">
                       {likedSimilarBooks.map(sb => (
                         <button

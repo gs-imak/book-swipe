@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { X, Download, Copy, Check, Share2 } from "lucide-react"
 import { getLikedBooks, getBookReviews, getReadingProgress, getUserStats, getReadingGoals } from "@/lib/storage"
 import { useFocusTrap } from "@/lib/use-focus-trap"
+import { t } from "@/lib/i18n"
 
 interface ProfileShareCardProps {
   isOpen: boolean
@@ -286,7 +287,7 @@ export function ProfileShareCard({ isOpen, onClose }: ProfileShareCardProps) {
           ref={modalRef}
           role="dialog"
           aria-modal="true"
-          aria-label="Share Your Profile"
+          aria-label={t("profile_share_card.share_your_profile")}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
@@ -295,8 +296,8 @@ export function ProfileShareCard({ isOpen, onClose }: ProfileShareCardProps) {
         >
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-stone-200/60 dark:border-stone-700/60">
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">Share Your Profile</h2>
-            <button onClick={onClose} aria-label="Close share profile" className="p-2 -mr-2 rounded-lg hover:bg-stone-100 dark:bg-stone-800 transition-colors">
+            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">{t("profile_share_card.share_your_profile")}</h2>
+            <button onClick={onClose} aria-label={t("profile_share_card.close_share_profile")} className="p-2 -mr-2 rounded-lg hover:bg-stone-100 dark:bg-stone-800 transition-colors">
               <X className="w-5 h-5 text-stone-400" />
             </button>
           </div>
@@ -312,7 +313,7 @@ export function ProfileShareCard({ isOpen, onClose }: ProfileShareCardProps) {
               // eslint-disable-next-line @next/next/no-img-element -- locally generated canvas data URL; the image optimizer can't process it
               <img
                 src={preview}
-                alt="Reading profile card"
+                alt={t("profile_share_card.reading_profile_card")}
                 className="w-full rounded-xl shadow-md"
               />
             )}
@@ -324,9 +325,7 @@ export function ProfileShareCard({ isOpen, onClose }: ProfileShareCardProps) {
               onClick={handleShare}
               className="flex-1 h-11 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2"
             >
-              <Share2 className="w-4 h-4" />
-              Share
-            </button>
+              <Share2 className="w-4 h-4" /> {t("common.share")} </button>
             <button
               onClick={handleCopy}
               className="h-11 px-4 bg-white dark:bg-stone-900 border border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 text-sm font-medium rounded-xl transition-all flex items-center gap-2"

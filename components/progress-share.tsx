@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Download, Copy, Check, Share2 } from "lucide-react"
 import { useFocusTrap } from "@/lib/use-focus-trap"
+import { t } from "@/lib/i18n"
 
 interface ProgressShareProps {
   isOpen: boolean
@@ -269,7 +270,7 @@ export function ProgressShare({
           ref={modalRef}
           role="dialog"
           aria-modal="true"
-          aria-label="Share Progress"
+          aria-label={t("progress_share.share_progress")}
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -279,10 +280,10 @@ export function ProgressShare({
         >
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-stone-200/60 dark:border-stone-700/60">
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">Share Progress</h2>
+            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">{t("progress_share.share_progress")}</h2>
             <button
               onClick={onClose}
-              aria-label="Close share progress"
+              aria-label={t("progress_share.close_share_progress")}
               className="p-2 -mr-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
             >
               <X className="w-5 h-5 text-stone-400" />
@@ -313,9 +314,7 @@ export function ProgressShare({
               disabled={!preview}
               className="flex-1 h-11 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-stone-200 text-white dark:text-stone-900 text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-40"
             >
-              <Share2 className="w-4 h-4" />
-              Share
-            </button>
+              <Share2 className="w-4 h-4" /> {t("common.share")} </button>
             <button
               onClick={handleCopy}
               disabled={!preview}

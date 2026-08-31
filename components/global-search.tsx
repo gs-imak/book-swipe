@@ -7,6 +7,7 @@ import { Search, X, Loader2, BookOpen, StickyNote, MessageSquare } from "lucide-
 import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
 import { useOverlayHistory } from "@/lib/use-overlay-history"
+import { t } from "@/lib/i18n"
 
 interface GlobalSearchProps {
   isOpen: boolean
@@ -244,7 +245,7 @@ export function GlobalSearch({ isOpen, onClose, onBookClick }: GlobalSearchProps
           className="fixed inset-0 lg:left-16 z-[60] bg-stone-50/[0.98] dark:bg-stone-950/[0.98] backdrop-blur-xl"
           role="dialog"
           aria-modal="true"
-          aria-label="Search your library, notes, and reviews"
+          aria-label={t("global_search.search_your_library_notes_and_reviews")}
         >
           {/* Search header */}
           <div className="border-b border-stone-200/60 dark:border-stone-700/60 bg-white/80 dark:bg-stone-900/80 backdrop-blur-md">
@@ -256,8 +257,8 @@ export function GlobalSearch({ isOpen, onClose, onBookClick }: GlobalSearchProps
                   type="text"
                   value={query}
                   onChange={(e) => handleInputChange(e.target.value)}
-                  placeholder="Search library, notes, reviews..."
-                  aria-label="Search your library, notes, and reviews"
+                  placeholder={t("global_search.search_library_notes_reviews")}
+                  aria-label={t("global_search.search_your_library_notes_and_reviews")}
                   className="flex-1 bg-transparent text-stone-900 dark:text-stone-100 text-base placeholder:text-stone-400 dark:placeholder:text-stone-500 outline-none"
                 />
                 {query && (
@@ -269,7 +270,7 @@ export function GlobalSearch({ isOpen, onClose, onBookClick }: GlobalSearchProps
                       setHasSearched(false)
                       inputRef.current?.focus()
                     }}
-                    aria-label="Clear search"
+                    aria-label={t("global_search.clear_search")}
                     className="p-2 rounded-md hover:bg-stone-100 dark:hover:bg-stone-800 tap-target touch-manipulation"
                   >
                     <X className="w-4 h-4 text-stone-400 dark:text-stone-500" />
@@ -279,9 +280,7 @@ export function GlobalSearch({ isOpen, onClose, onBookClick }: GlobalSearchProps
                   type="button"
                   onClick={onClose}
                   className="text-sm font-medium text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300 pl-2"
-                >
-                  Cancel
-                </button>
+                > {t("common.cancel")} </button>
               </form>
             </div>
           </div>
@@ -291,7 +290,7 @@ export function GlobalSearch({ isOpen, onClose, onBookClick }: GlobalSearchProps
             {isSearching && (
               <div className="flex items-center justify-center py-12" role="status">
                 <Loader2 className="w-6 h-6 text-stone-400 animate-spin" aria-hidden="true" />
-                <span className="sr-only">Searching...</span>
+                <span className="sr-only">{t("global_search.searching")}</span>
               </div>
             )}
 
@@ -301,12 +300,8 @@ export function GlobalSearch({ isOpen, onClose, onBookClick }: GlobalSearchProps
                 <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center">
                   <Search className="w-6 h-6 text-stone-300 dark:text-stone-600" />
                 </div>
-                <p className="text-stone-500 dark:text-stone-400 text-sm font-medium mb-1">
-                  Search across everything
-                </p>
-                <p className="text-stone-400 dark:text-stone-500 text-xs max-w-[260px] mx-auto leading-relaxed">
-                  Find books in your library, notes you have written, and your reviews -- all in one place.
-                </p>
+                <p className="text-stone-500 dark:text-stone-400 text-sm font-medium mb-1"> {t("global_search.search_across_everything")} </p>
+                <p className="text-stone-400 dark:text-stone-500 text-xs max-w-[260px] mx-auto leading-relaxed"> {t("global_search.find_books_in_your_library_notes")} </p>
               </div>
             )}
 
@@ -316,12 +311,8 @@ export function GlobalSearch({ isOpen, onClose, onBookClick }: GlobalSearchProps
                 <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center">
                   <Search className="w-6 h-6 text-stone-300 dark:text-stone-600" />
                 </div>
-                <p className="text-stone-500 dark:text-stone-400 text-sm font-medium">
-                  No matches found
-                </p>
-                <p className="text-stone-400 dark:text-stone-500 text-xs mt-1">
-                  Try a different spelling or shorter keyword.
-                </p>
+                <p className="text-stone-500 dark:text-stone-400 text-sm font-medium"> {t("global_search.no_matches_found")} </p>
+                <p className="text-stone-400 dark:text-stone-500 text-xs mt-1"> {t("global_search.try_a_different_spelling_or_shorter")} </p>
               </div>
             )}
 
@@ -333,9 +324,7 @@ export function GlobalSearch({ isOpen, onClose, onBookClick }: GlobalSearchProps
                   <section>
                     <div className="flex items-center gap-2 mb-3">
                       <BookOpen className="w-3.5 h-3.5 text-amber-600 dark:text-amber-500" />
-                      <h3 className="text-[11px] font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500">
-                        In Your Library
-                      </h3>
+                      <h3 className="text-[11px] font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500"> {t("global_search.in_your_library")} </h3>
                       <span className="text-[10px] text-stone-300 dark:text-stone-600 tabular-nums">
                         {grouped.library.length}
                       </span>
@@ -384,9 +373,7 @@ export function GlobalSearch({ isOpen, onClose, onBookClick }: GlobalSearchProps
                   <section>
                     <div className="flex items-center gap-2 mb-3">
                       <StickyNote className="w-3.5 h-3.5 text-amber-600 dark:text-amber-500" />
-                      <h3 className="text-[11px] font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500">
-                        In Your Notes
-                      </h3>
+                      <h3 className="text-[11px] font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500"> {t("global_search.in_your_notes")} </h3>
                       <span className="text-[10px] text-stone-300 dark:text-stone-600 tabular-nums">
                         {grouped.notes.length}
                       </span>
@@ -424,7 +411,7 @@ export function GlobalSearch({ isOpen, onClose, onBookClick }: GlobalSearchProps
                             </p>
                             <span className="inline-flex items-center gap-1 text-[10px] font-medium text-stone-400 dark:text-stone-500 mt-0.5">
                               <span className="capitalize">{result.note.type}</span>
-                              {result.note.page && <span>-- p.{result.note.page}</span>}
+                              {result.note.page && <span>{t("global_search.p")}{result.note.page}</span>}
                             </span>
                             <p className="text-xs text-stone-500 dark:text-stone-400 line-clamp-2 leading-relaxed mt-1">
                               {highlightMatch(result.matchContext, query)}
@@ -441,9 +428,7 @@ export function GlobalSearch({ isOpen, onClose, onBookClick }: GlobalSearchProps
                   <section>
                     <div className="flex items-center gap-2 mb-3">
                       <MessageSquare className="w-3.5 h-3.5 text-amber-600 dark:text-amber-500" />
-                      <h3 className="text-[11px] font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500">
-                        In Your Reviews
-                      </h3>
+                      <h3 className="text-[11px] font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500"> {t("global_search.in_your_reviews")} </h3>
                       <span className="text-[10px] text-stone-300 dark:text-stone-600 tabular-nums">
                         {grouped.reviews.length}
                       </span>

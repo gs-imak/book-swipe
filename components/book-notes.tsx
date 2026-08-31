@@ -6,6 +6,7 @@ import { Plus, Quote, Highlighter, FileText, Edit, Trash2, Save, X, Download } f
 import { Button } from "./ui/button"
 import { BookNote, saveBookNote, getBookNotesForBook, updateBookNote, deleteBookNote } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
+import { t } from "@/lib/i18n"
 
 interface BookNotesProps {
   bookId: string
@@ -101,11 +102,11 @@ export function BookNotes({ bookId, compact = false }: BookNotesProps) {
               </div>
             ))}
             {notes.length > 2 && (
-              <p className="text-sm text-stone-500 dark:text-stone-400 text-center">+{notes.length - 2} more notes</p>
+              <p className="text-sm text-stone-500 dark:text-stone-400 text-center">+{notes.length - 2} {t("book_notes.more_notes")}</p>
             )}
           </div>
         ) : (
-          <p className="text-sm text-stone-500 dark:text-stone-400 text-center py-4">No notes yet</p>
+          <p className="text-sm text-stone-500 dark:text-stone-400 text-center py-4">{t("book_notes.no_notes_yet")}</p>
         )}
       </div>
     )
@@ -121,7 +122,7 @@ export function BookNotes({ bookId, compact = false }: BookNotesProps) {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <FileText className="w-5 h-5 text-amber-600" />
-          <h3 className="text-lg font-bold text-stone-900 dark:text-stone-100">Notes & Highlights</h3>
+          <h3 className="text-lg font-bold text-stone-900 dark:text-stone-100">{t("book_notes.notes_highlights")}</h3>
           <span className="text-sm text-stone-500 dark:text-stone-400 bg-stone-100 dark:bg-stone-800 px-2 py-1 rounded-full">
             {notes.length}
           </span>
@@ -150,18 +151,14 @@ export function BookNotes({ bookId, compact = false }: BookNotesProps) {
               size="sm"
               className="flex items-center gap-1.5"
             >
-              <Download className="w-3.5 h-3.5" />
-              Export
-            </Button>
+              <Download className="w-3.5 h-3.5" /> {t("book_notes.export")} </Button>
           )}
           <Button
             onClick={() => setIsAdding(true)}
             size="sm"
             className="flex items-center gap-2"
           >
-            <Plus className="w-4 h-4" />
-            Add Note
-          </Button>
+            <Plus className="w-4 h-4" /> {t("book_notes.add_note")} </Button>
         </div>
       </div>
 
@@ -180,37 +177,31 @@ export function BookNotes({ bookId, compact = false }: BookNotesProps) {
                 size="sm"
                 onClick={() => setNewNote(prev => ({ ...prev, type: "note" }))}
               >
-                <FileText className="w-4 h-4 mr-1" />
-                Note
-              </Button>
+                <FileText className="w-4 h-4 mr-1" /> {t("book_notes.note")} </Button>
               <Button
                 variant={newNote.type === "highlight" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setNewNote(prev => ({ ...prev, type: "highlight" }))}
               >
-                <Highlighter className="w-4 h-4 mr-1" />
-                Highlight
-              </Button>
+                <Highlighter className="w-4 h-4 mr-1" /> {t("book_notes.highlight")} </Button>
               <Button
                 variant={newNote.type === "quote" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setNewNote(prev => ({ ...prev, type: "quote" }))}
               >
-                <Quote className="w-4 h-4 mr-1" />
-                Quote
-              </Button>
+                <Quote className="w-4 h-4 mr-1" /> {t("book_notes.quote")} </Button>
             </div>
             
             <div className="flex gap-2">
               <input
                 type="number"
-                placeholder="Page (optional)"
+                placeholder={t("book_notes.page_optional")}
                 value={newNote.page}
                 onChange={(e) => setNewNote(prev => ({ ...prev, page: e.target.value }))}
                 className="w-24 px-3 py-2 border border-stone-200 dark:border-stone-700 rounded-lg text-sm bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-amber-400"
               />
               <textarea
-                placeholder="Add your note, highlight, or favorite quote..."
+                placeholder={t("book_notes.add_your_note_highlight_or_favorite")}
                 value={newNote.content}
                 onChange={(e) => setNewNote(prev => ({ ...prev, content: e.target.value }))}
                 className="flex-1 px-3 py-2 border border-stone-200 dark:border-stone-700 rounded-lg resize-none bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-amber-400"
@@ -227,17 +218,13 @@ export function BookNotes({ bookId, compact = false }: BookNotesProps) {
                   setNewNote({ content: "", type: "note", page: "" })
                 }}
               >
-                <X className="w-4 h-4 mr-1" />
-                Cancel
-              </Button>
+                <X className="w-4 h-4 mr-1" /> {t("common.cancel")} </Button>
               <Button
                 size="sm"
                 onClick={handleAddNote}
                 disabled={!newNote.content.trim()}
               >
-                <Save className="w-4 h-4 mr-1" />
-                Save Note
-              </Button>
+                <Save className="w-4 h-4 mr-1" /> {t("book_notes.save_note")} </Button>
             </div>
           </motion.div>
         )}
@@ -262,8 +249,7 @@ export function BookNotes({ bookId, compact = false }: BookNotesProps) {
                       {note.type}
                     </span>
                     {note.page && (
-                      <span className="text-xs text-stone-500 dark:text-stone-400 bg-white dark:bg-stone-900 px-2 py-1 rounded-full">
-                        Page {note.page}
+                      <span className="text-xs text-stone-500 dark:text-stone-400 bg-white dark:bg-stone-900 px-2 py-1 rounded-full"> {t("common.page")} {note.page}
                       </span>
                     )}
                   </div>
@@ -316,10 +302,8 @@ export function BookNotes({ bookId, compact = false }: BookNotesProps) {
         ) : (
           <div className="text-center py-8">
             <FileText className="w-12 h-12 text-stone-300 mx-auto mb-4" />
-            <p className="text-stone-500 dark:text-stone-400 mb-2">No notes yet</p>
-            <p className="text-sm text-stone-400 dark:text-stone-500">
-              Add notes, highlights, and favorite quotes as you read
-            </p>
+            <p className="text-stone-500 dark:text-stone-400 mb-2">{t("book_notes.no_notes_yet")}</p>
+            <p className="text-sm text-stone-400 dark:text-stone-500"> {t("book_notes.add_notes_highlights_and_favorite_quotes")} </p>
           </div>
         )}
       </div>
@@ -345,16 +329,12 @@ function EditNoteForm({ initialContent, onSave, onCancel }: EditNoteFormProps) {
         rows={3}
       />
       <div className="flex justify-end gap-2">
-        <Button variant="outline" size="sm" onClick={onCancel}>
-          Cancel
-        </Button>
+        <Button variant="outline" size="sm" onClick={onCancel}> {t("common.cancel")} </Button>
         <Button 
           size="sm" 
           onClick={() => onSave(content)}
           disabled={!content.trim()}
-        >
-          Save
-        </Button>
+        > {t("common.save")} </Button>
       </div>
     </div>
   )

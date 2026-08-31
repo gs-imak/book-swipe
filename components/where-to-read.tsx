@@ -5,6 +5,7 @@ import { ExternalLink, Tag, Eye, ShoppingCart, Smartphone, Headphones, BookOpen,
 import { Book } from "@/lib/book-data"
 import { getBookLinks, type BookLink } from "@/lib/book-links"
 import { fetchPriceInfo, type PriceInfo, isOnWatchList, addToWatchList, removeFromWatchList } from "@/lib/price-tracker"
+import { t } from "@/lib/i18n"
 
 interface WhereToReadProps {
   book: Book
@@ -87,7 +88,7 @@ export function WhereToRead({ book }: WhereToReadProps) {
           <div className="flex items-center justify-between">
             <div>
               {priceInfo.saleability === "FREE" ? (
-                <span className="text-sm font-bold text-green-600">Free</span>
+                <span className="text-sm font-bold text-green-600">{t("where_to_read.free")}</span>
               ) : priceInfo.saleability === "FOR_SALE" ? (
                 <div className="flex items-center gap-2">
                   {priceInfo.retailPrice && (
@@ -102,13 +103,11 @@ export function WhereToRead({ book }: WhereToReadProps) {
                     </span>
                   )}
                   {priceInfo.isEbook && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-medium">
-                      eBook
-                    </span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-medium"> {t("common.ebook")} </span>
                   )}
                 </div>
               ) : (
-                <span className="text-xs text-stone-500">Not available for sale</span>
+                <span className="text-xs text-stone-500">{t("where_to_read.not_available_for_sale")}</span>
               )}
             </div>
             {/* Price watch list UI not yet implemented — button removed */}
@@ -119,8 +118,7 @@ export function WhereToRead({ book }: WhereToReadProps) {
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 mt-2 text-xs text-amber-700 dark:text-amber-400 hover:text-amber-800 font-medium"
-            >
-              Buy on Google Play <ExternalLink className="w-3 h-3" />
+            > {t("where_to_read.buy_on_google_play")} <ExternalLink className="w-3 h-3" />
             </a>
           )}
         </div>
@@ -128,14 +126,12 @@ export function WhereToRead({ book }: WhereToReadProps) {
 
       {loadingPrice && (
         <div className="flex items-center gap-2 text-xs text-stone-400 py-1">
-          <div className="w-3 h-3 border border-stone-300 border-t-stone-500 rounded-full animate-spin" />
-          Checking price...
-        </div>
+          <div className="w-3 h-3 border border-stone-300 border-t-stone-500 rounded-full animate-spin" /> {t("where_to_read.checking_price")} </div>
       )}
 
       {/* Buy links */}
       <div>
-        <h4 className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider mb-2">Buy / Download</h4>
+        <h4 className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider mb-2">{t("where_to_read.buy_download")}</h4>
         <div className="grid grid-cols-2 gap-1.5">
           {buyLinks.map(link => {
             const LinkIcon = linkIconMap[link.icon]
@@ -158,7 +154,7 @@ export function WhereToRead({ book }: WhereToReadProps) {
 
       {/* Borrow links */}
       <div>
-        <h4 className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider mb-2">Borrow / Free</h4>
+        <h4 className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider mb-2">{t("where_to_read.borrow_free")}</h4>
         <div className="grid grid-cols-2 gap-1.5">
           {borrowLinks.map(link => {
             const LinkIcon = linkIconMap[link.icon]

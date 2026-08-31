@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { UserPreferences } from "@/lib/book-data"
 import { motion, AnimatePresence } from "framer-motion"
 import { ArrowLeft, ChevronRight, Sparkles } from "lucide-react"
+import { t } from "@/lib/i18n"
 
 interface QuestionnaireProps {
   onComplete: (preferences: UserPreferences) => void
@@ -219,9 +220,7 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
                   onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}
                   disabled={currentQuestion === 0}
                   className="flex-1 sm:flex-none h-11 px-5 text-sm font-medium rounded-xl border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:bg-stone-800/50 transition-colors tap-target touch-manipulation disabled:opacity-40 disabled:pointer-events-none"
-                >
-                  Back
-                </motion.button>
+                > {t("common.back")} </motion.button>
                 <motion.button
                   whileTap={{ scale: 0.98 }}
                   onClick={handleNext}
@@ -230,13 +229,9 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
                 >
                   {isLastQuestion ? (
                     <>
-                      <Sparkles className="w-4 h-4" />
-                      Start Discovering
-                    </>
+                      <Sparkles className="w-4 h-4" /> {t("common.start_discovering")} </>
                   ) : (
-                    <>
-                      Next
-                      <ChevronRight className="w-4 h-4" />
+                    <> {t("common.next")} <ChevronRight className="w-4 h-4" />
                     </>
                   )}
                 </motion.button>
@@ -252,9 +247,7 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
                     contentPreferences: []
                   })}
                   className="text-sm text-stone-500 hover:text-stone-700 dark:text-stone-300 font-medium underline underline-offset-2 transition-colors"
-                >
-                  Skip setup, show me everything
-                </button>
+                > {t("questionnaire.skip_setup_show_me_everything")} </button>
               </div>
             </motion.div>
           </AnimatePresence>

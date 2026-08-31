@@ -165,6 +165,7 @@ function filterBooks(books: Book[], preferences: UserPreferences): Book[] {
 }
 
 import { MAX_DECK_SIZE, DECK_FETCH_BUDGET, DECK_COVER_SIZES } from "@/lib/config"
+import { t } from "@/lib/i18n"
 
 export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeInterfaceProps) {
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([])
@@ -691,7 +692,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
   // Loading — skeleton mirrors the real card anatomy (never a spinner)
   if (isLoading) {
     return (
-      <div className="bg-surface-0 flex flex-col items-center justify-center gap-5 p-4" style={{ minHeight: "100dvh" }} aria-busy="true" aria-label="Finding books for you">
+      <div className="bg-surface-0 flex flex-col items-center justify-center gap-5 p-4" style={{ minHeight: "100dvh" }} aria-busy="true" aria-label={t("swipe_interface.finding_books_for_you")}>
         <div className="w-[264px] h-[396px] rounded-cover shimmer" />
         <div className="w-[300px] space-y-2.5">
           <div className="h-3 w-24 rounded shimmer" />
@@ -716,19 +717,13 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
           <div className="w-16 h-16 bg-surface-2 rounded-card flex items-center justify-center mx-auto mb-5">
             <BookOpen className="w-8 h-8 text-ink" strokeWidth={1.8} />
           </div>
-          <h2 className="font-serif font-semibold text-[30px] leading-[1.08] text-ink mb-2">
-            No matches yet
-          </h2>
-          <p className="text-ink-muted mb-6 leading-relaxed">
-            We couldn&apos;t find books for your current preferences. Try adjusting your taste profile.
-          </p>
+          <h2 className="font-serif font-semibold text-[30px] leading-[1.08] text-ink mb-2"> {t("swipe_interface.no_matches_yet")} </h2>
+          <p className="text-ink-muted mb-6 leading-relaxed"> {t("swipe_interface.we_couldn_t_find_books_for")} </p>
           <Button
             onClick={onRestart}
             className="h-11 px-6 bg-ink hover:bg-ink/90 text-surface-0 font-semibold rounded-full"
           >
-            <Settings2 className="w-4 h-4 mr-2" />
-            Update Preferences
-          </Button>
+            <Settings2 className="w-4 h-4 mr-2" /> {t("swipe_interface.update_preferences")} </Button>
         </motion.div>
       </div>
     )
@@ -747,31 +742,25 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
           <div className="w-16 h-16 bg-surface-2 rounded-card flex items-center justify-center mx-auto mb-5">
             <Heart className="w-8 h-8 text-success" strokeWidth={1.8} />
           </div>
-          <h2 className="font-serif font-semibold text-[30px] leading-[1.08] text-ink mb-2">
-            Nice batch!
-          </h2>
-          <p className="text-ink-muted mb-6">
-            You&apos;ve gone through {filteredBooks.length} books. Ready for more or head to your library?
-          </p>
+          <h2 className="font-serif font-semibold text-[30px] leading-[1.08] text-ink mb-2"> {t("swipe_interface.nice_batch")} </h2>
+          <p className="text-ink-muted mb-6"> {t("swipe_interface.you_ve_gone_through")} {filteredBooks.length} {t("swipe_interface.books_ready_for_more_or_head")} </p>
 
           {/* Stats — serif numbers over a hairline, no tiles */}
           <div className="flex justify-center divide-x divide-border border-y border-border py-3 mb-6">
             <div className="text-center px-8">
               <p className="font-serif font-semibold text-[26px] text-success-ink tabular-nums">{sessionLikedBooks.length}</p>
-              <p className="text-xs text-ink-muted mt-0.5">Saved</p>
+              <p className="text-xs text-ink-muted mt-0.5">{t("swipe_interface.saved")}</p>
             </div>
             <div className="text-center px-8">
               <p className="font-serif font-semibold text-[26px] text-ink-muted tabular-nums">{passedBooks.length}</p>
-              <p className="text-xs text-ink-muted mt-0.5">Passed</p>
+              <p className="text-xs text-ink-muted mt-0.5">{t("swipe_interface.passed")}</p>
             </div>
           </div>
 
           {/* Liked books list — hairline rows */}
           {sessionLikedBooks.length > 0 && (
             <div className="mb-6 text-left">
-              <h3 className="text-[11px] font-bold text-ink-muted uppercase tracking-[0.12em] mb-2">
-                Your picks
-              </h3>
+              <h3 className="text-[11px] font-bold text-ink-muted uppercase tracking-[0.12em] mb-2"> {t("swipe_interface.your_picks")} </h3>
               <div className="max-h-32 overflow-y-auto divide-y divide-border border-y border-border">
                 {sessionLikedBooks.map((book, index) => (
                   <motion.div
@@ -782,7 +771,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
                     className="text-[13px] text-ink py-2"
                   >
                     <span className="font-serif font-semibold">{book.title}</span>
-                    <span className="text-ink-muted"> by {book.author}</span>
+                    <span className="text-ink-muted"> {t("swipe_interface.by")} {book.author}</span>
                   </motion.div>
                 ))}
               </div>
@@ -795,9 +784,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
               onClick={onViewLibrary}
               className="flex-1 h-11 bg-ink hover:bg-ink/90 text-surface-0 font-semibold rounded-full"
             >
-              <Library className="w-4 h-4 mr-2" />
-              View Library
-            </Button>
+              <Library className="w-4 h-4 mr-2" /> {t("swipe_interface.view_library")} </Button>
             <Button
               onClick={() => {
                 const seenIds = new Set([
@@ -810,9 +797,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
               variant="outline"
               className="flex-1 h-11 border-border-strong hover:bg-surface-2 text-ink font-semibold rounded-full"
             >
-              <RotateCcw className="w-4 h-4 mr-2" />
-              More Books
-            </Button>
+              <RotateCcw className="w-4 h-4 mr-2" /> {t("swipe_interface.more_books")} </Button>
           </div>
         </motion.div>
       </div>
@@ -834,20 +819,18 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
           <div className="px-4 sm:px-6 h-[52px] flex justify-between items-center max-w-md lg:max-w-[820px] mx-auto">
             <button
               onClick={onViewLibrary}
-              aria-label="View library"
+              aria-label={t("swipe_interface.view_library_2")}
               className="flex items-center gap-1.5 px-2 -ml-2 rounded-control text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors tap-target touch-manipulation"
             >
               <BookOpen className="w-[18px] h-[18px]" strokeWidth={1.8} />
               <span className="text-sm font-medium tabular-nums">{likedBooks.length}</span>
             </button>
 
-            <h1 className="font-serif font-semibold text-[18px] text-ink tracking-tight">
-              BookSwipe
-            </h1>
+            <h1 className="font-serif font-semibold text-[18px] text-ink tracking-tight"> {t("swipe_interface.bookswipe")} </h1>
 
             <button
               onClick={onRestart}
-              aria-label="Update preferences"
+              aria-label={t("swipe_interface.update_preferences_2")}
               className="flex items-center justify-center p-2 -mr-2 rounded-control text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors tap-target touch-manipulation"
             >
               <Settings2 className="w-5 h-5" strokeWidth={1.8} />
@@ -934,7 +917,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
             <div className="flex justify-center lg:justify-start items-center gap-4 mb-3">
               <motion.button
                 whileTap={{ scale: 0.97 }}
-                aria-label="Pass on this book"
+                aria-label={t("swipe_interface.pass_on_this_book")}
                 className="w-14 h-14 rounded-full border border-border-strong bg-surface-1 flex items-center justify-center transition-colors hover:border-ink-muted tap-target touch-manipulation"
                 onClick={() => handleSwipe("left")}
               >
@@ -943,7 +926,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
 
               <motion.button
                 whileTap={{ scale: 0.97 }}
-                aria-label="Undo last swipe"
+                aria-label={t("swipe_interface.undo_last_swipe")}
                 disabled={undoStack.length === 0}
                 className={`w-11 h-11 rounded-full border border-border bg-surface-1 flex items-center justify-center transition-colors tap-target touch-manipulation ${
                   undoStack.length > 0
@@ -957,7 +940,7 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
 
               <motion.button
                 whileTap={{ scale: 0.97 }}
-                aria-label="Like this book"
+                aria-label={t("swipe_interface.like_this_book")}
                 className="w-14 h-14 rounded-full bg-success hover:bg-success/90 flex items-center justify-center transition-colors tap-target touch-manipulation"
                 onClick={() => handleSwipe("right")}
               >
@@ -966,14 +949,11 @@ export function SwipeInterface({ preferences, onRestart, onViewLibrary }: SwipeI
             </div>
 
             <p className="text-center lg:text-left text-xs text-ink-muted [@media(max-height:700px)]:hidden lg:[@media(max-height:700px)]:block">
-              <span className="lg:hidden">Swipe left to pass · right to save</span>
+              <span className="lg:hidden">{t("swipe_interface.swipe_left_to_pass_right_to")}</span>
               <span className="hidden lg:inline">
-                <kbd className="px-1.5 py-0.5 rounded bg-surface-2 text-ink-muted font-mono text-[10.5px]">&larr;</kbd> Pass
-                <span className="mx-2 text-ink-faint">·</span>
-                <kbd className="px-1.5 py-0.5 rounded bg-surface-2 text-ink-muted font-mono text-[10.5px]">&rarr;</kbd> Save
-                <span className="mx-2 text-ink-faint">·</span>
-                <kbd className="px-1.5 py-0.5 rounded bg-surface-2 text-ink-muted font-mono text-[10.5px]">Ctrl+Z</kbd> Undo
-              </span>
+                <kbd className="px-1.5 py-0.5 rounded bg-surface-2 text-ink-muted font-mono text-[10.5px]">{t("swipe_interface.text")}</kbd> {t("swipe_interface.pass")} <span className="mx-2 text-ink-faint">·</span>
+                <kbd className="px-1.5 py-0.5 rounded bg-surface-2 text-ink-muted font-mono text-[10.5px]">{t("swipe_interface.text_2")}</kbd> {t("common.save")} <span className="mx-2 text-ink-faint">·</span>
+                <kbd className="px-1.5 py-0.5 rounded bg-surface-2 text-ink-muted font-mono text-[10.5px]">{t("swipe_interface.ctrl_z")}</kbd> {t("swipe_interface.undo")} </span>
             </p>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { motion } from "framer-motion"
 import { Home, Sparkles, Trophy, BarChart3, BookOpen, Search, Sun, Moon, Camera, Cloud, User } from "lucide-react"
 import { toggleTheme } from "@/lib/theme"
 import { useTheme } from "@/lib/use-theme"
+import { t } from "@/lib/i18n"
 
 type NavView = "dashboard" | "swipe" | "read" | "achievements" | "profile"
 
@@ -60,7 +61,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
       */}
 
       <motion.nav
-        aria-label="Main navigation"
+        aria-label={t("mobile_nav.main_navigation")}
         data-desktop-sidebar=""
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -81,7 +82,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
       >
         {/* Desktop: branding area at top of sidebar */}
         <div className="hidden lg:flex lg:items-center lg:justify-center lg:h-14 lg:border-b lg:border-border lg:shrink-0">
-          <span className="font-serif font-semibold text-[17px] text-ink">B.</span>
+          <span className="font-serif font-semibold text-[17px] text-ink">{t("mobile_nav.b")}</span>
         </div>
 
         {/* Nav items container */}
@@ -142,11 +143,11 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
             <div className="lg:flex lg:items-center lg:justify-center lg:pt-3 lg:pb-1">
               <button
                 onClick={onSearch}
-                aria-label="Search"
+                aria-label={t("mobile_nav.search")}
                 className="flex flex-col items-center gap-0.5 py-2 px-1 rounded-control text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors duration-150 w-[calc(100%-8px)]"
               >
                 <Search className="w-[20px] h-[20px]" strokeWidth={1.8} />
-                <span className="text-[10px] font-medium">Search</span>
+                <span className="text-[10px] font-medium">{t("mobile_nav.search")}</span>
               </button>
             </div>
           )}
@@ -154,11 +155,11 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
             <div className="lg:flex lg:items-center lg:justify-center lg:pb-1">
               <button
                 onClick={onScan}
-                aria-label="Scan a book barcode"
+                aria-label={t("mobile_nav.scan_a_book_barcode")}
                 className="flex flex-col items-center gap-0.5 py-2 px-1 rounded-control text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors duration-150 w-[calc(100%-8px)]"
               >
                 <Camera className="w-[20px] h-[20px]" strokeWidth={1.8} />
-                <span className="text-[10px] font-medium">Scan</span>
+                <span className="text-[10px] font-medium">{t("mobile_nav.scan")}</span>
               </button>
             </div>
           )}

@@ -26,6 +26,7 @@ import {
   polarisation,
   type RatingBreakdown,
 } from "@/lib/rating-breakdown-shared"
+import { t } from "@/lib/i18n"
 
 export interface RatingBreakdownPanelProps {
   /** The book whose ratings to break down, or null when closed. */
@@ -126,9 +127,7 @@ export function RatingBreakdownPanel({ book, onClose }: RatingBreakdownPanelProp
                 <h2
                   id="rating-breakdown-title"
                   className="font-serif text-xl leading-tight text-stage-ink"
-                >
-                  How readers rated it
-                </h2>
+                > {t("rating_breakdown_panel.how_readers_rated_it")} </h2>
                 <p className="mt-0.5 truncate text-sm text-stage-ink-tertiary">
                   {book.title}
                 </p>
@@ -136,7 +135,7 @@ export function RatingBreakdownPanel({ book, onClose }: RatingBreakdownPanelProp
               <button
                 type="button"
                 onClick={onClose}
-                aria-label="Close ratings breakdown"
+                aria-label={t("rating_breakdown_panel.close_ratings_breakdown")}
                 className="-mr-1 -mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-stage-ink-muted transition-colors hover:bg-white/10 hover:text-stage-ink"
               >
                 <X className="h-5 w-5" />
@@ -145,17 +144,11 @@ export function RatingBreakdownPanel({ book, onClose }: RatingBreakdownPanelProp
 
             {loading && (
               <div className="flex items-center gap-2 py-10 text-sm text-stage-ink-muted">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Looking up the ratings…
-              </div>
+                <Loader2 className="h-4 w-4 animate-spin" /> {t("rating_breakdown_panel.looking_up_the_ratings")} </div>
             )}
 
             {!loading && data && !data.found && (
-              <p className="py-8 text-[15px] leading-relaxed text-stage-ink-muted">
-                No public rating breakdown for this book yet. It needs at least
-                a couple of dozen ratings on Open Library before a distribution
-                says anything.
-              </p>
+              <p className="py-8 text-[15px] leading-relaxed text-stage-ink-muted"> {t("rating_breakdown_panel.no_public_rating_breakdown_for_this")} </p>
             )}
 
             {!loading && data?.found && data.counts && (
@@ -164,9 +157,7 @@ export function RatingBreakdownPanel({ book, onClose }: RatingBreakdownPanelProp
                   <span className="font-serif text-4xl tabular-nums text-stage-ink">
                     {data.average ? data.average.toFixed(2) : "—"}
                   </span>
-                  <span className="text-sm text-stage-ink-muted">
-                    from {formatCount(data.count ?? 0)} ratings
-                  </span>
+                  <span className="text-sm text-stage-ink-muted"> {t("rating_breakdown_panel.from")} {formatCount(data.count ?? 0)} {t("common.ratings")} </span>
                 </div>
 
                 <div className="mt-4 space-y-1.5">
@@ -193,25 +184,19 @@ export function RatingBreakdownPanel({ book, onClose }: RatingBreakdownPanelProp
                 {/* The line the average hides. Only stated when the shape of
                     the distribution actually carries it. */}
                 {split?.divisive && (
-                  <p className="mt-4 rounded-2xl border border-stage-hairline px-4 py-3 text-[14px] leading-relaxed text-stage-ink-muted">
-                    Divisive — {split.loved}% gave it five stars while{" "}
-                    {split.disliked}% gave it one or two.
-                  </p>
+                  <p className="mt-4 rounded-2xl border border-stage-hairline px-4 py-3 text-[14px] leading-relaxed text-stage-ink-muted"> {t("rating_breakdown_panel.divisive")} {split.loved}{t("rating_breakdown_panel.gave_it_five_stars_while")}{" "}
+                    {split.disliked}{t("rating_breakdown_panel.gave_it_one_or_two")} </p>
                 )}
 
                 <div className="mt-4 flex items-center justify-between gap-3 border-t border-stage-hairline pt-3">
-                  <span className="text-xs text-stage-ink-tertiary">
-                    Open Library readers
-                  </span>
+                  <span className="text-xs text-stage-ink-tertiary"> {t("rating_breakdown_panel.open_library_readers")} </span>
                   {data.workKey && (
                     <a
                       href={`https://openlibrary.org${data.workKey}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex min-h-[40px] items-center gap-1.5 text-xs font-medium text-stage-amber transition-opacity hover:opacity-80"
-                    >
-                      See it on Open Library
-                      <ExternalLink className="h-3.5 w-3.5" />
+                    > {t("rating_breakdown_panel.see_it_on_open_library")} <ExternalLink className="h-3.5 w-3.5" />
                     </a>
                   )}
                 </div>

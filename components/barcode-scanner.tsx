@@ -7,6 +7,7 @@ import { Book } from "@/lib/book-data"
 import { addLikedBook } from "@/lib/storage"
 import { BookCover } from "@/components/book-cover"
 import { useOverlayHistory } from "@/lib/use-overlay-history"
+import { t } from "@/lib/i18n"
 
 interface BarcodeScannerProps {
   isOpen: boolean
@@ -192,7 +193,7 @@ export function BarcodeScanner({ isOpen, onClose }: BarcodeScannerProps) {
           <div className="flex items-center justify-between px-4 py-3 border-b border-stone-200/60 dark:border-stone-700/60">
             <div className="flex items-center gap-2">
               <Camera className="w-4 h-4 text-amber-600" />
-              <h3 className="font-semibold text-stone-900 dark:text-stone-100 text-sm">Scan a Book</h3>
+              <h3 className="font-semibold text-stone-900 dark:text-stone-100 text-sm">{t("barcode_scanner.scan_a_book")}</h3>
             </div>
             <button
               onClick={() => { stopCamera(); onClose() }}
@@ -207,14 +208,12 @@ export function BarcodeScanner({ isOpen, onClose }: BarcodeScannerProps) {
             {!isSupported ? (
               <div className="text-center py-8 space-y-3">
                 <AlertCircle className="w-10 h-10 text-stone-300 mx-auto" />
-                <p className="text-sm text-stone-500">
-                  Barcode scanning requires Chrome or Edge on a device with a camera.
-                </p>
+                <p className="text-sm text-stone-500"> {t("barcode_scanner.barcode_scanning_requires_chrome_or_edge")} </p>
               </div>
             ) : lookingUp ? (
               <div className="text-center py-8 space-y-3">
                 <Loader2 className="w-8 h-8 text-amber-500 animate-spin mx-auto" />
-                <p className="text-sm text-stone-500">Looking up book...</p>
+                <p className="text-sm text-stone-500">{t("barcode_scanner.looking_up_book")}</p>
               </div>
             ) : foundBook ? (
               <div className="space-y-4">
@@ -234,29 +233,24 @@ export function BarcodeScanner({ isOpen, onClose }: BarcodeScannerProps) {
                     </h4>
                     <p className="text-xs text-stone-500 mt-0.5">{foundBook.author}</p>
                     {foundBook.pages > 0 && (
-                      <p className="text-xs text-stone-400 mt-1">{foundBook.pages} pages</p>
+                      <p className="text-xs text-stone-400 mt-1">{foundBook.pages} {t("common.pages")}</p>
                     )}
                   </div>
                 </div>
                 <div className="flex gap-2">
                   {added ? (
                     <div className="flex-1 h-10 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center gap-1.5 text-sm font-medium">
-                      <Check className="w-4 h-4" /> Added to library
-                    </div>
+                      <Check className="w-4 h-4" /> {t("barcode_scanner.added_to_library")} </div>
                   ) : (
                     <button
                       onClick={handleAdd}
                       className="flex-1 h-10 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 rounded-xl text-sm font-medium hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors"
-                    >
-                      Add to Library
-                    </button>
+                    > {t("barcode_scanner.add_to_library")} </button>
                   )}
                   <button
                     onClick={handleScanAgain}
                     className="h-10 px-4 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 rounded-xl text-sm font-medium hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
-                  >
-                    Scan Another
-                  </button>
+                  > {t("barcode_scanner.scan_another")} </button>
                 </div>
               </div>
             ) : error ? (
@@ -266,9 +260,7 @@ export function BarcodeScanner({ isOpen, onClose }: BarcodeScannerProps) {
                 <button
                   onClick={handleScanAgain}
                   className="text-xs text-amber-600 font-medium"
-                >
-                  Try again
-                </button>
+                > {t("barcode_scanner.try_again")} </button>
               </div>
             ) : (
               <div className="space-y-3">
@@ -285,9 +277,7 @@ export function BarcodeScanner({ isOpen, onClose }: BarcodeScannerProps) {
                   </div>
                   {scanning && (
                     <div className="absolute bottom-3 left-0 right-0 text-center pointer-events-none">
-                      <span className="text-xs text-white/80 bg-black/50 px-3 py-1 rounded-full">
-                        Point at a barcode...
-                      </span>
+                      <span className="text-xs text-white/80 bg-black/50 px-3 py-1 rounded-full"> {t("barcode_scanner.point_at_a_barcode")} </span>
                     </div>
                   )}
                 </div>

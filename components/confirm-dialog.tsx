@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { AlertTriangle, Trash2 } from "lucide-react"
+import { t } from "@/lib/i18n"
 
 interface ConfirmDialogProps {
   isOpen: boolean
@@ -109,9 +110,7 @@ export function ConfirmDialog({
                 ref={cancelRef}
                 onClick={onCancel}
                 className="flex-1 h-10 rounded-xl border border-stone-200 dark:border-stone-700 text-sm font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-400 focus-visible:ring-offset-2"
-              >
-                Cancel
-              </button>
+              > {t("common.cancel")} </button>
               <button
                 onClick={onConfirm}
                 className={`flex-1 h-10 rounded-xl text-sm font-medium text-white transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${

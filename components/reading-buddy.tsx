@@ -13,6 +13,7 @@ import {
   saveMyCode,
   type ReadingBuddy,
 } from "@/lib/reading-buddy"
+import { t } from "@/lib/i18n"
 
 interface ReadingBuddyProps {
   bookId: string
@@ -154,7 +155,7 @@ export function ReadingBuddyPanel({ bookId, bookTitle, progress, isOpen, onClose
                 </button>
               )}
               <div>
-                <h2 className="text-base font-bold text-stone-900 dark:text-stone-100">Reading Buddy</h2>
+                <h2 className="text-base font-bold text-stone-900 dark:text-stone-100">{t("reading_buddy.reading_buddy")}</h2>
                 <p className="text-[11px] text-stone-400 dark:text-stone-500 truncate max-w-[200px]">{bookTitle}</p>
               </div>
             </div>
@@ -172,7 +173,7 @@ export function ReadingBuddyPanel({ bookId, bookTitle, progress, isOpen, onClose
               <>
                 {/* My Code section */}
                 <div className="space-y-3">
-                  <p className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider">Your Code</p>
+                  <p className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider">{t("reading_buddy.your_code")}</p>
 
                   {!myCode ? (
                     <div className="space-y-2">
@@ -180,7 +181,7 @@ export function ReadingBuddyPanel({ bookId, bookTitle, progress, isOpen, onClose
                         type="text"
                         value={myName}
                         onChange={e => setMyName(e.target.value)}
-                        placeholder="Your display name (optional)"
+                        placeholder={t("reading_buddy.your_display_name_optional")}
                         maxLength={30}
                         className="w-full h-10 px-3 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-600 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-400 transition-all"
                       />
@@ -188,9 +189,7 @@ export function ReadingBuddyPanel({ bookId, bookTitle, progress, isOpen, onClose
                         onClick={handleGenerateCode}
                         className="w-full h-11 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2"
                       >
-                        <Users className="w-4 h-4" />
-                        Generate My Code
-                      </button>
+                        <Users className="w-4 h-4" /> {t("reading_buddy.generate_my_code")} </button>
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -206,14 +205,11 @@ export function ReadingBuddyPanel({ bookId, bookTitle, progress, isOpen, onClose
                           {codeCopied ? "Copied" : "Copy"}
                         </button>
                       </div>
-                      <p className="text-xs text-stone-400 dark:text-stone-500">
-                        Share this code with a friend reading the same book.
-                      </p>
+                      <p className="text-xs text-stone-400 dark:text-stone-500"> {t("reading_buddy.share_this_code_with_a_friend")} </p>
                       <button
                         onClick={handleGenerateCode}
                         className="text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-medium transition-colors"
-                      >
-                        Refresh code with current progress ({Math.round(progress)}%)
+                      > {t("reading_buddy.refresh_code_with_current_progress")}{Math.round(progress)}%)
                       </button>
                     </div>
                   )}
@@ -222,23 +218,20 @@ export function ReadingBuddyPanel({ bookId, bookTitle, progress, isOpen, onClose
                 {/* Buddies list */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider">
-                      Buddies {buddies.length > 0 && `(${buddies.length})`}
+                    <p className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider"> {t("reading_buddy.buddies")} {buddies.length > 0 && `(${buddies.length})`}
                     </p>
                     <button
                       onClick={() => { setStep("add-buddy"); setErrorMsg(null) }}
                       className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-medium transition-colors"
                     >
-                      <UserPlus className="w-3.5 h-3.5" />
-                      Add Buddy
-                    </button>
+                      <UserPlus className="w-3.5 h-3.5" /> {t("reading_buddy.add_buddy")} </button>
                   </div>
 
                   {buddies.length === 0 ? (
                     <div className="text-center py-8 border-2 border-dashed border-stone-200 dark:border-stone-700 rounded-xl">
                       <Users className="w-8 h-8 text-stone-300 dark:text-stone-600 mx-auto mb-2" />
-                      <p className="text-sm text-stone-400 dark:text-stone-500">No buddies yet</p>
-                      <p className="text-xs text-stone-300 dark:text-stone-600 mt-0.5">Add a buddy using their code</p>
+                      <p className="text-sm text-stone-400 dark:text-stone-500">{t("reading_buddy.no_buddies_yet")}</p>
+                      <p className="text-xs text-stone-300 dark:text-stone-600 mt-0.5">{t("reading_buddy.add_a_buddy_using_their_code")}</p>
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -266,8 +259,7 @@ export function ReadingBuddyPanel({ bookId, bookTitle, progress, isOpen, onClose
                                 style={{ width: `${buddy.progress}%` }}
                               />
                             </div>
-                            <p className="text-[10px] text-stone-400 dark:text-stone-500 mt-1">
-                              Updated {new Date(buddy.lastUpdated).toLocaleDateString()}
+                            <p className="text-[10px] text-stone-400 dark:text-stone-500 mt-1"> {t("reading_buddy.updated")} {new Date(buddy.lastUpdated).toLocaleDateString()}
                             </p>
                           </div>
                           <button
@@ -288,13 +280,11 @@ export function ReadingBuddyPanel({ bookId, bookTitle, progress, isOpen, onClose
             {step === "add-buddy" && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2">
-                    Buddy&apos;s Code
-                  </label>
+                  <label className="block text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2"> {t("reading_buddy.buddy_s_code")} </label>
                   <textarea
                     value={buddyInput}
                     onChange={e => { setBuddyInput(e.target.value); setErrorMsg(null) }}
-                    placeholder="Paste your buddy's code here..."
+                    placeholder={t("reading_buddy.paste_your_buddy_s_code_here")}
                     rows={3}
                     className="w-full px-4 py-3 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-600 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-400 transition-all resize-none"
                     autoFocus
@@ -305,14 +295,13 @@ export function ReadingBuddyPanel({ bookId, bookTitle, progress, isOpen, onClose
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2">
-                    Nickname <span className="normal-case font-normal">(optional)</span>
+                  <label className="block text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-2"> {t("reading_buddy.nickname")} <span className="normal-case font-normal">{t("common.optional")}</span>
                   </label>
                   <input
                     type="text"
                     value={buddyName}
                     onChange={e => setBuddyName(e.target.value)}
-                    placeholder="e.g. Alex"
+                    placeholder={t("reading_buddy.e_g_alex")}
                     maxLength={30}
                     className="w-full h-10 px-3 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-600 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-400 transition-all"
                   />
@@ -322,17 +311,13 @@ export function ReadingBuddyPanel({ bookId, bookTitle, progress, isOpen, onClose
                   <button
                     onClick={() => setStep("main")}
                     className="flex-1 h-11 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 text-sm font-medium hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-all"
-                  >
-                    Cancel
-                  </button>
+                  > {t("common.cancel")} </button>
                   <button
                     onClick={handleAddBuddy}
                     disabled={!buddyInput.trim()}
                     className="flex-1 h-11 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    <UserPlus className="w-4 h-4" />
-                    Add Buddy
-                  </button>
+                    <UserPlus className="w-4 h-4" /> {t("reading_buddy.add_buddy")} </button>
                 </div>
               </div>
             )}

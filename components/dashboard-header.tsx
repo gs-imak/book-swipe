@@ -1,6 +1,7 @@
 "use client"
 
 import { ArrowLeft, Search, Camera, Target, Trophy } from "lucide-react"
+import { t } from "@/lib/i18n"
 
 interface DashboardHeaderProps {
   showBackButton: boolean
@@ -30,22 +31,20 @@ export function DashboardHeader({
             {showBackButton && onBack && (
               <button
                 onClick={onBack}
-                aria-label="Go back"
+                aria-label={t("common.go_back")}
                 className="p-2 -ml-2 rounded-control text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors tap-target touch-manipulation"
               >
                 <ArrowLeft className="w-5 h-5" strokeWidth={1.8} />
               </button>
             )}
             <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-semibold text-ink tracking-tight font-serif">
-                My Library
-              </h1>
+              <h1 className="text-xl sm:text-2xl font-semibold text-ink tracking-tight font-serif"> {t("dashboard_header.my_library")} </h1>
             </div>
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
             <button
               onClick={onSearch}
-              aria-label="Search books"
+              aria-label={t("dashboard_header.search_books")}
               className="flex items-center justify-center p-2 rounded-control text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors tap-target touch-manipulation"
             >
               <Search className="w-5 h-5" strokeWidth={1.8} />
@@ -53,7 +52,7 @@ export function DashboardHeader({
             {onScan && (
               <button
                 onClick={onScan}
-                aria-label="Scan a book barcode"
+                aria-label={t("dashboard_header.scan_a_book_barcode")}
                 className="flex items-center justify-center p-2 rounded-control text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors tap-target touch-manipulation"
               >
                 <Camera className="w-5 h-5" strokeWidth={1.8} />
@@ -61,19 +60,19 @@ export function DashboardHeader({
             )}
             <button
               onClick={onChallenges}
-              aria-label="Reading challenges"
+              aria-label={t("dashboard_header.reading_challenges")}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border-strong text-ink text-sm font-medium hover:bg-surface-2 transition-colors tap-target touch-manipulation"
             >
               <Target className="w-4 h-4" />
-              <span className="hidden sm:inline">Challenges</span>
+              <span className="hidden sm:inline">{t("dashboard_header.challenges")}</span>
             </button>
             <button
               onClick={onAchievements}
-              aria-label="Achievements"
+              aria-label={t("dashboard_header.achievements")}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border-strong text-ink text-sm font-medium hover:bg-surface-2 transition-colors tap-target touch-manipulation tabular-nums"
             >
               <Trophy className="w-4 h-4" />
-              <span className="hidden sm:inline">Lv.{level}</span>
+              <span className="hidden sm:inline">{t("dashboard_header.lv")}{level}</span>
               <span className="sm:hidden">{level}</span>
             </button>
           </div>

@@ -6,6 +6,7 @@ import { X, BookOpen, Star, Sparkles, TrendingUp, Flame, Heart, Download } from 
 import { getLikedBooks, getBookReviews, getReadingGoals } from "@/lib/storage"
 import { BookCover } from "@/components/book-cover"
 import { Book } from "@/lib/book-data"
+import { t } from "@/lib/i18n"
 
 // ---------------------------------------------------------------------------
 // Archetype helper (mirrors taste-profile logic)
@@ -83,21 +84,15 @@ function SlideIntro({ stats }: { stats: WrappedStats }) {
         transition={{ delay: 0.25 }}
         className="space-y-2"
       >
-        <p className="text-amber-500/80 text-xs uppercase tracking-[0.3em] font-semibold">
-          Reading Wrapped
-        </p>
-        <h2 className="text-4xl sm:text-5xl font-bold text-white font-serif leading-tight">
-          Your {stats.year}<br />in Books
-        </h2>
+        <p className="text-amber-500/80 text-xs uppercase tracking-[0.3em] font-semibold"> {t("reading_wrapped.reading_wrapped")} </p>
+        <h2 className="text-4xl sm:text-5xl font-bold text-white font-serif leading-tight"> {t("reading_wrapped.your")} {stats.year}<br />{t("reading_wrapped.in_books")} </h2>
       </motion.div>
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
         className="text-stone-500 text-sm"
-      >
-        Tap to begin
-      </motion.p>
+      > {t("reading_wrapped.tap_to_begin")} </motion.p>
     </div>
   )
 }
@@ -107,7 +102,7 @@ function SlideBooks({ stats }: { stats: WrappedStats }) {
     <div className="flex flex-col items-center justify-center h-full text-center px-8 space-y-5">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <BookOpen className="w-10 h-10 text-amber-500 mx-auto mb-4" />
-        <p className="text-stone-400 text-sm uppercase tracking-widest mb-3">You discovered</p>
+        <p className="text-stone-400 text-sm uppercase tracking-widest mb-3">{t("reading_wrapped.you_discovered")}</p>
         <p className="text-8xl sm:text-9xl font-bold text-white font-serif leading-none">
           {stats.totalBooks}
         </p>
@@ -122,8 +117,7 @@ function SlideBooks({ stats }: { stats: WrappedStats }) {
           transition={{ delay: 0.5 }}
           className="text-stone-500 text-sm"
         >
-          {stats.booksCompleted} finished cover to cover
-        </motion.p>
+          {stats.booksCompleted} {t("reading_wrapped.finished_cover_to_cover")} </motion.p>
       )}
     </div>
   )
@@ -134,20 +128,18 @@ function SlidePages({ stats }: { stats: WrappedStats }) {
     <div className="flex flex-col items-center justify-center h-full text-center px-8 space-y-5">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <TrendingUp className="w-10 h-10 text-teal-400 mx-auto mb-4" />
-        <p className="text-stone-400 text-sm uppercase tracking-widest mb-3">You explored</p>
+        <p className="text-stone-400 text-sm uppercase tracking-widest mb-3">{t("reading_wrapped.you_explored")}</p>
         <p className="text-7xl sm:text-8xl font-bold text-white font-serif leading-none">
           {stats.totalPages.toLocaleString()}
         </p>
-        <p className="text-stone-300 text-xl mt-3 font-serif">pages of worlds</p>
+        <p className="text-stone-300 text-xl mt-3 font-serif">{t("reading_wrapped.pages_of_worlds")}</p>
       </motion.div>
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
         className="text-stone-500 text-sm"
-      >
-        That&apos;s about {Math.round(stats.totalPages / 250)} hours of reading
-      </motion.p>
+      > {t("reading_wrapped.that_s_about")} {Math.round(stats.totalPages / 250)} {t("reading_wrapped.hours_of_reading")} </motion.p>
     </div>
   )
 }
@@ -157,7 +149,7 @@ function SlideGenre({ stats }: { stats: WrappedStats }) {
     <div className="flex flex-col items-center justify-center h-full text-center px-8 space-y-5">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <Heart className="w-10 h-10 text-rose-400 mx-auto mb-4" />
-        <p className="text-stone-400 text-sm uppercase tracking-widest mb-4">Your favourite genre</p>
+        <p className="text-stone-400 text-sm uppercase tracking-widest mb-4">{t("reading_wrapped.your_favourite_genre")}</p>
         <h3 className="text-4xl sm:text-5xl font-bold text-white font-serif leading-tight">
           {stats.topGenre || "Everything"}
         </h3>
@@ -168,8 +160,7 @@ function SlideGenre({ stats }: { stats: WrappedStats }) {
             transition={{ delay: 0.45 }}
             className="text-stone-400 text-sm mt-4"
           >
-            {stats.topGenreCount} books in this genre
-          </motion.p>
+            {stats.topGenreCount} {t("reading_wrapped.books_in_this_genre")} </motion.p>
         )}
       </motion.div>
       {stats.topAuthor && (
@@ -179,10 +170,10 @@ function SlideGenre({ stats }: { stats: WrappedStats }) {
           transition={{ delay: 0.6 }}
           className="mt-4 px-5 py-3 bg-white/5 rounded-2xl border border-white/8"
         >
-          <p className="text-stone-500 text-xs mb-0.5">Top author</p>
+          <p className="text-stone-500 text-xs mb-0.5">{t("reading_wrapped.top_author")}</p>
           <p className="text-white text-sm font-medium">{stats.topAuthor}</p>
           {stats.topAuthorCount > 1 && (
-            <p className="text-stone-500 text-[11px]">{stats.topAuthorCount} books</p>
+            <p className="text-stone-500 text-[11px]">{stats.topAuthorCount} {t("common.books_2")}</p>
           )}
         </motion.div>
       )}
@@ -200,7 +191,7 @@ function SlideBestBook({ stats }: { stats: WrappedStats }) {
         className="w-full space-y-4"
       >
         <Star className="w-10 h-10 text-amber-400 fill-amber-400/30 mx-auto" />
-        <p className="text-stone-400 text-sm uppercase tracking-widest">Highest rated</p>
+        <p className="text-stone-400 text-sm uppercase tracking-widest">{t("reading_wrapped.highest_rated")}</p>
         {stats.bestBook ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.92 }}
@@ -232,7 +223,7 @@ function SlideBestBook({ stats }: { stats: WrappedStats }) {
             </div>
           </motion.div>
         ) : (
-          <p className="text-stone-400 text-sm">Rate some books to see your best read</p>
+          <p className="text-stone-400 text-sm">{t("reading_wrapped.rate_some_books_to_see_your")}</p>
         )}
       </motion.div>
     </div>
@@ -248,7 +239,7 @@ function SlideArchetype({ stats, onClose, onShare }: { stats: WrappedStats; onCl
         transition={{ delay: 0.1 }}
         className="space-y-3"
       >
-        <p className="text-stone-400 text-sm uppercase tracking-widest">You are a</p>
+        <p className="text-stone-400 text-sm uppercase tracking-widest">{t("reading_wrapped.you_are_a")}</p>
         <h2 className="text-4xl sm:text-5xl font-bold text-white font-serif leading-tight">
           {stats.archetype}
         </h2>
@@ -260,7 +251,7 @@ function SlideArchetype({ stats, onClose, onShare }: { stats: WrappedStats; onCl
             className="flex items-center justify-center gap-2 mt-2"
           >
             <Flame className="w-4 h-4 text-orange-400" />
-            <p className="text-stone-300 text-sm">{stats.streak}-day reading streak</p>
+            <p className="text-stone-300 text-sm">{stats.streak}{t("reading_wrapped.day_reading_streak")}</p>
           </motion.div>
         )}
       </motion.div>
@@ -272,23 +263,17 @@ function SlideArchetype({ stats, onClose, onShare }: { stats: WrappedStats; onCl
         className="space-y-3 w-full"
       >
         <div className="h-px bg-white/8 w-24 mx-auto" />
-        <p className="text-stone-500 text-sm leading-relaxed">
-          Keep going. The next great book is one swipe away.
-        </p>
+        <p className="text-stone-500 text-sm leading-relaxed"> {t("reading_wrapped.keep_going_the_next_great_book")} </p>
         <div className="flex flex-col items-center gap-2 mt-2">
           <button
             onClick={(e) => { e.stopPropagation(); onShare() }}
             className="h-11 px-7 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold transition-colors active:scale-[0.97] flex items-center gap-2"
           >
-            <Download className="w-4 h-4" />
-            Download Stats Card
-          </button>
+            <Download className="w-4 h-4" /> {t("reading_wrapped.download_stats_card")} </button>
           <button
             onClick={(e) => { e.stopPropagation(); onClose() }}
             className="h-10 px-8 rounded-xl text-stone-400 hover:text-stone-200 text-sm transition-colors"
-          >
-            Keep Reading
-          </button>
+          > {t("reading_wrapped.keep_reading")} </button>
         </div>
       </motion.div>
     </div>
@@ -589,7 +574,7 @@ export function ReadingWrapped({ isOpen, onClose }: ReadingWrappedProps) {
             onClick={onClose}
             className="absolute right-4 z-10 p-2 rounded-full text-stone-500 hover:text-stone-200 transition-colors"
             style={{ top: "max(16px, env(safe-area-inset-top, 16px))" }}
-            aria-label="Close"
+            aria-label={t("common.close")}
           >
             <X className="w-5 h-5" />
           </button>
@@ -627,9 +612,7 @@ export function ReadingWrapped({ isOpen, onClose }: ReadingWrappedProps) {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.8 }}
               className="text-center text-stone-600 text-xs pb-10 flex-shrink-0"
-            >
-              Tap to continue
-            </motion.p>
+            > {t("reading_wrapped.tap_to_continue")} </motion.p>
           )}
         </motion.div>
       )}

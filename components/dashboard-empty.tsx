@@ -4,6 +4,7 @@ import { motion } from "framer-motion"
 import { Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import dynamic from "next/dynamic"
+import { t } from "@/lib/i18n"
 // Doodles are decorative and below the fold — dynamic() keeps them out of the
 // hydration payload (they were 104KB gzip, 24.5% of the entire cold download).
 const SittingReadingDoodle = dynamic(() => import("./illustrations").then(m => ({ default: m.SittingReadingDoodle })))
@@ -24,19 +25,13 @@ export function DashboardEmpty({ onStartDiscovery }: { onStartDiscovery: () => v
       >
         <SittingReadingDoodle />
       </motion.div>
-      <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-100 mb-3 font-serif">
-        Your shelf is waiting
-      </h2>
-      <p className="text-stone-500 dark:text-stone-400 mb-8 max-w-md mx-auto text-base sm:text-lg leading-relaxed">
-        Start swiping to discover books you&apos;ll love. We&apos;ll learn your taste and suggest better matches over time.
-      </p>
+      <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-100 mb-3 font-serif"> {t("dashboard_empty.your_shelf_is_waiting")} </h2>
+      <p className="text-stone-500 dark:text-stone-400 mb-8 max-w-md mx-auto text-base sm:text-lg leading-relaxed"> {t("dashboard_empty.start_swiping_to_discover_books_you")} </p>
       <Button
         onClick={onStartDiscovery}
         className="h-12 px-8 text-base bg-stone-900 dark:bg-stone-100 hover:bg-stone-800 dark:hover:bg-stone-200 text-white dark:text-stone-900 font-medium rounded-xl transition-all shadow-sm hover:shadow-md tap-target touch-manipulation"
       >
-        <Sparkles className="w-5 h-5 mr-2" />
-        Start Discovering
-      </Button>
+        <Sparkles className="w-5 h-5 mr-2" /> {t("common.start_discovering")} </Button>
     </motion.div>
   )
 }

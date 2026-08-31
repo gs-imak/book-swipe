@@ -2,6 +2,7 @@
 
 import { Component, type ReactNode } from "react"
 import { captureError } from "@/lib/monitoring"
+import { t } from "@/lib/i18n"
 
 interface Props {
   children: ReactNode
@@ -34,16 +35,12 @@ export class ErrorBoundary extends Component<Props, State> {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold text-stone-900 mb-2 font-serif">Something went wrong</h2>
-            <p className="text-stone-500 mb-6 leading-relaxed">
-              An unexpected error occurred. Try refreshing the page.
-            </p>
+            <h2 className="text-xl font-bold text-stone-900 mb-2 font-serif">{t("common.something_went_wrong")}</h2>
+            <p className="text-stone-500 mb-6 leading-relaxed"> {t("error_boundary.an_unexpected_error_occurred_try_refreshing")} </p>
             <button
               onClick={() => window.location.reload()}
               className="h-11 px-6 bg-stone-900 hover:bg-stone-800 text-white font-medium rounded-xl transition-colors"
-            >
-              Refresh Page
-            </button>
+            > {t("error_boundary.refresh_page")} </button>
           </div>
         </div>
       )

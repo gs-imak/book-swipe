@@ -1,6 +1,7 @@
 "use client"
 
 import { AlertCircle } from "lucide-react"
+import { t } from "@/lib/i18n"
 
 export default function Error({
   error,
@@ -17,18 +18,12 @@ export default function Error({
         </div>
         <h2
           className="text-2xl font-bold text-stone-900 mb-3 font-serif"
-        >
-          Something went wrong
-        </h2>
-        <p className="text-stone-500 mb-8 leading-relaxed">
-          An unexpected error occurred. Your data is safe — try again or reload the page.
-        </p>
+        > {t("common.something_went_wrong")} </h2>
+        <p className="text-stone-500 mb-8 leading-relaxed"> {t("error.an_unexpected_error_occurred_your_data")} </p>
         <button
           onClick={reset}
           className="inline-flex items-center h-12 px-8 bg-stone-900 hover:bg-stone-800 text-white text-base font-medium rounded-xl transition-colors"
-        >
-          Try Again
-        </button>
+        > {t("error.try_again")} </button>
       </div>
     </div>
   )

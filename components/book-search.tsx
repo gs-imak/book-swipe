@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
 import { hasVerifiedRating } from "@/lib/book-truth"
 import { useOverlayHistory } from "@/lib/use-overlay-history"
+import { t } from "@/lib/i18n"
 
 interface BookSearchProps {
   isOpen: boolean
@@ -134,15 +135,15 @@ export function BookSearch({ isOpen, onClose, onSaveBook, onBookClick, savedBook
                   type="text"
                   value={query}
                   onChange={(e) => handleInputChange(e.target.value)}
-                  placeholder="Search books or authors..."
-                  aria-label="Search books or authors"
+                  placeholder={t("book_search.search_books_or_authors")}
+                  aria-label={t("book_search.search_books_or_authors_2")}
                   className="flex-1 min-h-[40px] bg-transparent text-stone-900 dark:text-stone-100 text-base placeholder:text-stone-400 dark:placeholder:text-stone-500 outline-none"
                 />
                 {query && (
                   <button
                     type="button"
                     onClick={() => { setQuery(""); setResults([]); setHasSearched(false); inputRef.current?.focus() }}
-                    aria-label="Clear search"
+                    aria-label={t("book_search.clear_search")}
                     className="p-2 rounded-md hover:bg-stone-100 dark:hover:bg-stone-800 tap-target touch-manipulation"
                   >
                     <X className="w-4 h-4 text-stone-400 dark:text-stone-500" />
@@ -152,9 +153,7 @@ export function BookSearch({ isOpen, onClose, onSaveBook, onBookClick, savedBook
                   type="button"
                   onClick={onClose}
                   className="relative before:absolute before:-inset-y-2.5 before:inset-x-0 before:content-[''] text-sm font-medium text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300 pl-2"
-                >
-                  Cancel
-                </button>
+                > {t("common.cancel")} </button>
               </form>
             </div>
           </div>
@@ -164,7 +163,7 @@ export function BookSearch({ isOpen, onClose, onSaveBook, onBookClick, savedBook
             {isSearching && (
               <div className="flex items-center justify-center py-12" role="status">
                 <Loader2 className="w-6 h-6 text-stone-400 animate-spin" aria-hidden="true" />
-                <span className="sr-only">Searching for books...</span>
+                <span className="sr-only">{t("book_search.searching_for_books")}</span>
               </div>
             )}
 
@@ -173,24 +172,22 @@ export function BookSearch({ isOpen, onClose, onSaveBook, onBookClick, savedBook
                 {searchError ? (
                   <>
                     <WifiOff className="w-10 h-10 text-stone-200 mx-auto mb-3" />
-                    <p className="text-stone-500 dark:text-stone-400 text-sm">Couldn&apos;t reach the search service</p>
-                    <p className="text-xs text-stone-400 dark:text-stone-500 mt-2">Check your internet connection and try again.</p>
+                    <p className="text-stone-500 dark:text-stone-400 text-sm">{t("book_search.couldn_t_reach_the_search_service")}</p>
+                    <p className="text-xs text-stone-400 dark:text-stone-500 mt-2">{t("book_search.check_your_internet_connection_and_try")}</p>
                     <button
                       onClick={() => doSearch(query)}
                       className="mt-4 px-4 py-2 bg-stone-900 text-white text-sm rounded-xl hover:bg-stone-800 transition-colors"
-                    >
-                      Retry
-                    </button>
+                    > {t("book_search.retry")} </button>
                   </>
                 ) : (
                   <>
                     <Search className="w-10 h-10 text-stone-200 mx-auto mb-3" />
-                    <p className="text-stone-500 dark:text-stone-400 text-sm">No books found for &ldquo;{query}&rdquo;</p>
+                    <p className="text-stone-500 dark:text-stone-400 text-sm">{t("book_search.no_books_found_for")}{query}{t("common.text_2")}</p>
                     <div className="mt-3 space-y-1.5 text-xs text-stone-400 dark:text-stone-500">
-                      <p>Try:</p>
-                      <p>• Searching by author name instead</p>
-                      <p>• Using fewer or broader keywords</p>
-                      <p>• Checking the spelling</p>
+                      <p>{t("book_search.try")}</p>
+                      <p>{t("book_search.searching_by_author_name_instead")}</p>
+                      <p>{t("book_search.using_fewer_or_broader_keywords")}</p>
+                      <p>{t("book_search.checking_the_spelling")}</p>
                     </div>
                   </>
                 )}
@@ -200,7 +197,7 @@ export function BookSearch({ isOpen, onClose, onSaveBook, onBookClick, savedBook
             {!isSearching && !hasSearched && (
               <div className="text-center py-12">
                 <Search className="w-10 h-10 text-stone-200 mx-auto mb-3" />
-                <p className="text-stone-400 dark:text-stone-500 text-sm">Search for any book or author</p>
+                <p className="text-stone-400 dark:text-stone-500 text-sm">{t("book_search.search_for_any_book_or_author")}</p>
                 <div className="flex flex-wrap gap-2 justify-center mt-4">
                   {["Dune", "Sapiens", "Project Hail Mary", "Atomic Habits"].map(term => (
                     <button
