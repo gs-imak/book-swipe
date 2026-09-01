@@ -637,7 +637,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                         key={genre}
                         className="bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 text-xs px-3 py-1.5 rounded-full font-medium"
                       >
-                        {genre}
+                        {tv(genre)}
                       </span>
                     ))}
                     {book.mood.map((mood) => (
@@ -645,7 +645,7 @@ export function BookDetailModal({ book, isOpen, onClose, onStartReading, onRemov
                         key={mood}
                         className="bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs px-3 py-1.5 rounded-full font-medium border border-amber-100 dark:border-amber-900/40"
                       >
-                        {mood}
+                        {tv(mood)}
                       </span>
                     ))}
                   </div>

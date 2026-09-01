@@ -303,7 +303,7 @@ export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }
                   onLike={handleLikeBook}
                   isLiked={likedBooks.some(l => l.id === book.id)}
                   index={index}
-                  reason="New genre for you"
+                  reason={t("smart_recommendations.new_genre_for_you")}
                   onClick={onBookClick}
                 />
               ))}

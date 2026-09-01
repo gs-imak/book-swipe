@@ -374,7 +374,7 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
                 achievement.type === 'gold' ? 'bg-yellow-100 text-yellow-700' :
                 'bg-violet-50 text-violet-700'
               }`}>
-                {achievement.type.charAt(0).toUpperCase() + achievement.type.slice(1)}
+                {tv(achievement.type.charAt(0).toUpperCase() + achievement.type.slice(1))}
               </span>
               <span className="text-[11px] text-stone-400">
                 {new Date(achievement.unlockedAt!).toLocaleDateString()}

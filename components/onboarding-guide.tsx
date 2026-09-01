@@ -169,7 +169,7 @@ export function OnboardingGuide({ onComplete }: OnboardingGuideProps) {
                             : "border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:border-stone-500"
                         }`}
                       >
-                        {genre}
+                        {tv(genre)}
                       </button>
                     )
                   })}

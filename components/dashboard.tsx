@@ -667,7 +667,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                           : "border border-border-strong text-ink hover:bg-surface-2"
                       }`}
                     >
-                      {mood}
+                      {tv(mood)}
                     </button>
                   )
                 })}
@@ -764,7 +764,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                           : "border border-border-strong text-ink hover:bg-surface-2"
                       }`}
                     >
-                      {shelf.name}
+                      {tv(shelf.name)}
                       {count > 0 && (
                         <span className="ml-1 opacity-60 tabular-nums">· {count}</span>
                       )}
@@ -781,7 +781,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                         : "border border-border-strong text-ink hover:bg-surface-2"
                     }`}
                   >
-                    {genre}
+                    {tv(genre)}
                   </button>
                 ))}
                 <button

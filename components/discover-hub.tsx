@@ -515,7 +515,7 @@ export function DiscoverHub({
         <SectionHeader
           icon={<Flame className="w-4 h-4 text-orange-500" />}
           title={t("discover_hub.trending_now")}
-          subtitle="Popular today"
+          subtitle={t("discover_hub.popular_today")}
         />
         {trendingLoading ? (
           <InlineSpinner />
@@ -605,7 +605,7 @@ export function DiscoverHub({
                       {tv(list.name)}
                     </p>
                     <p className="text-[11px] text-stone-400">
-                      {list.description}
+                      {tv(list.description)}
                     </p>
                   </div>
                   <motion.div
@@ -661,7 +661,7 @@ export function DiscoverHub({
         <SectionHeader
           icon={<Search className="w-4 h-4 text-violet-500" />}
           title={t("discover_hub.genre_deep_dives")}
-          subtitle="Explore sub-genres"
+          subtitle={t("discover_hub.explore_sub_genres")}
         />
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {subGenres.map((genre) => {
@@ -695,7 +695,7 @@ export function DiscoverHub({
                   </div>
                   {!isExpanded && (
                     <p className="text-[10px] opacity-70 mt-1 line-clamp-2 leading-relaxed">
-                      {genre.description.split(".")[0]}.
+                      {tv(genre.description).split(".")[0]}.
                     </p>
                   )}
                 </button>

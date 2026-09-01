@@ -2,7 +2,7 @@
 
 import { Flame } from "lucide-react"
 import { getReadingProgress, getBookReviews, getBookNotes } from "@/lib/storage"
-import { t } from "@/lib/i18n"
+import { t, localeTag } from "@/lib/i18n"
 
 /**
  * Current-month reading-activity calendar + day streak. Self-contained: reads
@@ -59,7 +59,13 @@ export function ActivityHeatmap() {
     weeks.push(currentWeek)
   }
 
-  const dayLabels = ["M", "T", "W", "T", "F", "S", "S"]
+  // Monday-first, in the reader's language: a hand-written English array
+  // spelled out M T W T F S S on a French calendar.
+  const dayFormat = new Intl.DateTimeFormat(localeTag(), { weekday: "narrow" })
+  const dayLabels = Array.from({ length: 7 }, (_, i) =>
+    // 2024-01-01 was a Monday, so this walks Monday → Sunday.
+    dayFormat.format(new Date(Date.UTC(2024, 0, 1 + i))),
+  )
 
   const getCellColor = (count: number) => {
     if (count === 0) return "bg-[#F1EBDF] dark:bg-[#2A2521]"

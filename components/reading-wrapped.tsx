@@ -6,7 +6,7 @@ import { X, BookOpen, Star, Sparkles, TrendingUp, Flame, Heart, Download } from 
 import { getLikedBooks, getBookReviews, getReadingGoals } from "@/lib/storage"
 import { BookCover } from "@/components/book-cover"
 import { Book } from "@/lib/book-data"
-import { t, tv } from "@/lib/i18n"
+import { t, tv, tp } from "@/lib/i18n"
 
 // ---------------------------------------------------------------------------
 // Archetype helper (mirrors taste-profile logic)
@@ -107,7 +107,7 @@ function SlideBooks({ stats }: { stats: WrappedStats }) {
           {stats.totalBooks}
         </p>
         <p className="text-stone-300 text-xl mt-3 font-serif">
-          {stats.totalBooks === 1 ? "book" : "books"}
+          {tp("common.book_word", stats.totalBooks)}
         </p>
       </motion.div>
       {stats.booksCompleted > 0 && (

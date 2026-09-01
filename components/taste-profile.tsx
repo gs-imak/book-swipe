@@ -15,7 +15,7 @@ import { ProfileShareCard } from "./profile-share-card"
 import { ReadingStats } from "./reading-stats"
 import { ActivityFeed } from "./activity-feed"
 import { NotificationSettings } from "./notification-settings"
-import { t, tv } from "@/lib/i18n"
+import { t, tv, tp } from "@/lib/i18n"
 
 interface TasteProfileProps {
   isOpen: boolean
@@ -440,7 +440,7 @@ export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfilePr
                           </span>
                           <span className="flex-1 text-sm text-stone-800 dark:text-stone-200 font-medium">{author}</span>
                           <span className="text-xs text-stone-400">
-                            {count} {count === 1 ? "book" : "books"}
+                            {tp("common.book_count", count)}
                           </span>
                         </div>
                       ))}

@@ -466,7 +466,7 @@ export function ReadingChallenges({ isOpen, onClose }: ReadingChallengesProps) {
                         <span className="text-xs text-stone-400 dark:text-stone-500 ml-0.5">
                           /{challenge.target}
                         </span>
-                        <p className="text-[10px] text-stone-400 dark:text-stone-500">{challenge.unit}</p>
+                        <p className="text-[10px] text-stone-400 dark:text-stone-500">{tv(challenge.unit)}</p>
                       </div>
                     </div>
 
@@ -503,7 +503,7 @@ export function ReadingChallenges({ isOpen, onClose }: ReadingChallengesProps) {
                     )}
                     {!done && pct > 0 && (
                       <p className="text-[11px] text-stone-400 dark:text-stone-500 mt-1.5">
-                        {pct}{t("reading_challenges.complete_2")} {challenge.target - challenge.current} {challenge.unit} {t("reading_challenges.to_go")} </p>
+                        {pct}{t("reading_challenges.complete_2")} {challenge.target - challenge.current} {tv(challenge.unit)} {t("reading_challenges.to_go")} </p>
                     )}
                     {!done && pct === 0 && (
                       <p className="text-[11px] text-stone-400 dark:text-stone-500 mt-1.5"> {t("reading_challenges.not_started_yet")} </p>

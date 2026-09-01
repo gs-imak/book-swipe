@@ -99,7 +99,7 @@ export function ReadingGoalSetter({ onGoalSet }: ReadingGoalSetterProps) {
                     <p className={`text-[11px] mt-0.5 ${
                       selected === opt.value ? "text-amber-600" : "text-stone-400"
                     }`}>
-                      {opt.sub}
+                      {tv(opt.sub)}
                     </p>
                   </button>
                 ))}
