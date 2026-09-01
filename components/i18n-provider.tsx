@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react"
+import { useCallback, useEffect, useSyncExternalStore } from "react"
 import {
   DEFAULT_LOCALE,
   localeTag,
@@ -11,57 +11,73 @@ import {
   type Locale,
 } from "@/lib/i18n"
 
-interface I18nValue {
-  locale: Locale
-  setLocale: (locale: Locale) => void
+// A tiny store rather than a context value, so the reader's language can be
+// read DURING render on the client while the server still renders the default.
+// That is exactly what useSyncExternalStore's third argument is for, and it is
+// what keeps this from being a setState-in-an-effect: hydration matches the
+// server snapshot, then React re-renders with the client one, with no mismatch
+// and no extra commit of our own.
+let current: Locale = DEFAULT_LOCALE
+let resolved = false
+const listeners = new Set<() => void>()
+
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
 }
 
-const I18nContext = createContext<I18nValue>({
-  locale: DEFAULT_LOCALE,
-  setLocale: () => {},
-})
+function getSnapshot(): Locale {
+  if (!resolved) {
+    resolved = true
+    current = resolveLocale()
+    setActiveLocale(current)
+  }
+  return current
+}
 
-export function useI18n(): I18nValue {
-  return useContext(I18nContext)
+function getServerSnapshot(): Locale {
+  // The server has no reader to ask, and a module variable there is shared by
+  // every concurrent request — see lib/i18n.
+  return DEFAULT_LOCALE
+}
+
+function writeLocale(next: Locale): void {
+  current = next
+  resolved = true
+  setActiveLocale(next)
+  listeners.forEach((l) => l())
+}
+
+export function useI18n(): { locale: Locale; setLocale: (locale: Locale) => void } {
+  const locale = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+  const setLocale = useCallback((next: Locale) => {
+    persistLocale(next)
+    writeLocale(next)
+  }, [])
+  return { locale, setLocale }
 }
 
 /**
- * Owns the active language and makes the whole app re-read it.
+ * Makes the whole app re-read the active language.
  *
- * The first render is DELIBERATELY the default locale, matching what the
- * server emitted, so hydration cannot mismatch. The reader's real language is
- * applied in the effect below, one commit later.
- *
- * `key={locale}` on the children is the mechanism that makes a language change
- * total: `t()` is a module function with no subscription, so a switch remounts
- * the tree and every string is evaluated again. That is heavy-handed for a
- * per-frame update and exactly right for something a reader does once.
+ * `key={locale}` is the mechanism: `t()` is a module function with no
+ * subscription of its own, so a language change remounts the tree and every
+ * string is evaluated again. Heavy-handed for a per-frame update, and exactly
+ * right for something a reader does once.
  */
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE)
+  const locale = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 
   useEffect(() => {
-    const resolved = resolveLocale()
-    setActiveLocale(resolved)
-    document.documentElement.lang = localeTag(resolved).slice(0, 2)
-    // So the next request is server-rendered in the same language: page
+    document.documentElement.lang = localeTag(locale).slice(0, 2)
+    // So the NEXT request is server-rendered in the same language: page
     // metadata and the legal pages are produced before any of this runs.
-    syncLocaleCookie(resolved)
-    if (resolved !== DEFAULT_LOCALE) setLocaleState(resolved)
-  }, [])
-
-  const setLocale = useCallback((next: Locale) => {
-    persistLocale(next)
-    setActiveLocale(next)
-    document.documentElement.lang = localeTag(next).slice(0, 2)
-    setLocaleState(next)
-  }, [])
+    syncLocaleCookie(locale)
+  }, [locale])
 
   return (
-    <I18nContext.Provider value={{ locale, setLocale }}>
-      <div key={locale} className="contents">
-        {children}
-      </div>
-    </I18nContext.Provider>
+    <div key={locale} className="contents">
+      {children}
+    </div>
   )
 }

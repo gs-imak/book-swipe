@@ -208,7 +208,7 @@ export function Questionnaire({ onComplete, onBack }: QuestionnaireProps) {
                           : "bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:bg-stone-800/50 hover:border-stone-300"
                       }`}
                     >
-                      {option}
+                      {tv(option)}
                     </motion.button>
                   )
                 })}

@@ -527,7 +527,7 @@ export function ReadingChallenges({ isOpen, onClose }: ReadingChallengesProps) {
                   return (
                     <div key={category} className="mb-4">
                       <p className="text-[10px] font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-widest mb-2">
-                        {category}
+                        {tv(category)}
                       </p>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {items.map(item => {
@@ -548,7 +548,7 @@ export function ReadingChallenges({ isOpen, onClose }: ReadingChallengesProps) {
                                   ? "text-emerald-700 dark:text-emerald-400 line-through decoration-emerald-400/60"
                                   : "text-stone-700 dark:text-stone-300"
                               }`}>
-                                {item.prompt}
+                                {tv(item.prompt)}
                               </p>
                               {done && (
                                 <CheckCircle2 className="absolute top-2 right-2 w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />

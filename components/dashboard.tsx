@@ -559,7 +559,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                   <div>
                     <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-muted mb-1">{t("dashboard.my_library")}</p>
                     <h2 className="text-[30px] sm:text-[40px] font-semibold text-ink font-serif leading-[1.08]">
-                      {getGreeting()},<br className="sm:hidden" /> {t("dashboard.reader")} </h2>
+                      {tv(getGreeting())},<br className="sm:hidden" /> {t("dashboard.reader")} </h2>
                     <div className="flex items-center gap-2 mt-1.5 text-ink-muted text-[13px] tabular-nums">
                       <span className="flex items-center gap-1">
                         <BookOpen className="w-3.5 h-3.5" strokeWidth={1.8} />

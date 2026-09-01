@@ -6,7 +6,7 @@ import { X, BookOpen, Star, Sparkles, TrendingUp, Flame, Heart, Download } from 
 import { getLikedBooks, getBookReviews, getReadingGoals } from "@/lib/storage"
 import { BookCover } from "@/components/book-cover"
 import { Book } from "@/lib/book-data"
-import { t } from "@/lib/i18n"
+import { t, tv } from "@/lib/i18n"
 
 // ---------------------------------------------------------------------------
 // Archetype helper (mirrors taste-profile logic)
@@ -241,7 +241,7 @@ function SlideArchetype({ stats, onClose, onShare }: { stats: WrappedStats; onCl
       >
         <p className="text-stone-400 text-sm uppercase tracking-widest">{t("reading_wrapped.you_are_a")}</p>
         <h2 className="text-4xl sm:text-5xl font-bold text-white font-serif leading-tight">
-          {stats.archetype}
+          {tv(stats.archetype)}
         </h2>
         {stats.streak > 1 && (
           <motion.div
@@ -389,7 +389,7 @@ export function ReadingWrapped({ isOpen, onClose }: ReadingWrappedProps) {
     // Archetype
     ctx.fillStyle = "#D97706"
     ctx.font = "bold 44px Georgia, serif"
-    ctx.fillText(stats.archetype, 540, 250)
+    ctx.fillText(tv(stats.archetype), 540, 250)
 
     // Divider
     ctx.strokeStyle = "#E7D5B3"

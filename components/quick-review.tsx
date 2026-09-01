@@ -235,7 +235,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
               className="h-auto px-3 py-1 text-xs"
             >
               <Tag className="w-3 h-3 mr-1" />
-              {tag}
+              {tv(tag)}
             </Button>
           ))}
         </div>
@@ -274,7 +274,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
                   : "bg-stone-50 dark:bg-stone-800/50 border-stone-200 text-stone-500 hover:border-stone-300"
               }`}
             >
-              {w}
+              {tv(w)}
             </button>
           ))}
         </div>

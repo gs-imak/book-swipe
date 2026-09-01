@@ -309,7 +309,7 @@ export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfilePr
                   </div>
                   <div className="relative z-10">
                     <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-2">{t("taste_profile.your_reader_type")}</p>
-                    <h2 className="text-3xl sm:text-4xl font-bold text-stone-900 dark:text-stone-100 font-serif leading-tight">{archetype}</h2>
+                    <h2 className="text-3xl sm:text-4xl font-bold text-stone-900 dark:text-stone-100 font-serif leading-tight">{tv(archetype)}</h2>
                     <p className="text-sm text-stone-500 mt-2"> {t("taste_profile.based_on")} {likedBooks.length} {t("taste_profile.books_in_your_library")} </p>
                   </div>
                 </motion.div>

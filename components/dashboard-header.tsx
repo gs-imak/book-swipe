@@ -38,7 +38,11 @@ export function DashboardHeader({
               </button>
             )}
             <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-semibold text-ink tracking-tight font-serif"> {t("dashboard_header.my_library")} </h1>
+              {/* truncate, and a step smaller on phones: the header row gives the
+                  title only what four fixed-width controls leave behind, and a
+                  12-character word ("Bibliothèque") was being cut mid-glyph at
+                  360px with no ellipsis to say so. English never showed it. */}
+              <h1 className="text-lg sm:text-2xl font-semibold text-ink tracking-tight font-serif truncate"> {t("dashboard_header.my_library")} </h1>
             </div>
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
