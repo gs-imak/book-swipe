@@ -148,7 +148,7 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
 
                 {/* Description teaser */}
                 {teaser && (
-                  <p className="mt-2.5 text-[13px] italic text-stone-600 dark:text-stone-400 line-clamp-3 leading-relaxed"> {t("common.text")}{teaser}{t("common.text_2")} </p>
+                  <p className="mt-2.5 text-[13px] italic text-stone-600 dark:text-stone-400 line-clamp-3 leading-relaxed"> &ldquo;{teaser}&rdquo; </p>
                 )}
               </div>
 

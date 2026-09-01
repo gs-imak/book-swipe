@@ -18,7 +18,6 @@ import {
   cleanDescription,
   trimToSentenceBand,
 } from "./description-clean"
-import { t } from "@/lib/i18n"
 
 // The route may wait on its LLM stage (~12s worst case) before answering.
 /** A dead-end lookup is not re-asked for a week. */

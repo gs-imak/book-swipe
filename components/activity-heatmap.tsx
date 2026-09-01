@@ -13,7 +13,7 @@ export function ActivityHeatmap() {
   const now = new Date()
   const year = now.getFullYear()
   const month = now.getMonth()
-  const monthName = now.toLocaleString("default", { month: "long" })
+  const monthName = now.toLocaleString(localeTag(), { month: "long" })
   const daysInMonth = new Date(year, month + 1, 0).getDate()
   const firstDayOfWeek = new Date(year, month, 1).getDay()
 
@@ -61,7 +61,7 @@ export function ActivityHeatmap() {
 
   // Monday-first, in the reader's language: a hand-written English array
   // spelled out M T W T F S S on a French calendar.
-  const dayFormat = new Intl.DateTimeFormat(localeTag(), { weekday: "narrow" })
+  const dayFormat = new Intl.DateTimeFormat(localeTag(), { weekday: "narrow", timeZone: "UTC" })
   const dayLabels = Array.from({ length: 7 }, (_, i) =>
     // 2024-01-01 was a Monday, so this walks Monday → Sunday.
     dayFormat.format(new Date(Date.UTC(2024, 0, 1 + i))),

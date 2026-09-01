@@ -2690,7 +2690,7 @@ export default function BookReader({ bookId, bookTitle, gutenbergBook, isOpen, o
                   <span className="text-sm tabular-nums font-medium">
                     {String(Math.floor(pomodoroSecondsLeft / 60)).padStart(2, "0")}:{String(pomodoroSecondsLeft % 60).padStart(2, "0")}
                   </span>
-                  {ambientSound && <span className="text-xs opacity-60">{AMBIENT_SOUNDS.find(s => s.id === ambientSound)?.label}</span>}
+                  {ambientSound && <span className="text-xs opacity-60">{tv(AMBIENT_SOUNDS.find(s => s.id === ambientSound)?.label)}</span>}
                 </button>
               </motion.div>
             )}

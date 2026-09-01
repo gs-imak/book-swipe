@@ -764,7 +764,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                           : "border border-border-strong text-ink hover:bg-surface-2"
                       }`}
                     >
-                      {tv(shelf.name)}
+                      {shelf.isDefault ? tv(shelf.name) : shelf.name}
                       {count > 0 && (
                         <span className="ml-1 opacity-60 tabular-nums">· {count}</span>
                       )}

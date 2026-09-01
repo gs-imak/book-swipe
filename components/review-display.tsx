@@ -57,7 +57,7 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
         </div>
         
         {review.review && (
-          <p className="text-sm text-stone-500 line-clamp-2"> {t("common.text")}{review.review}{t("common.text_2")} </p>
+          <p className="text-sm text-stone-500 line-clamp-2"> &ldquo;{review.review}&rdquo; </p>
         )}
         
         <div className="flex items-center gap-2 text-xs text-stone-400">
@@ -110,7 +110,7 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
             <span className="text-sm font-medium text-stone-700 dark:text-stone-300">{t("review_display.your_review")}</span>
           </div>
           <div className="bg-stone-50 dark:bg-stone-800/50 rounded-lg p-4">
-            <p className={`text-stone-700 dark:text-stone-300 leading-relaxed ${!showFullReview && review.review.length > 200 ? 'line-clamp-3' : ''}`}> {t("common.text")}{review.review}{t("common.text_2")} </p>
+            <p className={`text-stone-700 dark:text-stone-300 leading-relaxed ${!showFullReview && review.review.length > 200 ? 'line-clamp-3' : ''}`}> &ldquo;{review.review}&rdquo; </p>
             {review.review.length > 200 && (
               <Button
                 variant="ghost"

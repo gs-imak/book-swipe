@@ -101,3 +101,21 @@ export function tv(text: string | null | undefined, vars?: TranslationVars): str
   const key = reverseIndex.get(text)
   return key ? t(key, vars) : text
 }
+
+/**
+ * An English weekday name ("Monday") in the reader's language.
+ *
+ * The stats engine emits English day names as DATA, and interpolating one into
+ * a translated sentence left "Vous lisez surtout le Monday". Intl knows every
+ * locale's names, so adding a language needs no new dictionary entries. An
+ * unrecognised value (the "N/A" sentinel included) is returned untouched.
+ */
+export function localiseWeekday(englishDay: string): string {
+  // 2024-01-01 was a Monday, so this walks Monday -> Sunday.
+  const NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+  const index = NAMES.indexOf(englishDay)
+  if (index < 0) return englishDay
+  return new Intl.DateTimeFormat(localeTag(), { weekday: "long", timeZone: "UTC" }).format(
+    new Date(Date.UTC(2024, 0, 1 + index)),
+  )
+}

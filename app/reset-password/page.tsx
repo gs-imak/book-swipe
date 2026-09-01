@@ -5,8 +5,20 @@ import { Loader2, Check, KeyRound } from "lucide-react"
 import { updatePassword } from "@/lib/supabase-sync"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { t } from "@/lib/i18n"
+import { I18nProvider } from "@/components/i18n-provider"
 
+// Reached from a password-reset e-mail, OUTSIDE the app shell, so it has to
+// mount the language provider itself — without it t() never leaves the default
+// locale and this page is English for everyone.
 export default function ResetPasswordPage() {
+  return (
+    <I18nProvider>
+      <ResetPasswordForm />
+    </I18nProvider>
+  )
+}
+
+function ResetPasswordForm() {
   const [password, setPassword] = useState("")
   const [confirm, setConfirm] = useState("")
   const [loading, setLoading] = useState(false)

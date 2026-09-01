@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
+import { t } from "@/lib/i18n"
 
 interface StarRatingProps {
   rating: number
@@ -129,7 +130,7 @@ export function StarRating({
         <div
           role="img"
           aria-labelledby={ariaLabelledBy}
-          aria-label={ariaLabelledBy ? undefined : `Rated ${formatLabel(rating)} out of 5`}
+          aria-label={ariaLabelledBy ? undefined : t("star_rating.rated_out_of_5", { v0: formatLabel(rating) })}
           className="flex items-center gap-1"
         >
           {[1, 2, 3, 4, 5].map((star) => (

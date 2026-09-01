@@ -7,7 +7,6 @@ import { upgradeGoogleBooksCoverUrl, sanitizeGoogleCoverUrl } from "./covers"
 import { stableRating } from "./stable-rating"
 import { estimateReadingTimeRange } from "./reading-time"
 import { cleanDescription, trimToSentenceBand, DESC_MAX_CHARS } from "./description-clean"
-import { t } from "@/lib/i18n"
 
 // Strip HTML tags from API descriptions and truncate safely
 // Origin-point cleaning: books reach the deck straight from search results,

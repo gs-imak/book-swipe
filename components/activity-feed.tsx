@@ -3,7 +3,7 @@
 import { useMemo } from "react"
 import { Heart, BookOpen, CheckCircle2, Star, BookMarked, FolderPlus, Trophy } from "lucide-react"
 import { getActivityLog, type ActivityEntry } from "@/lib/storage"
-import { t, tv } from "@/lib/i18n"
+import { t, tv, localeTag } from "@/lib/i18n"
 
 interface ActivityFeedProps {
   limit?: number
@@ -78,7 +78,7 @@ function dateLabel(iso: string): string {
   if (diffDay === 0) return "Today"
   if (diffDay === 1) return "Yesterday"
   if (diffDay < 7) return "This Week"
-  return date.toLocaleDateString("en-US", { month: "long", day: "numeric" })
+  return date.toLocaleDateString(localeTag(), { month: "long", day: "numeric" })
 }
 
 export function ActivityFeed({ limit = 20 }: ActivityFeedProps) {
@@ -110,7 +110,7 @@ export function ActivityFeed({ limit = 20 }: ActivityFeedProps) {
 
       <div className="space-y-5">
         {grouped.map((group) => (
-          <div key={tv(group.label)}>
+          <div key={group.label}>
             <p className="text-[11px] font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider ml-9 mb-2">
               {tv(group.label)}
             </p>

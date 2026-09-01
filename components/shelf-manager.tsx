@@ -12,7 +12,7 @@ import {
   type Shelf,
 } from "@/lib/storage"
 import { useOverlayHistory } from "@/lib/use-overlay-history"
-import { t } from "@/lib/i18n"
+import { t, tv } from "@/lib/i18n"
 
 interface ShelfManagerProps {
   isOpen: boolean
@@ -183,7 +183,7 @@ export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManager
                 ) : (
                   <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-stone-50 dark:bg-stone-800/50 transition-colors">
                     <span className="text-lg">{shelf.emoji}</span>
-                    <span className="flex-1 text-sm font-medium text-stone-800 dark:text-stone-200">{shelf.name}</span>
+                    <span className="flex-1 text-sm font-medium text-stone-800 dark:text-stone-200">{shelf.isDefault ? tv(shelf.name) : shelf.name}</span>
                     <span className="text-xs text-stone-400">{getBooksForShelf(shelf.id).length}</span>
                     <button
                       onClick={() => startEdit(shelf)}

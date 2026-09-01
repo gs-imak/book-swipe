@@ -10,7 +10,6 @@ import {
   assignBookToShelf,
   type BookReview,
 } from "./storage"
-import { t } from "@/lib/i18n"
 
 export interface GoodreadsRow {
   title: string
@@ -265,7 +264,7 @@ function googleBookToBook(item: any, isbn?: string): Book {
     mood: [],
     description: info.description || "",
     publishedYear: parseInt(info.publishedDate?.substring(0, 4)) || 2000,
-    readingTime: hours <= 2 ? "< 2 hours" : t("goodreads_import.hours", { v0: hours - 1, v1: hours + 1 }),
+    readingTime: hours <= 2 ? "< 2 hours" : `${hours - 1}-${hours + 1} hours`,
   }
 }
 

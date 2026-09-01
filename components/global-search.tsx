@@ -356,7 +356,7 @@ export function GlobalSearch({ isOpen, onClose, onBookClick }: GlobalSearchProps
                             <p className="text-xs text-stone-500 dark:text-stone-400 line-clamp-1 mt-0.5">
                               {highlightMatch(result.book.author, query)}
                             </p>
-                            {result.book.genre[0] && result.book.genre[0] !== t("book_search.general") && (
+                            {result.book.genre[0] && result.book.genre[0] !== "General" && (
                               <span className="inline-block mt-1.5 text-[10px] font-medium text-stone-400 dark:text-stone-500 bg-stone-100 dark:bg-stone-800 px-2 py-0.5 rounded-full">
                                 {result.book.genre[0]}
                               </span>

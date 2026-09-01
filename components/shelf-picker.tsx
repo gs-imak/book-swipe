@@ -111,7 +111,7 @@ export function ShelfPicker({ bookId, isOpen, onClose }: ShelfPickerProps) {
                   }`}
                 >
                   <span className="text-lg">{shelf.emoji}</span>
-                  <span className="flex-1 text-sm font-medium text-stone-800 dark:text-stone-200">{tv(shelf.name)}</span>
+                  <span className="flex-1 text-sm font-medium text-stone-800 dark:text-stone-200">{shelf.isDefault ? tv(shelf.name) : shelf.name}</span>
                   {isAssigned && (
                     <motion.div
                       initial={{ scale: 0 }}

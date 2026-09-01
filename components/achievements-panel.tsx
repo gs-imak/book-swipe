@@ -418,7 +418,7 @@ function StatsTab({ stats }: { stats: UserStats }) {
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
       {statIconMap.map((item, index) => (
         <motion.div
-          key={tv(item.label)}
+          key={item.label}
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: Math.min(index * 0.03, 0.2) }}

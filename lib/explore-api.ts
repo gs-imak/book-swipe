@@ -6,7 +6,6 @@ import { searchOpenLibrary, searchOpenLibraryByQuery, fetchSubjectBooks, transfo
 import { getCachedBooks, addBooksToCache } from "./book-cache"
 import { getLikedBooks } from "./storage"
 import { getOpenLibraryLanguageCodes } from "./language-preference"
-import { t } from "@/lib/i18n"
 
 // ---------------------------------------------------------------------------
 // Sub-genre definitions

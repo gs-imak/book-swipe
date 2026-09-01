@@ -182,7 +182,7 @@ export function BookSearch({ isOpen, onClose, onSaveBook, onBookClick, savedBook
                 ) : (
                   <>
                     <Search className="w-10 h-10 text-stone-200 mx-auto mb-3" />
-                    <p className="text-stone-500 dark:text-stone-400 text-sm">{t("book_search.no_books_found_for")}{query}{t("common.text_2")}</p>
+                    <p className="text-stone-500 dark:text-stone-400 text-sm">{t("book_search.no_books_found_for")}{query}&rdquo;</p>
                     <div className="mt-3 space-y-1.5 text-xs text-stone-400 dark:text-stone-500">
                       <p>{t("book_search.try")}</p>
                       <p>{t("book_search.searching_by_author_name_instead")}</p>
@@ -251,7 +251,7 @@ export function BookSearch({ isOpen, onClose, onSaveBook, onBookClick, savedBook
                               </div>
                             )}
                             {book.pages > 0 && <span>{book.pages}p</span>}
-                            {book.genre[0] !== t("book_search.general") && (
+                            {book.genre[0] !== "General" && (
                               <span className="text-stone-400 dark:text-stone-500">{book.genre[0]}</span>
                             )}
                           </div>

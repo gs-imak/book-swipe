@@ -237,7 +237,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
           ].map((feature, i) => {
             return (
               <div
-                key={tv(feature.title)}
+                key={feature.title}
                 className="hero-rise group flex items-start gap-4 sm:gap-5 p-5 sm:p-6 rounded-2xl border border-stone-200/60 dark:border-stone-700/60 bg-white dark:bg-stone-900 transition-all duration-300 hover:shadow-md"
                 style={{ "--rise-delay": `${340 + i * 80}ms` } as React.CSSProperties}
               >

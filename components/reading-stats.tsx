@@ -19,7 +19,7 @@ import {
   type ReadingGoals,
 } from "@/lib/storage"
 import { Book } from "@/lib/book-data"
-import { t, tv } from "@/lib/i18n"
+import { t, tv, tp, localiseWeekday } from "@/lib/i18n"
 
 interface ReadingStatsProps {
   isOpen: boolean
@@ -338,7 +338,7 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                     </div>
                     <div className="space-y-3">
                       {computed.genreData.map((genre, i) => (
-                        <div key={tv(genre.name)}>
+                        <div key={genre.name}>
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-sm text-stone-700 dark:text-stone-300 font-medium">{tv(genre.name)}</span>
                             <span className="text-xs text-stone-400 tabular-nums">{genre.percentage}%</span>
@@ -366,7 +366,7 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                       <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider">{t("reading_stats.reading_heatmap")}</h3>
                     </div>
                     <span className="text-xs text-stone-400">
-                      {computed.activeDays} {t("reading_stats.active_day")}{computed.activeDays !== 1 ? "s" : ""} {t("reading_stats.in_12_weeks")} </span>
+                      {tp("reading_stats.active_days", computed.activeDays)} {t("reading_stats.in_12_weeks")} </span>
                   </div>
                   {/* Day-of-week labels + grid */}
                   <div className="flex gap-1">
@@ -387,7 +387,7 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                             <div
                               key={day.date}
                               className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-sm ${getHeatColor(day.count)} transition-colors`}
-                              title={t("reading_stats.activit", { v0: day.date, v1: day.count, v2: day.count === 1 ? "y" : "ies" })}
+                              title={`${day.date}: ${tp("reading_stats.activities", day.count)}`}
                               role="presentation"
                             />
                           ))}
@@ -458,11 +458,11 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                           value={t("reading_stats.pages_hour", { v0: paceInsights.avgPagesPerHour })}
                         />
                       )}
-                      {paceInsights.bestDay !== t("reading_stats.n_a") && (
+                      {paceInsights.bestDay !== "N/A" && (
                         <InsightCard
                           icon={<Calendar className="w-4 h-4 text-amber-600" />}
                           label={t("reading_stats.most_active_day")}
-                          value={t("reading_stats.you_read_most_on_s", { v0: paceInsights.bestDay })}
+                          value={t("reading_stats.you_read_most_on_s", { v0: localiseWeekday(paceInsights.bestDay) })}
                         />
                       )}
                       {paceInsights.booksFinished > 0 && (

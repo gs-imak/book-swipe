@@ -322,7 +322,7 @@ export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfilePr
                     { icon: Star, value: avgRating, label: "Avg Rating" },
                     { icon: Heart, value: reviews.filter(r => r.favorite).length, label: "Favorites" },
                   ].map((stat) => (
-                    <div key={tv(stat.label)} className="bg-white dark:bg-stone-900 rounded-xl p-4 border border-stone-200/60 dark:border-stone-700/60 shadow-sm text-center">
+                    <div key={stat.label} className="bg-white dark:bg-stone-900 rounded-xl p-4 border border-stone-200/60 dark:border-stone-700/60 shadow-sm text-center">
                       <stat.icon className="w-4 h-4 text-amber-600 mx-auto mb-1" />
                       <p className="text-2xl font-bold text-stone-900 dark:text-stone-100">{stat.value}</p>
                       <p className="text-xs text-stone-500">{tv(stat.label)}</p>
@@ -372,7 +372,7 @@ export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfilePr
                       <svg viewBox="0 0 160 160" className="flex-shrink-0 w-[120px] h-[120px] sm:w-[160px] sm:h-[160px]">
                         {donutSegments.map((genre, i) => (
                           <circle
-                            key={tv(genre.name)}
+                            key={genre.name}
                             cx="80"
                             cy="80"
                             r={donutRadius}
@@ -394,7 +394,7 @@ export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfilePr
                       {/* Legend */}
                       <div className="flex-1 grid grid-cols-2 gap-x-4 gap-y-1.5 w-full">
                         {genreData.map((genre) => (
-                          <div key={tv(genre.name)} className="flex items-center gap-2">
+                          <div key={genre.name} className="flex items-center gap-2">
                             <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: genre.color }} />
                             <span className="text-xs text-stone-700 dark:text-stone-300 truncate">{tv(genre.name)}</span>
                             <span className="text-xs text-stone-400 ml-auto">{genre.percentage}%</span>
@@ -411,7 +411,7 @@ export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfilePr
                     <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">{t("taste_profile.moods")}</h3>
                     <div className="space-y-2.5">
                       {moodData.map((mood) => (
-                        <div key={tv(mood.name)} className="flex items-center gap-3">
+                        <div key={mood.name} className="flex items-center gap-3">
                           <span className="text-xs text-stone-600 w-24 truncate text-right">{tv(mood.name)}</span>
                           <div className="flex-1 h-5 bg-stone-100 dark:bg-stone-800 rounded-full overflow-hidden">
                             <motion.div

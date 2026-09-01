@@ -87,7 +87,7 @@ export function WhereToRead({ book }: WhereToReadProps) {
         <div className="bg-stone-50 dark:bg-stone-800/50 rounded-xl p-3 border border-stone-200/60">
           <div className="flex items-center justify-between">
             <div>
-              {priceInfo.saleability === t("free_books_browser.free") ? (
+              {priceInfo.saleability === "FREE" ? (
                 <span className="text-sm font-bold text-green-600">{t("where_to_read.free")}</span>
               ) : priceInfo.saleability === "FOR_SALE" ? (
                 <div className="flex items-center gap-2">

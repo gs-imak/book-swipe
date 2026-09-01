@@ -153,7 +153,7 @@ export function VocabFlashcards({ isOpen, onClose }: VocabFlashcardsProps) {
                 <p className="text-3xl font-bold text-stone-900 dark:text-stone-100 font-serif mb-2">
                   {currentWord.word}
                 </p>
-                <p className="text-xs text-stone-400 dark:text-stone-500 italic mb-6"> {t("vocab_flashcards.from")}{currentWord.bookTitle}{t("common.text_2")} </p>
+                <p className="text-xs text-stone-400 dark:text-stone-500 italic mb-6"> {t("vocab_flashcards.from")}{currentWord.bookTitle}&rdquo; </p>
 
                 {showAnswer ? (
                   <motion.div
@@ -165,7 +165,7 @@ export function VocabFlashcards({ isOpen, onClose }: VocabFlashcardsProps) {
                       <p className="text-sm text-stone-700 dark:text-stone-300">{currentWord.definition}</p>
                     )}
                     <div className="bg-stone-50 dark:bg-stone-800/50 rounded-xl p-4">
-                      <p className="text-sm text-stone-600 dark:text-stone-400 italic leading-relaxed"> {t("common.text")}{currentWord.context}{t("common.text_2")} </p>
+                      <p className="text-sm text-stone-600 dark:text-stone-400 italic leading-relaxed"> &ldquo;{currentWord.context}&rdquo; </p>
                     </div>
                   </motion.div>
                 ) : (
