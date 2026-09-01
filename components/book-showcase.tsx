@@ -20,6 +20,7 @@ import type { ShowcaseSceneHandle } from "@/lib/showcase-scene"
 import { hasVerifiedRating } from "@/lib/book-truth"
 import { useOverlayHistory } from "@/lib/use-overlay-history"
 import { RatingBreakdownPanel } from "@/components/rating-breakdown-panel"
+import { t, tv } from "@/lib/i18n"
 
 export interface BookShowcaseProps {
   /** The showcased book, or null when the showcase is closed. */
@@ -214,7 +215,7 @@ function ShowcaseOverlay({
     setPeekLoading(false)
     if (closingRef.current) return
     if (!text) {
-      showToast("Preview unavailable right now", "info")
+      showToast(t("book_showcase.preview_unavailable_right_now"), "info")
       return
     }
     const page = document.createElement("canvas")
@@ -320,10 +321,10 @@ function ShowcaseOverlay({
     const next = !saved
     if (next) {
       addLikedBook(book)
-      showToast(`"${book.title}" saved to library`)
+      showToast(t("book_showcase.saved_to_library", { v0: book.title }))
     } else {
       removeLikedBook(book.id)
-      showToast(`"${book.title}" removed from library`, "info")
+      showToast(t("book_showcase.removed_from_library", { v0: book.title }), "info")
     }
     setSaved(next)
     onSavedChange?.(book, next)
@@ -368,7 +369,7 @@ function ShowcaseOverlay({
 
       <button
         onClick={requestClose}
-        aria-label="Close showcase"
+        aria-label={t("book_showcase.close_showcase")}
         className="absolute right-4 top-4 z-10 flex h-12 w-12 items-center justify-center rounded-full border-[1.5px] border-[rgba(245,239,224,.4)] text-stage-ink transition-colors hover:border-[rgba(245,239,224,.9)] lg:left-1/2 lg:right-auto lg:top-7 lg:-translate-x-1/2 tap-target"
       >
         <X className="h-5 w-5" />
@@ -388,15 +389,11 @@ function ShowcaseOverlay({
               onClick={() => (onRead ? onRead(book) : jumpToDetails())}
               className="inline-flex h-12 items-center gap-2 rounded-full bg-stage-amber px-6 text-[15px] font-semibold text-on-stage-amber transition-transform hover:scale-[1.04] tap-target"
             >
-              <BookOpen className="h-4 w-4" />
-              Keep reading
-            </button>
+              <BookOpen className="h-4 w-4" /> {t("book_showcase.keep_reading")} </button>
             <button
               onClick={exitPeek}
               className="inline-flex h-12 items-center gap-2 rounded-full bg-white/10 px-6 text-[15px] font-semibold text-stage-ink transition-transform hover:scale-[1.04] tap-target"
-            >
-              Close preview
-            </button>
+            > {t("book_showcase.close_preview")} </button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -435,11 +432,11 @@ function ShowcaseOverlay({
               {[
                 display.metadata.enriched.series
                   ? display.metadata.enriched.series.index
-                    ? `Book ${display.metadata.enriched.series.index} of ${display.metadata.enriched.series.name}`
+                    ? t("book_detail_modal.book_of", { v0: display.metadata.enriched.series.index, v1: display.metadata.enriched.series.name })
                     : display.metadata.enriched.series.name
                   : null,
                 display.metadata.enriched.firstPublished
-                  ? `First published ${display.metadata.enriched.firstPublished}`
+                  ? t("book_showcase.first_published", { v0: display.metadata.enriched.firstPublished })
                   : null,
               ]
                 .filter(Boolean)
@@ -470,7 +467,7 @@ function ShowcaseOverlay({
                 aria-controls="showcase-description"
                 className="mt-1.5 inline-flex min-h-[40px] items-center gap-1 text-[14px] font-medium text-stage-amber transition-opacity hover:opacity-80"
               >
-                {descExpanded ? "Show less" : "Read more"}
+                {descExpanded ? t("book_card.show_less") : t("book_card.read_more")}
                 <svg
                   width="15"
                   height="15"
@@ -501,14 +498,13 @@ function ShowcaseOverlay({
                 type="button"
                 onClick={() => setRatingsOpen(true)}
                 aria-haspopup="dialog"
-                aria-label={`See how readers rated ${display.title}`}
+                aria-label={t("book_detail_modal.see_how_readers_rated", { v0: display.title })}
                 className="-mx-2 inline-flex min-h-[44px] items-center gap-2.5 rounded-full px-2 transition-colors hover:bg-white/10"
               >
                 <StarRating rating={display.rating} readonly size="sm" />
                 {display.metadata?.ratingsCount ? (
                   <span className="text-sm text-stage-ink-muted tabular-nums">
-                    {formatCount(display.metadata.ratingsCount)} ratings
-                  </span>
+                    {formatCount(display.metadata.ratingsCount)} {t("common.ratings")} </span>
                 ) : null}
                 <ChevronRight className="h-4 w-4 text-stage-ink-tertiary" />
               </button>
@@ -517,7 +513,7 @@ function ShowcaseOverlay({
               <>
                 <div className="h-6 w-px bg-stage-hairline" />
                 <span className="font-serif text-sm italic text-stage-ink-tertiary">
-                  {display.readingTime}
+                  {tv(display.readingTime)}
                 </span>
               </>
             )}
@@ -530,7 +526,7 @@ function ShowcaseOverlay({
                   key={g}
                   className="h-[29px] inline-flex items-center rounded-full border border-stage-hairline px-3 text-xs text-stage-ink-muted"
                 >
-                  {g}
+                  {tv(g)}
                 </span>
               ))}
             </motion.div>
@@ -550,9 +546,7 @@ function ShowcaseOverlay({
                 onClick={() => onRead(book)}
                 className="inline-flex h-12 items-center gap-2 rounded-full bg-stage-amber px-6 text-[15px] font-semibold text-on-stage-amber transition-transform hover:scale-[1.04] tap-target"
               >
-                <BookOpen className="h-4 w-4" />
-                Read free
-              </button>
+                <BookOpen className="h-4 w-4" /> {t("book_showcase.read_free")} </button>
             )}
             {gutenberg ? (
               <button
@@ -564,9 +558,7 @@ function ShowcaseOverlay({
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Eye className="h-4 w-4" />
-                )}
-                Peek inside
-              </button>
+                )} {t("book_showcase.peek_inside")} </button>
             ) : null}
             <button
               onClick={toggleSaved}
@@ -577,16 +569,14 @@ function ShowcaseOverlay({
               }`}
             >
               <Heart className={`h-4 w-4 ${saved ? "fill-current" : ""}`} />
-              {saved ? "Saved" : "Save"}
+              {saved ? t("swipe_interface.saved") : t("common.save")}
             </button>
             {onMoreDetails && (
               <button
                 onClick={jumpToDetails}
                 className="inline-flex h-12 items-center gap-2 rounded-full bg-white/10 px-6 text-[15px] font-semibold text-stage-ink transition-transform hover:scale-[1.04] tap-target"
               >
-                <Info className="h-4 w-4" />
-                Details
-              </button>
+                <Info className="h-4 w-4" /> {t("book_showcase.details")} </button>
             )}
           </motion.div>
         </motion.div>

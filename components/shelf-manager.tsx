@@ -12,6 +12,7 @@ import {
   type Shelf,
 } from "@/lib/storage"
 import { useOverlayHistory } from "@/lib/use-overlay-history"
+import { t, tv } from "@/lib/i18n"
 
 interface ShelfManagerProps {
   isOpen: boolean
@@ -83,8 +84,8 @@ export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManager
     const shelf = shelves.find(s => s.id === shelfId)
     const count = getBooksForShelf(shelfId).length
     const msg = count > 0
-      ? `Delete "${shelf?.name}"? ${count} book${count > 1 ? "s" : ""} will be unassigned.`
-      : `Delete "${shelf?.name}"?`
+      ? t("shelf_manager.delete_book_will_be_unassigned", { v0: shelf?.name, v1: count, v2: count > 1 ? "s" : "" })
+      : t("shelf_manager.delete", { v0: shelf?.name })
     if (confirm(msg)) {
       try {
         deleteShelf(shelfId)
@@ -129,7 +130,7 @@ export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManager
         >
           {/* Header */}
           <div className="flex items-center justify-between p-5 pb-3">
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">Manage Shelves</h2>
+            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">{t("shelf_manager.manage_shelves")}</h2>
             <button
               onClick={onClose}
               className="p-2 -mr-2 rounded-lg hover:bg-stone-100 dark:bg-stone-800 transition-colors tap-target touch-manipulation"
@@ -150,7 +151,7 @@ export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManager
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         className="flex-1 h-9 px-3 rounded-lg border border-stone-200 dark:border-stone-700 text-sm bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
-                        placeholder="Shelf name"
+                        placeholder={t("shelf_manager.shelf_name")}
                         autoFocus
                         onKeyDown={(e) => e.key === "Enter" && handleRename(shelf.id)}
                       />
@@ -172,25 +173,21 @@ export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManager
                       <button
                         onClick={() => setEditingId(null)}
                         className="px-3 py-1.5 text-xs text-stone-500 hover:text-stone-700 dark:text-stone-300 rounded-lg transition-colors"
-                      >
-                        Cancel
-                      </button>
+                      > {t("common.cancel")} </button>
                       <button
                         onClick={() => handleRename(shelf.id)}
                         className="px-3 py-1.5 text-xs bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-colors font-medium"
-                      >
-                        Save
-                      </button>
+                      > {t("common.save")} </button>
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-stone-50 dark:bg-stone-800/50 transition-colors">
                     <span className="text-lg">{shelf.emoji}</span>
-                    <span className="flex-1 text-sm font-medium text-stone-800 dark:text-stone-200">{shelf.name}</span>
+                    <span className="flex-1 text-sm font-medium text-stone-800 dark:text-stone-200">{shelf.isDefault ? tv(shelf.name) : shelf.name}</span>
                     <span className="text-xs text-stone-400">{getBooksForShelf(shelf.id).length}</span>
                     <button
                       onClick={() => startEdit(shelf)}
-                      aria-label={`Edit ${shelf.name}`}
+                      aria-label={t("shelf_manager.edit", { v0: shelf.name })}
                       className="p-1.5 rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 dark:bg-stone-800 transition-all tap-target touch-manipulation"
                     >
                       <Pencil className="w-3.5 h-3.5" />
@@ -198,7 +195,7 @@ export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManager
                     {!shelf.isDefault && (
                       <button
                         onClick={() => handleDelete(shelf.id)}
-                        aria-label={`Delete ${shelf.name}`}
+                        aria-label={t("shelf_manager.delete_2", { v0: shelf.name })}
                         className="p-1.5 rounded-lg text-stone-400 hover:text-red-500 hover:bg-red-50 transition-all tap-target touch-manipulation"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -217,7 +214,7 @@ export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManager
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full h-9 px-3 rounded-lg border border-stone-200 dark:border-stone-700 text-sm bg-white dark:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
-                  placeholder="New shelf name"
+                  placeholder={t("shelf_manager.new_shelf_name")}
                   autoFocus
                   onKeyDown={(e) => e.key === "Enter" && handleCreate()}
                 />
@@ -238,16 +235,12 @@ export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManager
                   <button
                     onClick={() => setIsAdding(false)}
                     className="px-3 py-1.5 text-xs text-stone-500 hover:text-stone-700 dark:text-stone-300 rounded-lg transition-colors"
-                  >
-                    Cancel
-                  </button>
+                  > {t("common.cancel")} </button>
                   <button
                     onClick={handleCreate}
                     disabled={!name.trim()}
                     className="px-3 py-1.5 text-xs bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-colors font-medium disabled:opacity-40"
-                  >
-                    Create
-                  </button>
+                  > {t("common.create")} </button>
                 </div>
               </div>
             ) : (
@@ -255,9 +248,7 @@ export function ShelfManager({ isOpen, onClose, onShelvesChanged }: ShelfManager
                 onClick={startAdd}
                 className="w-full flex items-center gap-2 p-3 rounded-xl text-sm text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:bg-amber-900/30 transition-colors font-medium"
               >
-                <Plus className="w-4 h-4" />
-                New Shelf
-              </button>
+                <Plus className="w-4 h-4" /> {t("shelf_manager.new_shelf")} </button>
             )}
           </div>
         </motion.div>

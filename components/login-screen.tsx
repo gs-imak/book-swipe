@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { BookOpen, ArrowRight, Bookmark, Library, Star, Heart, Clock, Sparkles, BookMarked } from "lucide-react"
 import { motion } from "framer-motion"
 import Image from "next/image"
+import { t, tv } from "@/lib/i18n"
 
 interface LoginScreenProps {
   onLogin: () => void
@@ -78,7 +79,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
         <div className="max-w-6xl mx-auto flex items-center gap-3">
           <Image
             src="/logo/bookswipe_logo.png"
-            alt="BookSwipe Logo"
+            alt={t("login_screen.bookswipe_logo")}
             /* No priority: this is server-rendered on every document now, and a
                head preload is not cancelled by display:none — it would sit on
                every returning user's critical path for a 44px asset. */
@@ -87,9 +88,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             className="w-9 h-9 sm:w-11 sm:h-11"
             priority
           />
-          <span className="text-xl sm:text-2xl font-semibold tracking-tight text-stone-900 dark:text-stone-100 font-serif">
-            BookSwipe
-          </span>
+          <span className="text-xl sm:text-2xl font-semibold tracking-tight text-stone-900 dark:text-stone-100 font-serif"> {t("login_screen.bookswipe")} </span>
         </div>
       </header>
 
@@ -105,9 +104,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               <div className="space-y-5">
                 <h1
                   className="text-[2.75rem] sm:text-6xl md:text-7xl font-bold leading-[1.05] text-stone-900 dark:text-stone-100 tracking-tight font-serif"
-                >
-                  Find your next
-                  <span className="block relative">
+                > {t("login_screen.find_your_next")} <span className="block relative">
                     <span
                       className="bg-clip-text text-transparent"
                       style={{
@@ -115,9 +112,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                         backgroundSize: "200% auto",
                         animation: "shimmer 3s ease-in-out infinite",
                       }}
-                    >
-                      favorite book.
-                    </span>
+                    > {t("login_screen.favorite_book")} </span>
                     {/* Subtle underline accent */}
                     <span
                       className="absolute -bottom-1 left-1/2 -translate-x-1/2 lg:left-0 lg:translate-x-0 h-[3px] rounded-full opacity-30"
@@ -130,10 +125,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 </h1>
                 <p
                   className="text-lg sm:text-xl md:text-[1.375rem] text-stone-500 dark:text-stone-400 leading-relaxed max-w-xl mx-auto lg:mx-0"
-                >
-                  Swipe through personalized recommendations matched to your
-                  taste. No accounts, no fuss — just great books.
-                </p>
+                > {t("login_screen.swipe_through_personalized_recommendations_m")} </p>
               </div>
 
               {/* CTA — static, never animated: it must be clickable at first
@@ -167,20 +159,14 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                         animate={{ opacity: [1, 0.5, 1] }}
                         transition={{ duration: 1, repeat: Infinity }}
                       >
-                        <BookOpen className="w-5 h-5" />
-                        Opening your library...
-                      </motion.span>
+                        <BookOpen className="w-5 h-5" /> {t("login_screen.opening_your_library")} </motion.span>
                     ) : (
-                      <span className="relative flex items-center gap-3">
-                        Start Discovering
-                        <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1.5" />
+                      <span className="relative flex items-center gap-3"> {t("common.start_discovering")} <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1.5" />
                       </span>
                     )}
                   </button>
                 </div>
-                <p className="text-sm text-stone-400 dark:text-stone-500">
-                  Free forever. Your data stays on your device.
-                </p>
+                <p className="text-sm text-stone-400 dark:text-stone-500"> {t("login_screen.free_forever_your_data_stays_on")} </p>
               </div>
 
               {/* Social proof */}
@@ -193,14 +179,12 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 <div className="flex items-center gap-1.5">
                   <BookMarked className="w-4 h-4 text-amber-600 dark:text-amber-500" />
                   <p className="text-sm text-stone-500 dark:text-stone-400">
-                    <span className="font-semibold text-stone-700 dark:text-stone-300">70,000+</span> free classics to read
-                  </p>
+                    <span className="font-semibold text-stone-700 dark:text-stone-300">70,000+</span> {t("login_screen.free_classics_to_read")} </p>
                 </div>
                 <div className="hidden sm:block w-px h-4 bg-stone-300 dark:bg-stone-700" />
                 <div className="flex items-center gap-1.5">
                   <Heart className="w-4 h-4 text-emerald-600 dark:text-emerald-500" />
-                  <p className="text-sm text-stone-500 dark:text-stone-400">
-                    Free &amp; <a href="https://github.com/gs-imak/book-swipe" target="_blank" rel="noopener noreferrer" className="font-semibold text-stone-700 dark:text-stone-300 underline decoration-stone-300 dark:decoration-stone-600 underline-offset-2 hover:decoration-amber-500">open source</a>
+                  <p className="text-sm text-stone-500 dark:text-stone-400"> {t("login_screen.free")} <a href="https://github.com/gs-imak/book-swipe" target="_blank" rel="noopener noreferrer" className="font-semibold text-stone-700 dark:text-stone-300 underline decoration-stone-300 dark:decoration-stone-600 underline-offset-2 hover:decoration-amber-500">{t("login_screen.open_source")}</a>
                   </p>
                 </div>
               </div>
@@ -225,12 +209,8 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
         style={{ "--rise-delay": "280ms" } as React.CSSProperties}
       >
         <div className="mb-10 text-center">
-          <p className="text-xs uppercase tracking-[0.2em] text-amber-700 dark:text-amber-400 font-semibold mb-2">
-            How it works
-          </p>
-          <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-100 font-serif">
-            Your reading journey, simplified
-          </h2>
+          <p className="text-xs uppercase tracking-[0.2em] text-amber-700 dark:text-amber-400 font-semibold mb-2"> {t("login_screen.how_it_works")} </p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-100 font-serif"> {t("login_screen.your_reading_journey_simplified")} </h2>
         </div>
         <div className="grid sm:grid-cols-2 gap-4 sm:gap-5">
           {[
@@ -266,10 +246,10 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 </div>
                 <div>
                   <h3 className="text-base font-semibold text-stone-800 dark:text-stone-200 mb-1">
-                    {feature.title}
+                    {tv(feature.title)}
                   </h3>
                   <p className="text-sm leading-relaxed text-stone-500 dark:text-stone-400">
-                    {feature.description}
+                    {tv(feature.description)}
                   </p>
                 </div>
               </div>
@@ -284,27 +264,21 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
           <div className="flex items-center gap-2">
             <Image
               src="/logo/bookswipe_logo.png"
-              alt="BookSwipe"
+              alt={t("login_screen.bookswipe")}
               width={24}
               height={24}
               className="w-5 h-5 opacity-50"
             />
-            <p className="text-xs text-stone-400 dark:text-stone-500">
-              Powered by Google Books & Open Library
-            </p>
+            <p className="text-xs text-stone-400 dark:text-stone-500"> {t("login_screen.powered_by_google_books_open_library")} </p>
           </div>
           <div className="flex items-center gap-6">
-            <span className="text-xs text-stone-400 dark:text-stone-500">
-              No tracking · No accounts · 100% free
-            </span>
+            <span className="text-xs text-stone-400 dark:text-stone-500"> {t("login_screen.no_tracking_no_accounts_100_free")} </span>
             <a
               href="https://github.com/gs-imak/book-swipe"
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
-            >
-              GitHub
-            </a>
+            > {t("login_screen.github")} </a>
           </div>
         </div>
       </footer>
@@ -374,10 +348,8 @@ function PhoneMockup() {
               <span className="text-[10px] font-semibold text-stone-600 dark:text-stone-300">3</span>
             </div>
             <div className="text-center">
-              <p className="text-xs font-bold text-stone-800 dark:text-stone-200 font-serif">
-                BookSwipe
-              </p>
-              <p className="text-[9px] text-stone-400">4 of 15</p>
+              <p className="text-xs font-bold text-stone-800 dark:text-stone-200 font-serif"> {t("login_screen.bookswipe")} </p>
+              <p className="text-[9px] text-stone-400">{t("login_screen.4_of_15")}</p>
             </div>
             <div className="w-7" />
           </div>
@@ -398,17 +370,9 @@ function PhoneMockup() {
               {/* Decorative book cover design */}
               <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center">
                 <div className="w-16 h-px bg-amber-500/60 mb-4" />
-                <p className="text-amber-400/80 text-[10px] uppercase tracking-[0.2em] font-medium mb-2">
-                  A Novel
-                </p>
-                <h3 className="text-white text-xl font-bold leading-tight mb-1.5 font-serif">
-                  The Midnight
-                  <br />
-                  Library
-                </h3>
-                <p className="text-stone-400 text-xs">
-                  Matt Haig
-                </p>
+                <p className="text-amber-400/80 text-[10px] uppercase tracking-[0.2em] font-medium mb-2"> {t("login_screen.a_novel")} </p>
+                <h3 className="text-white text-xl font-bold leading-tight mb-1.5 font-serif"> {t("login_screen.the_midnight")} <br /> {t("login_screen.library")} </h3>
+                <p className="text-stone-400 text-xs"> {t("login_screen.matt_haig")} </p>
                 <div className="w-16 h-px bg-amber-500/60 mt-4" />
               </div>
 
@@ -423,21 +387,17 @@ function PhoneMockup() {
                 <div className="flex items-center gap-2 text-white/70 text-[10px] mb-2">
                   <div className="flex items-center gap-0.5">
                     <BookOpen className="w-2.5 h-2.5" />
-                    <span>288p</span>
+                    <span>{t("login_screen.288p")}</span>
                   </div>
                   <span className="w-0.5 h-0.5 rounded-full bg-white/40" />
                   <div className="flex items-center gap-0.5">
                     <Clock className="w-2.5 h-2.5" />
-                    <span>4-6 hours</span>
+                    <span>{t("login_screen.4_6_hours")}</span>
                   </div>
                 </div>
                 <div className="flex gap-1">
-                  <span className="bg-white/15 border border-white/20 text-white text-[9px] px-2 py-0.5 rounded-full">
-                    Fiction
-                  </span>
-                  <span className="bg-white/15 border border-white/20 text-white text-[9px] px-2 py-0.5 rounded-full">
-                    Philosophical
-                  </span>
+                  <span className="bg-white/15 border border-white/20 text-white text-[9px] px-2 py-0.5 rounded-full"> {t("login_screen.fiction")} </span>
+                  <span className="bg-white/15 border border-white/20 text-white text-[9px] px-2 py-0.5 rounded-full"> {t("login_screen.philosophical")} </span>
                 </div>
               </div>
             </div>
@@ -459,16 +419,16 @@ function PhoneMockup() {
           <div className="border-t border-stone-100 dark:border-stone-800 flex justify-around py-2 px-6">
             <div className="flex flex-col items-center gap-0.5">
               <Library className="w-3.5 h-3.5 text-stone-300 dark:text-stone-600" />
-              <span className="text-[8px] text-stone-300 dark:text-stone-600">Library</span>
+              <span className="text-[8px] text-stone-300 dark:text-stone-600">{t("login_screen.library")}</span>
             </div>
             <div className="flex flex-col items-center gap-0.5">
               <BookOpen className="w-3.5 h-3.5 text-stone-800 dark:text-stone-200" />
-              <span className="text-[8px] text-stone-800 dark:text-stone-200 font-medium">Discover</span>
+              <span className="text-[8px] text-stone-800 dark:text-stone-200 font-medium">{t("login_screen.discover")}</span>
               <div className="w-1 h-1 rounded-full bg-amber-500 -mt-0.5" />
             </div>
             <div className="flex flex-col items-center gap-0.5">
               <Star className="w-3.5 h-3.5 text-stone-300 dark:text-stone-600" />
-              <span className="text-[8px] text-stone-300 dark:text-stone-600">Awards</span>
+              <span className="text-[8px] text-stone-300 dark:text-stone-600">{t("login_screen.awards")}</span>
             </div>
           </div>
 

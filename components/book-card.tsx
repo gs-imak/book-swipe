@@ -12,6 +12,7 @@ import { DECK_COVER_SIZES } from "@/lib/config"
 import { displayRating, displayPages, metaSegments } from "@/lib/book-truth"
 import { useToast } from "./toast-provider"
 import { useState, useRef, useEffect, useCallback } from "react"
+import { t, tv } from "@/lib/i18n"
 
 interface BookCardProps {
   book: Book
@@ -109,16 +110,16 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
   const handleStartReading = () => {
     const alreadyReading = getReadingProgress().some(p => p.bookId === book.id)
     if (alreadyReading) {
-      showToast("Already in your reading list", "info")
+      showToast(t("book_card.already_in_your_reading_list"), "info")
       return
     }
     addBookToReading(book)
-    showToast(`"${book.title}" added to reading list`)
+    showToast(t("book_card.added_to_reading_list", { v0: book.title }))
   }
 
   const shownRating = displayRating(book)
   const shownPages = displayPages(book)
-  const metaLine = metaSegments(book, { readTime: book.pages >= 60 ? `~${Math.round(book.pages / 40)} h` : null }).join(" · ")
+  const metaLine = metaSegments(book, { readTime: book.pages >= 60 ? t("book.hours_short", { n: Math.round(book.pages / 40) }) : null }).join(" · ")
   const readTime = book.pages >= 60 ? `~${Math.round(book.pages / 40)} h` : `~${Math.round((book.pages / 40) * 60)} m`
   const ratingsCount = book.metadata?.ratingsCount
 
@@ -159,7 +160,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
         // Only the top card is reachable; the peek card is inert anyway.
         role={isTop && onOpenDetails ? "button" : undefined}
         tabIndex={isTop && onOpenDetails ? 0 : -1}
-        aria-label={isTop && onOpenDetails ? `Preview "${book.title}" in 3D` : undefined}
+        aria-label={isTop && onOpenDetails ? t("book_card.preview_in_3d", { v0: book.title }) : undefined}
       >
         <div className="flex h-full w-full flex-col items-center lg:flex-row lg:items-start lg:justify-center lg:gap-16">
           {/* Cover object — radius 5px (covers are books), object shadow.
@@ -192,13 +193,13 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
                   className="absolute top-6 left-4 z-20 rounded-lg border-[2.5px] border-success-ink px-3 py-0.5 -rotate-10 bg-[rgba(20,17,16,.4)]"
                   style={{ opacity: saveOpacity, rotate: -10 }}
                 >
-                  <span className="text-success-ink dark:text-[#A3C168] text-[17px] font-extrabold tracking-[0.14em]">SAVE</span>
+                  <span className="text-success-ink dark:text-[#A3C168] text-[17px] font-extrabold tracking-[0.14em]">{t("book_card.save")}</span>
                 </motion.div>
                 <motion.div
                   className="absolute top-6 right-4 z-20 rounded-lg border-[2.5px] border-ink-muted px-3 py-0.5 bg-[rgba(20,17,16,.4)]"
                   style={{ opacity: passOpacity, rotate: 10 }}
                 >
-                  <span className="text-ink-muted text-[17px] font-extrabold tracking-[0.14em]">PASS</span>
+                  <span className="text-ink-muted text-[17px] font-extrabold tracking-[0.14em]">{t("book_card.pass")}</span>
                 </motion.div>
               </>
             )}
@@ -224,7 +225,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => { setSheetEverOpened(true); setInfoExpanded(true); onSheetToggle?.(true) }}
-                aria-label="More info"
+                aria-label={t("book_card.more_info")}
                 className="w-9 h-9 -mr-1 rounded-full flex items-center justify-center flex-shrink-0 text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors tap-target"
               >
                 <Info className="w-[18px] h-[18px]" />
@@ -247,7 +248,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
                 <p className="text-[13px] text-ink-muted tabular-nums">
                   {metaLine}
                   {shownRating !== null && ratingsCount
-                    ? ` · ${formatCount(ratingsCount)} ratings`
+                    ? t("book_card.ratings", { v0: formatCount(ratingsCount) })
                     : ""}
                 </p>
               </div>
@@ -257,8 +258,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
               <div className="flex items-center gap-1.5 mt-2 text-success-ink text-[12.5px] font-semibold [@media(max-height:700px)]:hidden">
                 <Heart className="w-3 h-3 fill-current flex-shrink-0" />
                 <span>
-                  {coLikeCount} {coLikeCount === 1 ? "reader" : "readers"} with your taste saved this
-                </span>
+                  {coLikeCount} {coLikeCount === 1 ? "reader" : "readers"} {t("book_card.with_your_taste_saved_this")} </span>
               </div>
             )}
 
@@ -269,7 +269,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
                   key={genre}
                   className="h-[27px] inline-flex items-center px-3 rounded-full border border-border-strong text-[12.5px] text-ink"
                 >
-                  {genre}
+                  {tv(genre)}
                 </span>
               ))}
             </div>
@@ -308,11 +308,11 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
             <div className="w-10 h-1 rounded-full bg-border-strong mb-2" />
             <button
               onClick={closeSheet}
-              aria-label="Close details"
+              aria-label={t("book_card.close_details")}
               className="flex items-center gap-1 text-ink-muted hover:text-ink transition-colors px-3 py-2 min-h-[44px]"
             >
               <ChevronDown className="w-5 h-5" />
-              <span className="text-xs font-medium">Close</span>
+              <span className="text-xs font-medium">{t("common.close")}</span>
             </button>
           </div>
 
@@ -340,30 +340,28 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
               <div className="grid grid-cols-3 divide-x divide-border border-y border-border py-3">
                 <div className="text-center px-2">
                   <p className="font-serif font-semibold text-[21px] text-ink tabular-nums">{shownRating ?? "—"}</p>
-                  <p className="text-xs text-ink-muted mt-0.5">rating</p>
+                  <p className="text-xs text-ink-muted mt-0.5">{t("book_card.rating")}</p>
                 </div>
                 <div className="text-center px-2">
                   <p className="font-serif font-semibold text-[21px] text-ink tabular-nums">{shownPages ?? "—"}</p>
-                  <p className="text-xs text-ink-muted mt-0.5">pages</p>
+                  <p className="text-xs text-ink-muted mt-0.5">{t("common.pages")}</p>
                 </div>
                 <div className="text-center px-2">
                   <p className="font-serif font-semibold text-[21px] text-ink tabular-nums">{readTime}</p>
-                  <p className="text-xs text-ink-muted mt-0.5">read time</p>
+                  <p className="text-xs text-ink-muted mt-0.5">{t("book_card.read_time")}</p>
                 </div>
               </div>
 
               {/* Genres */}
               <div>
-                <h3 className="text-[11px] font-bold text-ink-muted uppercase tracking-[0.12em] mb-2">
-                  Genres
-                </h3>
+                <h3 className="text-[11px] font-bold text-ink-muted uppercase tracking-[0.12em] mb-2"> {t("book_card.genres")} </h3>
                 <div className="flex flex-wrap gap-1.5">
                   {book.genre.map((genre) => (
                     <span
                       key={genre}
                       className="h-[27px] inline-flex items-center px-3 rounded-full border border-border-strong text-[12.5px] text-ink"
                     >
-                      {genre}
+                      {tv(genre)}
                     </span>
                   ))}
                 </div>
@@ -372,9 +370,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
               {/* Moods */}
               {book.mood.length > 0 && (
                 <div>
-                  <h3 className="text-[11px] font-bold text-ink-muted uppercase tracking-[0.12em] mb-2">
-                    Vibes
-                  </h3>
+                  <h3 className="text-[11px] font-bold text-ink-muted uppercase tracking-[0.12em] mb-2"> {t("book_card.vibes")} </h3>
                   <div className="flex flex-wrap gap-1.5">
                     {book.mood.map((mood) => (
                       <span
@@ -390,9 +386,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
 
               {/* Description — collapsible */}
               <div>
-                <h3 className="text-[11px] font-bold text-ink-muted uppercase tracking-[0.12em] mb-2">
-                  About
-                </h3>
+                <h3 className="text-[11px] font-bold text-ink-muted uppercase tracking-[0.12em] mb-2"> {t("book_card.about")} </h3>
                 <p className={`text-[15px] text-ink leading-[1.6] max-w-[54ch] ${descExpanded ? "" : "line-clamp-3"}`}>
                   {book.description}
                 </p>
@@ -401,7 +395,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
                     onClick={() => setDescExpanded(!descExpanded)}
                     className="text-xs text-accent-ink font-medium mt-1.5 hover:underline"
                   >
-                    {descExpanded ? "Show less" : "Read more"}
+                    {descExpanded ? t("book_card.show_less") : t("book_card.read_more")}
                   </button>
                 )}
               </div>
@@ -413,9 +407,7 @@ export function BookCard({ book, onSwipe, isTop = false, showActions = true, rea
                     onClick={handleStartReading}
                     className="w-full bg-success hover:bg-success/90 text-on-success rounded-control h-12 text-[15px] font-semibold"
                   >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add to Reading List
-                  </Button>
+                    <Plus className="w-4 h-4 mr-2" /> {t("book_card.add_to_reading_list")} </Button>
                 </div>
               )}
             </div>

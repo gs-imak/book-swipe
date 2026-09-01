@@ -6,6 +6,7 @@ import { Heart, MessageSquare, Tag, Calendar, Edit, Trash2 } from "lucide-react"
 import { Button } from "./ui/button"
 import { StarRating } from "./star-rating"
 import { BookReview, deleteBookReview } from "@/lib/storage"
+import { t } from "@/lib/i18n"
 
 interface ReviewDisplayProps {
   review: BookReview
@@ -56,9 +57,7 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
         </div>
         
         {review.review && (
-          <p className="text-sm text-stone-500 line-clamp-2">
-            &ldquo;{review.review}&rdquo;
-          </p>
+          <p className="text-sm text-stone-500 line-clamp-2"> &ldquo;{review.review}&rdquo; </p>
         )}
         
         <div className="flex items-center gap-2 text-xs text-stone-400">
@@ -85,7 +84,7 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
           {review.favorite && (
             <div className="flex items-center gap-1 text-red-500">
               <Heart className="w-4 h-4 fill-current" />
-              <span className="text-sm font-medium">Favorite</span>
+              <span className="text-sm font-medium">{t("review_display.favorite")}</span>
             </div>
           )}
         </div>
@@ -93,9 +92,7 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
         <div className="flex items-center gap-2">
           {onEdit && (
             <Button variant="outline" size="sm" onClick={onEdit}>
-              <Edit className="w-4 h-4 mr-1" />
-              Edit
-            </Button>
+              <Edit className="w-4 h-4 mr-1" /> {t("review_display.edit")} </Button>
           )}
           {onDelete && (
             <Button variant="outline" size="sm" onClick={handleDelete}>
@@ -110,12 +107,10 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-stone-400" />
-            <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Your Review</span>
+            <span className="text-sm font-medium text-stone-700 dark:text-stone-300">{t("review_display.your_review")}</span>
           </div>
           <div className="bg-stone-50 dark:bg-stone-800/50 rounded-lg p-4">
-            <p className={`text-stone-700 dark:text-stone-300 leading-relaxed ${!showFullReview && review.review.length > 200 ? 'line-clamp-3' : ''}`}>
-              &ldquo;{review.review}&rdquo;
-            </p>
+            <p className={`text-stone-700 dark:text-stone-300 leading-relaxed ${!showFullReview && review.review.length > 200 ? 'line-clamp-3' : ''}`}> &ldquo;{review.review}&rdquo; </p>
             {review.review.length > 200 && (
               <Button
                 variant="ghost"
@@ -123,7 +118,7 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
                 onClick={() => setShowFullReview(!showFullReview)}
                 className="mt-2 p-0 h-auto text-amber-700 dark:text-amber-400 hover:text-amber-800"
               >
-                {showFullReview ? 'Show less' : 'Show more'}
+                {showFullReview ? t("book_card.show_less") : t("review_display.show_more")}
               </Button>
             )}
           </div>
@@ -134,8 +129,7 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
       {review.mood && moodEmojis[review.mood] && (
         <div className="flex items-center gap-2">
           <span className="text-lg">{moodEmojis[review.mood]}</span>
-          <span className="text-sm text-stone-500">
-            This book made you feel {review.mood}
+          <span className="text-sm text-stone-500"> {t("review_display.this_book_made_you_feel")} {review.mood}
           </span>
         </div>
       )}
@@ -145,7 +139,7 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Tag className="w-4 h-4 text-stone-400" />
-            <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Tags</span>
+            <span className="text-sm font-medium text-stone-700 dark:text-stone-300">{t("review_display.tags")}</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {review.tags.map((tag) => (
@@ -165,10 +159,10 @@ export function ReviewDisplay({ review, onEdit, onDelete, compact = false }: Rev
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
             <Calendar className="w-3 h-3" />
-            <span>Reviewed {formatDate(review.createdAt)}</span>
+            <span>{t("review_display.reviewed")} {formatDate(review.createdAt)}</span>
           </div>
           {review.updatedAt !== review.createdAt && (
-            <span>• Updated {formatDate(review.updatedAt)}</span>
+            <span>{t("review_display.updated")} {formatDate(review.updatedAt)}</span>
           )}
         </div>
       </div>

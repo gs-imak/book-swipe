@@ -19,6 +19,7 @@ import {
   type ReadingGoals,
 } from "@/lib/storage"
 import { Book } from "@/lib/book-data"
+import { t, tv, tp, localiseWeekday } from "@/lib/i18n"
 
 interface ReadingStatsProps {
   isOpen: boolean
@@ -247,11 +248,11 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
           <div className="max-w-2xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <BarChart3 className="w-5 h-5 text-amber-600" />
-              <h1 className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100 font-serif">Reading Stats</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100 font-serif">{t("reading_stats.reading_stats")}</h1>
             </div>
             <button
               onClick={onClose}
-              aria-label="Close reading stats"
+              aria-label={t("reading_stats.close_reading_stats")}
               className="p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors tap-target touch-manipulation"
             >
               <X className="w-5 h-5 text-stone-400" />
@@ -267,8 +268,8 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
             {!computed.hasAnyData ? (
               <div className="text-center py-16">
                 <BookOpen className="w-12 h-12 text-stone-300 dark:text-stone-600 mx-auto mb-4" />
-                <p className="text-lg font-serif text-stone-500 dark:text-stone-400 mb-1">No reading data yet</p>
-                <p className="text-sm text-stone-400 dark:text-stone-500">Start reading to see your stats</p>
+                <p className="text-lg font-serif text-stone-500 dark:text-stone-400 mb-1">{t("reading_stats.no_reading_data_yet")}</p>
+                <p className="text-sm text-stone-400 dark:text-stone-500">{t("reading_stats.start_reading_to_see_your_stats")}</p>
               </div>
             ) : (
               <>
@@ -276,7 +277,7 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                 <motion.div {...fadeIn(0.05)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-800 shadow-sm">
                   <div className="flex items-center gap-2 mb-4">
                     <TrendingUp className="w-4 h-4 text-amber-600" />
-                    <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider">Reading Pace</h3>
+                    <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider">{t("reading_stats.reading_pace")}</h3>
                   </div>
                   <div className="grid grid-cols-3 gap-3">
                     <div className="text-center p-3 bg-stone-50 dark:bg-stone-800/60 rounded-xl">
@@ -290,21 +291,20 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1">
-                        Books this year{computed.completedLastYear > 0 ? " vs last" : ""}
+                      <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1"> {t("reading_stats.books_this_year")}{computed.completedLastYear > 0 ? t("reading_stats.vs_last") : ""}
                       </p>
                     </div>
                     <div className="text-center p-3 bg-stone-50 dark:bg-stone-800/60 rounded-xl">
                       <span className="text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-100">
                         {formatNumber(computed.pagesThisMonth)}
                       </span>
-                      <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1">Pages this month</p>
+                      <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1">{t("reading_stats.pages_this_month")}</p>
                     </div>
                     <div className="text-center p-3 bg-stone-50 dark:bg-stone-800/60 rounded-xl">
                       <span className="text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-100">
                         {computed.avgPagesPerDay}
                       </span>
-                      <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1">Avg pages/day</p>
+                      <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1">{t("reading_stats.avg_pages_day")}</p>
                     </div>
                   </div>
                   {/* Year goal progress bar */}
@@ -312,9 +312,7 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                     <div className="mt-4">
                       <div className="flex items-center justify-between mb-1.5">
                         <span className="text-xs text-stone-500 dark:text-stone-400 flex items-center gap-1">
-                          <Target className="w-3 h-3" />
-                          Yearly goal
-                        </span>
+                          <Target className="w-3 h-3" /> {t("reading_stats.yearly_goal")} </span>
                         <span className="text-xs font-medium text-stone-600 dark:text-stone-300">
                           {computed.completedThisYear} / {goals.yearlyTarget}
                         </span>
@@ -336,13 +334,13 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                   <motion.div {...fadeIn(0.12)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-800 shadow-sm">
                     <div className="flex items-center gap-2 mb-4">
                       <BarChart3 className="w-4 h-4 text-amber-600" />
-                      <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider">Genre Breakdown</h3>
+                      <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider">{t("reading_stats.genre_breakdown")}</h3>
                     </div>
                     <div className="space-y-3">
                       {computed.genreData.map((genre, i) => (
                         <div key={genre.name}>
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm text-stone-700 dark:text-stone-300 font-medium">{genre.name}</span>
+                            <span className="text-sm text-stone-700 dark:text-stone-300 font-medium">{tv(genre.name)}</span>
                             <span className="text-xs text-stone-400 tabular-nums">{genre.percentage}%</span>
                           </div>
                           <div className="h-3.5 bg-stone-100 dark:bg-stone-800 rounded-full overflow-hidden">
@@ -365,11 +363,10 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-amber-600" />
-                      <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider">Reading Heatmap</h3>
+                      <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider">{t("reading_stats.reading_heatmap")}</h3>
                     </div>
                     <span className="text-xs text-stone-400">
-                      {computed.activeDays} active day{computed.activeDays !== 1 ? "s" : ""} in 12 weeks
-                    </span>
+                      {tp("reading_stats.active_days", computed.activeDays)} {t("reading_stats.in_12_weeks")} </span>
                   </div>
                   {/* Day-of-week labels + grid */}
                   <div className="flex gap-1">
@@ -390,7 +387,7 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                             <div
                               key={day.date}
                               className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-sm ${getHeatColor(day.count)} transition-colors`}
-                              title={`${day.date}: ${day.count} activit${day.count === 1 ? "y" : "ies"}`}
+                              title={`${day.date}: ${tp("reading_stats.activities", day.count)}`}
                               role="presentation"
                             />
                           ))}
@@ -399,13 +396,13 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                     </div>
                   </div>
                   <div className="flex items-center justify-end gap-1.5 mt-3">
-                    <span className="text-[10px] text-stone-400">Less</span>
+                    <span className="text-[10px] text-stone-400">{t("common.less")}</span>
                     <div className="w-2.5 h-2.5 rounded-sm bg-stone-100 dark:bg-stone-800" />
                     <div className="w-2.5 h-2.5 rounded-sm bg-emerald-200 dark:bg-emerald-900" />
                     <div className="w-2.5 h-2.5 rounded-sm bg-emerald-400 dark:bg-emerald-700" />
                     <div className="w-2.5 h-2.5 rounded-sm bg-emerald-500 dark:bg-emerald-600" />
                     <div className="w-2.5 h-2.5 rounded-sm bg-emerald-600 dark:bg-emerald-500" />
-                    <span className="text-[10px] text-stone-400">More</span>
+                    <span className="text-[10px] text-stone-400">{t("common.more")}</span>
                   </div>
                 </motion.div>
 
@@ -413,35 +410,35 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                 <motion.div {...fadeIn(0.28)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-800 shadow-sm">
                   <div className="flex items-center gap-2 mb-4">
                     <Flame className="w-4 h-4 text-amber-600" />
-                    <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider">Reading Insights</h3>
+                    <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider">{t("reading_stats.reading_insights")}</h3>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <InsightCard
                       icon={<BookOpen className="w-4 h-4 text-amber-600" />}
-                      label="Average book length"
-                      value={`${computed.avgBookLength} pages`}
+                      label={t("reading_stats.average_book_length")}
+                      value={t("reading_stats.pages", { v0: computed.avgBookLength })}
                     />
                     <InsightCard
                       icon={<BarChart3 className="w-4 h-4 text-amber-600" />}
-                      label="Favorite genre"
+                      label={t("reading_stats.favorite_genre")}
                       value={computed.favoriteGenre}
                     />
                     <InsightCard
                       icon={<TrendingUp className="w-4 h-4 text-amber-600" />}
-                      label="Monthly change"
+                      label={t("reading_stats.monthly_change")}
                       value={
                         computed.monthlyChange > 0
-                          ? `${computed.monthlyChange}% more this month`
+                          ? t("reading_stats.more_this_month", { v0: computed.monthlyChange })
                           : computed.monthlyChange < 0
-                            ? `${Math.abs(computed.monthlyChange)}% less this month`
-                            : "Same as last month"
+                            ? t("reading_stats.less_this_month", { v0: Math.abs(computed.monthlyChange) })
+                            : t("reading_stats.same_as_last_month")
                       }
                       positive={computed.monthlyChange >= 0}
                     />
                     <InsightCard
                       icon={<Flame className="w-4 h-4 text-amber-600" />}
-                      label="Longest streak"
-                      value={`${computed.longestStreak} day${computed.longestStreak !== 1 ? "s" : ""}`}
+                      label={t("reading_stats.longest_streak")}
+                      value={t("reading_stats.day", { v0: computed.longestStreak, v1: computed.longestStreak !== 1 ? "s" : "" })}
                     />
                   </div>
                 </motion.div>
@@ -451,38 +448,38 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                   <motion.div {...fadeIn(0.36)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-800 shadow-sm">
                     <div className="flex items-center gap-2 mb-4">
                       <Zap className="w-4 h-4 text-amber-600" />
-                      <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider">Reading Pace</h3>
+                      <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider">{t("reading_stats.reading_pace")}</h3>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {paceInsights.avgPagesPerHour > 0 && (
                         <InsightCard
                           icon={<Clock className="w-4 h-4 text-amber-600" />}
-                          label="Your reading speed"
-                          value={`~${paceInsights.avgPagesPerHour} pages/hour`}
+                          label={t("reading_stats.your_reading_speed")}
+                          value={t("reading_stats.pages_hour", { v0: paceInsights.avgPagesPerHour })}
                         />
                       )}
                       {paceInsights.bestDay !== "N/A" && (
                         <InsightCard
                           icon={<Calendar className="w-4 h-4 text-amber-600" />}
-                          label="Most active day"
-                          value={`You read most on ${paceInsights.bestDay}s`}
+                          label={t("reading_stats.most_active_day")}
+                          value={t("reading_stats.you_read_most_on_s", { v0: localiseWeekday(paceInsights.bestDay) })}
                         />
                       )}
                       {paceInsights.booksFinished > 0 && (
                         <InsightCard
                           icon={<Target className="w-4 h-4 text-amber-600" />}
-                          label="Avg time to finish"
-                          value={`${paceInsights.avgDaysPerBook} day${paceInsights.avgDaysPerBook !== 1 ? "s" : ""} per book`}
+                          label={t("reading_stats.avg_time_to_finish")}
+                          value={t("reading_stats.day_per_book", { v0: paceInsights.avgDaysPerBook, v1: paceInsights.avgDaysPerBook !== 1 ? "s" : "" })}
                         />
                       )}
                       {paceInsights.totalMinutes > 0 && (
                         <InsightCard
                           icon={<Flame className="w-4 h-4 text-amber-600" />}
-                          label="Total reading time"
+                          label={t("reading_stats.total_reading_time")}
                           value={
                             paceInsights.totalMinutes >= 60
-                              ? `${Math.round(paceInsights.totalMinutes / 60)} hour${Math.round(paceInsights.totalMinutes / 60) !== 1 ? "s" : ""}`
-                              : `${paceInsights.totalMinutes} min`
+                              ? t("reading_stats.hour", { v0: Math.round(paceInsights.totalMinutes / 60), v1: Math.round(paceInsights.totalMinutes / 60) !== 1 ? "s" : "" })
+                              : t("reading_stats.min", { v0: paceInsights.totalMinutes })
                           }
                         />
                       )}
@@ -494,9 +491,7 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                       if (currentlyReading.length === 0) return null
                       return (
                         <div className="mt-4 pt-4 border-t border-stone-100 dark:border-stone-800">
-                          <p className="text-[11px] text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-3">
-                            At your pace
-                          </p>
+                          <p className="text-[11px] text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-3"> {t("reading_stats.at_your_pace")} </p>
                           <div className="space-y-2">
                             {currentlyReading.map(book => {
                               const remaining = Math.max(0, book.totalPages - book.currentPage)
@@ -519,8 +514,7 @@ export function ReadingStats({ isOpen, onClose }: ReadingStatsProps) {
                                     </div>
                                   </div>
                                   <span className="text-xs font-medium text-amber-600 dark:text-amber-400 flex-shrink-0 whitespace-nowrap">
-                                    {estimate} left
-                                  </span>
+                                    {estimate} {t("reading_stats.left")} </span>
                                 </div>
                               )
                             })}

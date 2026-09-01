@@ -16,6 +16,7 @@ import { motion } from "framer-motion"
 import { BookCover } from "@/components/book-cover"
 import { useGamification } from "./gamification-provider"
 import { useToast } from "./toast-provider"
+import { t, tv } from "@/lib/i18n"
 
 interface SmartRecommendationsProps {
   onBookLike?: (book: Book) => void
@@ -121,7 +122,7 @@ export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }
     if (!addLikedBook(book)) return // atomic add handles dedup + storage
     setLikedBooks(getLikedBooks())
     triggerActivity('like_book')
-    showToast(`"${book.title}" saved to library`)
+    showToast(t("book_showcase.saved_to_library", { v0: book.title }))
     onBookLike?.(book)
   }
 
@@ -139,9 +140,9 @@ export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }
         <div>
           <div className="flex items-center gap-2 mb-3 px-0.5">
             <Sparkles className="w-4 h-4 text-amber-600" />
-            <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100">Popular Books</h3>
+            <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100">{t("smart_recommendations.popular_books")}</h3>
           </div>
-          <p className="text-xs text-stone-400 mb-3 px-0.5">Like a few books to get personalized recommendations</p>
+          <p className="text-xs text-stone-400 mb-3 px-0.5">{t("smart_recommendations.like_a_few_books_to_get")}</p>
           <div className="overflow-x-auto hide-scrollbar -mx-4 px-4">
             <div className="flex gap-3 pb-2">
               {popular.map((book, index) => (
@@ -192,7 +193,7 @@ export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }
     <div className="space-y-6">
       {/* Mood & Time Filters */}
       <div className="bg-white dark:bg-stone-900 rounded-xl p-4 sm:p-5 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
-        <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100 mb-3">Filter by mood</h3>
+        <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100 mb-3">{t("smart_recommendations.filter_by_mood")}</h3>
         <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
           {moodFilters.map((mood) => (
             <button
@@ -205,7 +206,7 @@ export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }
               }`}
             >
               {(() => { const MIcon = moodIconMap[mood.emoji]; return MIcon ? <MIcon className="w-3.5 h-3.5" /> : null })()}
-              {mood.name}
+              {tv(mood.name)}
             </button>
           ))}
         </div>
@@ -213,7 +214,7 @@ export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }
         <div className="mt-3 pt-3 border-t border-stone-50">
           <div className="flex items-center gap-2 mb-2">
             <Clock className="w-3.5 h-3.5 text-stone-400" />
-            <span className="text-xs font-medium text-stone-500">How much time?</span>
+            <span className="text-xs font-medium text-stone-500">{t("smart_recommendations.how_much_time")}</span>
           </div>
           <div className="flex gap-1.5 overflow-x-auto hide-scrollbar">
             {timeBasedSuggestions.map((time) => (
@@ -227,7 +228,7 @@ export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }
                 }`}
               >
                 {(() => { const TIcon = timeIconMap[time.emoji]; return TIcon ? <TIcon className="w-3 h-3" /> : null })()}
-                {time.name}
+                {tv(time.name)}
               </button>
             ))}
           </div>
@@ -238,8 +239,8 @@ export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }
       {filteredBooks.length > 0 && (
         <div>
           <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100 mb-3 px-0.5">
-            {selectedMood && `${moodFilters.find(m => m.id === selectedMood)?.name} Books`}
-            {selectedTime && `${timeBasedSuggestions.find(t => t.id === selectedTime)?.name} Reads`}
+            {selectedMood && t("smart_recommendations.books", { v0: moodFilters.find(m => m.id === selectedMood)?.name })}
+            {selectedTime && t("smart_recommendations.reads", { v0: timeBasedSuggestions.find(t => t.id === selectedTime)?.name })}
           </h3>
           <div className="overflow-x-auto hide-scrollbar -mx-4 px-4">
             <div className="flex gap-3 pb-2">
@@ -264,9 +265,9 @@ export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }
           <div className="flex items-center justify-between mb-3 px-0.5">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-amber-600" />
-              <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100">For You</h3>
+              <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100">{t("smart_recommendations.for_you")}</h3>
             </div>
-            <span className="text-[11px] text-stone-400">Based on your likes</span>
+            <span className="text-[11px] text-stone-400">{t("smart_recommendations.based_on_your_likes")}</span>
           </div>
           <div className="overflow-x-auto hide-scrollbar -mx-4 px-4">
             <div className="flex gap-3 pb-2">
@@ -291,7 +292,7 @@ export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }
         <div>
           <div className="flex items-center gap-2 mb-3 px-0.5">
             <Zap className="w-4 h-4 text-teal-600" />
-            <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100">Try Something New</h3>
+            <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100">{t("smart_recommendations.try_something_new")}</h3>
           </div>
           <div className="overflow-x-auto hide-scrollbar -mx-4 px-4">
             <div className="flex gap-3 pb-2">
@@ -302,7 +303,7 @@ export function SmartRecommendations({ onBookLike, onStartReading, onBookClick }
                   onLike={handleLikeBook}
                   isLiked={likedBooks.some(l => l.id === book.id)}
                   index={index}
-                  reason="New genre for you"
+                  reason={t("smart_recommendations.new_genre_for_you")}
                   onClick={onBookClick}
                 />
               ))}
@@ -374,7 +375,7 @@ function MiniBookCard({
           }`}
         >
           <Heart className={`w-3 h-3 ${isLiked ? 'fill-current' : ''}`} />
-          {isLiked ? 'Saved' : 'Save'}
+          {isLiked ? t("swipe_interface.saved") : t("common.save")}
         </button>
       </div>
     </motion.div>

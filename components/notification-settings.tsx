@@ -13,6 +13,7 @@ import {
   toTimeValue,
   type NotificationSettings as NotifSettings,
 } from "@/lib/notifications"
+import { t } from "@/lib/i18n"
 
 export function NotificationSettings() {
   // Mounted post-interaction (inside settings), so lazy browser-API/storage
@@ -71,13 +72,11 @@ export function NotificationSettings() {
             <BellOff className="w-4 h-4 text-amber-500" />
           )}
           <div>
-            <p className="text-sm font-medium text-stone-900 dark:text-stone-100">
-              Reading Reminders
-            </p>
+            <p className="text-sm font-medium text-stone-900 dark:text-stone-100"> {t("notification_settings.reading_reminders")} </p>
             <p className="text-xs text-stone-400">
               {isEnabled
-                ? `Daily at ${formatReminderTime(settings.reminderHour, settings.reminderMinute)}`
-                : "Get reminded to keep your streak"}
+                ? t("notification_settings.daily_at", { v0: formatReminderTime(settings.reminderHour, settings.reminderMinute) })
+                : t("notification_settings.get_reminded_to_keep_your_streak")}
             </p>
           </div>
         </div>
@@ -85,7 +84,7 @@ export function NotificationSettings() {
           onClick={handleToggle}
           role="switch"
           aria-checked={isEnabled}
-          aria-label="Toggle reading reminders"
+          aria-label={t("notification_settings.toggle_reading_reminders")}
           className={`relative w-11 h-6 rounded-full transition-colors ${
             isEnabled ? "bg-amber-600" : "bg-stone-300 dark:bg-stone-600"
           }`}
@@ -102,10 +101,7 @@ export function NotificationSettings() {
       {isDenied && (
         <div className="flex items-start gap-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 rounded-xl p-3">
           <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-          <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
-            Notifications are blocked. Open your browser settings and allow notifications for this
-            site, then try again.
-          </p>
+          <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed"> {t("notification_settings.notifications_are_blocked_open_your_browser")} </p>
         </div>
       )}
 
@@ -115,9 +111,7 @@ export function NotificationSettings() {
           <label
             htmlFor="reminder-time"
             className="text-xs text-stone-500 dark:text-stone-400"
-          >
-            Remind me at
-          </label>
+          > {t("notification_settings.remind_me_at")} </label>
           <input
             id="reminder-time"
             type="time"

@@ -10,6 +10,7 @@ import {
   type ImportProgress,
   type ImportResult,
 } from "@/lib/goodreads-import"
+import { t } from "@/lib/i18n"
 
 interface GoodreadsImportProps {
   isOpen: boolean
@@ -114,11 +115,11 @@ export function GoodreadsImport({ isOpen, onClose, onComplete }: GoodreadsImport
         >
           {/* Header */}
           <div className="flex items-center justify-between p-5 pb-3">
-            <h2 id="goodreads-import-title" className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">Import from Goodreads</h2>
+            <h2 id="goodreads-import-title" className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">{t("goodreads_import.import_from_goodreads")}</h2>
             {step !== "progress" && (
               <button
                 onClick={handleClose}
-                aria-label="Close import"
+                aria-label={t("goodreads_import.close_import")}
                 className="p-2 -mr-2 rounded-lg hover:bg-stone-100 dark:bg-stone-800 transition-colors tap-target touch-manipulation"
               >
                 <X className="w-5 h-5 text-stone-400" />
@@ -131,12 +132,12 @@ export function GoodreadsImport({ isOpen, onClose, onComplete }: GoodreadsImport
             {step === "upload" && (
               <div className="space-y-5">
                 <div className="bg-amber-50 dark:bg-amber-900/30 rounded-xl p-4 border border-amber-100">
-                  <h3 className="text-sm font-semibold text-amber-900 mb-2">How to export from Goodreads</h3>
+                  <h3 className="text-sm font-semibold text-amber-900 mb-2">{t("goodreads_import.how_to_export_from_goodreads")}</h3>
                   <ol className="text-xs text-amber-800 dark:text-amber-300 space-y-1.5 list-decimal list-inside leading-relaxed">
-                    <li>Go to goodreads.com/review/import</li>
-                    <li>Click &ldquo;Export Library&rdquo; at the top</li>
-                    <li>Wait for the export to generate</li>
-                    <li>Download the CSV file</li>
+                    <li>{t("goodreads_import.go_to_goodreads_com_review_import")}</li>
+                    <li>{t("goodreads_import.click_export_library_at_the_top")}</li>
+                    <li>{t("goodreads_import.wait_for_the_export_to_generate")}</li>
+                    <li>{t("goodreads_import.download_the_csv_file")}</li>
                   </ol>
                 </div>
 
@@ -146,8 +147,8 @@ export function GoodreadsImport({ isOpen, onClose, onComplete }: GoodreadsImport
                 >
                   <Upload className="w-8 h-8 text-stone-400" />
                   <div className="text-center">
-                    <p className="text-sm font-medium text-stone-700 dark:text-stone-300">Choose CSV file</p>
-                    <p className="text-xs text-stone-400 mt-1">goodreads_library_export.csv</p>
+                    <p className="text-sm font-medium text-stone-700 dark:text-stone-300">{t("goodreads_import.choose_csv_file")}</p>
+                    <p className="text-xs text-stone-400 mt-1">{t("goodreads_import.goodreads_library_export_csv")}</p>
                   </div>
                 </button>
                 <input
@@ -166,20 +167,20 @@ export function GoodreadsImport({ isOpen, onClose, onComplete }: GoodreadsImport
                 <div className="bg-stone-50 dark:bg-stone-800/50 rounded-xl p-4 border border-stone-200/60">
                   <div className="flex items-center gap-2 mb-3">
                     <FileText className="w-4 h-4 text-stone-500" />
-                    <span className="text-sm font-medium text-stone-800 dark:text-stone-200">Found {rows.length} books</span>
+                    <span className="text-sm font-medium text-stone-800 dark:text-stone-200">{t("goodreads_import.found")} {rows.length} {t("common.books_2")}</span>
                   </div>
                   <div className="grid grid-cols-3 gap-3">
                     <div className="text-center">
                       <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{readCount}</p>
-                      <p className="text-[11px] text-stone-500">Read</p>
+                      <p className="text-[11px] text-stone-500">{t("goodreads_import.read")}</p>
                     </div>
                     <div className="text-center">
                       <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{toReadCount}</p>
-                      <p className="text-[11px] text-stone-500">To Read</p>
+                      <p className="text-[11px] text-stone-500">{t("goodreads_import.to_read")}</p>
                     </div>
                     <div className="text-center">
                       <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{ratedCount}</p>
-                      <p className="text-[11px] text-stone-500">Rated</p>
+                      <p className="text-[11px] text-stone-500">{t("goodreads_import.rated")}</p>
                     </div>
                   </div>
                 </div>
@@ -194,8 +195,8 @@ export function GoodreadsImport({ isOpen, onClose, onComplete }: GoodreadsImport
                       className="w-4 h-4 rounded border-stone-300 text-amber-600 focus:ring-amber-500"
                     />
                     <div>
-                      <p className="text-sm font-medium text-stone-800 dark:text-stone-200">Import ratings as reviews</p>
-                      <p className="text-xs text-stone-500">{ratedCount} books with ratings</p>
+                      <p className="text-sm font-medium text-stone-800 dark:text-stone-200">{t("goodreads_import.import_ratings_as_reviews")}</p>
+                      <p className="text-xs text-stone-500">{ratedCount} {t("goodreads_import.books_with_ratings")}</p>
                     </div>
                   </label>
                   <label className="flex items-center gap-3 p-3 rounded-xl hover:bg-stone-50 dark:bg-stone-800/50 cursor-pointer transition-colors">
@@ -206,8 +207,8 @@ export function GoodreadsImport({ isOpen, onClose, onComplete }: GoodreadsImport
                       className="w-4 h-4 rounded border-stone-300 text-amber-600 focus:ring-amber-500"
                     />
                     <div>
-                      <p className="text-sm font-medium text-stone-800 dark:text-stone-200">Map shelves</p>
-                      <p className="text-xs text-stone-500">Assign books to matching shelves</p>
+                      <p className="text-sm font-medium text-stone-800 dark:text-stone-200">{t("goodreads_import.map_shelves")}</p>
+                      <p className="text-xs text-stone-500">{t("goodreads_import.assign_books_to_matching_shelves")}</p>
                     </div>
                   </label>
                 </div>
@@ -216,15 +217,11 @@ export function GoodreadsImport({ isOpen, onClose, onComplete }: GoodreadsImport
                   <button
                     onClick={() => setStep("upload")}
                     className="flex-1 h-10 bg-white dark:bg-stone-900 border border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 text-sm font-medium rounded-xl transition-colors"
-                  >
-                    Back
-                  </button>
+                  > {t("common.back")} </button>
                   <button
                     onClick={handleStartImport}
                     className="flex-1 h-10 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium rounded-xl transition-colors"
-                  >
-                    Import {rows.length} Books
-                  </button>
+                  > {t("goodreads_import.import")} {rows.length} {t("common.books")} </button>
                 </div>
               </div>
             )}
@@ -234,8 +231,7 @@ export function GoodreadsImport({ isOpen, onClose, onComplete }: GoodreadsImport
               <div className="space-y-5 py-4">
                 <div className="text-center">
                   <BookOpen className="w-10 h-10 text-amber-600 mx-auto mb-3 animate-pulse" />
-                  <p className="text-sm font-medium text-stone-800 dark:text-stone-200">
-                    Importing books... {progress.processed} / {progress.total}
+                  <p className="text-sm font-medium text-stone-800 dark:text-stone-200"> {t("goodreads_import.importing_books")} {progress.processed} / {progress.total}
                   </p>
                   <p className="text-xs text-stone-500 mt-1 truncate px-4">{progress.currentTitle}</p>
                 </div>
@@ -253,15 +249,15 @@ export function GoodreadsImport({ isOpen, onClose, onComplete }: GoodreadsImport
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div>
                     <p className="text-lg font-bold text-green-600">{progress.matched}</p>
-                    <p className="text-[11px] text-stone-500">Matched</p>
+                    <p className="text-[11px] text-stone-500">{t("goodreads_import.matched")}</p>
                   </div>
                   <div>
                     <p className="text-lg font-bold text-stone-400">{progress.skipped}</p>
-                    <p className="text-[11px] text-stone-500">Skipped</p>
+                    <p className="text-[11px] text-stone-500">{t("goodreads_import.skipped")}</p>
                   </div>
                   <div>
                     <p className="text-lg font-bold text-red-400">{progress.errors}</p>
-                    <p className="text-[11px] text-stone-500">Errors</p>
+                    <p className="text-[11px] text-stone-500">{t("goodreads_import.errors")}</p>
                   </div>
                 </div>
               </div>
@@ -272,27 +268,27 @@ export function GoodreadsImport({ isOpen, onClose, onComplete }: GoodreadsImport
               <div className="space-y-5 py-4">
                 <div className="text-center">
                   <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
-                  <h3 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">Import Complete</h3>
+                  <h3 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">{t("goodreads_import.import_complete")}</h3>
                 </div>
 
                 <div className="bg-stone-50 dark:bg-stone-800/50 rounded-xl p-4 border border-stone-200/60 space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-stone-600">Books imported</span>
+                    <span className="text-stone-600">{t("goodreads_import.books_imported")}</span>
                     <span className="font-bold text-green-600">{result.matched}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-stone-600">Already existed</span>
+                    <span className="text-stone-600">{t("goodreads_import.already_existed")}</span>
                     <span className="font-bold text-stone-400">{result.skipped}</span>
                   </div>
                   {result.errors > 0 && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-stone-600">Could not match</span>
+                      <span className="text-stone-600">{t("goodreads_import.could_not_match")}</span>
                       <span className="font-bold text-red-400">{result.errors}</span>
                     </div>
                   )}
                   {result.newShelves.length > 0 && (
                     <div className="pt-2 border-t border-stone-200/60 dark:border-stone-700/60">
-                      <p className="text-xs text-stone-500 mb-1">New shelves created:</p>
+                      <p className="text-xs text-stone-500 mb-1">{t("goodreads_import.new_shelves_created")}</p>
                       <div className="flex flex-wrap gap-1">
                         {result.newShelves.map(s => (
                           <span key={s} className="text-xs px-2 py-0.5 bg-amber-50 text-amber-700 dark:text-amber-400 rounded-full border border-amber-100">
@@ -307,9 +303,7 @@ export function GoodreadsImport({ isOpen, onClose, onComplete }: GoodreadsImport
                 <button
                   onClick={handleDone}
                   className="w-full h-10 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium rounded-xl transition-colors"
-                >
-                  Done
-                </button>
+                > {t("common.done")} </button>
               </div>
             )}
 
@@ -318,7 +312,7 @@ export function GoodreadsImport({ isOpen, onClose, onComplete }: GoodreadsImport
               <div className="space-y-5 py-4">
                 <div className="text-center">
                   <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
-                  <h3 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">Import Failed</h3>
+                  <h3 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">{t("goodreads_import.import_failed")}</h3>
                   <p className="text-sm text-stone-600 dark:text-stone-400 mt-2 leading-relaxed">{errorMessage}</p>
                 </div>
 
@@ -326,18 +320,14 @@ export function GoodreadsImport({ isOpen, onClose, onComplete }: GoodreadsImport
                   <button
                     onClick={handleDone}
                     className="flex-1 h-10 bg-white dark:bg-stone-900 border border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 text-sm font-medium rounded-xl transition-colors"
-                  >
-                    Close
-                  </button>
+                  > {t("common.close")} </button>
                   <button
                     onClick={() => {
                       setErrorMessage("")
                       setStep("upload")
                     }}
                     className="flex-1 h-10 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium rounded-xl transition-colors"
-                  >
-                    Try Again
-                  </button>
+                  > {t("goodreads_import.try_again")} </button>
                 </div>
               </div>
             )}

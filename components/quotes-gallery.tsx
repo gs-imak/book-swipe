@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { Quote, Share2, Copy } from "lucide-react"
 import { getBookNotes, getLikedBooks } from "@/lib/storage"
 import { Book } from "@/lib/book-data"
+import { t } from "@/lib/i18n"
 
 interface QuoteEntry {
   id: string
@@ -43,7 +44,7 @@ export function QuotesGallery() {
     >
       <div className="flex items-center gap-2">
         <Quote className="w-4 h-4 text-teal-600" />
-        <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100 font-serif">Saved Quotes</h3>
+        <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100 font-serif">{t("quotes_gallery.saved_quotes")}</h3>
         <span className="text-[11px] bg-teal-50 text-teal-700 px-1.5 py-0.5 rounded-full font-medium">
           {quotes.length}
         </span>
@@ -97,7 +98,7 @@ export function QuotesGallery() {
                         await copyToClipboard()
                       }
                     }}
-                    aria-label="Share quote"
+                    aria-label={t("quotes_gallery.share_quote")}
                     className="flex-shrink-0 p-1.5 rounded-md text-teal-400 hover:text-teal-600 hover:bg-teal-100 transition-colors"
                   >
                     {copyFailedId === q.id ? <Copy className="w-3 h-3 text-red-400" /> : <Share2 className="w-3 h-3" />}

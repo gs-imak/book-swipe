@@ -2,6 +2,7 @@
 
 import { Book } from "./book-data"
 import { getBookReviews, getPassedBookIds, getPassedFeatures } from "./storage"
+import { t } from "@/lib/i18n"
 
 export interface RecommendationReason {
   type: "genre" | "mood" | "author" | "rating" | "community" | "similar"
@@ -208,7 +209,7 @@ function generateReasons(
     if (best.sim > 0.15) {
       reasons.push({
         type: "similar",
-        description: `Similar to ${best.book.title}`,
+        description: t("scoring_engine.similar_to", { v0: best.book.title }),
       })
     }
   }
@@ -219,7 +220,7 @@ function generateReasons(
   if (likedAuthors[book.author]) {
     reasons.push({
       type: "author",
-      description: `More from ${book.author}`,
+      description: t("scoring_engine.more_from", { v0: book.author }),
     })
   }
 
@@ -237,7 +238,7 @@ function generateReasons(
     )[0]
     reasons.push({
       type: "genre",
-      description: `Matches your love of ${bestGenre}`,
+      description: t("scoring_engine.matches_your_love_of", { v0: bestGenre }),
     })
   }
 
@@ -253,7 +254,7 @@ function generateReasons(
     )[0]
     reasons.push({
       type: "mood",
-      description: `Fits your ${bestMood} mood`,
+      description: t("scoring_engine.fits_your_mood", { v0: bestMood }),
     })
   }
 
@@ -264,7 +265,7 @@ function generateReasons(
   ) {
     reasons.push({
       type: "community",
-      description: `Popular with ${Math.round(book.metadata.readinglogCount / 1000)}k readers`,
+      description: t("scoring_engine.popular_with_k_readers", { v0: Math.round(book.metadata.readinglogCount / 1000) }),
     })
   }
 
@@ -274,12 +275,12 @@ function generateReasons(
   if (hasRealRating && book.rating >= 4.0 && matchedGenres.length > 0) {
     reasons.push({
       type: "rating",
-      description: `Highly rated in ${matchedGenres[0]}`,
+      description: t("scoring_engine.highly_rated_in", { v0: matchedGenres[0] }),
     })
   } else if (hasRealRating && book.rating >= 4.0) {
     reasons.push({
       type: "rating",
-      description: `Highly rated (${book.rating}/5)`,
+      description: t("scoring_engine.highly_rated_5", { v0: book.rating }),
     })
   }
 

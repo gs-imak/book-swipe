@@ -15,6 +15,7 @@ import { ProfileShareCard } from "./profile-share-card"
 import { ReadingStats } from "./reading-stats"
 import { ActivityFeed } from "./activity-feed"
 import { NotificationSettings } from "./notification-settings"
+import { t, tv, tp } from "@/lib/i18n"
 
 interface TasteProfileProps {
   isOpen: boolean
@@ -260,12 +261,12 @@ export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfilePr
         {/* Header */}
         <div className="bg-background/90 backdrop-blur-md border-b border-stone-200/60 dark:border-stone-700/60 sticky top-0 z-10">
           <div className="max-w-2xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
-            <h1 className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100 font-serif">Your Profile</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100 font-serif">{t("taste_profile.your_profile")}</h1>
             <div className="flex items-center gap-1">
             {onOpenSettings && (
               <button
                 onClick={onOpenSettings}
-                aria-label="Settings"
+                aria-label={t("taste_profile.settings")}
                 className="p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors tap-target touch-manipulation"
               >
                 <SettingsIcon className="w-5 h-5 text-stone-400" />
@@ -291,7 +292,7 @@ export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfilePr
                 <div className="w-40 h-32 mx-auto mb-4 opacity-60">
                   <ReadingDoodle />
                 </div>
-                <p className="text-stone-500">Save some books to see your taste profile</p>
+                <p className="text-stone-500">{t("taste_profile.save_some_books_to_see_your")}</p>
               </div>
             ) : (
               <>
@@ -307,11 +308,9 @@ export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfilePr
                     </div>
                   </div>
                   <div className="relative z-10">
-                    <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-2">Your Reader Type</p>
-                    <h2 className="text-3xl sm:text-4xl font-bold text-stone-900 dark:text-stone-100 font-serif leading-tight">{archetype}</h2>
-                    <p className="text-sm text-stone-500 mt-2">
-                      Based on {likedBooks.length} books in your library
-                    </p>
+                    <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-2">{t("taste_profile.your_reader_type")}</p>
+                    <h2 className="text-3xl sm:text-4xl font-bold text-stone-900 dark:text-stone-100 font-serif leading-tight">{tv(archetype)}</h2>
+                    <p className="text-sm text-stone-500 mt-2"> {t("taste_profile.based_on")} {likedBooks.length} {t("taste_profile.books_in_your_library")} </p>
                   </div>
                 </motion.div>
 
@@ -326,7 +325,7 @@ export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfilePr
                     <div key={stat.label} className="bg-white dark:bg-stone-900 rounded-xl p-4 border border-stone-200/60 dark:border-stone-700/60 shadow-sm text-center">
                       <stat.icon className="w-4 h-4 text-amber-600 mx-auto mb-1" />
                       <p className="text-2xl font-bold text-stone-900 dark:text-stone-100">{stat.value}</p>
-                      <p className="text-xs text-stone-500">{stat.label}</p>
+                      <p className="text-xs text-stone-500">{tv(stat.label)}</p>
                     </div>
                   ))}
                 </motion.div>
@@ -335,10 +334,9 @@ export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfilePr
                 {heatmapDays.length > 0 && (
                   <motion.div {...fadeIn(0.14)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider">Activity</h3>
+                      <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider">{t("taste_profile.activity")}</h3>
                       <span className="text-xs text-stone-400">
-                        {totalActiveDays} active day{totalActiveDays !== 1 ? "s" : ""} in 12 weeks
-                      </span>
+                        {totalActiveDays} {t("taste_profile.active_day")}{totalActiveDays !== 1 ? "s" : ""} {t("taste_profile.in_12_weeks")} </span>
                     </div>
                     <div className="flex gap-[3px] overflow-x-auto hide-scrollbar">
                       {heatmapWeeks.map((week, wi) => (
@@ -347,20 +345,20 @@ export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfilePr
                             <div
                               key={day.date}
                               className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-sm ${getHeatColor(day.count)}`}
-                              title={`${day.date}: ${day.count} activit${day.count === 1 ? "y" : "ies"}`}
+                              title={t("reading_stats.activit", { v0: day.date, v1: day.count, v2: day.count === 1 ? "y" : "ies" })}
                             />
                           ))}
                         </div>
                       ))}
                     </div>
                     <div className="flex items-center justify-end gap-1.5 mt-3">
-                      <span className="text-[10px] text-stone-400">Less</span>
+                      <span className="text-[10px] text-stone-400">{t("common.less")}</span>
                       <div className="w-2.5 h-2.5 rounded-sm bg-stone-100" />
                       <div className="w-2.5 h-2.5 rounded-sm bg-amber-200" />
                       <div className="w-2.5 h-2.5 rounded-sm bg-amber-400" />
                       <div className="w-2.5 h-2.5 rounded-sm bg-amber-500" />
                       <div className="w-2.5 h-2.5 rounded-sm bg-amber-600" />
-                      <span className="text-[10px] text-stone-400">More</span>
+                      <span className="text-[10px] text-stone-400">{t("common.more")}</span>
                     </div>
                   </motion.div>
                 )}
@@ -368,7 +366,7 @@ export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfilePr
                 {/* Genre Donut Chart */}
                 {genreData.length > 0 && (
                   <motion.div {...fadeIn(0.18)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
-                    <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">Genres</h3>
+                    <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">{t("taste_profile.genres")}</h3>
                     <div className="flex flex-col sm:flex-row items-center gap-6">
                       {/* SVG Donut */}
                       <svg viewBox="0 0 160 160" className="flex-shrink-0 w-[120px] h-[120px] sm:w-[160px] sm:h-[160px]">
@@ -390,9 +388,7 @@ export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfilePr
                         <text x="80" y="76" textAnchor="middle" className="text-2xl font-bold fill-stone-900" fontSize="22">
                           {genreData.length}
                         </text>
-                        <text x="80" y="94" textAnchor="middle" className="fill-stone-500" fontSize="11">
-                          genres
-                        </text>
+                        <text x="80" y="94" textAnchor="middle" className="fill-stone-500" fontSize="11"> {t("taste_profile.genres_2")} </text>
                       </svg>
 
                       {/* Legend */}
@@ -400,7 +396,7 @@ export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfilePr
                         {genreData.map((genre) => (
                           <div key={genre.name} className="flex items-center gap-2">
                             <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: genre.color }} />
-                            <span className="text-xs text-stone-700 dark:text-stone-300 truncate">{genre.name}</span>
+                            <span className="text-xs text-stone-700 dark:text-stone-300 truncate">{tv(genre.name)}</span>
                             <span className="text-xs text-stone-400 ml-auto">{genre.percentage}%</span>
                           </div>
                         ))}
@@ -412,11 +408,11 @@ export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfilePr
                 {/* Mood Bar Chart */}
                 {moodData.length > 0 && (
                   <motion.div {...fadeIn(0.26)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
-                    <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">Moods</h3>
+                    <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">{t("taste_profile.moods")}</h3>
                     <div className="space-y-2.5">
                       {moodData.map((mood) => (
                         <div key={mood.name} className="flex items-center gap-3">
-                          <span className="text-xs text-stone-600 w-24 truncate text-right">{mood.name}</span>
+                          <span className="text-xs text-stone-600 w-24 truncate text-right">{tv(mood.name)}</span>
                           <div className="flex-1 h-5 bg-stone-100 dark:bg-stone-800 rounded-full overflow-hidden">
                             <motion.div
                               initial={{ width: 0 }}
@@ -435,7 +431,7 @@ export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfilePr
                 {/* Top Authors */}
                 {topAuthors.length > 0 && (
                   <motion.div {...fadeIn(0.34)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
-                    <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">Top Authors</h3>
+                    <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">{t("taste_profile.top_authors")}</h3>
                     <div className="space-y-2">
                       {topAuthors.map(([author, count], i) => (
                         <div key={author} className="flex items-center gap-3 py-1.5">
@@ -444,7 +440,7 @@ export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfilePr
                           </span>
                           <span className="flex-1 text-sm text-stone-800 dark:text-stone-200 font-medium">{author}</span>
                           <span className="text-xs text-stone-400">
-                            {count} {count === 1 ? "book" : "books"}
+                            {tp("common.book_count", count)}
                           </span>
                         </div>
                       ))}
@@ -455,7 +451,7 @@ export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfilePr
                 {/* Rating Distribution */}
                 {reviews.length > 0 && (
                   <motion.div {...fadeIn(0.42)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
-                    <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">Your Ratings</h3>
+                    <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">{t("taste_profile.your_ratings")}</h3>
                     <div className="space-y-2">
                       {[5, 4, 3, 2, 1].map((stars) => (
                         <div key={stars} className="flex items-center gap-3">
@@ -482,7 +478,7 @@ export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfilePr
             )}
             {/* Recent Activity */}
             <motion.div {...fadeIn(0.48)} className="bg-white dark:bg-stone-900 rounded-2xl p-5 border border-stone-200/60 dark:border-stone-700/60 shadow-sm">
-              <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">Recent Activity</h3>
+              <h3 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">{t("taste_profile.recent_activity")}</h3>
               <ActivityFeed limit={15} />
             </motion.div>
 
@@ -497,16 +493,12 @@ export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfilePr
                 onClick={() => setShowStats(true)}
                 className="flex-1 h-11 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-800/50 text-stone-700 dark:text-stone-300 text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2"
               >
-                <BarChart3 className="w-4 h-4" />
-                Reading Stats
-              </button>
+                <BarChart3 className="w-4 h-4" /> {t("taste_profile.reading_stats")} </button>
               <button
                 onClick={() => setShowProfileCard(true)}
                 className="flex-1 h-11 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2"
               >
-                <Share2 className="w-4 h-4" />
-                Share Profile
-              </button>
+                <Share2 className="w-4 h-4" /> {t("taste_profile.share_profile")} </button>
             </motion.div>
 
             {/* Hidden dedication trigger */}
@@ -518,9 +510,9 @@ export function TasteProfile({ isOpen, onClose, onOpenSettings }: TasteProfilePr
             >
               <button
                 onClick={() => setShowDedication(true)}
-                aria-label="A message for you"
+                aria-label={t("taste_profile.a_message_for_you")}
                 className="w-6 h-6 flex items-center justify-center rounded-full text-stone-300 hover:text-rose-400 transition-colors duration-300"
-                title="A message for you"
+                title={t("taste_profile.a_message_for_you")}
               >
                 <Heart className="w-3.5 h-3.5" />
               </button>

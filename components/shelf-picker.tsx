@@ -12,6 +12,7 @@ import {
 } from "@/lib/storage"
 import { useToast } from "./toast-provider"
 import { useFocusTrap } from "@/lib/use-focus-trap"
+import { t, tv } from "@/lib/i18n"
 
 interface ShelfPickerProps {
   bookId: string
@@ -55,11 +56,11 @@ export function ShelfPicker({ bookId, isOpen, onClose }: ShelfPickerProps) {
     if (assignedIds.includes(shelfId)) {
       removeBookFromShelf(bookId, shelfId)
       setAssignedIds(assignedIds.filter(id => id !== shelfId))
-      showToast(`Removed from ${shelf?.name || "shelf"}`, "info")
+      showToast(t("shelf_picker.removed_from", { v0: shelf?.name || "shelf" }), "info")
     } else {
       assignBookToShelf(bookId, shelfId)
       setAssignedIds([...assignedIds, shelfId])
-      showToast(`Added to ${shelf?.name || "shelf"}`)
+      showToast(t("shelf_picker.added_to", { v0: shelf?.name || "shelf" }))
     }
   }
 
@@ -86,10 +87,10 @@ export function ShelfPicker({ bookId, isOpen, onClose }: ShelfPickerProps) {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between p-4 pb-2">
-            <h3 id="shelf-picker-title" className="text-base font-bold text-stone-900 dark:text-stone-100 font-serif">Add to Shelf</h3>
+            <h3 id="shelf-picker-title" className="text-base font-bold text-stone-900 dark:text-stone-100 font-serif">{t("shelf_picker.add_to_shelf")}</h3>
             <button
               onClick={onClose}
-              aria-label="Close shelf picker"
+              aria-label={t("shelf_picker.close_shelf_picker")}
               className="p-2 -mr-1 rounded-lg hover:bg-stone-100 dark:bg-stone-800 transition-colors tap-target touch-manipulation"
             >
               <X className="w-4 h-4 text-stone-400" />
@@ -110,7 +111,7 @@ export function ShelfPicker({ bookId, isOpen, onClose }: ShelfPickerProps) {
                   }`}
                 >
                   <span className="text-lg">{shelf.emoji}</span>
-                  <span className="flex-1 text-sm font-medium text-stone-800 dark:text-stone-200">{shelf.name}</span>
+                  <span className="flex-1 text-sm font-medium text-stone-800 dark:text-stone-200">{shelf.isDefault ? tv(shelf.name) : shelf.name}</span>
                   {isAssigned && (
                     <motion.div
                       initial={{ scale: 0 }}

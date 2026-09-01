@@ -2,6 +2,7 @@
 
 import { Flame } from "lucide-react"
 import { getReadingProgress, getBookReviews, getBookNotes } from "@/lib/storage"
+import { t, localeTag } from "@/lib/i18n"
 
 /**
  * Current-month reading-activity calendar + day streak. Self-contained: reads
@@ -12,7 +13,7 @@ export function ActivityHeatmap() {
   const now = new Date()
   const year = now.getFullYear()
   const month = now.getMonth()
-  const monthName = now.toLocaleString("default", { month: "long" })
+  const monthName = now.toLocaleString(localeTag(), { month: "long" })
   const daysInMonth = new Date(year, month + 1, 0).getDate()
   const firstDayOfWeek = new Date(year, month, 1).getDay()
 
@@ -58,7 +59,13 @@ export function ActivityHeatmap() {
     weeks.push(currentWeek)
   }
 
-  const dayLabels = ["M", "T", "W", "T", "F", "S", "S"]
+  // Monday-first, in the reader's language: a hand-written English array
+  // spelled out M T W T F S S on a French calendar.
+  const dayFormat = new Intl.DateTimeFormat(localeTag(), { weekday: "narrow", timeZone: "UTC" })
+  const dayLabels = Array.from({ length: 7 }, (_, i) =>
+    // 2024-01-01 was a Monday, so this walks Monday → Sunday.
+    dayFormat.format(new Date(Date.UTC(2024, 0, 1 + i))),
+  )
 
   const getCellColor = (count: number) => {
     if (count === 0) return "bg-[#F1EBDF] dark:bg-[#2A2521]"
@@ -78,7 +85,7 @@ export function ActivityHeatmap() {
         {streak > 0 && (
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-border-strong">
             <Flame className="w-3.5 h-3.5 text-accent-ink" />
-            <span className="text-xs font-bold text-ink tabular-nums">{streak} day streak</span>
+            <span className="text-xs font-bold text-ink tabular-nums">{streak} {t("activity_heatmap.day_streak")}</span>
           </div>
         )}
       </div>
@@ -116,12 +123,12 @@ export function ActivityHeatmap() {
       </div>
 
       <div className="flex items-center gap-1.5 mt-2.5 justify-end">
-        <span className="text-[9.5px] text-ink-muted">Less</span>
+        <span className="text-[9.5px] text-ink-muted">{t("common.less")}</span>
         <div className="h-2.5 w-2.5 rounded-sm bg-[#F1EBDF] dark:bg-[#2A2521]" />
         <div className="h-2.5 w-2.5 rounded-sm bg-[#D8CDB6] dark:bg-[#4A443B]" />
         <div className="h-2.5 w-2.5 rounded-sm bg-[#9C9077] dark:bg-[#7A7263]" />
         <div className="h-2.5 w-2.5 rounded-sm bg-[#3D362B] dark:bg-[#D8D2C5]" />
-        <span className="text-[9.5px] text-ink-muted">More</span>
+        <span className="text-[9.5px] text-ink-muted">{t("common.more")}</span>
       </div>
     </div>
   )

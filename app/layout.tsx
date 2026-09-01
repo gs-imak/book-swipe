@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { SkipLink } from '@/components/skip-link'
 import { Source_Serif_4, DM_Sans } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
@@ -34,6 +35,9 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 }
 
+// Static, and in English on purpose: this is the marketing copy crawlers
+// read, and localising it here would mean reading the request, which opts the
+// whole app out of static prerendering.
 export const metadata: Metadata = {
   title: 'BookSwipe - Discover Your Next Favorite Book',
   description: 'Swipe through personalized book recommendations matched to your taste. No accounts, no fuss — just great books.',
@@ -66,6 +70,9 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
+    // Stamped "en" statically and corrected by the boot script below before
+    // <body> is parsed — a cascade guarantee, and one that keeps this layout
+    // free of any read of the request.
     <html lang="en" suppressHydrationWarning>
       <head>
         {/*
@@ -73,6 +80,11 @@ export default function RootLayout({
           is on <html> before <body> is parsed — a cascade guarantee, never a
           timing race. It owns three things:
 
+          0. Language: stamps <html lang> from the stored choice, the cookie, or
+             the browser. The layout renders lang="en" statically — reading the
+             request there would take every route out of static prerendering —
+             and the legal pages never mount the client provider, so without
+             this /privacy served French prose under lang="en".
           1. Theme (mirrors lib/theme.ts): key "bookswipe_theme", dark only when
              the stored value is exactly "dark". Post-hydration, the effect in
              app/page.tsx remains the source of truth.
@@ -90,7 +102,7 @@ export default function RootLayout({
         */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var d=document.documentElement;if(localStorage.getItem("bookswipe_theme")==="dark"){d.classList.add("dark");var m=document.querySelector('meta[name="theme-color"]');if(m){m.setAttribute("content","#0a0a0a");}}if(localStorage.getItem("bookswipe_onboarded")==="true"){d.setAttribute("data-app-state","returning");var h=location.hash;d.setAttribute("data-app-view",h==="#/discover"?"deck":h==="#/read"?"read":"shelf");}var c=function(e){if(window.__bsHydrated)return;var t=e.target&&e.target.closest&&e.target.closest("[data-hero-cta]");if(!t)return;window.__bsPendingStart=true;d.setAttribute("data-app-state","entering");d.setAttribute("data-app-view","deck");document.removeEventListener("click",c,true);};window.__bsBootClick=c;document.addEventListener("click",c,true);}catch(e){}})();`,
+            __html: `(function(){try{var d=document.documentElement;var L=null;try{L=localStorage.getItem("bookswipe_ui_locale");}catch(e){}if(!L){var mm=document.cookie.match(/bookswipe_locale=([a-z]{2})/);if(mm){L=mm[1];}}if(!L&&navigator.languages){for(var i=0;i<navigator.languages.length;i++){var b=String(navigator.languages[i]).toLowerCase().split("-")[0];if(b==="fr"||b==="en"){L=b;break;}}}if(L==="fr"||L==="en"){d.setAttribute("lang",L);}if(localStorage.getItem("bookswipe_theme")==="dark"){d.classList.add("dark");var m=document.querySelector('meta[name="theme-color"]');if(m){m.setAttribute("content","#0a0a0a");}}if(localStorage.getItem("bookswipe_onboarded")==="true"){d.setAttribute("data-app-state","returning");var h=location.hash;d.setAttribute("data-app-view",h==="#/discover"?"deck":h==="#/read"?"read":"shelf");}var c=function(e){if(window.__bsHydrated)return;var t=e.target&&e.target.closest&&e.target.closest("[data-hero-cta]");if(!t)return;window.__bsPendingStart=true;d.setAttribute("data-app-state","entering");d.setAttribute("data-app-view","deck");document.removeEventListener("click",c,true);};window.__bsBootClick=c;document.addEventListener("click",c,true);}catch(e){}})();`,
           }}
         />
         {PLAUSIBLE_DOMAIN && (
@@ -100,12 +112,7 @@ export default function RootLayout({
       <body className={`${dmSans.variable} ${sourceSerif.variable} font-sans`}>
         {/* Skip link: first focusable element, visually hidden until focused, so
             keyboard users can jump past nav straight to content (WCAG 2.4.1). */}
-        <a
-          href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-lg focus:bg-background focus:px-4 focus:py-2 focus:text-foreground focus:shadow-lg focus:ring-2 focus:ring-ring"
-        >
-          Skip to content
-        </a>
+        <SkipLink />
         <main id="main-content" className="min-h-screen bg-background">
           {children}
         </main>

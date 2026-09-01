@@ -42,6 +42,7 @@ import {
   previewFullBackupJSON,
   downloadJSON,
 } from "@/lib/export-utils"
+import { t } from "@/lib/i18n"
 
 interface AdminPanelProps {
   onBooksLoaded: (books: Book[]) => void
@@ -103,7 +104,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
   const handleLanguageChange = (lang: BookLanguage) => {
     setLanguage(lang)
     setLanguagePreference(lang)
-    showToast(`Language set to ${LANGUAGE_LABELS[lang]}. Book cache cleared.`)
+    showToast(t("admin_panel.language_set_to_book_cache_cleared", { v0: LANGUAGE_LABELS[lang] }))
   }
 
   const handleExport = () => {
@@ -133,7 +134,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
     a.click()
     URL.revokeObjectURL(url)
     markBackupExported()
-    showToast("Backup downloaded successfully")
+    showToast(t("admin_panel.backup_downloaded_successfully"))
   }
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,7 +147,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
       const parsed = JSON.parse(text) as ExportData
 
       if (!parsed.version || !parsed.data) {
-        showToast("Invalid backup file format", "error")
+        showToast(t("admin_panel.invalid_backup_file_format"), "error")
         return
       }
 
@@ -239,22 +240,22 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
       }
 
       const parts: string[] = []
-      if (counts.books > 0) parts.push(`${counts.books} books`)
-      if (counts.progress > 0) parts.push(`${counts.progress} reading entries`)
-      if (counts.reviews > 0) parts.push(`${counts.reviews} reviews`)
-      if (counts.notes > 0) parts.push(`${counts.notes} notes`)
+      if (counts.books > 0) parts.push(t("admin_panel.books_2", { v0: counts.books }))
+      if (counts.progress > 0) parts.push(t("admin_panel.reading_entries", { v0: counts.progress }))
+      if (counts.reviews > 0) parts.push(t("admin_panel.reviews_3", { v0: counts.reviews }))
+      if (counts.notes > 0) parts.push(t("admin_panel.notes_2", { v0: counts.notes }))
 
       if (parts.length > 0) {
-        showToast(`Imported ${parts.join(", ")}`)
+        showToast(t("admin_panel.imported", { v0: parts.join(", ") }))
       } else {
-        showToast("Everything was already up to date", "info")
+        showToast(t("admin_panel.everything_was_already_up_to_date"), "info")
       }
 
       // Trigger a reload
       onBooksLoaded(getLikedBooks())
       refreshCounts()
     } catch {
-      showToast("Failed to read backup file", "error")
+      showToast(t("admin_panel.failed_to_read_backup_file"), "error")
     } finally {
       setImporting(false)
       if (fileInputRef.current) fileInputRef.current.value = ""
@@ -266,7 +267,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
     const date = new Date().toISOString().split("T")[0]
     downloadJSON(json, `bookswipe-full-backup-${date}.json`)
     markBackupExported()
-    showToast("Full backup downloaded")
+    showToast(t("admin_panel.full_backup_downloaded"))
   }
 
   const handleFullBackupFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -284,7 +285,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
 
       setFullBackupPreview({ json: text, stats: preview.stats })
     } catch {
-      showToast("Failed to read file", "error")
+      showToast(t("admin_panel.failed_to_read_file"), "error")
     } finally {
       if (fullBackupInputRef.current) fullBackupInputRef.current.value = ""
     }
@@ -297,7 +298,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
     const result = importFullBackupJSON(fullBackupPreview.json)
 
     if (result.success) {
-      showToast(`Restored ${result.stats?.totalKeys || 0} data entries`)
+      showToast(t("admin_panel.restored_data_entries", { v0: result.stats?.totalKeys || 0 }))
       setFullBackupPreview(null)
       setTimeout(() => window.location.reload(), 600)
     } else {
@@ -316,12 +317,8 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
       {/* Book Language */}
       <div>
         <h3 className="text-base font-semibold text-stone-900 dark:text-stone-100 flex items-center gap-2 mb-1">
-          <Globe className="w-4 h-4 text-stone-500" />
-          Book Language
-        </h3>
-        <p className="text-xs text-stone-500 mb-2">
-          Choose the language for book recommendations and search results.
-        </p>
+          <Globe className="w-4 h-4 text-stone-500" /> {t("admin_panel.book_language")} </h3>
+        <p className="text-xs text-stone-500 mb-2"> {t("admin_panel.choose_the_language_for_book_recommendations")} </p>
         <select
           value={language}
           onChange={(e) => handleLanguageChange(e.target.value as BookLanguage)}
@@ -339,31 +336,27 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
 
       <div>
         <h3 className="text-base font-semibold text-stone-900 dark:text-stone-100 flex items-center gap-2 mb-1">
-          <Shield className="w-4 h-4 text-stone-500" />
-          Data & Backup
-        </h3>
-        <p className="text-xs text-stone-500">
-          Export your data to keep a backup, or import from a previous backup.
-        </p>
+          <Shield className="w-4 h-4 text-stone-500" /> {t("admin_panel.data_backup")} </h3>
+        <p className="text-xs text-stone-500"> {t("admin_panel.export_your_data_to_keep_a")} </p>
       </div>
 
       {/* Current data summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <div className="bg-stone-50 dark:bg-stone-800/50 rounded-xl px-3 py-2">
           <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{likedCount}</p>
-          <p className="text-[11px] text-stone-500">Books</p>
+          <p className="text-[11px] text-stone-500">{t("common.books")}</p>
         </div>
         <div className="bg-stone-50 dark:bg-stone-800/50 rounded-xl px-3 py-2">
           <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{progressCount}</p>
-          <p className="text-[11px] text-stone-500">Reading</p>
+          <p className="text-[11px] text-stone-500">{t("admin_panel.reading")}</p>
         </div>
         <div className="bg-stone-50 dark:bg-stone-800/50 rounded-xl px-3 py-2">
           <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{reviewCount}</p>
-          <p className="text-[11px] text-stone-500">Reviews</p>
+          <p className="text-[11px] text-stone-500">{t("admin_panel.reviews")}</p>
         </div>
         <div className="bg-stone-50 dark:bg-stone-800/50 rounded-xl px-3 py-2">
           <p className="text-lg font-bold text-stone-900 dark:text-stone-100">{noteCount}</p>
-          <p className="text-[11px] text-stone-500">Notes</p>
+          <p className="text-[11px] text-stone-500">{t("common.notes")}</p>
         </div>
       </div>
 
@@ -373,9 +366,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
           onClick={handleExport}
           className="flex-1 h-10 bg-stone-900 hover:bg-stone-800 text-white font-medium rounded-xl text-sm"
         >
-          <Download className="w-4 h-4 mr-2" />
-          Export Backup
-        </Button>
+          <Download className="w-4 h-4 mr-2" /> {t("admin_panel.export_backup")} </Button>
         <Button
           onClick={() => fileInputRef.current?.click()}
           disabled={importing}
@@ -383,7 +374,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
           className="flex-1 h-10 border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 dark:text-stone-300 rounded-xl text-sm"
         >
           <Upload className="w-4 h-4 mr-2" />
-          {importing ? "Importing..." : "Import Backup"}
+          {importing ? t("admin_panel.importing") : t("admin_panel.import_backup")}
         </Button>
         <input
           ref={fileInputRef}
@@ -396,24 +387,20 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
 
       {/* Full Backup (JSON) */}
       <div className="pt-2 border-t border-stone-200/60 dark:border-stone-700/60 space-y-2">
-        <p className="text-xs text-stone-500 font-medium">Full Backup (all data)</p>
+        <p className="text-xs text-stone-500 font-medium">{t("admin_panel.full_backup_all_data")}</p>
         <div className="grid grid-cols-2 gap-2">
           <Button
             onClick={handleFullBackupExport}
             variant="outline"
             className="h-10 border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 dark:text-stone-300 rounded-xl text-sm"
           >
-            <HardDrive className="w-4 h-4 mr-1.5" />
-            Export Full
-          </Button>
+            <HardDrive className="w-4 h-4 mr-1.5" /> {t("admin_panel.export_full")} </Button>
           <Button
             onClick={() => fullBackupInputRef.current?.click()}
             variant="outline"
             className="h-10 border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 dark:text-stone-300 rounded-xl text-sm"
           >
-            <Upload className="w-4 h-4 mr-1.5" />
-            Import Full
-          </Button>
+            <Upload className="w-4 h-4 mr-1.5" /> {t("admin_panel.import_full")} </Button>
           <input
             ref={fullBackupInputRef}
             type="file"
@@ -427,14 +414,9 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
       {/* Full Backup Import Confirmation */}
       {fullBackupPreview && (
         <div className="p-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30 space-y-2">
-          <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
-            Confirm full restore
-          </p>
-          <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
-            This will overwrite your current data with: {fullBackupPreview.stats.books} books,{" "}
-            {fullBackupPreview.stats.reviews} reviews, {fullBackupPreview.stats.notes} notes
-            ({fullBackupPreview.stats.totalKeys} total entries).
-          </p>
+          <p className="text-sm font-medium text-blue-900 dark:text-blue-200"> {t("admin_panel.confirm_full_restore")} </p>
+          <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed"> {t("admin_panel.this_will_overwrite_your_current_data")} {fullBackupPreview.stats.books} {t("admin_panel.books")}{" "}
+            {fullBackupPreview.stats.reviews} {t("admin_panel.reviews_2")} {fullBackupPreview.stats.notes} {t("admin_panel.notes")}{fullBackupPreview.stats.totalKeys} {t("admin_panel.total_entries")} </p>
           <div className="flex gap-2">
             <Button
               onClick={handleFullBackupConfirm}
@@ -442,7 +424,7 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
               className="flex-1 h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl text-sm"
             >
               <Check className="w-4 h-4 mr-1.5" />
-              {importingFull ? "Restoring..." : "Confirm Restore"}
+              {importingFull ? t("admin_panel.restoring") : t("admin_panel.confirm_restore")}
             </Button>
             <Button
               onClick={() => setFullBackupPreview(null)}
@@ -458,52 +440,43 @@ export function AdminPanel({ onBooksLoaded }: AdminPanelProps) {
 
       {/* Goodreads / Notion */}
       <div className="pt-2 border-t border-stone-200/60 dark:border-stone-700/60 space-y-2">
-        <p className="text-xs text-stone-500 font-medium">Goodreads & Notion</p>
+        <p className="text-xs text-stone-500 font-medium">{t("admin_panel.goodreads_notion")}</p>
         <div className="grid grid-cols-2 gap-2">
           <Button
             onClick={() => setShowGoodreadsImport(true)}
             variant="outline"
             className="h-10 border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 dark:text-stone-300 rounded-xl text-sm"
           >
-            <Upload className="w-4 h-4 mr-1.5" />
-            Import GR
-          </Button>
+            <Upload className="w-4 h-4 mr-1.5" /> {t("admin_panel.import_gr")} </Button>
           <Button
             onClick={() => {
               const csv = exportToGoodreadsCSV()
               const date = new Date().toISOString().split("T")[0]
               downloadCSV(csv, `goodreads-export-${date}.csv`)
-              showToast("Goodreads CSV exported")
+              showToast(t("admin_panel.goodreads_csv_exported"))
             }}
             variant="outline"
             className="h-10 border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 dark:text-stone-300 rounded-xl text-sm"
           >
-            <BookOpen className="w-4 h-4 mr-1.5" />
-            Export GR
-          </Button>
+            <BookOpen className="w-4 h-4 mr-1.5" /> {t("admin_panel.export_gr")} </Button>
         </div>
         <Button
           onClick={() => {
             const csv = exportToNotionCSV()
             const date = new Date().toISOString().split("T")[0]
             downloadCSV(csv, `notion-books-${date}.csv`)
-            showToast("Notion CSV exported")
+            showToast(t("admin_panel.notion_csv_exported"))
           }}
           variant="outline"
           className="w-full h-10 border-stone-200 hover:bg-stone-50 dark:bg-stone-800/50 text-stone-700 dark:text-stone-300 rounded-xl text-sm"
         >
-          <FileSpreadsheet className="w-4 h-4 mr-2" />
-          Export for Notion
-        </Button>
+          <FileSpreadsheet className="w-4 h-4 mr-2" /> {t("admin_panel.export_for_notion")} </Button>
       </div>
 
       {/* Warning */}
       <div className="flex gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/30 border border-amber-100">
         <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-        <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
-          Your data is stored in this browser only. Clearing browser data will erase it.
-          Export backups regularly to avoid data loss.
-        </p>
+        <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed"> {t("admin_panel.your_data_is_stored_in_this")} </p>
       </div>
 
       {/* Goodreads Import Modal */}

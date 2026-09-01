@@ -49,6 +49,7 @@ import { getShelves, getBooksForShelf, shouldShowBackupReminder, dismissBackupRe
 import { estimateReadingTime, getReadingSpeed, setReadingSpeed, getAllSpeeds, type ReadingSpeed } from "@/lib/reading-time"
 import { upgradeLikedBookCovers } from "@/lib/itunes-covers"
 import { hasVerifiedRating } from "@/lib/book-truth"
+import { t, tv } from "@/lib/i18n"
 
 // Module scope: a constant lookup table, so it isn't rebuilt on every render
 // (and doesn't need to be a memo dependency).
@@ -158,27 +159,27 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
     clearLikedBooks()
     setLikedBooks([])
     setShowClearConfirm(false)
-    showToast("Library cleared", "info")
+    showToast(t("dashboard.library_cleared"), "info")
   }
 
   const handleSearchSave = (book: Book) => {
     if (!addLikedBook(book)) {
-      showToast("Already in your library", "info")
+      showToast(t("dashboard.already_in_your_library"), "info")
       return
     }
     setLikedBooks(getLikedBooks())
     triggerActivity('like_book')
-    showToast(`"${book.title}" saved to library`)
+    showToast(t("book_showcase.saved_to_library", { v0: book.title }))
   }
 
   const handleStartReading = (book: Book) => {
     const alreadyReading = getReadingProgress().some(p => p.bookId === book.id)
     if (alreadyReading) {
-      showToast("Already in your reading list", "info")
+      showToast(t("book_card.already_in_your_reading_list"), "info")
       return
     }
     addBookToReading(book)
-    showToast(`"${book.title}" added to reading list`)
+    showToast(t("book_card.added_to_reading_list", { v0: book.title }))
   }
 
   const handleBookClick = (book: Book) => {
@@ -355,19 +356,14 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                 className="flex items-center gap-3 px-4 py-3 bg-surface-1 border border-border rounded-card"
               >
                 <Download className="w-4 h-4 text-ink-muted flex-shrink-0" strokeWidth={1.8} />
-                <p className="text-xs text-ink flex-1">
-                  Your library is stored in this browser only.{' '}
+                <p className="text-xs text-ink flex-1"> {t("dashboard.your_library_is_stored_in_this")}{' '}
                   <button
                     onClick={() => { setShowAdmin(true); setShowBackupBanner(false) }}
                     className="font-semibold text-accent-ink underline underline-offset-2"
-                  >
-                    Export a backup
-                  </button>{' '}
-                  to keep it safe.
-                </p>
+                  > {t("dashboard.export_a_backup")} </button>{' '} {t("dashboard.to_keep_it_safe")} </p>
                 <button
                   onClick={() => { dismissBackupReminder(); setShowBackupBanner(false) }}
-                  aria-label="Dismiss backup reminder"
+                  aria-label={t("dashboard.dismiss_backup_reminder")}
                   className="p-1 rounded-md text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors flex-shrink-0"
                 >
                   <XIcon className="w-3.5 h-3.5" />
@@ -411,9 +407,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                       {/* Content */}
                       <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                         <div>
-                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-muted mb-1">
-                            Continue Reading
-                          </p>
+                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-muted mb-1"> {t("dashboard.continue_reading")} </p>
                           <h3 className="font-serif font-semibold text-[19px] sm:text-[24px] text-ink leading-tight line-clamp-1">
                             {primary.book.title}
                           </h3>
@@ -433,15 +427,13 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                             />
                           </div>
                           <div className="flex items-center justify-between text-xs text-ink-muted tabular-nums">
-                            <span>
-                              Page {primary.currentPage} of {primary.totalPages}
+                            <span> {t("common.page")} {primary.currentPage} {t("common.of")} {primary.totalPages}
                               <span className="mx-1.5 text-ink-faint">·</span>
                               {pct}%
                             </span>
                             <span className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
-                              {timeLabel} read
-                              {primary.currentPage > 0 && primary.timeSpentMinutes > 0 && primary.totalPages > primary.currentPage && (() => {
+                              {timeLabel} {t("dashboard.read")} {primary.currentPage > 0 && primary.timeSpentMinutes > 0 && primary.totalPages > primary.currentPage && (() => {
                                 const pagesPerMinute = primary.currentPage / primary.timeSpentMinutes
                                 const pagesLeft = primary.totalPages - primary.currentPage
                                 const minutesLeft = Math.round(pagesLeft / pagesPerMinute)
@@ -454,12 +446,12 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                                 const minutesPerDay = primary.timeSpentMinutes / daysElapsed
                                 const daysLeft = minutesPerDay > 0 ? Math.ceil(minutesLeft / minutesPerDay) : 0
                                 const estimate = hoursLeft < 2
-                                  ? `~${minutesLeft}m left`
+                                  ? t("dashboard.m_left", { v0: minutesLeft })
                                   : hoursLeft < 24
-                                    ? `~${hoursLeft}h left`
+                                    ? t("dashboard.h_left", { v0: hoursLeft })
                                     : daysLeft > 0
-                                      ? `~${daysLeft} day${daysLeft !== 1 ? "s" : ""} left`
-                                      : `~${hoursLeft}h left`
+                                      ? t("dashboard.day_left", { v0: daysLeft, v1: daysLeft !== 1 ? "s" : "" })
+                                      : t("dashboard.h_left", { v0: hoursLeft })
                                 return (
                                   <span className="font-serif italic ml-1.5">· {estimate}</span>
                                 )
@@ -488,7 +480,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                         }}
                         className="text-xs font-medium text-ink-muted hover:text-accent-ink transition-colors px-1"
                       >
-                        {showAllReading ? "Show less" : `Reading ${othersCount} more...`}
+                        {showAllReading ? t("book_card.show_less") : t("dashboard.reading_more", { v0: othersCount })}
                       </button>
                       <AnimatePresence>
                         {showAllReading && (
@@ -565,19 +557,17 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                     <ReadingSideDoodle />
                   </motion.div>
                   <div>
-                    <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-muted mb-1">My Library</p>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-muted mb-1">{t("dashboard.my_library")}</p>
                     <h2 className="text-[30px] sm:text-[40px] font-semibold text-ink font-serif leading-[1.08]">
-                      {getGreeting()},<br className="sm:hidden" /> reader.
-                    </h2>
+                      {tv(getGreeting())},<br className="sm:hidden" /> {t("dashboard.reader")} </h2>
                     <div className="flex items-center gap-2 mt-1.5 text-ink-muted text-[13px] tabular-nums">
                       <span className="flex items-center gap-1">
                         <BookOpen className="w-3.5 h-3.5" strokeWidth={1.8} />
-                        {stats.totalBooks} books
-                      </span>
+                        {stats.totalBooks} {t("common.books_2")} </span>
                       {stats.totalPages > 0 && (
                         <>
                           <span className="w-0.5 h-0.5 rounded-full bg-border-strong hidden sm:block" />
-                          <span className="hidden sm:inline">{stats.totalPages.toLocaleString()} pages</span>
+                          <span className="hidden sm:inline">{stats.totalPages.toLocaleString()} {t("common.pages")}</span>
                         </>
                       )}
                       {Number(stats.averageRating) > 0 && (
@@ -596,8 +586,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                             <span className="w-0.5 h-0.5 rounded-full bg-border-strong" />
                             <span className="flex items-center gap-0.5">
                               <Clock className="w-3 h-3" strokeWidth={1.8} />
-                              {todayMin >= 60 ? `${Math.floor(todayMin / 60)}h ${todayMin % 60}m` : `${todayMin}m`} today
-                            </span>
+                              {todayMin >= 60 ? `${Math.floor(todayMin / 60)}h ${todayMin % 60}m` : `${todayMin}m`} {t("dashboard.today")} </span>
                           </>
                         )
                         return null
@@ -605,7 +594,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                       {userStats.currentStreak > 0 && (
                         <>
                           <span className="w-0.5 h-0.5 rounded-full bg-border-strong" />
-                          <span className="text-ink font-bold tabular-nums">{userStats.currentStreak}d streak</span>
+                          <span className="text-ink font-bold tabular-nums">{userStats.currentStreak}{t("dashboard.d_streak")}</span>
                         </>
                       )}
                     </div>
@@ -616,7 +605,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                   className="h-10 px-3 sm:px-5 text-sm bg-accent hover:bg-accent/90 text-on-accent font-semibold rounded-full transition-all flex-shrink-0 tap-target touch-manipulation"
                 >
                   <Sparkles className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Discover</span>
+                  <span className="hidden sm:inline">{t("dashboard.discover")}</span>
                 </Button>
               </div>
 
@@ -633,8 +622,8 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                   <div className="flex items-center gap-3">
                     <Sparkles className="w-4 h-4 text-stage-amber flex-shrink-0" />
                     <div>
-                      <p className="font-serif font-semibold text-[15px] leading-tight">Your {new Date().getFullYear()} Reading Wrapped</p>
-                      <p className="text-[11px] opacity-70 mt-0.5 tabular-nums">{likedBooks.length} books · tap to see your year</p>
+                      <p className="font-serif font-semibold text-[15px] leading-tight">{t("dashboard.your")} {new Date().getFullYear()} {t("dashboard.reading_wrapped")}</p>
+                      <p className="text-[11px] opacity-70 mt-0.5 tabular-nums">{likedBooks.length} {t("dashboard.books_tap_to_see_your_year")}</p>
                     </div>
                   </div>
                   <div className="w-6 h-6 rounded-full border border-stage-hairline flex items-center justify-center flex-shrink-0">
@@ -650,7 +639,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                   onBookLiked={(book) => {
                     addLikedBook(book)
                     setLikedBooks(getLikedBooks())
-                    showToast(`"${book.title}" saved to library`)
+                    showToast(t("book_showcase.saved_to_library", { v0: book.title }))
                   }}
                 />
               )}
@@ -678,7 +667,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                           : "border border-border-strong text-ink hover:bg-surface-2"
                       }`}
                     >
-                      {mood}
+                      {tv(mood)}
                     </button>
                   )
                 })}
@@ -687,9 +676,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                     onClick={() => setMoodFilter(null)}
                     className="flex-shrink-0 rounded-full py-1 px-2.5 text-xs font-medium text-ink-muted hover:text-ink transition-colors flex items-center gap-1"
                   >
-                    <XIcon className="w-3 h-3" />
-                    Clear
-                  </button>
+                    <XIcon className="w-3 h-3" /> {t("dashboard.clear")} </button>
                 )}
               </div>
             </motion.div>
@@ -726,9 +713,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <BookOpen className="w-5 h-5 text-ink hidden sm:block" strokeWidth={1.8} />
-                  <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100 font-serif">
-                    Your Books
-                  </h2>
+                  <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100 font-serif"> {t("dashboard.your_books")} </h2>
                   <span className="text-xs text-stone-400 dark:text-stone-500 bg-stone-100 dark:bg-stone-800 px-2 py-0.5 rounded-full">
                     {sortedBooks.length !== likedBooks.length
                       ? `${sortedBooks.length} / ${likedBooks.length}`
@@ -738,8 +723,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                     <button
                       onClick={() => setAuthorFilter(null)}
                       className="relative before:absolute before:-inset-y-2 before:inset-x-0 before:content-[''] flex items-center gap-1 h-[27px] px-2.5 rounded-full text-[12.5px] font-medium bg-ink text-surface-0 transition-opacity hover:opacity-90"
-                    >
-                      by {authorFilter}
+                    > {t("dashboard.by")} {authorFilter}
                       <XIcon className="w-3 h-3" />
                     </button>
                   )}
@@ -752,9 +736,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                       : "text-ink-muted hover:text-ink hover:bg-surface-2"
                   }`}
                 >
-                  <SlidersHorizontal className="w-3.5 h-3.5" />
-                  Filters
-                  {hasActiveFilters && (
+                  <SlidersHorizontal className="w-3.5 h-3.5" /> {t("dashboard.filters")} {hasActiveFilters && (
                     <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                   )}
                 </button>
@@ -769,9 +751,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                       ? "bg-ink text-surface-0"
                       : "border border-border-strong text-ink hover:bg-surface-2"
                   }`}
-                >
-                  All
-                </button>
+                > {t("dashboard.all")} </button>
                 {shelves.map(shelf => {
                   const count = getBooksForShelf(shelf.id).length
                   return (
@@ -784,7 +764,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                           : "border border-border-strong text-ink hover:bg-surface-2"
                       }`}
                     >
-                      {shelf.name}
+                      {shelf.isDefault ? tv(shelf.name) : shelf.name}
                       {count > 0 && (
                         <span className="ml-1 opacity-60 tabular-nums">· {count}</span>
                       )}
@@ -801,25 +781,21 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                         : "border border-border-strong text-ink hover:bg-surface-2"
                     }`}
                   >
-                    {genre}
+                    {tv(genre)}
                   </button>
                 ))}
                 <button
                   onClick={() => setShowShelfManager(true)}
-                  aria-label="Manage shelves"
+                  aria-label={t("dashboard.manage_shelves")}
                   className="flex-shrink-0 px-2.5 py-1.5 text-xs font-medium text-accent-ink hover:underline transition-colors flex items-center gap-1"
                 >
-                  <Library className="w-3 h-3" />
-                  Manage
-                </button>
+                  <Library className="w-3 h-3" /> {t("dashboard.manage")} </button>
                 <button
                   onClick={() => setShowCollections(true)}
-                  aria-label="Open collections"
+                  aria-label={t("dashboard.open_collections")}
                   className="flex-shrink-0 px-2.5 py-1.5 text-xs font-medium text-accent-ink hover:underline transition-colors flex items-center gap-1"
                 >
-                  <FolderOpen className="w-3 h-3" />
-                  Collections
-                </button>
+                  <FolderOpen className="w-3 h-3" /> {t("dashboard.collections")} </button>
               </div>
 
               {/* Collapsible advanced filters */}
@@ -844,7 +820,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                                 : "bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700"
                             }`}
                           >
-                            {opt.label}
+                            {tv(opt.label)}
                           </button>
                         ))}
                       </div>
@@ -866,7 +842,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                                 : "bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700"
                             }`}
                           >
-                            {f.label}
+                            {tv(f.label)}
                           </button>
                         ))}
                       </div>
@@ -881,7 +857,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                             : "bg-stone-100 text-stone-500 hover:bg-stone-200"
                         }`}
                       >
-                        {showHidden ? `Hidden (${hiddenIds.size})` : `Hidden${hiddenIds.size > 0 ? ` (${hiddenIds.size})` : ''}`}
+                        {showHidden ? t("dashboard.hidden", { v0: hiddenIds.size }) : t("dashboard.hidden_2", { v0: hiddenIds.size > 0 ? ` (${hiddenIds.size})` : '' })}
                       </button>
 
                       <span className="w-px h-4 bg-stone-200 dark:bg-stone-700" />
@@ -890,16 +866,14 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                         onClick={handleClearAll}
                         className="px-3 py-1.5 rounded-full text-xs font-medium text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 transition-all flex items-center gap-1"
                       >
-                        <Trash2 className="w-3 h-3" />
-                        Clear all
-                      </button>
+                        <Trash2 className="w-3 h-3" /> {t("dashboard.clear_all")} </button>
 
                       <span className="w-px h-4 bg-stone-200 dark:bg-stone-700" />
 
-                      <span className="text-[11px] text-stone-400 dark:text-stone-500">Speed:</span>
+                      <span className="text-[11px] text-stone-400 dark:text-stone-500">{t("dashboard.speed")}</span>
                       <select
                         value={readingSpd}
-                        aria-label="Reading speed"
+                        aria-label={t("dashboard.reading_speed")}
                         onChange={(e) => {
                           const speed = e.target.value as ReadingSpeed
                           setReadingSpd(speed)
@@ -908,7 +882,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                         className="text-[11px] text-stone-500 dark:text-stone-400 bg-transparent border-none cursor-pointer hover:text-stone-700 dark:hover:text-stone-300"
                       >
                         {getAllSpeeds().map(s => (
-                          <option key={s.value} value={s.value}>{s.label}</option>
+                          <option key={s.value} value={s.value}>{tv(s.label)}</option>
                         ))}
                       </select>
                     </div>
@@ -930,13 +904,11 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                   <div className="w-36 h-28 mx-auto mb-3 opacity-60">
                     <LovingDoodle />
                   </div>
-                  <p className="text-sm text-stone-500 dark:text-stone-400">No books match these filters</p>
+                  <p className="text-sm text-stone-500 dark:text-stone-400">{t("dashboard.no_books_match_these_filters")}</p>
                   <button
                     onClick={() => { setFilter("all"); setShelfFilter(null); setFormatFilter("all"); setAuthorFilter(null); setMoodFilter(null); setShowHidden(false) }}
                     className="mt-2 text-xs text-accent-ink hover:underline font-medium"
-                  >
-                    Clear filters
-                  </button>
+                  > {t("dashboard.clear_filters")} </button>
                 </motion.div>
               ) : (
               <motion.div
@@ -1023,10 +995,10 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                               <span>{estimateReadingTime(book.pages, readingSpd)}</span>
                             </>
                           ) : (
-                            <span>Unknown length</span>
+                            <span>{t("dashboard.unknown_length")}</span>
                           )}
                           {book.formats?.ebook && (
-                            <span className="px-1 py-px rounded bg-blue-50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 text-[9px] font-medium">eBook</span>
+                            <span className="px-1 py-px rounded bg-blue-50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 text-[9px] font-medium">{t("common.ebook")}</span>
                           )}
                         </div>
                       </div>
@@ -1047,7 +1019,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                     <div className="w-10 h-10 rounded-full bg-surface-2 flex items-center justify-center transition-colors">
                       <Sparkles className="w-5 h-5 text-ink" strokeWidth={1.8} />
                     </div>
-                    <span className="text-xs font-semibold text-ink-muted group-hover:text-ink transition-colors">Discover more</span>
+                    <span className="text-xs font-semibold text-ink-muted group-hover:text-ink transition-colors">{t("dashboard.discover_more")}</span>
                   </motion.button>
                 )}
                 </div>
@@ -1055,18 +1027,14 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                 {/* Scroll sentinel + progress indicator */}
                 {sortedBooks.length > BOOKS_PER_PAGE && (
                   <div className="mt-6 flex flex-col items-center gap-3">
-                    <p className="text-xs text-stone-400 dark:text-stone-500 tabular-nums">
-                      Showing {Math.min(visibleCount, sortedBooks.length)} of {sortedBooks.length} books
-                    </p>
+                    <p className="text-xs text-stone-400 dark:text-stone-500 tabular-nums"> {t("dashboard.showing")} {Math.min(visibleCount, sortedBooks.length)} {t("common.of")} {sortedBooks.length} {t("common.books_2")} </p>
                     {hasMore && (
                       <>
                         <div ref={sentinelCallback} className="w-full h-px" aria-hidden="true" />
                         <button
                           onClick={() => setVisibleCount(sortedBooks.length)}
                           className="px-4 py-2 rounded-lg text-xs font-medium text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
-                        >
-                          Load all ({sortedBooks.length - visibleCount} remaining)
-                        </button>
+                        > {t("dashboard.load_all")}{sortedBooks.length - visibleCount} {t("dashboard.remaining")} </button>
                       </>
                     )}
                   </div>
@@ -1089,7 +1057,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
                 </div>
                 <div className="flex items-center gap-3 w-full">
                   <div className="h-px flex-1 bg-stone-200/60 dark:bg-stone-700/60" />
-                  <span className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-widest">Discover</span>
+                  <span className="text-xs font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-widest">{t("dashboard.discover")}</span>
                   <div className="h-px flex-1 bg-stone-200/60 dark:bg-stone-700/60" />
                 </div>
               </div>
@@ -1147,17 +1115,17 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
             // In hidden view, "remove" means unhide
             unhideBook(book.id)
             setHiddenIds(new Set(getHiddenBookIds()))
-            showToast(`"${book.title}" restored to library`)
+            showToast(t("dashboard.restored_to_library", { v0: book.title }))
           } else {
             const updated = removeLikedBook(book.id)
             setLikedBooks(updated)
-            showToast(`"${book.title}" removed from library`, "info")
+            showToast(t("book_showcase.removed_from_library", { v0: book.title }), "info")
           }
         }}
         onHideBook={showHidden ? undefined : (book) => {
           hideBook(book.id)
           setHiddenIds(new Set(getHiddenBookIds()))
-          showToast(`"${book.title}" hidden from library`, "info")
+          showToast(t("dashboard.hidden_from_library", { v0: book.title }), "info")
         }}
       />
 
@@ -1195,7 +1163,7 @@ export function Dashboard({ onBack, onStartDiscovery, showBackButton = true, onS
         isOpen={showClearConfirm}
         onConfirm={confirmClearAll}
         onCancel={() => setShowClearConfirm(false)}
-        title="Clear entire library?"
+        title={t("dashboard.clear_entire_library")}
         message="All your liked books will be permanently removed. This action cannot be undone."
         confirmLabel="Clear All"
         variant="danger"

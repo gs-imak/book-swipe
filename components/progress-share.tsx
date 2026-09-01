@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Download, Copy, Check, Share2 } from "lucide-react"
 import { useFocusTrap } from "@/lib/use-focus-trap"
+import { t } from "@/lib/i18n"
 
 interface ProgressShareProps {
   isOpen: boolean
@@ -155,7 +156,7 @@ export function ProgressShare({
     ctx.font = "14px 'system-ui', sans-serif"
     ctx.textAlign = "left"
     if (totalPages > 0 && currentPage > 0) {
-      ctx.fillText(`Page ${currentPage} of ${totalPages}`, barX, barY + barH + 24)
+      ctx.fillText(t("progress_share.page_of", { v0: currentPage, v1: totalPages }), barX, barY + barH + 24)
     }
 
     // Footer — "Reading on BookSwipe"
@@ -243,8 +244,8 @@ export function ProgressShare({
       try {
         await navigator.share({
           files: [file],
-          title: `I'm ${Math.round(progress)}% through ${bookTitle}`,
-          text: `Reading "${bookTitle}" by ${bookAuthor} on BookSwipe`,
+          title: t("progress_share.i_m_through", { v0: Math.round(progress), v1: bookTitle }),
+          text: t("progress_share.reading_by_on_bookswipe", { v0: bookTitle, v1: bookAuthor }),
         })
         return
       } catch {
@@ -269,7 +270,7 @@ export function ProgressShare({
           ref={modalRef}
           role="dialog"
           aria-modal="true"
-          aria-label="Share Progress"
+          aria-label={t("progress_share.share_progress")}
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -279,10 +280,10 @@ export function ProgressShare({
         >
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-stone-200/60 dark:border-stone-700/60">
-            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">Share Progress</h2>
+            <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-serif">{t("progress_share.share_progress")}</h2>
             <button
               onClick={onClose}
-              aria-label="Close share progress"
+              aria-label={t("progress_share.close_share_progress")}
               className="p-2 -mr-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
             >
               <X className="w-5 h-5 text-stone-400" />
@@ -300,7 +301,7 @@ export function ProgressShare({
               // eslint-disable-next-line @next/next/no-img-element -- locally generated canvas data URL; the image optimizer can't process it
               <img
                 src={preview}
-                alt={`Reading progress for ${bookTitle}`}
+                alt={t("progress_share.reading_progress_for", { v0: bookTitle })}
                 className="w-full rounded-xl shadow-md"
               />
             )}
@@ -313,16 +314,14 @@ export function ProgressShare({
               disabled={!preview}
               className="flex-1 h-11 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-stone-200 text-white dark:text-stone-900 text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-40"
             >
-              <Share2 className="w-4 h-4" />
-              Share
-            </button>
+              <Share2 className="w-4 h-4" /> {t("common.share")} </button>
             <button
               onClick={handleCopy}
               disabled={!preview}
               className="h-11 px-4 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-800/50 text-stone-700 dark:text-stone-300 text-sm font-medium rounded-xl transition-all flex items-center gap-2 disabled:opacity-40"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-              {copied ? "Copied" : "Copy"}
+              {copied ? t("profile_share_card.copied") : t("profile_share_card.copy")}
             </button>
             <button
               onClick={handleDownload}

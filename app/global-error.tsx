@@ -2,6 +2,7 @@
 
 import { useEffect } from "react"
 import { captureError } from "@/lib/monitoring"
+import { t } from "@/lib/i18n"
 
 export default function GlobalError({
   error,
@@ -35,12 +36,8 @@ export default function GlobalError({
                 marginBottom: "12px",
                 fontFamily: "Georgia, 'Times New Roman', serif",
               }}
-            >
-              Something went wrong
-            </h2>
-            <p style={{ color: "#78716c", marginBottom: "32px", lineHeight: 1.6 }}>
-              A critical error occurred. Please reload the page to continue.
-            </p>
+            > {t("common.something_went_wrong")} </h2>
+            <p style={{ color: "#78716c", marginBottom: "32px", lineHeight: 1.6 }}> {t("global_error.a_critical_error_occurred_please_reload")} </p>
             <button
               onClick={reset}
               style={{
@@ -54,9 +51,7 @@ export default function GlobalError({
                 fontWeight: 500,
                 cursor: "pointer",
               }}
-            >
-              Reload
-            </button>
+            > {t("global_error.reload")} </button>
           </div>
         </div>
       </body>

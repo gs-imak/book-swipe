@@ -9,6 +9,7 @@ import { BookCover } from "@/components/book-cover"
 import { Book } from "@/lib/book-data"
 import { BookReview, saveBookReview } from "@/lib/storage"
 import { useGamification } from "./gamification-provider"
+import { t, tv } from "@/lib/i18n"
 
 interface QuickReviewProps {
   book: Book
@@ -150,7 +151,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
 
       {/* Rating */}
       <div className="space-y-2">
-        <label id="review-rating-label" className="text-sm font-semibold text-stone-700 dark:text-stone-300">How was it?</label>
+        <label id="review-rating-label" className="text-sm font-semibold text-stone-700 dark:text-stone-300">{t("quick_review.how_was_it")}</label>
         <StarRating
           rating={rating}
           onRatingChange={setRating}
@@ -168,7 +169,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
           className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
           aria-expanded={dimensionsOpen}
         >
-          <span>Rate by dimension</span>
+          <span>{t("quick_review.rate_by_dimension")}</span>
           <ChevronDown
             className={`w-4 h-4 text-stone-400 transition-transform duration-200 ${dimensionsOpen ? "rotate-180" : ""}`}
           />
@@ -204,7 +205,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
 
       {/* Mood */}
       <div className="space-y-3">
-        <label id="review-mood-label" className="text-sm font-semibold text-stone-700 dark:text-stone-300">How did it make you feel?</label>
+        <label id="review-mood-label" className="text-sm font-semibold text-stone-700 dark:text-stone-300">{t("quick_review.how_did_it_make_you_feel")}</label>
         <div role="group" aria-labelledby="review-mood-label" className="grid grid-cols-3 sm:grid-cols-6 gap-2">
           {moodOptions.map((mood) => (
             <Button
@@ -215,7 +216,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
               className="h-auto p-2 flex flex-col gap-1 text-center"
             >
               {(() => { const MIcon = moodIconMap[mood.icon]; return MIcon ? <MIcon className="w-5 h-5" /> : null })()}
-              <span className="text-xs">{mood.label}</span>
+              <span className="text-xs">{tv(mood.label)}</span>
             </Button>
           ))}
         </div>
@@ -223,7 +224,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
 
       {/* Quick Tags */}
       <div className="space-y-3">
-        <label id="review-tags-label" className="text-sm font-semibold text-stone-700 dark:text-stone-300">Quick tags</label>
+        <label id="review-tags-label" className="text-sm font-semibold text-stone-700 dark:text-stone-300">{t("quick_review.quick_tags")}</label>
         <div role="group" aria-labelledby="review-tags-label" className="flex flex-wrap gap-2">
           {quickTags.map((tag) => (
             <Button
@@ -234,7 +235,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
               className="h-auto px-3 py-1 text-xs"
             >
               <Tag className="w-3 h-3 mr-1" />
-              {tag}
+              {tv(tag)}
             </Button>
           ))}
         </div>
@@ -242,14 +243,13 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
 
       {/* Written Review */}
       <div className="space-y-2">
-        <label htmlFor="review-text" className="text-sm font-semibold text-stone-700 dark:text-stone-300">
-          Your thoughts <span className="text-stone-400 font-normal">(optional)</span>
+        <label htmlFor="review-text" className="text-sm font-semibold text-stone-700 dark:text-stone-300"> {t("quick_review.your_thoughts")} <span className="text-stone-400 font-normal">{t("common.optional")}</span>
         </label>
         <textarea
           id="review-text"
           value={review}
           onChange={(e) => setReview(e.target.value)}
-          placeholder="What did you love about this book? Any memorable quotes or moments?"
+          placeholder={t("quick_review.what_did_you_love_about_this")}
           className="w-full p-3 border border-stone-200 dark:border-stone-700 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
           rows={3}
         />
@@ -258,8 +258,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
       {/* Content Warnings */}
       <div className="space-y-3">
         <label id="review-warnings-label" className="text-sm font-semibold text-stone-700 dark:text-stone-300 flex items-center gap-2">
-          <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
-          Content warnings <span className="text-stone-400 font-normal">(optional)</span>
+          <AlertTriangle className="w-3.5 h-3.5 text-amber-500" /> {t("quick_review.content_warnings")} <span className="text-stone-400 font-normal">{t("common.optional")}</span>
         </label>
         <div role="group" aria-labelledby="review-warnings-label" className="flex flex-wrap gap-2">
           {CONTENT_WARNINGS.map((w) => (
@@ -275,7 +274,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
                   : "bg-stone-50 dark:bg-stone-800/50 border-stone-200 text-stone-500 hover:border-stone-300"
               }`}
             >
-              {w}
+              {tv(w)}
             </button>
           ))}
         </div>
@@ -283,7 +282,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
 
       {/* Reading Format */}
       <div className="space-y-3">
-        <label id="review-format-label" className="text-sm font-semibold text-stone-700 dark:text-stone-300">How did you read it?</label>
+        <label id="review-format-label" className="text-sm font-semibold text-stone-700 dark:text-stone-300">{t("quick_review.how_did_you_read_it")}</label>
         <div role="group" aria-labelledby="review-format-label" className="flex flex-wrap gap-2">
           {([
             { value: "print", label: "Print", Icon: BookOpen },
@@ -309,7 +308,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
 
       {/* Pace */}
       <div className="space-y-3">
-        <label id="review-pace-label" className="text-sm font-semibold text-stone-700 dark:text-stone-300">How was the pacing?</label>
+        <label id="review-pace-label" className="text-sm font-semibold text-stone-700 dark:text-stone-300">{t("quick_review.how_was_the_pacing")}</label>
         <div role="group" aria-labelledby="review-pace-label" className="flex flex-wrap gap-2">
           {([
             { value: "slow", label: "Slow" },
@@ -341,13 +340,13 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
           className="flex items-center gap-2"
         >
           <Heart className={`w-4 h-4 ${favorite ? "fill-current" : ""}`} />
-          {favorite ? "Remove from favorites" : "Add to favorites"}
+          {favorite ? t("quick_review.remove_from_favorites") : t("quick_review.add_to_favorites")}
         </Button>
       </div>
 
       {/* Submit Button */}
       {rating === 0 && (
-        <p className="text-xs text-stone-400 dark:text-stone-500">Tap the stars above to rate this book</p>
+        <p className="text-xs text-stone-400 dark:text-stone-500">{t("quick_review.tap_the_stars_above_to_rate")}</p>
       )}
       {submitError && (
         <p role="alert" className="text-xs text-red-500">{submitError}</p>
@@ -358,7 +357,7 @@ export function QuickReview({ book, onReviewSaved, existingReview }: QuickReview
           disabled={rating === 0 || isSubmitting}
           className="px-6"
         >
-          {isSubmitting ? "Saving..." : existingReview ? "Update Review" : "Save Review"}
+          {isSubmitting ? t("quick_review.saving") : existingReview ? t("quick_review.update_review") : t("quick_review.save_review")}
         </Button>
       </div>
     </motion.div>

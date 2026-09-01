@@ -40,6 +40,7 @@ import { useGamification } from "./gamification-provider"
 import { useToast } from "./toast-provider"
 import { upgradeVisibleBooks, formatCount } from "@/lib/book-enrichment"
 import { hasVerifiedRating } from "@/lib/book-truth"
+import { t, tv } from "@/lib/i18n"
 
 // ---------------------------------------------------------------------------
 // Props
@@ -112,7 +113,7 @@ function ExploreBookCard({
         </p>
         <p className="text-[10px] text-stone-400/80 mb-1.5 truncate">
           {book.metadata?.ratingsCount
-            ? `${formatCount(book.metadata.ratingsCount)} ratings`
+            ? t("discover_hub.ratings", { v0: formatCount(book.metadata.ratingsCount) })
             : " "}
         </p>
         <button
@@ -125,7 +126,7 @@ function ExploreBookCard({
           }`}
         >
           <Heart className={`w-3 h-3 ${isSaved ? "fill-current" : ""}`} />
-          {isSaved ? "Saved" : "Save"}
+          {isSaved ? t("swipe_interface.saved") : t("common.save")}
         </button>
       </div>
     </motion.div>
@@ -237,7 +238,7 @@ export function DiscoverHub({
     (book: Book) => {
       onSaveBook(book)
       triggerActivity("like_book")
-      showToast(`"${book.title}" saved to library`)
+      showToast(t("book_showcase.saved_to_library", { v0: book.title }))
     },
     [onSaveBook, triggerActivity, showToast]
   )
@@ -420,21 +421,15 @@ export function DiscoverHub({
         <div className="p-4 sm:p-5">
           <div className="flex items-center gap-2 mb-1">
             <Shuffle className="w-4 h-4 text-teal-600" />
-            <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100">
-              Surprise Me
-            </h3>
+            <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100"> {t("discover_hub.surprise_me")} </h3>
           </div>
-          <p className="text-xs text-stone-400 mb-3">
-            Discover a random book from a genre you haven&apos;t explored yet
-          </p>
+          <p className="text-xs text-stone-400 mb-3"> {t("discover_hub.discover_a_random_book_from_a")} </p>
 
           {!surprise && !surpriseLoading && (
             <button
               onClick={handleSurprise}
               className="w-full py-3 rounded-xl bg-stone-900 text-white text-sm font-medium hover:bg-stone-800 active:scale-[0.98] transition-all tap-target touch-manipulation"
-            >
-              Show me something new
-            </button>
+            > {t("discover_hub.show_me_something_new")} </button>
           )}
 
           {surpriseLoading && <InlineSpinner />}
@@ -463,8 +458,7 @@ export function DiscoverHub({
                   />
                 </div>
                 <div className="flex-1 min-w-0 py-0.5">
-                  <span className="inline-block text-[10px] font-semibold uppercase tracking-wide text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full mb-1.5">
-                    From: {surprise.genre}
+                  <span className="inline-block text-[10px] font-semibold uppercase tracking-wide text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full mb-1.5"> {t("discover_hub.from")} {surprise.genre}
                   </span>
                   <h4 className="font-semibold text-sm text-stone-900 dark:text-stone-100 line-clamp-2 leading-tight">
                     {surprise.book.title}
@@ -481,9 +475,7 @@ export function DiscoverHub({
                         </span>
                       </>
                     )}
-                    <span className="text-[10px] text-stone-300 mx-1">
-                      \u00B7
-                    </span>
+                    <span className="text-[10px] text-stone-300 mx-1"> &middot; </span>
                     <span className="text-[10px] text-stone-400">
                       {surprise.book.pages}p
                     </span>
@@ -501,15 +493,13 @@ export function DiscoverHub({
                       <Heart
                         className={`w-3 h-3 ${savedBookIds.has(surprise.book.id) ? "fill-current" : ""}`}
                       />
-                      {savedBookIds.has(surprise.book.id) ? "Saved" : "Save"}
+                      {savedBookIds.has(surprise.book.id) ? t("swipe_interface.saved") : t("common.save")}
                     </button>
                     <button
                       onClick={handleSurprise}
                       className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-stone-500 hover:bg-stone-100 dark:bg-stone-800 transition-all active:scale-[0.98]"
                     >
-                      <RefreshCw className="w-3 h-3" />
-                      Try another
-                    </button>
+                      <RefreshCw className="w-3 h-3" /> {t("discover_hub.try_another")} </button>
                   </div>
                 </div>
               </motion.div>
@@ -524,8 +514,8 @@ export function DiscoverHub({
       <div>
         <SectionHeader
           icon={<Flame className="w-4 h-4 text-orange-500" />}
-          title="Trending Now"
-          subtitle="Popular today"
+          title={t("discover_hub.trending_now")}
+          subtitle={t("discover_hub.popular_today")}
         />
         {trendingLoading ? (
           <InlineSpinner />
@@ -543,9 +533,7 @@ export function DiscoverHub({
             ))}
           </HorizontalScroll>
         ) : (
-          <p className="text-xs text-stone-400 px-0.5">
-            Could not load trending books right now.
-          </p>
+          <p className="text-xs text-stone-400 px-0.5"> {t("discover_hub.could_not_load_trending_books_right")} </p>
         )}
       </div>
 
@@ -558,12 +546,12 @@ export function DiscoverHub({
             icon={<User className="w-4 h-4 text-indigo-500" />}
             title={
               authorData
-                ? `More by ${authorData.author}`
-                : "Author Spotlight"
+                ? t("discover_hub.more_by", { v0: authorData.author })
+                : t("discover_hub.author_spotlight")
             }
             subtitle={
               authorData
-                ? `You liked "${authorData.bookTitle}"`
+                ? t("discover_hub.you_liked", { v0: authorData.bookTitle })
                 : undefined
             }
           />
@@ -592,7 +580,7 @@ export function DiscoverHub({
       <div>
         <SectionHeader
           icon={<BookOpen className="w-4 h-4 text-amber-600" />}
-          title="Curated Collections"
+          title={t("discover_hub.curated_collections")}
         />
         <div className="space-y-2">
           {curatedLists.map((list) => {
@@ -614,10 +602,10 @@ export function DiscoverHub({
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-stone-900 dark:text-stone-100">
-                      {list.name}
+                      {tv(list.name)}
                     </p>
                     <p className="text-[11px] text-stone-400">
-                      {list.description}
+                      {tv(list.description)}
                     </p>
                   </div>
                   <motion.div
@@ -654,9 +642,7 @@ export function DiscoverHub({
                             ))}
                           </HorizontalScroll>
                         ) : (
-                          <p className="text-xs text-stone-400 py-3">
-                            No books found for this collection.
-                          </p>
+                          <p className="text-xs text-stone-400 py-3"> {t("discover_hub.no_books_found_for_this_collection")} </p>
                         )}
                       </div>
                     </motion.div>
@@ -674,8 +660,8 @@ export function DiscoverHub({
       <div>
         <SectionHeader
           icon={<Search className="w-4 h-4 text-violet-500" />}
-          title="Genre Deep-Dives"
-          subtitle="Explore sub-genres"
+          title={t("discover_hub.genre_deep_dives")}
+          subtitle={t("discover_hub.explore_sub_genres")}
         />
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {subGenres.map((genre) => {
@@ -701,7 +687,7 @@ export function DiscoverHub({
                   <div className="flex items-center gap-2">
                     {(() => { const GIcon = subGenreIconMap[genre.emoji]; return GIcon ? <GIcon className="w-4 h-4" /> : null })()}
                     <span className="text-xs font-semibold truncate">
-                      {genre.name}
+                      {tv(genre.name)}
                     </span>
                     {isExpanded && (
                       <ChevronDown className="w-3.5 h-3.5 text-stone-400 ml-auto flex-shrink-0" />
@@ -709,7 +695,7 @@ export function DiscoverHub({
                   </div>
                   {!isExpanded && (
                     <p className="text-[10px] opacity-70 mt-1 line-clamp-2 leading-relaxed">
-                      {genre.description.split(".")[0]}.
+                      {tv(genre.description).split(".")[0]}.
                     </p>
                   )}
                 </button>
@@ -727,11 +713,10 @@ export function DiscoverHub({
                         <div
                           className={`rounded-lg p-3 mb-3 ${colorMap[genre.color] || "bg-stone-50"}`}
                         >
-                          <p className="text-xs font-semibold mb-1">
-                            What is {genre.name}?
+                          <p className="text-xs font-semibold mb-1"> {t("discover_hub.what_is")} {tv(genre.name)}?
                           </p>
                           <p className="text-[11px] opacity-80 leading-relaxed">
-                            {genre.description}
+                            {tv(genre.description)}
                           </p>
                         </div>
 
@@ -751,9 +736,7 @@ export function DiscoverHub({
                             ))}
                           </HorizontalScroll>
                         ) : (
-                          <p className="text-xs text-stone-400 py-3">
-                            No books found for this sub-genre.
-                          </p>
+                          <p className="text-xs text-stone-400 py-3"> {t("discover_hub.no_books_found_for_this_sub")} </p>
                         )}
                       </div>
                     </motion.div>

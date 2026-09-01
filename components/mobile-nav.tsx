@@ -4,6 +4,7 @@ import { motion } from "framer-motion"
 import { Home, Sparkles, Trophy, BarChart3, BookOpen, Search, Sun, Moon, Camera, Cloud, User } from "lucide-react"
 import { toggleTheme } from "@/lib/theme"
 import { useTheme } from "@/lib/use-theme"
+import { t, tv } from "@/lib/i18n"
 
 type NavView = "dashboard" | "swipe" | "read" | "achievements" | "profile"
 
@@ -60,7 +61,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
       */}
 
       <motion.nav
-        aria-label="Main navigation"
+        aria-label={t("mobile_nav.main_navigation")}
         data-desktop-sidebar=""
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -94,7 +95,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
                 <motion.button
                   key={item.id}
                   onClick={() => onNavigate(item.id)}
-                  aria-label={item.label}
+                  aria-label={tv(item.label)}
                   aria-current={isActive ? "page" : undefined}
                   className={[
                     // Base (mobile)
@@ -126,8 +127,8 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
                     ].join(" ")}
                   >
                     {item.id === "dashboard" && likedCount > 0
-                      ? `${item.label} · ${likedCount > 999 ? "1k" : likedCount}`
-                      : item.label}
+                      ? `${tv(item.label)} · ${likedCount > 999 ? t("mobile_nav.1k") : likedCount}`
+                      : tv(item.label)}
                   </span>
 
                 </motion.button>
@@ -142,11 +143,11 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
             <div className="lg:flex lg:items-center lg:justify-center lg:pt-3 lg:pb-1">
               <button
                 onClick={onSearch}
-                aria-label="Search"
+                aria-label={t("mobile_nav.search")}
                 className="flex flex-col items-center gap-0.5 py-2 px-1 rounded-control text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors duration-150 w-[calc(100%-8px)]"
               >
                 <Search className="w-[20px] h-[20px]" strokeWidth={1.8} />
-                <span className="text-[10px] font-medium">Search</span>
+                <span className="text-[10px] font-medium">{t("mobile_nav.search")}</span>
               </button>
             </div>
           )}
@@ -154,29 +155,29 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
             <div className="lg:flex lg:items-center lg:justify-center lg:pb-1">
               <button
                 onClick={onScan}
-                aria-label="Scan a book barcode"
+                aria-label={t("mobile_nav.scan_a_book_barcode")}
                 className="flex flex-col items-center gap-0.5 py-2 px-1 rounded-control text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors duration-150 w-[calc(100%-8px)]"
               >
                 <Camera className="w-[20px] h-[20px]" strokeWidth={1.8} />
-                <span className="text-[10px] font-medium">Scan</span>
+                <span className="text-[10px] font-medium">{t("mobile_nav.scan")}</span>
               </button>
             </div>
           )}
           <div className="lg:flex lg:items-center lg:justify-center lg:py-1">
             <button
               onClick={() => toggleTheme()}
-              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              aria-label={isDark ? t("mobile_nav.switch_to_light_mode") : t("mobile_nav.switch_to_dark_mode")}
               className="flex flex-col items-center gap-0.5 py-2 px-1 rounded-control text-ink-muted hover:text-ink hover:bg-surface-2 transition-colors duration-150 w-[calc(100%-8px)]"
             >
               {isDark ? <Sun className="w-[20px] h-[20px]" strokeWidth={1.8} /> : <Moon className="w-[20px] h-[20px]" strokeWidth={1.8} />}
-              <span className="text-[10px] font-medium">{isDark ? "Light" : "Dark"}</span>
+              <span className="text-[10px] font-medium">{isDark ? t("mobile_nav.light") : t("recommendations.dark")}</span>
             </button>
           </div>
           {onSignIn && (
             <div className="lg:flex lg:items-center lg:justify-center lg:pb-2">
               <button
                 onClick={onSignIn}
-                aria-label={isSignedIn ? "Account synced" : "Sign in to sync"}
+                aria-label={isSignedIn ? t("mobile_nav.account_synced") : t("settings_page.sign_in_to_sync")}
                 className={`flex flex-col items-center gap-0.5 py-2 px-1 rounded-lg transition-colors duration-150 w-[calc(100%-8px)] ${
                   isSignedIn
                     ? "text-success-ink"
@@ -184,7 +185,7 @@ export function MobileNav({ currentView, onNavigate, likedCount = 0, onSearch, o
                 }`}
               >
                 {isSignedIn ? <User className="w-[20px] h-[20px]" strokeWidth={1.8} /> : <Cloud className="w-[20px] h-[20px]" strokeWidth={1.8} />}
-                <span className="text-[10px] font-medium">{isSignedIn ? "Synced" : "Sync"}</span>
+                <span className="text-[10px] font-medium">{isSignedIn ? t("mobile_nav.synced") : t("settings_page.sync")}</span>
               </button>
             </div>
           )}

@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef, ReactNode } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { CheckCircle, AlertCircle, Info, X } from "lucide-react"
+import { t, tv } from "@/lib/i18n"
 
 type ToastType = "success" | "error" | "info"
 
@@ -134,11 +135,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             >
               {icons[toast.type]}
               <span className={`text-sm font-medium flex-1 ${textColors[toast.type]}`}>
-                {toast.message}
+                {tv(toast.message)}
               </span>
               <button
                 onClick={() => dismiss(toast.id)}
-                aria-label="Dismiss notification"
+                aria-label={t("toast_provider.dismiss_notification")}
                 className="relative before:absolute before:-inset-3 before:content-[''] p-0.5 rounded-md hover:bg-black/5 transition-colors flex-shrink-0"
               >
                 <X className="w-3.5 h-3.5 text-stone-400" />

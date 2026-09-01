@@ -9,6 +9,7 @@ import { type DailyPick, addLikedBook } from "@/lib/storage"
 import { generateDailyPick, dismissDailyPick, saveDailyPickToLibrary } from "@/lib/daily-pick"
 import { BookCover } from "@/components/book-cover"
 import { hasVerifiedRating } from "@/lib/book-truth"
+import { t } from "@/lib/i18n"
 
 interface DailyPickCardProps {
   onBookClick?: (book: Book) => void
@@ -92,9 +93,7 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
           {/* Label */}
           <div className="flex items-center gap-2 mb-3.5">
             <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-            <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-amber-700 dark:text-amber-400">
-              Pick of the Day
-            </span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-amber-700 dark:text-amber-400"> {t("daily_pick_card.pick_of_the_day")} </span>
           </div>
 
           <div className="flex gap-4 sm:gap-5">
@@ -149,9 +148,7 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
 
                 {/* Description teaser */}
                 {teaser && (
-                  <p className="mt-2.5 text-[13px] italic text-stone-600 dark:text-stone-400 line-clamp-3 leading-relaxed">
-                    &ldquo;{teaser}&rdquo;
-                  </p>
+                  <p className="mt-2.5 text-[13px] italic text-stone-600 dark:text-stone-400 line-clamp-3 leading-relaxed"> &ldquo;{teaser}&rdquo; </p>
                 )}
               </div>
 
@@ -160,32 +157,24 @@ export function DailyPickCard({ onBookClick, onBookLiked }: DailyPickCardProps) 
                 {pick.saved ? (
                   <div className="flex items-center gap-2">
                     <span className="flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-400 font-medium">
-                      <Bookmark className="w-3.5 h-3.5 fill-amber-600 dark:fill-amber-500" />
-                      In Library
-                    </span>
+                      <Bookmark className="w-3.5 h-3.5 fill-amber-600 dark:fill-amber-500" /> {t("daily_pick_card.in_library")} </span>
                     <button
                       onClick={() => onBookClick?.(pick.book)}
                       className="h-11 px-3.5 bg-amber-100/80 hover:bg-amber-200/80 dark:bg-amber-800/30 dark:hover:bg-amber-700/40 text-amber-800 dark:text-amber-300 text-xs font-medium rounded-xl transition-all active:scale-[0.98]"
-                    >
-                      View Details
-                    </button>
+                    > {t("daily_pick_card.view_details")} </button>
                   </div>
                 ) : (
                   <button
                     onClick={handleLike}
                     className="h-11 px-4 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-white text-white dark:text-stone-900 text-xs font-semibold rounded-xl transition-all active:scale-[0.98] flex items-center gap-1.5 shadow-sm"
                   >
-                    <BookOpen className="w-3.5 h-3.5" />
-                    Add to Library
-                  </button>
+                    <BookOpen className="w-3.5 h-3.5" /> {t("daily_pick_card.add_to_library")} </button>
                 )}
                 <button
                   onClick={handleDismiss}
                   className="h-11 px-3 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-white/40 dark:hover:bg-stone-700/40 text-xs rounded-xl transition-all active:scale-[0.98] flex items-center gap-1"
                 >
-                  <X className="w-3.5 h-3.5" />
-                  Pass
-                </button>
+                  <X className="w-3.5 h-3.5" /> {t("daily_pick_card.pass")} </button>
               </div>
             </div>
           </div>

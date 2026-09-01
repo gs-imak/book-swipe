@@ -36,6 +36,8 @@ const AuthModal = dynamic(() => import("@/components/auth-modal").then(m => ({ d
 const SettingsPage = dynamic(() => import("@/components/settings-page").then(m => ({ default: m.SettingsPage })))
 import { onAuthChange, syncBidirectional, getUser } from "@/lib/supabase-sync"
 import { isSupabaseConfigured } from "@/lib/supabase"
+import { t } from "@/lib/i18n"
+import { I18nProvider } from "@/components/i18n-provider"
 
 // Code-split heavy components that aren't needed on initial load.
 // BarcodeScanner pulls in camera/barcode-decoding code only used on demand, so
@@ -219,7 +221,7 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
         // library saved on another device) THEN push local → cloud. Previously
         // only the push ran, so a new device never received any cloud data.
         syncBidirectional().then(({ pushed }) => {
-          if (pushed.synced) showToast("Library synced")
+          if (pushed.synced) showToast(t("page.library_synced"))
         })
       }
     })
@@ -598,7 +600,7 @@ function Home({ onShowAchievements, isAchievementsOpen }: HomeProps) {
         onClose={() => setShowAuthModal(false)}
         onAuthSuccess={() => {
           setShowAuthModal(false)
-          showToast("Signed in! Syncing your library...")
+          showToast(t("page.signed_in_syncing_your_library"))
         }}
       />
 
@@ -683,6 +685,7 @@ export default function App() {
 
   return (
     <MotionConfig reducedMotion="user">
+      <I18nProvider>
       <ToastProvider>
         <GamificationProvider onShowAchievements={() => setShowAchievements(true)}>
           <ErrorBoundary>
@@ -701,6 +704,7 @@ export default function App() {
           <WhatsNewModal />
         </GamificationProvider>
       </ToastProvider>
+      </I18nProvider>
     </MotionConfig>
   )
 }

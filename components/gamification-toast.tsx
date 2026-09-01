@@ -3,7 +3,16 @@
 import { useEffect, useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Trophy, Star, Zap, Award } from "lucide-react"
+import { tv } from "@/lib/i18n"
 import { GamificationEvent } from "@/lib/gamification"
+
+// Tier and category arrive as raw enum values ("bronze", "discovery").
+// Capitalising first is what lets tv() find them in the dictionary, which
+// is keyed on the display form the achievements panel already uses.
+function capitalise(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
 
 interface GamificationToastProps {
   events: GamificationEvent[]
@@ -74,10 +83,10 @@ export function GamificationToast({ events, onEventShown, onOpenAchievements }: 
             
             <div className="flex-1">
               <h3 className="font-bold text-white text-lg leading-tight">
-                {currentEvent.title}
+                {tv(currentEvent.title)}
               </h3>
               <p className="text-white/90 text-sm">
-                {currentEvent.description}
+                {tv(currentEvent.description)}
               </p>
               
               {currentEvent.type === 'achievement_unlocked' && currentEvent.achievement && (
@@ -86,10 +95,10 @@ export function GamificationToast({ events, onEventShown, onOpenAchievements }: 
                     px-2 py-1 rounded-full text-xs font-medium
                     ${getAchievementTypeStyle(currentEvent.achievement.type)}
                   `}>
-                    {currentEvent.achievement.type.toUpperCase()}
+                    {tv(capitalise(currentEvent.achievement.type)).toUpperCase()}
                   </span>
                   <span className="text-white/80 text-xs">
-                    {currentEvent.achievement.category}
+                    {tv(capitalise(currentEvent.achievement.category))}
                   </span>
                 </div>
               )}

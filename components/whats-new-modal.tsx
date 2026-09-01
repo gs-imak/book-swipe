@@ -10,6 +10,7 @@ import {
   CURRENT_FEATURE_VERSION,
   isOnboarded,
 } from "@/lib/storage"
+import { t, tv } from "@/lib/i18n"
 
 interface FeatureEntry {
   id: string
@@ -88,7 +89,7 @@ export function WhatsNewModal() {
           onClick={handleDismiss}
           role="dialog"
           aria-modal="true"
-          aria-label="What's new in this update"
+          aria-label={t("whats_new_modal.what_s_new_in_this_update")}
         >
           <motion.div
             initial={{ opacity: 0, y: 40, scale: 0.94 }}
@@ -101,7 +102,7 @@ export function WhatsNewModal() {
             <button
               onClick={handleDismiss}
               className="absolute top-3 right-3 z-10 p-1.5 rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
-              aria-label="Close"
+              aria-label={t("common.close")}
             >
               <X className="w-4 h-4" />
             </button>
@@ -112,12 +113,8 @@ export function WhatsNewModal() {
                   v{CURRENT_FEATURE_VERSION}
                 </span>
               </div>
-              <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100">
-                What&apos;s New
-              </h2>
-              <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
-                Features added since your last visit
-              </p>
+              <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100"> {t("whats_new_modal.what_s_new")} </h2>
+              <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5"> {t("whats_new_modal.features_added_since_your_last_visit")} </p>
             </div>
 
             <div className="px-6 pb-2 max-h-[50vh] overflow-y-auto">
@@ -137,10 +134,10 @@ export function WhatsNewModal() {
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-stone-900 dark:text-stone-100 leading-tight">
-                          {feature.title}
+                          {tv(feature.title)}
                         </p>
                         <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5 leading-relaxed">
-                          {feature.description}
+                          {tv(feature.description)}
                         </p>
                       </div>
                     </motion.li>
@@ -153,9 +150,7 @@ export function WhatsNewModal() {
               <button
                 onClick={handleDismiss}
                 className="w-full py-3 rounded-xl text-sm font-semibold bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 hover:bg-stone-800 dark:hover:bg-stone-200 active:scale-[0.98] transition-all"
-              >
-                Got it
-              </button>
+              > {t("whats_new_modal.got_it")} </button>
             </div>
           </motion.div>
         </motion.div>

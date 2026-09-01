@@ -4,6 +4,7 @@ import { useState, useSyncExternalStore } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Target, Check } from "lucide-react"
 import { updateReadingGoals } from "@/lib/storage"
+import { t, tv } from "@/lib/i18n"
 
 const GOAL_CONFIGURED_KEY = "bookswipe_goal_configured"
 
@@ -69,21 +70,15 @@ export function ReadingGoalSetter({ onGoalSet }: ReadingGoalSetterProps) {
               <div className="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
                 <Check className="w-4 h-4 text-white" />
               </div>
-              <p className="text-sm font-medium text-emerald-800">
-                Goal set — let&apos;s go!
-              </p>
+              <p className="text-sm font-medium text-emerald-800"> {t("reading_goal_setter.goal_set_let_s_go")} </p>
             </motion.div>
           ) : (
             <div className="bg-white dark:bg-stone-900 border border-stone-200/60 dark:border-stone-700/60 rounded-2xl p-5 shadow-sm">
               <div className="flex items-center gap-2 mb-1">
                 <Target className="w-4 h-4 text-amber-600" />
-                <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100">
-                  Set your {new Date().getFullYear()} reading goal
-                </h3>
+                <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-100"> {t("reading_goal_setter.set_your")} {new Date().getFullYear()} {t("reading_goal_setter.reading_goal")} </h3>
               </div>
-              <p className="text-xs text-stone-400 mb-4 ml-6">
-                How many books do you want to read this year?
-              </p>
+              <p className="text-xs text-stone-400 mb-4 ml-6"> {t("reading_goal_setter.how_many_books_do_you_want")} </p>
 
               <div className="grid grid-cols-2 gap-2 mb-4">
                 {GOAL_OPTIONS.map((opt) => (
@@ -99,12 +94,12 @@ export function ReadingGoalSetter({ onGoalSet }: ReadingGoalSetterProps) {
                     <p className={`text-sm font-semibold ${
                       selected === opt.value ? "text-amber-800 dark:text-amber-300" : "text-stone-800 dark:text-stone-200"
                     }`}>
-                      {opt.label}
+                      {tv(opt.label)}
                     </p>
                     <p className={`text-[11px] mt-0.5 ${
                       selected === opt.value ? "text-amber-600" : "text-stone-400"
                     }`}>
-                      {opt.sub}
+                      {tv(opt.sub)}
                     </p>
                   </button>
                 ))}
@@ -114,9 +109,7 @@ export function ReadingGoalSetter({ onGoalSet }: ReadingGoalSetterProps) {
                 onClick={handleSet}
                 disabled={!selected}
                 className="w-full h-10 rounded-xl bg-stone-900 text-white text-sm font-medium transition-all hover:bg-stone-800 active:scale-[0.98] disabled:opacity-35 disabled:cursor-not-allowed"
-              >
-                Set goal
-              </button>
+              > {t("reading_goal_setter.set_goal")} </button>
             </div>
           )}
         </motion.div>

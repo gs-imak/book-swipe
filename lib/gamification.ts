@@ -14,6 +14,7 @@ import {
 } from "./storage"
 import { ACHIEVEMENTS, POINTS_CONFIG } from "./achievements"
 import type { Achievement } from "./storage"
+import { t } from "@/lib/i18n"
 
 export interface GamificationEvent {
   type: 'achievement_unlocked' | 'level_up' | 'points_earned'
@@ -93,7 +94,7 @@ export function awardPoints(activity: string, amount?: number, silent: boolean =
   if (!silent) {
     events.push({
       type: 'points_earned',
-      title: `+${pointsToAward} points!`,
+      title: t("gamification.points", { v0: pointsToAward }),
       description: getActivityDescription(activity),
       points: pointsToAward
     })
@@ -104,7 +105,7 @@ export function awardPoints(activity: string, amount?: number, silent: boolean =
     const stats = getUserStats()
     events.push({
       type: 'level_up',
-      title: `Level ${stats.level}!`,
+      title: t("gamification.level", { v0: stats.level }),
       description: 'You\'ve reached a new reading level!',
       level: stats.level
     })

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Target, BookOpen, FileText, Flame, Compass, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react"
 import { getLikedBooks, getReadingProgress, getBookReviews, getUserStats } from "@/lib/storage"
+import { t, tv } from "@/lib/i18n"
 
 const CHALLENGES_KEY = "bookswipe_challenges"
 const PROMPT_CHALLENGES_KEY = "bookswipe_prompt_challenges"
@@ -344,26 +345,21 @@ export function ReadingChallenges({ isOpen, onClose }: ReadingChallengesProps) {
                   <Target className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-stone-900 dark:text-stone-100 font-serif leading-tight">
-                    Reading Challenges
-                  </h2>
+                  <h2 className="text-base font-bold text-stone-900 dark:text-stone-100 font-serif leading-tight"> {t("reading_challenges.reading_challenges")} </h2>
                   <p className="text-[11px] text-stone-400 dark:text-stone-500">
-                    {completedCount} of {totalCount} complete
-                  </p>
+                    {completedCount} {t("common.of")} {totalCount} {t("reading_challenges.complete")} </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowGoalEditor(v => !v)}
-                  aria-label="Edit goals"
+                  aria-label={t("reading_challenges.edit_goals")}
                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
-                >
-                  Goals
-                  {showGoalEditor ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                > {t("reading_challenges.goals")} {showGoalEditor ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                 </button>
                 <button
                   onClick={onClose}
-                  aria-label="Close challenges"
+                  aria-label={t("reading_challenges.close_challenges")}
                   className="p-1.5 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
                 >
                   <X className="w-4 h-4 text-stone-500 dark:text-stone-400" />
@@ -382,11 +378,9 @@ export function ReadingChallenges({ isOpen, onClose }: ReadingChallengesProps) {
                   className="overflow-hidden border-b border-stone-100 dark:border-stone-800 flex-shrink-0"
                 >
                   <div className="px-5 py-3 space-y-3 bg-stone-50 dark:bg-stone-800/50">
-                    <p className="text-[11px] font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-widest">
-                      Customize Targets
-                    </p>
+                    <p className="text-[11px] font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-widest"> {t("reading_challenges.customize_targets")} </p>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-stone-600 dark:text-stone-300">Monthly books</span>
+                      <span className="text-xs text-stone-600 dark:text-stone-300">{t("reading_challenges.monthly_books")}</span>
                       <div className="flex gap-1.5">
                         {MONTHLY_BOOK_OPTIONS.map(n => (
                           <button
@@ -404,7 +398,7 @@ export function ReadingChallenges({ isOpen, onClose }: ReadingChallengesProps) {
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-stone-600 dark:text-stone-300">Streak goal (days)</span>
+                      <span className="text-xs text-stone-600 dark:text-stone-300">{t("reading_challenges.streak_goal_days")}</span>
                       <div className="flex gap-1.5">
                         {STREAK_OPTIONS.map(n => (
                           <button
@@ -456,10 +450,10 @@ export function ReadingChallenges({ isOpen, onClose }: ReadingChallengesProps) {
                           <h3 className={`text-sm font-semibold leading-tight ${
                             done ? "text-emerald-800 dark:text-emerald-300" : "text-stone-900 dark:text-stone-100"
                           }`}>
-                            {challenge.title}
+                            {tv(challenge.title)}
                           </h3>
                           <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5">
-                            {challenge.description}
+                            {tv(challenge.description)}
                           </p>
                         </div>
                       </div>
@@ -472,7 +466,7 @@ export function ReadingChallenges({ isOpen, onClose }: ReadingChallengesProps) {
                         <span className="text-xs text-stone-400 dark:text-stone-500 ml-0.5">
                           /{challenge.target}
                         </span>
-                        <p className="text-[10px] text-stone-400 dark:text-stone-500">{challenge.unit}</p>
+                        <p className="text-[10px] text-stone-400 dark:text-stone-500">{tv(challenge.unit)}</p>
                       </div>
                     </div>
 
@@ -505,19 +499,14 @@ export function ReadingChallenges({ isOpen, onClose }: ReadingChallengesProps) {
                     </div>
 
                     {done && (
-                      <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-2">
-                        Challenge complete!
-                      </p>
+                      <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-2"> {t("reading_challenges.challenge_complete")} </p>
                     )}
                     {!done && pct > 0 && (
                       <p className="text-[11px] text-stone-400 dark:text-stone-500 mt-1.5">
-                        {pct}% complete — {challenge.target - challenge.current} {challenge.unit} to go
-                      </p>
+                        {pct}{t("reading_challenges.complete_2")} {challenge.target - challenge.current} {tv(challenge.unit)} {t("reading_challenges.to_go")} </p>
                     )}
                     {!done && pct === 0 && (
-                      <p className="text-[11px] text-stone-400 dark:text-stone-500 mt-1.5">
-                        Not started yet
-                      </p>
+                      <p className="text-[11px] text-stone-400 dark:text-stone-500 mt-1.5"> {t("reading_challenges.not_started_yet")} </p>
                     )}
                   </motion.div>
                 )
@@ -526,9 +515,7 @@ export function ReadingChallenges({ isOpen, onClose }: ReadingChallengesProps) {
               {/* Reading Prompts section */}
               <div className="pt-2">
                 <div className="flex items-center gap-2 mb-3">
-                  <h3 className="text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-widest">
-                    Reading Prompts
-                  </h3>
+                  <h3 className="text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-widest"> {t("reading_challenges.reading_prompts")} </h3>
                   <div className="flex-1 h-px bg-stone-100 dark:bg-stone-800" />
                   <span className="text-[11px] text-stone-400 dark:text-stone-500">
                     {completedPrompts.length}/{PROMPT_CHALLENGES.length}
@@ -540,7 +527,7 @@ export function ReadingChallenges({ isOpen, onClose }: ReadingChallengesProps) {
                   return (
                     <div key={category} className="mb-4">
                       <p className="text-[10px] font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-widest mb-2">
-                        {category}
+                        {tv(category)}
                       </p>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {items.map(item => {
@@ -561,7 +548,7 @@ export function ReadingChallenges({ isOpen, onClose }: ReadingChallengesProps) {
                                   ? "text-emerald-700 dark:text-emerald-400 line-through decoration-emerald-400/60"
                                   : "text-stone-700 dark:text-stone-300"
                               }`}>
-                                {item.prompt}
+                                {tv(item.prompt)}
                               </p>
                               {done && (
                                 <CheckCircle2 className="absolute top-2 right-2 w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
@@ -576,9 +563,7 @@ export function ReadingChallenges({ isOpen, onClose }: ReadingChallengesProps) {
               </div>
 
               {/* Footer nudge */}
-              <p className="text-center text-[11px] text-stone-400 dark:text-stone-500 pb-2 pt-1">
-                Progress updates as you read and review books.
-              </p>
+              <p className="text-center text-[11px] text-stone-400 dark:text-stone-500 pb-2 pt-1"> {t("reading_challenges.progress_updates_as_you_read_and")} </p>
             </div>
           </motion.div>
         </motion.div>

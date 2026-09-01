@@ -12,6 +12,7 @@ import {
   type ReadingProgress,
   type BookNote,
 } from "./storage"
+import { t } from "@/lib/i18n"
 
 // --- Goodreads CSV Export ---
 
@@ -159,7 +160,7 @@ export function exportToNotionCSV(): string {
     const notesText = bookNotes
       .map(n => {
         const prefix = n.type === "quote" ? `"${n.content}"` :
-                       n.type === "highlight" ? `[Highlight] ${n.content}` :
+                       n.type === "highlight" ? t("export_utils.highlight", { v0: n.content }) :
                        n.content
         return n.page ? `p.${n.page}: ${prefix}` : prefix
       })

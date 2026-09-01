@@ -4,6 +4,7 @@ import { useState, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ArrowRight, X } from "lucide-react"
 import dynamic from "next/dynamic"
+import { t, tv } from "@/lib/i18n"
 // Doodles are decorative and below the fold — dynamic() keeps them out of the
 // hydration payload (they were 104KB gzip, 24.5% of the entire cold download).
 const GroovyDoodle = dynamic(() => import("@/components/illustrations").then(m => ({ default: m.GroovyDoodle })))
@@ -119,7 +120,7 @@ export function OnboardingGuide({ onComplete }: OnboardingGuideProps) {
           <button
             onClick={handleSkip}
             className="absolute top-3 right-3 z-10 p-1.5 rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-100 dark:bg-stone-800 transition-colors"
-            aria-label="Skip guide"
+            aria-label={t("onboarding_guide.skip_guide")}
           >
             <X className="w-4 h-4" />
           </button>
@@ -149,11 +150,11 @@ export function OnboardingGuide({ onComplete }: OnboardingGuideProps) {
               )}
 
               {/* Text */}
-              <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-2">{step.title}</h2>
-              <p className="text-sm text-stone-500 leading-relaxed max-w-[280px]">{step.description}</p>
+              <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 mb-2">{tv(step.title)}</h2>
+              <p className="text-sm text-stone-500 leading-relaxed max-w-[280px]">{tv(step.description)}</p>
 
               {"picker" in step && step.picker && (
-                <div role="group" aria-label="Favourite genres" className="mt-4 flex flex-wrap justify-center gap-2">
+                <div role="group" aria-label={t("onboarding_guide.favourite_genres")} className="mt-4 flex flex-wrap justify-center gap-2">
                   {GENRE_CHOICES.map((genre) => {
                     const on = picked.includes(genre)
                     return (
@@ -168,7 +169,7 @@ export function OnboardingGuide({ onComplete }: OnboardingGuideProps) {
                             : "border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:border-stone-500"
                         }`}
                       >
-                        {genre}
+                        {tv(genre)}
                       </button>
                     )
                   })}
@@ -202,11 +203,9 @@ export function OnboardingGuide({ onComplete }: OnboardingGuideProps) {
             className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold bg-stone-900 text-white hover:bg-stone-800 active:scale-[0.98] transition-all"
           >
             {isLast ? (
-              "Start Exploring"
+              t("onboarding_guide.start_exploring")
             ) : (
-              <>
-                Next
-                <ArrowRight className="w-4 h-4" />
+              <> {t("common.next")} <ArrowRight className="w-4 h-4" />
               </>
             )}
           </button>
