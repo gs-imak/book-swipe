@@ -22,8 +22,13 @@ const _itunesCoverCache = new Map<string, string | null>()
 // be retried rather than pinned null for the whole session.
 const _itunesInFlight = new Map<string, Promise<string | null>>()
 
+// Every input the resolution depends on. Keying on the ISBN alone was wrong
+// twice over: the ISBN no longer decides the cover on its own (the result is
+// validated against title+author), and two records carrying the same ISBN —
+// which happens, since a book's stored ISBN can be one of a work's many
+// editions — would have served each other's cover out of this cache.
 function coverCacheKey(book: Book): string {
-  return book.isbn || `${book.title}::${book.author}`
+  return `${book.isbn || ""}::${book.title}::${book.author}`
 }
 
 /**
@@ -73,8 +78,10 @@ async function fetchItunesCover(book: Book, key: string): Promise<string | null>
  * cover changed (cover = iTunes, coverFallback = the original source cover).
  */
 export async function upgradeCoversWithItunes(books: Book[]): Promise<Book[]> {
+  // title+author are required, not optional: they are what the resolved result
+  // is validated against, and the route refuses a request without them.
   const pending = books.filter(
-    (b) => (b.isbn || (b.title && b.author)) && !isItunesCover(b.cover)
+    (b) => b.title && b.author && !isItunesCover(b.cover)
   )
   if (pending.length === 0) return []
 

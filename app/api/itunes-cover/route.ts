@@ -7,10 +7,23 @@ import { itunesResultMatchesBook } from "@/lib/covers"
 // actual iTunes calls rare even under load.
 //
 // Resolution strategy (a wrong cover is worse than no upgrade):
-//   1. Exact by-ISBN lookup — edition-exact, but Apple only indexes EBOOK
-//      ISBNs, so arbitrary print ISBNs mostly miss.
-//   2. Title+author SEARCH fallback, accepted ONLY when the result passes the
-//      strict title/author match check (itunesResultMatchesBook).
+//   1. By-ISBN lookup — Apple only indexes EBOOK ISBNs, so arbitrary print
+//      ISBNs mostly miss.
+//   2. Title+author SEARCH fallback.
+//
+// EVERY result from either tier must pass the strict title/author match check
+// (itunesResultMatchesBook) before it can become a cover. The ISBN tier used to
+// be trusted as "edition-exact" and took results[0] unvalidated — it is not.
+// Apple's isbn index resolves loosely: probed live on 2026-09-02, four of the
+// six Project Hail Mary ISBNs Apple resolves at all returned a different book
+// (0593135210 / 0593135202 / 9780593135204 -> "That Summer" by Jennifer Weiner,
+// 9786064310996 -> "Turnul nebunilor" by Andrzej Sapkowski), which is how the
+// discovery deck came to show a stranger's cover on a Project Hail Mary card.
+// Neighbouring ISBNs in one publisher block resolve to each other, so the
+// wrong book is usually a plausible-looking one from the same catalog.
+//
+// Because the ISBN alone cannot name the book it belongs to, title+author are
+// REQUIRED: they are the only thing a result can be validated against.
 const ITUNES_LOOKUP = "https://itunes.apple.com/lookup"
 const ITUNES_SEARCH = "https://itunes.apple.com/search"
 
@@ -49,10 +62,10 @@ export async function GET(request: NextRequest) {
   const author = params.get("author")?.trim().slice(0, 100)
 
   const hasIsbn = !!isbn && isValidIsbn(isbn)
-  const hasQuery = !!title && !!author
-  if (!hasIsbn && !hasQuery) {
+  if (!title || !author) {
+    // Refuse visibly rather than returning a cover nothing could validate.
     return NextResponse.json(
-      { error: "Provide a valid isbn or title+author" },
+      { error: "Provide title and author (an isbn alone cannot be validated)" },
       { status: 400 }
     )
   }
@@ -62,26 +75,33 @@ export async function GET(request: NextRequest) {
   try {
     let artwork: string | undefined
 
-    // 1) Edition-exact ISBN lookup
+    // The one gate both tiers pass through: never return artwork we cannot
+    // tie back to the book that was asked for.
+    const firstMatch = (results: ItunesResult[]): string | undefined =>
+      results.find((r) => r.artworkUrl100 && itunesResultMatchesBook(r, title, author))
+        ?.artworkUrl100
+
+    // 1) By-ISBN lookup — validated, and across ALL results rather than just
+    //    the first, since a loose isbn match can rank a stranger above the book.
     if (hasIsbn) {
-      const results = await fetchItunes(
-        `${ITUNES_LOOKUP}?isbn=${encodeURIComponent(isbn!)}&entity=ebook`,
-        controller.signal
+      artwork = firstMatch(
+        await fetchItunes(
+          `${ITUNES_LOOKUP}?isbn=${encodeURIComponent(isbn!)}&entity=ebook`,
+          controller.signal
+        )
       )
-      artwork = results[0]?.artworkUrl100
     }
 
-    // 2) Validated title+author search fallback
-    if (!artwork && hasQuery) {
+    // 2) Validated title+author search fallback. Also catches the case where
+    //    tier 1 resolved to the wrong book and was rejected above.
+    if (!artwork) {
       const term = `${title} ${author}`
-      const results = await fetchItunes(
-        `${ITUNES_SEARCH}?term=${encodeURIComponent(term)}&entity=ebook&limit=5`,
-        controller.signal
+      artwork = firstMatch(
+        await fetchItunes(
+          `${ITUNES_SEARCH}?term=${encodeURIComponent(term)}&entity=ebook&limit=5`,
+          controller.signal
+        )
       )
-      const match = results.find(
-        (r) => r.artworkUrl100 && itunesResultMatchesBook(r, title!, author!)
-      )
-      artwork = match?.artworkUrl100
     }
 
     const cover = artwork ? hiRes(artwork) : null
