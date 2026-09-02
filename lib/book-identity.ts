@@ -32,8 +32,11 @@ function coreTitle(title: string): string {
  * Surname only. Full-name matching misses "J.R.R. Tolkien" vs "John Tolkien",
  * and surname-only alone would collapse different King/Smith/Miller authors —
  * so it is paired with an exact title match, never used on its own.
+ *
+ * Also the surname the iTunes cover match check compares against
+ * (lib/covers.ts): same question, same catalogue-order problem, one answer.
  */
-function authorKey(author: string): string {
+export function authorKey(author: string): string {
   const raw = (author || "").trim()
   // Open Library writes "Weir, Andy" while Google writes "Andy Weir". Taking
   // the last word gives "andy" for the first and "weir" for the second, so the

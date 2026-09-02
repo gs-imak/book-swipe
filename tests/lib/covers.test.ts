@@ -55,6 +55,28 @@ describe("itunesResultMatchesBook", () => {
     )).toBe(true)
   })
 
+  it("reads the surname from a 'Surname, First' author, not the last word", () => {
+    // Open Library writes "Weir, Andy" and the Goodreads importer falls back to
+    // the CSV's "Author l-f" column, so this form does reach the cover pipeline.
+    // Taking the last word yields "andy", which any Andy would satisfy.
+    expect(itunesResultMatchesBook(
+      { trackName: "Project Hail Mary Companion", artistName: "Andy Somebody" },
+      "Project Hail Mary", "Weir, Andy"
+    )).toBe(false)
+    expect(itunesResultMatchesBook(
+      { trackName: "Project Hail Mary", artistName: "Andy Weir" },
+      "Project Hail Mary", "Weir, Andy"
+    )).toBe(true)
+  })
+
+  it("matches on the FIRST author when a record lists several", () => {
+    // lib/goodreads-import.ts joins multiple authors with ", ".
+    expect(itunesResultMatchesBook(
+      { trackName: "Good Omens", artistName: "Neil Gaiman & Terry Pratchett" },
+      "Good Omens", "Neil Gaiman, Terry Pratchett"
+    )).toBe(true)
+  })
+
   it("rejects results missing fields", () => {
     expect(itunesResultMatchesBook({}, "Villette", "Charlotte Brontë")).toBe(false)
     expect(itunesResultMatchesBook({ trackName: "Villette" }, "Villette", "")).toBe(false)

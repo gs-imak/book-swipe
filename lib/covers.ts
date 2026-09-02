@@ -1,3 +1,5 @@
+import { authorKey } from "./book-identity"
+
 /**
  * Cover URL helpers.
  *
@@ -101,6 +103,9 @@ function normalizeForMatch(s: string): string {
  * tolerated, but only for titles long enough to be distinctive) AND the
  * author's surname must appear in the result's artist name (initials and
  * middle names vary across catalogs; surnames don't).
+ *
+ * Applied to BOTH tiers of /api/itunes-cover, the by-ISBN lookup included —
+ * Apple's isbn index resolves loosely enough to hand back a different book.
  */
 export function itunesResultMatchesBook(
   result: { trackName?: string; artistName?: string },
@@ -118,7 +123,10 @@ export function itunesResultMatchesBook(
       ? rTitle.includes(bTitle) || bTitle.includes(rTitle)
       : rTitle === bTitle
 
-  const surname = bAuthor.split(" ").pop() || ""
+  // NOT the last word of the name: Open Library and the Goodreads importer
+  // both emit "Weir, Andy", whose last word is the FIRST name — and "andy"
+  // is a surname test any Andy passes. authorKey reads the comma form.
+  const surname = normalizeForMatch(authorKey(author))
   const authorOk = surname.length >= 3 ? rAuthor.includes(surname) : rAuthor === bAuthor
 
   return titleOk && authorOk
